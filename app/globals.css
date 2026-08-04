@@ -1,0 +1,24 @@
+/* คัดจากมอคอัปต้นฉบับ (Med Return App.dc.html บรรทัด 15–19) ตัวต่อตัว
+   เปลี่ยนแค่ชื่อฟอนต์ให้ชี้ไปฟอนต์ที่ฝังไว้ตอน build (next/font) แทนการโหลดจาก Google ตอนใช้งาน */
+*{-webkit-tap-highlight-color:transparent;box-sizing:border-box}
+body{margin:0;background:#f6f7f4;font-family:var(--font-sarabun),Sarabun,system-ui,sans-serif;color:#1e2420}
+a{color:#2f7d5d}a:hover{color:#24614a}
+input{font-family:inherit}input:focus{outline:none}::placeholder{color:#9aa19c}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(30,36,32,.18);border-radius:9px}
+
+/* วงกลมหมุนตอนรอวัดความกว้างจอ (มอคอัปไม่มี เพราะเป็นไฟล์เดียวไม่มีฝั่งเซิร์ฟเวอร์) */
+@keyframes mrspin{to{transform:rotate(360deg)}}
+
+/* สีตอนเอาเมาส์ไปวาง — มอคอัปเขียนไว้ในแอตทริบิวต์ style-hover ของแท็ก
+   React ทำแบบนั้นไม่ได้ เลยย้ายมาเป็นคลาส ค่าสีคัดมาตรงตัวทุกชุด
+   ต้องมี !important เพราะสไตล์ที่ฝังในแท็กชนะกฎใน CSS เสมอ */
+.hv-bg-f6:hover{background:#f6f7f4!important}
+.hv-bg-fbe:hover{background:#fbe4dd!important}
+.hv-bg-e6e:hover{background:#e6e9e5!important}
+.hv-bg-eef:hover{background:#eef6f1!important}
+.hv-bg-e3f:hover{background:#e3f0e8!important}
+.hv-del:hover{background:#fdf1ed!important;color:#c2543c!important}
+.hv-fg-red:hover{color:#c2543c!important}
+/* ปุ่มยืนยันลบในป๊อปอัป — ไม่มีในมอคอัป ใช้แดงเดิมหยดลงมาหนึ่งขั้น */
+.hv-red:hover{background:#a8452f!important}
+.hv-bd-green:hover{border-color:#2f7d5d!important}

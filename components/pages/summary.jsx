@@ -1,0 +1,211 @@
+// หน้าสรุปภาพรวม — คัดจากมอคอัป (คอม 317–386 · มือถือ 388–473)
+// ต่างจากต้นฉบับอย่างเดียวคือข้อความบนปุ่มส่งออกเปลี่ยนเป็น "กำลังสร้างไฟล์" ตอนกำลังทำงาน
+// เพราะของจริงต้องรอเซิร์ฟเวอร์ส่งรายการทั้งปีงบกลับมาก่อน
+import { s, sx } from '../helpers';
+
+export function renderSummaryWide(V) {
+  return (
+    <div style={sx('min-height:100%', { background: V.sumBg, color: V.sumFg })}>
+      <div style={s('max-width:1400px;margin:0 auto;padding:18px 24px 26px')}>
+        <div style={s('display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px')}>
+          <div style={s('display:flex;align-items:center;gap:10px')}>
+            <div style={sx('width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;position:relative;flex:none', { background: V.sumGreen })}>
+              <div style={s('position:absolute;inset:4px;border:1.7px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
+              <span style={sx("font:700 14px 'IBM Plex Sans Thai',sans-serif;line-height:1", { color: V.sumMarkFg })}>฿</span>
+            </div>
+            <div style={s('font:600 17px Sarabun,sans-serif')}>มูลค่ายาคืน · ปีงบประมาณ {V.fyLabel}</div>
+          </div>
+          <div style={s('display:flex;align-items:center;gap:10px')}>
+            <div onClick={V.exportCsv} style={sx('padding:8px 15px;border-radius:9px;font:500 13.5px Sarabun,sans-serif;cursor:pointer', { border: '1px solid ' + V.sumBorder })}>{V.exportLabel}</div>
+            <div style={sx('display:flex;padding:3px;border-radius:10px;gap:3px', { background: V.togTrack })}>
+              <div onClick={V.setLight} style={sx('display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;cursor:pointer', { background: V.togLightBg })}>
+                <span style={s('width:12px;height:12px;border-radius:50%;background:#fff;border:1px solid rgba(30,36,32,.28)')}></span>
+                <span style={sx('font:600 13.5px Sarabun,sans-serif', { color: V.togLightFg })}>สว่าง</span>
+              </div>
+              <div onClick={V.setDark} style={sx('display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;cursor:pointer', { background: V.togDarkBg })}>
+                <span style={s('width:12px;height:12px;border-radius:50%;background:#151a17;border:1px solid rgba(255,255,255,.3)')}></span>
+                <span style={sx('font:600 13.5px Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
+              </div>
+            </div>
+            <div onClick={V.openSettings} style={sx('width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:600 17px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⋯</div>
+          </div>
+        </div>
+
+        <div style={s('display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;margin-bottom:26px')}>
+          <div style={s('flex:1 1 420px;min-width:0')}>
+            <div style={sx('font:500 clamp(14px,1.4vw,19px) Sarabun,sans-serif;margin-bottom:2px', { color: V.sumMuted })}>มูลค่ายาที่ประหยัดได้สะสม</div>
+            <div style={sx("font:700 clamp(44px,9.4vw,132px)/1 'IBM Plex Sans Thai',sans-serif;letter-spacing:-.045em;font-variant-numeric:tabular-nums;word-break:break-all", { color: V.sumGreen })}>{V.fySavedBig}</div>
+            <div style={s('font:500 clamp(15px,1.9vw,25px) Sarabun,sans-serif;margin-top:4px')}>฿ <span style={sx('font:400 clamp(12px,1.4vw,19px) Sarabun,sans-serif', { color: V.sumMuted })}>· {V.fyRangeLabel}</span></div>
+          </div>
+          <div style={s('flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:13px')}>
+            <div>
+              <div style={sx('font:500 14px Sarabun,sans-serif', { color: V.sumMuted })}>มูลค่าที่สูญเสีย (ทำลาย)</div>
+              <div style={sx("font:700 clamp(26px,3.4vw,42px)/1.1 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.03em", { color: V.sumRed })}>{V.fyLostLabel}</div>
+            </div>
+            <div style={sx('display:flex;height:10px;border-radius:99px;overflow:hidden', { background: V.sumTrack })}>
+              <div style={sx('', { width: V.fySavedPct, background: V.sumGreen })}></div>
+              <div style={sx('background:#c2543c', { width: V.fyLostPct })}></div>
+            </div>
+            <div style={sx('font:400 14px/1.6 Sarabun,sans-serif', { color: V.sumMuted })}>ยาที่คืนมา <strong style={sx('font-weight:600;font-variant-numeric:tabular-nums', { color: V.sumFg })}>{V.fyGrossLabel}</strong> · ใช้ต่อได้ {V.fyReusePct}</div>
+            <div style={sx('font:400 14px Sarabun,sans-serif;padding-top:12px', { color: V.sumMuted, borderTop: '1px solid ' + V.sumBorder })}><strong style={sx('font-weight:600;font-variant-numeric:tabular-nums', { color: V.sumFg })}>{V.fyCount}</strong> รายการ · <strong style={sx('font-weight:600;font-variant-numeric:tabular-nums', { color: V.sumFg })}>{V.fyDrugCount}</strong> รายการยา</div>
+          </div>
+        </div>
+
+        <div style={s('display:flex;flex-wrap:wrap;gap:20px')}>
+          <div style={sx('flex:1 1 460px;min-width:0;border-radius:12px;padding:16px 20px 12px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
+            <div style={sx('font:600 14.5px Sarabun,sans-serif;margin-bottom:14px', { color: V.sumFg })}>มูลค่าประหยัดรายเดือน (฿)</div>
+            <div style={s('display:flex;align-items:flex-end;gap:6px;height:190px')}>
+              {V.months.map((m) => (
+                <div key={m.key} style={s('flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:5px;min-width:0')}>
+                  <div style={sx("font:600 10.5px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums", { color: m.labelColor })}>{m.short}</div>
+                  <div style={sx('width:100%;border-radius:4px 4px 0 0;min-height:3px', { height: m.h, background: m.bg })}></div>
+                  <div style={sx('font:500 12px Sarabun,sans-serif', { color: m.nameColor })}>{m.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={sx('flex:1 1 340px;min-width:0;border-radius:12px;padding:16px 20px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
+            <div style={s('font:600 14.5px Sarabun,sans-serif;margin-bottom:14px')}>ยาที่คืนมูลค่าสูงสุด 10 อันดับ (฿)</div>
+            <div style={s('display:flex;flex-direction:column;gap:9px')}>
+              {V.topDrugs.map((t) => (
+                <div key={t.key}>
+                  <div style={s('display:flex;justify-content:space-between;gap:12px;font:400 13.5px Sarabun,sans-serif;margin-bottom:3px')}>
+                    <span style={s('font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{t.name}</span>
+                    <span style={s('font-weight:600;font-variant-numeric:tabular-nums;flex:none')}>{t.value}</span>
+                  </div>
+                  <div style={sx('height:6px;border-radius:99px', { background: V.sumTrack })}>
+                    <div style={sx('height:6px;border-radius:99px', { width: t.w, background: t.bg })}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={sx('padding-top:13px;margin-top:15px', { borderTop: '1px solid ' + V.sumBorder })}>
+              <div style={sx('font:500 12.5px Sarabun,sans-serif;margin-bottom:8px', { color: V.sumMuted })}>สัดส่วนตามแหล่งที่มา</div>
+              <div style={sx('display:flex;height:9px;border-radius:99px;overflow:hidden;margin-bottom:8px', { background: V.sumTrack })}>
+                {V.srcShares.map((sh) => (
+                  <div key={sh.key} style={sx('', { width: sh.w, background: sh.bg })}></div>
+                ))}
+              </div>
+              <div style={sx('display:flex;flex-wrap:wrap;gap:12px;font:400 12.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>
+                {V.srcShares.map((sh) => (
+                  <span key={sh.key}>{sh.label}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function renderSummaryNarrow(V) {
+  return (
+    <div style={sx('min-height:100%', { background: V.sumBg, color: V.sumFg })}>
+      <div style={s('max-width:520px;margin:0 auto;padding:14px 20px 24px')}>
+
+        <div style={s('display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px')}>
+          <div style={s('display:flex;align-items:center;gap:9px;min-width:0')}>
+            <div style={sx('width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;flex:none', { background: V.sumGreen })}>
+              <div style={s('position:absolute;inset:4px;border:1.6px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
+              <span style={sx("font:700 13px 'IBM Plex Sans Thai',sans-serif;line-height:1", { color: V.sumMarkFg })}>฿</span>
+            </div>
+            <div style={s('min-width:0')}>
+              <div style={s('font:700 15px/1.2 Sarabun,sans-serif')}>มูลค่ายาคืน</div>
+              <div style={sx('font:400 11px/1.2 Sarabun,sans-serif', { color: V.sumMuted })}>ปีงบประมาณ {V.fyLabel}</div>
+            </div>
+          </div>
+          <div style={sx('display:flex;padding:2px;border-radius:9px;gap:2px;flex:none', { background: V.togTrack })}>
+            <div onClick={V.setLight} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togLightBg })}>
+              <span style={s('width:11px;height:11px;border-radius:50%;background:#fff;border:1px solid rgba(30,36,32,.28)')}></span>
+              <span style={sx('font:600 12px Sarabun,sans-serif', { color: V.togLightFg })}>สว่าง</span>
+            </div>
+            <div onClick={V.setDark} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togDarkBg })}>
+              <span style={s('width:11px;height:11px;border-radius:50%;background:#151a17;border:1px solid rgba(255,255,255,.3)')}></span>
+              <span style={sx('font:600 12px Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
+            </div>
+          </div>
+          <div onClick={V.openSettings} style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 15px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⋯</div>
+        </div>
+
+        <div style={sx('border-radius:14px;padding:16px 17px 15px;margin-bottom:10px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
+          <div style={sx('font:500 12.5px Sarabun,sans-serif;margin-bottom:3px', { color: V.sumMuted })}>มูลค่ายาที่ประหยัดได้สะสม</div>
+          <div style={sx("font:700 clamp(34px,10.6vw,50px)/1.02 'IBM Plex Sans Thai',sans-serif;letter-spacing:-.04em;font-variant-numeric:tabular-nums;word-break:break-all", { color: V.sumGreen })}>{V.fySavedBig}</div>
+          <div style={s('font:500 15px Sarabun,sans-serif;margin-top:3px')}>฿ <span style={sx('font:400 12px Sarabun,sans-serif', { color: V.sumMuted })}>· {V.fyRangeLabel}</span></div>
+          <div style={sx('display:flex;height:9px;border-radius:99px;overflow:hidden;margin:13px 0 7px', { background: V.sumTrack })}>
+            <div style={sx('', { width: V.fySavedPct, background: V.sumGreen })}></div>
+            <div style={sx('background:#c2543c', { width: V.fyLostPct })}></div>
+          </div>
+          <div style={sx('font:400 12px/1.55 Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>ยาที่คืนมา <strong style={sx('font-weight:600', { color: V.sumFg })}>{V.fyGrossLabel}</strong> · ใช้ต่อได้ {V.fyReusePct}</div>
+        </div>
+
+        <div style={s('display:flex;gap:9px;margin-bottom:10px')}>
+          <div style={sx('flex:1;border-radius:12px;padding:11px 13px;min-width:0', { background: V.sumLostPanel, border: '1px solid ' + V.sumBorder })}>
+            <div style={sx('font:500 11px Sarabun,sans-serif', { color: V.sumRed })}>สูญเสีย (ทำลาย)</div>
+            <div style={sx("font:700 21px/1.2 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.03em;word-break:break-all", { color: V.sumRed })}>{V.fyLostShort}</div>
+          </div>
+          <div style={sx('flex:1;border-radius:12px;padding:11px 13px;min-width:0', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
+            <div style={sx('font:500 11px Sarabun,sans-serif', { color: V.sumMuted })}>รายการบันทึก</div>
+            <div style={s("font:700 21px/1.2 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em")}>{V.fyCount} <span style={sx('font:400 11.5px Sarabun,sans-serif', { color: V.sumMuted })}>· ยา {V.fyDrugCount}</span></div>
+          </div>
+        </div>
+
+        <div style={sx('border-radius:12px;padding:14px 14px 10px;margin-bottom:10px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
+          <div style={s('display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px')}>
+            <span style={s('font:600 13.5px Sarabun,sans-serif')}>มูลค่าประหยัดรายเดือน (฿)</span>
+            <span style={sx('font:400 10.5px Sarabun,sans-serif', { color: V.sumMuted })}>ต.ค.–ก.ย.</span>
+          </div>
+          <div style={s('display:flex;align-items:flex-end;gap:3px;height:132px')}>
+            {V.months.map((m) => (
+              <div key={m.key} style={s('flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:4px;min-width:0')}>
+                <div style={sx("font:600 8.5px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums", { color: m.labelColor })}>{m.short}</div>
+                <div style={sx('width:100%;border-radius:3px 3px 0 0;min-height:3px', { height: m.h, background: m.bg })}></div>
+                <div style={sx('font:500 9.5px Sarabun,sans-serif;white-space:nowrap', { color: m.nameColor })}>{m.nameShort}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={sx('border-radius:12px;padding:14px 14px;margin-bottom:10px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
+          <div style={s('font:600 13.5px Sarabun,sans-serif;margin-bottom:12px')}>ยาที่คืนมูลค่าสูงสุด 10 อันดับ (฿)</div>
+          <div style={s('display:flex;flex-direction:column;gap:9px')}>
+            {V.topDrugs.map((t) => (
+              <div key={t.key} style={s('display:flex;align-items:center;gap:9px')}>
+                <span style={sx("width:16px;flex:none;font:600 10.5px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums", { color: V.sumMuted })}>{t.rank}</span>
+                <div style={s('flex:1;min-width:0')}>
+                  <div style={s('display:flex;justify-content:space-between;gap:8px;font:400 12.5px Sarabun,sans-serif;margin-bottom:3px')}>
+                    <span style={s('font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{t.name}</span>
+                    <span style={s('font-weight:600;font-variant-numeric:tabular-nums;flex:none')}>{t.value}</span>
+                  </div>
+                  <div style={sx('height:5px;border-radius:99px', { background: V.sumTrack })}>
+                    <div style={sx('height:5px;border-radius:99px', { width: t.w, background: t.bg })}></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={sx('border-radius:12px;padding:14px 14px;margin-bottom:14px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
+          <div style={s('font:600 13.5px Sarabun,sans-serif;margin-bottom:11px')}>สัดส่วนตามแหล่งที่มา</div>
+          <div style={sx('display:flex;height:9px;border-radius:99px;overflow:hidden;margin-bottom:11px', { background: V.sumTrack })}>
+            {V.srcShares.map((sh) => (
+              <div key={sh.key} style={sx('', { width: sh.w, background: sh.bg })}></div>
+            ))}
+          </div>
+          <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:8px')}>
+            {V.srcShares.map((sh) => (
+              <div key={sh.key} style={sx('display:flex;align-items:center;gap:7px;font:400 12px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>
+                <span style={sx('width:9px;height:9px;border-radius:3px;flex:none', { background: sh.bg })}></span>{sh.label}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div onClick={V.exportCsv} style={sx('height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font:600 15.5px Sarabun,sans-serif;cursor:pointer', { border: '1px solid ' + V.sumBorder, background: V.sumPanel })}>{V.exportLabel}</div>
+
+      </div>
+    </div>
+  );
+}

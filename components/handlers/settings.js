@@ -1,0 +1,70 @@
+// การตั้งค่าห้องยา — คัดจากมอคอัป (บรรทัด 1322–1352)
+//
+// ต่างจากมอคอัปตรงเดียว: มอคอัปเก็บลง localStorage อย่างเดียว ของจริงต้องขึ้นเซิร์ฟเวอร์
+// เพราะตั้งค่าที่เครื่องหนึ่งแล้วอีกเครื่องต้องเห็นด้วย
+//
+// วิธี: เปลี่ยนบนจอทันที แล้วค่อยยิงเซิร์ฟเวอร์เบื้องหลัง ถ้าล้มเหลวย้อนกลับ + บอกให้รู้
+import { LS, writeCache, clearLS } from '../helpers';
+
+export function settingsActions(app) {
+  // ยิงขึ้นเซิร์ฟเวอร์ · patch = เฉพาะช่องที่เปลี่ยน
+  app.pushSetting = async (patch, before) => {
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'บันทึกการตั้งค่าไม่สำเร็จ');
+
+      app.setState({
+        orgName: data.setting.orgName,
+        favIds: data.setting.favIds,
+        defaultSource: data.setting.defaultSource
+      });
+      writeCache(LS.setting, data.setting);
+    } catch (e) {
+      if (before) app.setState(before);
+      // แคชเก่าไม่ตรงกับเซิร์ฟเวอร์แล้ว ทิ้งไปเลย เปิดใหม่จะได้โหลดสด
+      clearLS(LS.setting);
+      app.toast(e.message || 'บันทึกการตั้งค่าไม่สำเร็จ', '', false);
+    }
+  };
+
+  // ชื่อห้องยาพิมพ์ทีละตัวอักษร ยิงทุกตัวจะถล่มเซิร์ฟเวอร์ เลยรอให้หยุดพิมพ์ก่อน
+  app.onOrgName = (e) => {
+    const value = e.target.value;
+    const before = { orgName: app.state.orgName };
+    app.setState({ orgName: value });
+    if (app._orgTimer) clearTimeout(app._orgTimer);
+    app._orgTimer = setTimeout(() => app.pushSetting({ orgName: value }, before), 500);
+  };
+
+  app.pickDefaultSource = (key) => {
+    const before = { defaultSource: app.state.defaultSource, source: app.state.source };
+    // เปลี่ยนค่าเริ่มต้นแล้วชิปบนหน้าบันทึกขยับตามทันที เหมือนมอคอัป
+    app.setState({ defaultSource: key, source: key });
+    app.pushSetting({ defaultSource: key }, before);
+  };
+
+  app.addFav = (id) => {
+    if (app.state.favIds.length >= 6 || app.state.favIds.indexOf(id) >= 0) return;
+    const before = { favIds: app.state.favIds };
+    const next = app.state.favIds.concat([id]);
+    app.setState({ favIds: next, favQuery: '' });
+    app.pushSetting({ favIds: next }, before);
+  };
+
+  app.removeFav = (id) => {
+    const before = { favIds: app.state.favIds };
+    const next = app.state.favIds.filter((x) => x !== id);
+    app.setState({ favIds: next });
+    app.pushSetting({ favIds: next }, before);
+  };
+
+  app.onFavQuery = (e) => app.setState({ favQuery: e.target.value });
+
+  // ธีมอยู่ในเครื่องอย่างเดียว คนละเครื่องชอบคนละแบบ ไม่ต้องขึ้นเซิร์ฟเวอร์
+  app.setTheme = (dark) => app.persist({ dark: dark });
+}
