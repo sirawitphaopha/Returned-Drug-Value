@@ -12,6 +12,7 @@ export function summaryActions(app) {
   app._sumSeq = 0;
 
   app.loadSummary = async (force) => {
+    if (app.state.demo) return;      // โหมดตัวอย่างคิดยอดไว้แล้วตอนเปิดโหมด
     const c = app._sumCache;
     if (!force && c && Date.now() - c.ts < SUM_TTL) {
       app.setState({ sum: c.data, sumLoading: false });
@@ -57,6 +58,7 @@ export function summaryActions(app) {
   // ยาที่ถูกคืนบ่อยที่สุด — เรียงตามจำนวนครั้ง ไม่ใช่มูลค่า
   // ยาตัวไหนถูกคืนบ่อยมาก = อาจสั่งเกินจำเป็น เอาไปคุยกับแพทย์ลดการสั่งได้
   app.loadTopReturned = async () => {
+    if (app.state.demo) return;
     try {
       const fy = app.state.sumFy;
       const res = await fetchT('/api/top-returned' + (fy ? '?fy=' + fy : ''));

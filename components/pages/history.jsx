@@ -1,6 +1,7 @@
 // หน้าประวัติการบันทึก — คัดจากมอคอัป (คอม 224–265 · มือถือ 267–313)
 // เพิ่มจากต้นฉบับอย่างเดียวคือข้อความ "กำลังโหลด" เพราะของจริงต้องรอเซิร์ฟเวอร์
 import { s, sx } from '../helpers';
+import { renderExportBtn } from './exportbtn';
 
 // แถบเครื่องมือเสริม — ไม่มีในมอคอัป
 // เดิมมีแค่ 4 ปุ่มช่วงเวลาสำเร็จรูป + ตัดที่ 60 แถว แล้วบอกให้ "กรองช่วงวันที่ให้แคบลง"
@@ -24,13 +25,20 @@ function renderHistTools(V) {
           ล็อต {V.histLot} <span style={s('font:400 13px Sarabun,sans-serif')}>✕</span>
         </div>
       )}
+
+      {/* ส่งออกเฉพาะที่กรองอยู่ตอนนี้ — หน้าสรุปมีปุ่มส่งออกทั้งปีงบอยู่แล้ว */}
+      {renderExportBtn(V.exportHistoryCsv, V.histExportLabel, { push: true })}
     </div>
   );
 }
 
+// 🚨 width:100% ห้ามลบ — เหตุผลเดียวกับหน้าบันทึก (margin:0 auto ใน flex = เลิกยืดเต็มความกว้าง)
 export function renderHistoryWide(V) {
   return (
-    <div style={s('max-width:1400px;margin:0 auto;padding:20px 26px 26px')}>
+    <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:20px 26px 26px;flex:1 0 auto')}>
+      {/* แถบกรองติดบนตอนเลื่อน — เลื่อนดูแถวลึก ๆ แล้วยังเปลี่ยนช่วงเวลา/ค้นหาได้ทันที
+          ref = ตัววัดความสูง ส่งให้หัวตารางไปตั้งระยะติดบน (ดู .hist-head ใน globals.css) */}
+      <div ref={V.histHeadRef} className="hist-head">
       <div style={s('display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px')}>
         <div style={s('font:600 19px Sarabun,sans-serif')}>{V.histTitle || 'ประวัติการบันทึก'}</div>
         <input value={V.histQuery} onChange={V.onHistQuery} placeholder="ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลขล็อต" style={s('width:320px;height:42px;padding:0 13px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 14px Sarabun,sans-serif')} />
@@ -46,20 +54,29 @@ export function renderHistoryWide(V) {
       </div>
 
       {renderHistTools(V)}
+      </div>
 
       {/* overflow:hidden ถูกเอาออกเพราะทำให้หัวตารางติดบนไม่ทำงาน
           ใช้มุมโค้งกับเส้นขอบที่แถวแทน */}
       <div style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px')}>
-        <div className="sticky-head" style={s("display:flex;padding:10px 16px;background:#f6f7f4;border-bottom:1px solid rgba(30,36,32,.08);border-radius:10px 10px 0 0;font:600 11px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.06em;color:rgba(30,36,32,.5)")}>
-          <span style={s('width:110px')}>วันที่</span>
-          <span style={s('flex:1;min-width:180px')}>ยา</span>
-          <span style={s('width:80px;text-align:right')}>จำนวน</span>
-          <span style={s('width:92px;text-align:right')}>ราคา/หน่วย</span>
-          <span style={s('width:104px;text-align:right')}>มูลค่า (฿)</span>
-          <span style={s('width:90px;text-align:center')}>สถานะ</span>
-          <span style={s('width:88px')}>แหล่งที่มา</span>
-          <span style={s('width:84px')}>HN</span>
-          <span style={s('width:104px')}>ผู้บันทึก</span>
+        {/* หัวตาราง — กดเรียงได้ทุกคอลัมน์ · สีเข้มกว่าเดิม
+            (เดิมพื้น #f6f7f4 ตัวหนังสือ rgba(.5) จางมากจนแทบมองไม่เห็น) */}
+        <div className="sticky-head" style={s("display:flex;padding:11px 16px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);border-radius:10px 10px 0 0;font:600 11.5px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.04em")}>
+          {V.histCols.map((c) => (
+            <span
+              key={c.key}
+              onClick={c.pick}
+              className="hv-bg-e3f"
+              style={sx('display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;border-radius:5px;margin:-3px 0;padding:3px 0', Object.assign(
+                { color: c.fg },
+                c.flex ? { flex: 1, minWidth: '180px' } : { width: c.w },
+                c.align === 'right' ? { justifyContent: 'flex-end' } : c.align === 'center' ? { justifyContent: 'center' } : {}
+              ))}
+            >
+              {c.label}
+              <span style={sx('font-size:9px;flex:none', { color: c.arrowColor })}>{c.arrow}</span>
+            </span>
+          ))}
           <span style={s('width:80px')}></span>
         </div>
 
@@ -111,7 +128,7 @@ export function renderHistoryWide(V) {
 
 export function renderHistoryNarrow(V) {
   return (
-    <div style={s('max-width:520px;margin:0 auto;min-height:100%')}>
+    <div style={s('width:100%;max-width:520px;margin:0 auto;min-height:100%;flex:1 0 auto')}>
       <div style={s('padding:16px 20px 14px;background:#fff;border-bottom:1px solid rgba(30,36,32,.07)')}>
         <div style={s('display:flex;align-items:center;gap:10px;margin-bottom:10px')}>
           <div style={s('width:30px;height:30px;border-radius:8px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;position:relative;flex:none')}>
@@ -119,7 +136,8 @@ export function renderHistoryNarrow(V) {
             <span style={s("font:700 13px 'IBM Plex Sans Thai',sans-serif;color:#fff;line-height:1")}>฿</span>
           </div>
           <div style={s('font:600 18px Sarabun,sans-serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{V.histTitle || 'ประวัติการบันทึก'}</div>
-          <div onClick={V.openSettings} className="hv-bg-f6" style={s('margin-left:auto;width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⋯</div>
+          <div onClick={V.openAbout} title="เกี่ยวกับ" className="hv-bg-f6" style={s('margin-left:auto;width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
+          <div onClick={V.openSettings} title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
         </div>
         <input value={V.histQuery} onChange={V.onHistQuery} placeholder="ชื่อยา · HN · ชื่อคนบันทึก · เลขล็อต" style={s('width:100%;height:44px;padding:0 13px;border:1px solid rgba(30,36,32,.14);border-radius:10px;background:#f6f7f4;font:400 14.5px Sarabun,sans-serif;margin-bottom:9px')} />
         <div style={s('display:flex;gap:6px;flex-wrap:wrap')}>

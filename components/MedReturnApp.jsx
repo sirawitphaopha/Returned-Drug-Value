@@ -27,8 +27,13 @@ export default class MedReturnApp extends React.Component {
       // บังคับดูหน้าจอแบบมือถือทั้งที่นั่งอยู่หน้าคอม — สวิตช์อยู่มุมขวาล่าง
       forceNarrow: false,
 
+      // โหมดดูตัวอย่าง — ข้อมูลปลอมฝังในเว็บ ไม่แตะ Supabase เลย · บันทึกไม่ได้ตอนเปิดโหมด
+      demo: false,
+
       query: '',
       hi: 0,               // แถวที่ไฮไลต์ในผลค้นหา — เลื่อนด้วยลูกศรขึ้น/ลง
+      rowSortKey: '',      // คอลัมน์ที่กดเรียงในตารางรายการครั้งนี้
+      rowSortDir: 'desc',
       hn: '',
       source: 'opd',
       sourceTouched: false,
@@ -40,8 +45,9 @@ export default class MedReturnApp extends React.Component {
       staff: [],              // รายชื่อคนในห้องยา (ก๊อปมาจาก ME-DRP 16 คน แก้ได้ในหน้าตั้งค่า)
       recorder: '',           // คนที่เลือกไว้ตอนนี้ — ค้างไว้ทั้งเวร
       recorderMenuOpen: false,
-      recorderMenuUp: false,  // เมนูเด้งขึ้นบนเมื่อช่องอยู่ค่อนล่างจอ
+      recorderBox: null,      // ตำแหน่ง+ความสูงเมนู วัดจากที่ว่างจริงตอนกดเปิด
       recorderNew: '',        // ช่องพิมพ์ชื่อใหม่ เผื่อมีคนใหม่มาช่วย
+      addingRecorder: false,  // กางช่องพิมพ์ชื่อใหม่อยู่ไหม
       lastLot: '',            // เลขล็อตที่เพิ่งบันทึกสำเร็จ
       defaultSource: 'opd',
       settingsOpen: false,
@@ -68,6 +74,8 @@ export default class MedReturnApp extends React.Component {
       histFrom: '',          // ช่วงวันที่เลือกเอง
       histTo: '',
       histOffset: 0,         // ดูเพิ่มทีละ 60 แถว
+      histSortKey: '',       // คอลัมน์ที่กดเรียง (ว่าง = เรียงวันใหม่→เก่าตามที่เซิร์ฟเวอร์ส่งมา)
+      histSortDir: 'desc',
       histMore: [],          // แถวที่โหลดเพิ่มมาแล้ว
       lots: [],              // รายการล็อต — หน้าแยกดูรายล็อต
       lotsLoading: false,
@@ -84,6 +92,10 @@ export default class MedReturnApp extends React.Component {
       animSaved: 0,
       toast: null,
       vw: 430,
+      // มีเมาส์จริงไหม — วัดตอน componentDidMount ด้วย (pointer: fine)
+      // ใช้กันสวิตช์ "คอม/มือถือ" ไม่ให้โผล่บนเครื่องสัมผัสจริง (พี่กันสั่ง — ขึ้นมาแล้วบังจอ)
+      // ความกว้างอย่างเดียวไม่พอ แท็บเล็ตแนวนอนกว้าง 1024 จะหลุดขึ้นมา
+      hasMouse: true,
       pending: null,
       qtyInput: '',
       pendingDisp: 'reuse',
@@ -103,6 +115,20 @@ export default class MedReturnApp extends React.Component {
     this.searchRef = React.createRef();
     this.qtyRef = React.createRef();
     this.sheetQtyRef = React.createRef();
+
+    // ── วัดความสูงแถบกรองหน้าประวัติ ─────────────────────────────────────────
+    // หัวตารางต้องติดใต้แถบกรองพอดี ห่างเกินไปจะเห็นแถวลอดผ่าน ชิดเกินไปก็ทับกัน
+    // ตั้งเลขตายตัวไม่ได้ เพราะแถบกรองขึ้นบรรทัดใหม่เองเมื่อจอแคบ (flex-wrap)
+    // ref แบบฟังก์ชันจะถูกเรียกตอนของโผล่/หายจากจอ = ต่อและถอดตัววัดได้ถูกจังหวะ
+    this._histHeadRO = null;
+    this.histHeadRef = (el) => {
+      if (this._histHeadRO) { this._histHeadRO.disconnect(); this._histHeadRO = null; }
+      if (!el || typeof ResizeObserver === 'undefined') return;
+      const write = () => document.documentElement.style.setProperty('--histhead', el.offsetHeight + 'px');
+      write();
+      this._histHeadRO = new ResizeObserver(write);
+      this._histHeadRO.observe(el);
+    };
 
     // วาดใหม่เฉพาะตอนความกว้างเปลี่ยนจริง — ลากขอบหน้าต่างจะยิง event รัวมาก
     // แต่ละครั้งวิ่ง renderVals ใหม่ทั้งก้อน (กรองยา 417 ตัว) เครื่องเก่าจะกระตุก
@@ -125,6 +151,19 @@ export default class MedReturnApp extends React.Component {
     const setting = readCache(LS.setting);
 
     const patch = { loading: false, vw: window.innerWidth, dark: dark };
+
+    // เครื่องสัมผัสล้วน (มือถือ/แท็บเล็ต) → (pointer: fine) เป็นเท็จ = ซ่อนสวิตช์มุมมอง
+    // โน้ตบุ๊กจอสัมผัสที่ต่อเมาส์ยังนับเป็น fine เพราะดูตัวชี้หลัก
+    //
+    // ต้องคอยฟังการเปลี่ยนแปลงด้วย ไม่ใช่วัดครั้งเดียวจบ — เสียบเมาส์เข้าแท็บเล็ต
+    // หรือถอดออกจากแท่นวาง ค่านี้เปลี่ยนได้กลางคัน ถ้าไม่ฟังไว้สวิตช์จะค้างผิดสถานะ
+    try {
+      this._mqMouse = window.matchMedia('(pointer: fine)');
+      patch.hasMouse = this._mqMouse.matches;
+      this._onMouseKind = (e) => this.setState({ hasMouse: e.matches });
+      if (this._mqMouse.addEventListener) this._mqMouse.addEventListener('change', this._onMouseKind);
+      else this._mqMouse.addListener(this._onMouseKind);        // Safari รุ่นเก่า
+    } catch (e) { patch.hasMouse = true; }
 
     // วันที่ต้องมีค่าตั้งแต่วินาทีแรก ไม่งั้นถ้า /api/bootstrap ล่ม (เน็ตโรงพยาบาลสะดุด)
     // ช่องวันที่จะว่างตลอด แล้วกดบันทึกกี่ครั้งก็ไม่ผ่าน โดยไม่มีใครบอกว่าทำไม
@@ -193,6 +232,11 @@ export default class MedReturnApp extends React.Component {
   };
 
   componentWillUnmount() {
+    if (this._histHeadRO) { this._histHeadRO.disconnect(); this._histHeadRO = null; }
+    if (this._mqMouse && this._onMouseKind) {
+      if (this._mqMouse.removeEventListener) this._mqMouse.removeEventListener('change', this._onMouseKind);
+      else this._mqMouse.removeListener(this._onMouseKind);
+    }
     if (this._raf) cancelAnimationFrame(this._raf);
     if (this._toastTimer) clearTimeout(this._toastTimer);
     if (this._orgTimer) clearTimeout(this._orgTimer);

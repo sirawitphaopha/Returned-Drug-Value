@@ -132,6 +132,30 @@ export async function fetchT(url, opts, ms) {
 
 export const MAX_QTY = 100000;   // ต้องตรงกับ app/api/returns/route.js
 
+// ── แยกชื่อยาเป็น "ชื่อ" กับ "ความแรง" ──────────────────────────────────────
+// ชื่อในคลังเป็นพืดเดียว เช่น "Enalapril 5 mg" หรือ "Amoxicillin + Clavulanic acid 875 + 125 mg"
+// แยกออกมาเพื่อให้ตาไล่อ่านง่าย — ชื่อตัวหนาเข้ม ความแรงตัวเบากว่า
+//
+// ⚠️ ต้องยอมให้ + และ - อยู่ในกลุ่มความแรงด้วย ไม่งั้นยาสูตรผสมจะแยกผิดจุด
+//    ("Amoxicillin + Clavulanic acid 875 +" / "125 mg" — มี + ห้อยท้ายชื่อ)
+export function splitDrugName(name) {
+  const full = String(name || '');
+  const m = full.match(/^(.*?)\s(\d[\d\w./+\- ]*)$/);
+  if (!m) return { base: full, strength: '' };
+  return { base: m[1].trim(), strength: m[2].trim() };
+}
+
+// ตัดข้อความเป็น 3 ท่อน [ก่อน, ที่ตรงกับคำค้น, หลัง] ไว้ทำไฮไลต์
+// (ME-DRP ก็ไฮไลต์คำค้นแบบนี้ในตัวเลือกยา)
+export function markMatch(text, q) {
+  const t = String(text || '');
+  const needle = String(q || '').trim().toLowerCase();
+  if (!needle) return [t, '', ''];
+  const i = t.toLowerCase().indexOf(needle);
+  if (i < 0) return [t, '', ''];
+  return [t.slice(0, i), t.slice(i, i + needle.length), t.slice(i + needle.length)];
+}
+
 // เหตุผลการทำลาย — ผู้บริหารถามว่า "ที่ทำลายไป 40,000 บาท เพราะอะไร"
 // เดิมระบบเก็บแค่ว่า "ทำลาย" ตอบไม่ได้เลย
 export const DESTROY_REASONS = [

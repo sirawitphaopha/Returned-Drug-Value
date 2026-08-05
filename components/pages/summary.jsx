@@ -2,6 +2,7 @@
 // ต่างจากต้นฉบับอย่างเดียวคือข้อความบนปุ่มส่งออกเปลี่ยนเป็น "กำลังสร้างไฟล์" ตอนกำลังทำงาน
 // เพราะของจริงต้องรอเซิร์ฟเวอร์ส่งรายการทั้งปีงบกลับมาก่อน
 import { s, sx } from '../helpers';
+import { renderExportBtn } from './exportbtn';
 
 // แถบบอกสถานะบนสุดของหน้าสรุป — ไม่มีในมอคอัป (มอคอัปมีข้อมูลอยู่ในเครื่องเลยไม่ต้องรอ)
 // ของจริงต้องรอเซิร์ฟเวอร์ ถ้าไม่บอกอะไรเลย ผู้ใช้จะเห็น 0.00 กราฟว่าง
@@ -66,8 +67,9 @@ function renderTopReturned(V) {
 
 export function renderSummaryWide(V) {
   return (
-    <div style={sx('min-height:100%', { background: V.sumBg, color: V.sumFg })}>
-      <div style={s('max-width:1400px;margin:0 auto;padding:18px 24px 26px')}>
+    <div style={sx('width:100%;flex:1 0 auto;display:flex;flex-direction:column', { background: V.sumBg, color: V.sumFg })}>
+      {/* 🚨 width:100% ห้ามลบ — เหตุผลเดียวกับหน้าบันทึก · ระยะขอบ 26px ให้เท่าอีก 2 หน้า */}
+      <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:18px 26px 26px;flex:1 0 auto')}>
         {renderSumBanner(V)}
         <div style={s('margin-bottom:14px')}>{renderFyPicks(V)}</div>
         <div style={s('display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px')}>
@@ -79,7 +81,7 @@ export function renderSummaryWide(V) {
             <div style={s('font:600 17px Sarabun,sans-serif')}>มูลค่ายาคืน · ปีงบประมาณ {V.fyLabel}</div>
           </div>
           <div style={s('display:flex;align-items:center;gap:10px')}>
-            <div onClick={V.exportCsv} style={sx('padding:8px 15px;border-radius:9px;font:500 13.5px Sarabun,sans-serif;cursor:pointer', { border: '1px solid ' + V.sumBorder })}>{V.exportLabel}</div>
+            {renderExportBtn(V.exportCsv, V.exportLabel, {})}
             <div style={sx('display:flex;padding:3px;border-radius:10px;gap:3px', { background: V.togTrack })}>
               <div onClick={V.setLight} style={sx('display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;cursor:pointer', { background: V.togLightBg })}>
                 <span style={s('width:12px;height:12px;border-radius:50%;background:#fff;border:1px solid rgba(30,36,32,.28)')}></span>
@@ -90,7 +92,8 @@ export function renderSummaryWide(V) {
                 <span style={sx('font:600 13.5px Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
               </div>
             </div>
-            <div onClick={V.openSettings} style={sx('width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:600 17px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⋯</div>
+            <div onClick={V.openAbout} title="เกี่ยวกับ" style={sx('width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:700 16px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>ℹ</div>
+            <div onClick={V.openSettings} title="ตั้งค่า" style={sx('width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:600 17px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⚙</div>
           </div>
         </div>
 
@@ -173,8 +176,8 @@ export function renderSummaryWide(V) {
 
 export function renderSummaryNarrow(V) {
   return (
-    <div style={sx('min-height:100%', { background: V.sumBg, color: V.sumFg })}>
-      <div style={s('max-width:520px;margin:0 auto;padding:14px 20px 24px')}>
+    <div style={sx('width:100%;min-height:100%;flex:1 0 auto', { background: V.sumBg, color: V.sumFg })}>
+      <div style={s('width:100%;max-width:520px;margin:0 auto;padding:14px 20px 24px')}>
         {renderSumBanner(V)}
         <div style={s('margin-bottom:14px')}>{renderFyPicks(V)}</div>
 
@@ -199,7 +202,8 @@ export function renderSummaryNarrow(V) {
               <span style={sx('font:600 12px Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
             </div>
           </div>
-          <div onClick={V.openSettings} style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 15px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⋯</div>
+          <div onClick={V.openAbout} title="เกี่ยวกับ" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 14px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>ℹ</div>
+          <div onClick={V.openSettings} title="ตั้งค่า" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 15px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⚙</div>
         </div>
 
         <div style={sx('border-radius:14px;padding:16px 17px 15px;margin-bottom:10px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
@@ -212,6 +216,11 @@ export function renderSummaryNarrow(V) {
           </div>
           <div style={sx('font:400 12px/1.55 Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>ยาที่คืนมา <strong style={sx('font-weight:600', { color: V.sumFg })}>{V.fyGrossLabel}</strong> · ใช้ต่อได้ {V.fyReusePct}</div>
         </div>
+
+        {/* ปุ่มส่งออกย้ายขึ้นมาไว้ใต้ตัวเลขใหญ่ (พี่กันสั่ง)
+            เดิมอยู่ล่างสุดของหน้า ต้องเลื่อนผ่านกราฟ + 10 อันดับ + สัดส่วนแหล่งที่มา กว่าจะเจอ
+            ฝั่งคอมปุ่มนี้อยู่แถวหัวเรื่องอยู่แล้ว ตำแหน่งเลยใกล้เคียงกันทั้งสองแบบ */}
+        <div style={s('margin-bottom:10px')}>{renderExportBtn(V.exportCsv, V.exportLabel, { block: true })}</div>
 
         <div style={s('display:flex;gap:9px;margin-bottom:10px')}>
           <div style={sx('flex:1;border-radius:12px;padding:11px 13px;min-width:0', { background: V.sumLostPanel, border: '1px solid ' + V.sumBorder })}>
@@ -278,8 +287,6 @@ export function renderSummaryNarrow(V) {
         </div>
 
         {renderTopReturned(V)}
-
-        <div onClick={V.exportCsv} style={sx('height:50px;border-radius:12px;margin-top:14px;display:flex;align-items:center;justify-content:center;font:600 15.5px Sarabun,sans-serif;cursor:pointer', { border: '1px solid ' + V.sumBorder, background: V.sumPanel })}>{V.exportLabel}</div>
 
       </div>
     </div>

@@ -74,6 +74,21 @@ export function renderSettings(V) {
           </div>
           <div style={s('font:400 11.5px/1.5 Sarabun,sans-serif;color:#6b746e;margin-bottom:22px')}>ห้องประชุมที่ปิดไฟหรือโปรเจกเตอร์คอนทราสต์ต่ำใช้ธีมเข้มจะอ่านง่ายกว่า</div>
 
+          {/* โหมดดูตัวอย่าง — ข้อมูลปลอมฝังในเว็บ ไม่แตะฐานข้อมูลจริง
+              มีไว้ให้เห็นภาพว่าเว็บทำงานเต็มที่แล้วหน้าตาเป็นยังไง
+              ตอนที่ยังไม่ได้ใส่ราคายาจริง (ตัวเลขทุกหน้าเป็น 0 หมด) */}
+          <div style={s(LABEL + ';margin-bottom:7px')}>โหมดดูตัวอย่าง</div>
+          <div onClick={V.toggleDemo} className="tap" style={sx('display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:11px;cursor:pointer;margin-bottom:6px', {
+            background: V.demo ? '#fdf3e7' : '#f6f7f4',
+            border: '1px solid ' + (V.demo ? 'rgba(214,138,42,.4)' : 'rgba(30,36,32,.1)')
+          })}>
+            <span style={sx('font:600 13.5px Sarabun,sans-serif', { color: V.demo ? '#8a5a12' : '#414a44' })}>{V.demoBtnLabel}</span>
+            <span style={sx('width:42px;height:24px;border-radius:99px;flex:none;position:relative;transition:background .15s', { background: V.demo ? '#d68a2a' : '#d5dad6' })}>
+              <span style={sx('position:absolute;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s', { left: V.demo ? '21px' : '3px' })}></span>
+            </span>
+          </div>
+          <div style={s('font:400 11.5px/1.5 Sarabun,sans-serif;color:#6b746e;margin-bottom:22px')}>{V.demoHint}</div>
+
           <div style={s('border-top:1px solid rgba(30,36,32,.08);padding-top:18px;margin-bottom:18px')}>
             <div style={s(LABEL + ';margin-bottom:10px')}>เกี่ยวกับแอปนี้</div>
             <div style={s('font:400 13px/1.75 Sarabun,sans-serif;color:#414a44')}>

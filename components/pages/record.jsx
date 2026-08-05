@@ -3,10 +3,48 @@
 import { s, sx } from '../helpers';
 import { renderRecorderField } from './recorder';
 
+// ── หนึ่งบรรทัดในรายการผลค้นยา ───────────────────────────────────────────────
+// ต่างจากมอคอัปที่โชว์ชื่อยาเป็นพืดเดียวกับ "หน่วย · คงคลัง 1234" (เลขมั่วของเดโม)
+// พี่กันขอให้อ่านง่ายขึ้น เลยจัดใหม่เป็น
+//   บรรทัดบน  = ชื่อยาตัวหนาเข้ม (ไฮไลต์คำที่พิมพ์ค้นด้วยพื้นเขียวอ่อน)
+//                + ความแรงตัวเบากว่าต่อท้าย → ตาแยกชื่อกับขนาดออกทันที
+//   บรรทัดล่าง = หน่วยนับ · ป้ายเตือนถ้ายังไม่ใส่ราคา (ทำเป็นป้ายเล็ก ไม่ใช่ตัวหนังสือแดงลอย)
+//   ฝั่งขวา    = ราคา ตัวเลขใหญ่ + "ต่อ เม็ด" ตัวเล็กใต้ลงมา
+function renderDrugOption(r, big) {
+  const nameSize = big ? '15.5px' : '14.5px';
+  return (
+    <div key={r.name} onClick={big ? r.pick : r.pickInline} className="hv-bg-eef"
+      style={sx('display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid rgba(30,36,32,.06);cursor:pointer', { background: r.rowBg })}>
+
+      <div style={s('min-width:0;flex:1')}>
+        <div style={sx('font-family:var(--font-sarabun),Sarabun,sans-serif;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', { fontSize: nameSize })}>
+          <span style={s('font-weight:600;color:#1e2420')}>{r.mkBefore}</span>
+          <span style={s('font-weight:700;color:#2f7d5d;background:#dcefe4;border-radius:3px;padding:0 1px')}>{r.mkHit}</span>
+          <span style={s('font-weight:600;color:#1e2420')}>{r.mkAfter}</span>
+          {r.strength && (
+            <span style={s("font-weight:500;color:#6b746e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:6px")}>{r.strength}</span>
+          )}
+        </div>
+        <div style={s('display:flex;align-items:center;gap:6px;margin-top:2px')}>
+          <span style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#9aa19c')}>{r.unitLabel}</span>
+          {r.noPrice && (
+            <span style={s('font:600 10px Sarabun,sans-serif;color:#c2543c;background:#fbe4dd;border-radius:4px;padding:1px 6px;flex:none')}>ยังไม่ใส่ราคา</span>
+          )}
+        </div>
+      </div>
+
+      <div style={s('text-align:right;flex:none')}>
+        <div style={sx("font:600 14px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap", { color: r.priceColor })}>{r.priceLabel}</div>
+        {r.priceSub && <div style={s('font:400 10.5px Sarabun,sans-serif;color:#9aa19c;white-space:nowrap')}>{r.priceSub}</div>}
+      </div>
+    </div>
+  );
+}
+
 // ── มือถือ ──────────────────────────────────────────────────────────────────
 export function renderRecordNarrow(V) {
   return (
-    <div style={s('max-width:520px;margin:0 auto;display:flex;flex-direction:column;min-height:100%')}>
+    <div style={s('width:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;min-height:100%;flex:1 0 auto')}>
       <div style={s('padding:16px 20px 14px;background:#fff;border-bottom:1px solid rgba(30,36,32,.07)')}>
         <div style={s('display:flex;justify-content:space-between;align-items:center;margin-bottom:10px')}>
           <div style={s('display:flex;align-items:center;gap:10px;min-width:0')}>
@@ -21,23 +59,24 @@ export function renderRecordNarrow(V) {
           </div>
           <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
             <div onClick={V.toggleMore} style={s("display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid rgba(30,36,32,.14);border-radius:8px;font:500 12.5px 'IBM Plex Sans Thai',sans-serif;cursor:pointer")}>{V.dateLabel} <span style={s('color:#9aa19c')}>▾</span></div>
-            <div onClick={V.openSettings} className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⋯</div>
+            {/* ปุ่มเกี่ยวกับ แยกออกมาเป็นปุ่มของตัวเองข้างเฟือง — พี่กันสั่ง
+                เดิมซ่อนอยู่ในหน้าตั้งค่า ต้องเลื่อนลงไปหา ไม่มีใครเจอ */}
+            <div onClick={V.openAbout} title="เกี่ยวกับ" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
+            <div onClick={V.openSettings} title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
           </div>
         </div>
 
-        <input ref={V.searchRef} value={V.query} onChange={V.onQuery} onKeyDown={V.onSearchKey} placeholder={V.searchPlaceholder} style={s('width:100%;height:50px;padding:0 14px;border:1px solid rgba(30,36,32,.16);border-radius:12px;background:#f6f7f4;font:400 15.5px Sarabun,sans-serif;color:#1e2420')} />
+        {/* ปุ่ม ✕ ล้างช่องค้นหาทีเดียว — พี่กันขอ ไม่ต้องกด Backspace รัว */}
+        <div style={s('position:relative')}>
+          <input ref={V.searchRef} value={V.query} onChange={V.onQuery} onKeyDown={V.onSearchKey} placeholder={V.searchPlaceholder} style={s('width:100%;height:50px;padding:0 46px 0 14px;border:1px solid rgba(30,36,32,.16);border-radius:12px;background:#f6f7f4;font:400 15.5px Sarabun,sans-serif;color:#1e2420')} />
+          {V.hasQuery && (
+            <div onClick={V.clearQuery} className="hv-bg-e6e" style={s('position:absolute;right:9px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;background:rgba(30,36,32,.06)')}>✕</div>
+          )}
+        </div>
 
         {V.hasResults && (
           <div style={s('margin-top:8px;border:1px solid rgba(30,36,32,.10);border-radius:12px;background:#fff;box-shadow:0 10px 26px rgba(30,36,32,.12);overflow:hidden;max-height:264px;overflow-y:auto')}>
-            {V.results.map((r) => (
-              <div key={r.name} onClick={r.pick} className="hv-bg-eef" style={s('display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(30,36,32,.06);cursor:pointer')}>
-                <div style={s('min-width:0')}>
-                  <div style={s('font:600 15px/1.3 Sarabun,sans-serif')}>{r.name}</div>
-                  <div style={sx('font:400 11.5px/1.3 Sarabun,sans-serif', { color: r.subColor })}>{r.sub}</div>
-                </div>
-                <div style={sx("font:600 13.5px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none", { color: r.priceColor })}>{r.priceLabel}</div>
-              </div>
-            ))}
+            {V.results.map((r) => renderDrugOption(r, true))}
           </div>
         )}
 
@@ -67,7 +106,7 @@ export function renderRecordNarrow(V) {
               </div>
             </div>
             {/* ผู้บันทึกล็อต — ต่อจากวันที่/HN ตามที่พี่กันสั่ง */}
-            {renderRecorderField(V, false)}
+            {renderRecorderField(V)}
           </div>
         )}
       </div>
@@ -137,14 +176,21 @@ export function renderRecordNarrow(V) {
 }
 
 // ── คอม ─────────────────────────────────────────────────────────────────────
+// 🚨 width:100% ห้ามลบ — กล่องครอบใน shell เป็น flex คอลัมน์
+// ใน flex ตัว margin:0 auto จะยกเลิกการยืดเต็มความกว้าง แล้วย่อลงเท่าเนื้อหา (เคยหดไป 347px)
+// align-items:stretch = ให้คอลัมน์ซ้ายกับแผงขวาสูงเท่ากัน กรอบขาวจะได้ไม่ลอยค้างครึ่งจอ
 export function renderRecordWide(V) {
   return (
-    <div style={s('max-width:1400px;margin:0 auto;padding:20px 26px 26px;display:flex;gap:22px;align-items:flex-start')}>
-      <div style={s('flex:1;min-width:0')}>
-        <div style={s('display:flex;gap:10px;align-items:flex-end;margin-bottom:6px')}>
+    <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:20px 26px 26px;display:flex;gap:22px;align-items:stretch;flex:1;min-height:440px')}>
+      <div style={s('flex:1;min-width:0;min-height:0;display:flex;flex-direction:column')}>
+        <div style={s('flex:none;display:flex;gap:10px;align-items:flex-end;margin-bottom:6px')}>
           <div style={s('flex:1;min-width:0;position:relative')}>
             <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:5px')}>ยา</div>
-            <input ref={V.searchRef} value={V.query} onChange={V.onQuery} onKeyDown={V.onSearchKeyDesktop} placeholder="พิมพ์ชื่อยา แล้วกด Enter" style={sx('width:100%;height:46px;padding:0 13px;border-radius:9px;background:#fff;font:500 15px Sarabun,sans-serif', { border: '1px solid ' + V.searchBorder })} />
+            <input ref={V.searchRef} value={V.query} onChange={V.onQuery} onKeyDown={V.onSearchKeyDesktop} placeholder="พิมพ์ชื่อยา แล้วกด Enter" style={sx('width:100%;height:46px;padding:0 44px 0 13px;border-radius:9px;background:#fff;font:500 15px Sarabun,sans-serif', { border: '1px solid ' + V.searchBorder })} />
+            {/* ปุ่ม ✕ ล้างช่องค้นหาทีเดียว — พี่กันขอ ไม่ต้องกด Backspace รัว */}
+            {V.hasQuery && (
+              <div onClick={V.clearQuery} className="hv-bg-e6e" style={s('position:absolute;right:8px;top:calc(50% + 9px);transform:translateY(-50%);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:400 14px Sarabun,sans-serif;color:#6b746e;cursor:pointer;background:rgba(30,36,32,.06);z-index:10')}>✕</div>
+            )}
             {/* หน้าคอมเดิมไม่มีกล่อง "ไม่พบยา" (มอคอัปก็ไม่มี) พิมพ์ผิดแล้วเงียบสนิท
                 เภสัชกรไม่รู้ว่าพิมพ์ผิดหรือระบบค้าง — ฝั่งมือถือมีอยู่แล้ว เอามาใส่ให้เหมือนกัน */}
             {V.noResults && (
@@ -155,15 +201,7 @@ export function renderRecordWide(V) {
             )}
             {V.hasResults && (
               <div style={s('position:absolute;left:0;right:0;top:100%;margin-top:6px;z-index:9;border:1px solid rgba(30,36,32,.10);border-radius:10px;background:#fff;box-shadow:0 12px 30px rgba(30,36,32,.14);overflow:hidden;max-height:290px;overflow-y:auto')}>
-                {V.results.map((r) => (
-                  <div key={r.name} onClick={r.pickInline} className="hv-bg-eef" style={sx('display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid rgba(30,36,32,.06);cursor:pointer', { background: r.rowBg })}>
-                    <div style={s('min-width:0')}>
-                      <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif')}>{r.name}</div>
-                      <div style={sx('font:400 11.5px/1.3 Sarabun,sans-serif', { color: r.subColor })}>{r.sub}</div>
-                    </div>
-                    <div style={sx("font:600 13.5px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none", { color: r.priceColor })}>{r.priceLabel}</div>
-                  </div>
-                ))}
+                {V.results.map((r) => renderDrugOption(r, false))}
               </div>
             )}
           </div>
@@ -184,12 +222,12 @@ export function renderRecordWide(V) {
           <div onClick={V.addInline} style={sx('height:46px;padding:0 20px;border-radius:9px;display:flex;align-items:center;font:600 14px Sarabun,sans-serif;cursor:pointer', { background: V.addBg, color: V.addFg })}>เพิ่ม <span style={sx("font:400 11px 'IBM Plex Sans Thai',monospace;margin-left:8px", { color: V.addHintFg })}>⏎</span></div>
         </div>
 
-        <div style={s('font:400 11.5px Sarabun,sans-serif;color:rgba(30,36,32,.45);margin-bottom:16px;min-height:16px')}>{V.desktopHint}</div>
+        <div style={s('flex:none;font:400 11.5px Sarabun,sans-serif;color:rgba(30,36,32,.45);margin-bottom:16px;min-height:16px')}>{V.desktopHint}</div>
 
         {/* แถบยาที่คืนบ่อยฝั่งคอม — มอคอัปมีเฉพาะฝั่งมือถือ (บรรทัด 76–92) พี่กันขอให้มีบนคอมด้วย
             ใช้การ์ดหน้าตาเดียวกับมือถือทุกอย่าง ต่างแค่เรียง 6 ช่องแนวนอนแทนตาราง 3 คอลัมน์ */}
         {V.hasFrequent && (
-          <div style={s('margin-bottom:16px')}>
+          <div style={s('flex:none;margin-bottom:16px')}>
             <div style={s('display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px')}>
               <span style={s("font:600 11px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.08em;color:rgba(30,36,32,.45)")}>ยาที่คืนบ่อย</span>
               <span style={s('font:400 11px Sarabun,sans-serif;color:rgba(30,36,32,.4)')}>กดเพื่อใส่จำนวน</span>
@@ -208,18 +246,35 @@ export function renderRecordWide(V) {
           </div>
         )}
 
-        <div style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px;overflow:hidden')}>
-          <div style={s("display:flex;padding:10px 16px;background:#f6f7f4;border-bottom:1px solid rgba(30,36,32,.08);font:600 11px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.06em;color:rgba(30,36,32,.5)")}>
-            <span style={s('flex:1')}>ยา</span>
-            <span style={s('width:104px;text-align:right')}>จำนวน</span>
-            <span style={s('width:104px;text-align:right')}>ราคา/หน่วย (฿)</span>
-            <span style={s('width:124px;text-align:right')}>มูลค่า (฿)</span>
-            <span style={s('width:150px;text-align:right')}>สถานะ</span>
+        {/* flex:1 = กรอบขาวยืดเต็มความสูงที่เหลือ ไม่ลอยค้างครึ่งจอ (พี่กันทัก)
+            min-height:0 = ยอมให้หดต่ำกว่าเนื้อในได้ ไม่งั้นแถวเยอะแล้วกรอบดันทั้งหน้ายาวออกไป
+            แทนที่จะเลื่อนอยู่ข้างในกรอบ */}
+        <div style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px;overflow:hidden;flex:1;min-height:0;display:flex;flex-direction:column')}>
+          {/* หัวตาราง — กดเรียงได้ + สีเข้ม ชุดเดียวกับหน้าประวัติ (พี่กันสั่งให้เหมือนกัน) */}
+          <div style={s("flex:none;display:flex;padding:11px 16px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);font:600 11.5px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.04em")}>
+            {V.rowCols.map((c) => (
+              <span
+                key={c.key}
+                onClick={c.pick}
+                className="hv-bg-e3f"
+                style={sx('display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;border-radius:5px;margin:-3px 0;padding:3px 0', Object.assign(
+                  { color: c.fg },
+                  c.flex ? { flex: 1 } : { width: c.w },
+                  c.align === 'right' ? { justifyContent: 'flex-end' } : {}
+                ))}
+              >
+                {c.label}
+                <span style={sx('font-size:9px;flex:none', { color: c.arrowColor })}>{c.arrow}</span>
+              </span>
+            ))}
             <span style={s('width:40px')}></span>
           </div>
 
+          {/* 🎯 จุดเดียวในหน้าบันทึกแบบคอมที่เลื่อนได้ (พี่กันสั่ง)
+              ช่องกรอกยา · ยาที่คืนบ่อย · หัวตาราง · แผงขวา ถูกตรึงหมด ไม่ขยับตามการเลื่อน */}
+          <div style={s('flex:1;min-height:0;overflow-y:auto')}>
           {V.noRows && (
-            <div style={s('padding:34px 16px;text-align:center')}>
+            <div style={s('min-height:100%;padding:34px 16px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center')}>
               <div style={s('font:600 15px Sarabun,sans-serif;margin-bottom:4px')}>ยังไม่มีรายการในครั้งนี้</div>
               <div style={s('font:400 12.5px/1.6 Sarabun,sans-serif;color:#6b746e')}>พิมพ์ชื่อยาด้านบน กด Enter ใส่จำนวน แล้ว Enter อีกครั้ง — ไม่ต้องแตะเมาส์</div>
             </div>
@@ -240,10 +295,13 @@ export function renderRecordWide(V) {
               <span onClick={row.remove} className="hv-fg-red" style={s('width:40px;text-align:right;color:#c0c5c1;cursor:pointer')}>✕</span>
             </div>
           ))}
+          </div>
         </div>
       </div>
 
-      <div style={s('width:296px;flex:none;background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:16px')}>
+      {/* แผงขวาถูกตรึงเช่นกัน — overflow-y:auto ไว้เผื่อจอเตี้ยมากจนของในแผงล้น
+          ให้เลื่อนอยู่ในแผงเอง ไม่ไปดันทั้งหน้าให้ยาว */}
+      <div style={s('width:296px;flex:none;min-height:0;overflow-y:auto;background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:16px')}>
         <div>
           <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:6px')}>แหล่งที่มา</div>
           <div style={s('display:flex;flex-wrap:wrap;gap:6px')}>
@@ -265,7 +323,7 @@ export function renderRecordWide(V) {
         </div>
 
         {/* ผู้บันทึกล็อต — ต่อจากวันที่/HN ตามที่พี่กันสั่ง */}
-        <div style={s('margin-top:10px')}>{renderRecorderField(V, true)}</div>
+        <div style={s('margin-top:10px')}>{renderRecorderField(V)}</div>
 
         <div style={s('border-top:1px solid rgba(30,36,32,.08);padding-top:16px;margin-top:auto')}>
           <div style={s('display:flex;align-items:center;justify-content:space-between;margin-bottom:10px')}>

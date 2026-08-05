@@ -6,6 +6,7 @@ import { historyActions } from './history';
 import { summaryActions } from './summary';
 import { settingsActions } from './settings';
 import { pricesActions } from './prices';
+import { demoActions } from './demo';
 
 export function installHandlers(app) {
   uiActions(app);
@@ -15,4 +16,5 @@ export function installHandlers(app) {
   summaryActions(app);
   settingsActions(app);
   pricesActions(app);
+  demoActions(app);
 }

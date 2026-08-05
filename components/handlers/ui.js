@@ -12,6 +12,10 @@ export function uiActions(app) {
   app.persist = (patch) => {
     app.setState(patch, () => {
       const st = app.state;
+      // 🚨 โหมดดูตัวอย่างห้ามเขียนทับร่างจริงในเครื่องเด็ดขาด
+      // หน้าบันทึกมีล็อตตัวอย่างค้างอยู่ ถ้าปล่อยให้เขียนลง localStorage
+      // ยาที่พี่กันกรอกค้างไว้จริงก่อนกดเปิดโหมดจะถูกทับหายถาวร กู้ไม่ได้
+      if (st.demo) return;
       writeLS(LS.draft, {
         v: 1,
         rows: st.rows,

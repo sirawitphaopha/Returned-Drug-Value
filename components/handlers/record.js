@@ -52,6 +52,23 @@ export function recordActions(app) {
     });
   };
 
+  // ปุ่ม ✕ ในช่องค้นหา — กดทีเดียวล้างทั้งช่อง ไม่ต้องกด Backspace รัว
+  // ล้างยาที่เลือกค้างไว้ด้วย ไม่งั้นจะเหลือยารอเพิ่มทั้งที่ช่องค้นหาว่าง ซึ่งงง
+  app.clearQuery = () => {
+    app.setState({ query: '', hi: 0, pending: null, qtyInput: '', pendingDisp: 'reuse' }, () => {
+      if (app.searchRef.current) app.searchRef.current.focus();
+    });
+  };
+
+  // กดหัวคอลัมน์ครั้งแรก = มากไปน้อย · กดซ้ำ = สลับทิศ · กดคอลัมน์อื่น = เริ่มใหม่
+  app.setRowSort = (key) => {
+    if (app.state.rowSortKey === key) {
+      app.setState({ rowSortDir: app.state.rowSortDir === 'asc' ? 'desc' : 'asc' });
+    } else {
+      app.setState({ rowSortKey: key, rowSortDir: 'desc' });
+    }
+  };
+
   app.pickInline = (drug) => {
     app.setState({ pending: drug, query: drug.name, qtyInput: '' }, () => {
       if (app.qtyRef.current) app.qtyRef.current.focus();
@@ -132,21 +149,45 @@ export function recordActions(app) {
   // "ข้อมูลเข้าฐานไปแล้วแต่คำตอบหายกลางทาง" ถ้าไม่กันไว้จะได้ข้อมูลซ้ำสองชุด
   // ── ผู้บันทึกล็อต ──────────────────────────────────────────────────────────
   // อยู่ในแผงข้างถัดจากวันที่/HN — เลือกครั้งเดียวค้างไว้ทั้งเวร ไม่มีป๊อปอัปกวน
+  // เมนูวางแบบ fixed (ลอยเหนือทุกอย่าง) ไม่ใช่ absolute ในแผง
+  // เพราะแผงข้างมีขอบของตัวเอง เมนูที่สูงกว่าที่ว่างจะโดนตัดหัวหาย
+  // จนไม่เห็นกรอบด้านบน ดูเหมือนของค้างครึ่งท่อน (พี่กันเจอกับตา)
+  //
+  // วิธี: วัดที่ว่างเหนือ/ใต้ช่องก่อน แล้วเลือกฝั่งที่ว่างกว่า
+  //       จากนั้นย่อความสูงเมนูให้พอดีกับที่ว่างจริง (กรอบครบทั้ง 4 ด้านเสมอ)
   app.toggleRecorderMenu = (e) => {
-    const open = !app.state.recorderMenuOpen;
-    // ถ้าช่องอยู่ค่อนไปทางล่างจอ ให้เมนูเด้งขึ้นบนแทน กันโดนตัดขอบล่าง
-    let up = false;
+    if (app.state.recorderMenuOpen) { app.closeRecorderMenu(); return; }
+
+    let box = null;
     try {
       const r = e && e.currentTarget && e.currentTarget.getBoundingClientRect();
-      if (r) up = r.bottom > window.innerHeight * 0.55;
-    } catch (err) { /* ไม่มี event ก็เด้งลงตามปกติ */ }
-    app.setState({ recorderMenuOpen: open, recorderMenuUp: up, recorderNew: '' });
+      if (r) {
+        const GAP = 6;      // ระยะห่างระหว่างช่องกับเมนู
+        const EDGE = 12;    // เว้นขอบจอ
+        const above = r.top - GAP - EDGE;
+        const below = window.innerHeight - r.bottom - GAP - EDGE;
+        const up = above > below;
+        box = {
+          left: Math.round(r.left),
+          width: Math.round(r.width),
+          top: Math.round(r.bottom + GAP),
+          bottom: Math.round(window.innerHeight - r.top + GAP),
+          up: up,
+          // สูงได้ไม่เกินที่ว่างจริง และไม่เกิน 300px (เท่า ME-DRP)
+          maxH: Math.max(140, Math.min(300, Math.round(up ? above : below)))
+        };
+      }
+    } catch (err) { /* วัดไม่ได้ก็ปล่อยให้เมนูใช้ค่าเริ่มต้น */ }
+
+    app.setState({ recorderMenuOpen: true, recorderBox: box, recorderNew: '', addingRecorder: false });
   };
 
-  app.closeRecorderMenu = () => app.setState({ recorderMenuOpen: false, recorderNew: '' });
+  app.closeRecorderMenu = () => app.setState({ recorderMenuOpen: false, recorderBox: null, recorderNew: '', addingRecorder: false });
+
+  app.startAddRecorder = () => app.setState({ addingRecorder: true, recorderNew: '' });
 
   app.pickRecorder = (name) => {
-    app.setState({ recorder: name, recorderMenuOpen: false, recorderNew: '' });
+    app.setState({ recorder: name, recorderMenuOpen: false, recorderNew: '', addingRecorder: false });
     app.pushSetting({ lastRecorder: name });
   };
 
@@ -157,7 +198,7 @@ export function recordActions(app) {
     const name = (app.state.recorderNew || '').trim().slice(0, 80);
     if (!name) return;
     const staff = app.state.staff.indexOf(name) < 0 ? app.state.staff.concat([name]) : app.state.staff;
-    app.setState({ staff: staff, recorder: name, recorderMenuOpen: false, recorderNew: '' });
+    app.setState({ staff: staff, recorder: name, recorderMenuOpen: false, recorderNew: '', addingRecorder: false });
     app.pushSetting({ staff: staff, lastRecorder: name });
   };
 
@@ -166,6 +207,8 @@ export function recordActions(app) {
     // ยามในหน่วยความจำ ไม่ต้องรอ setState — กันกดรัวสองครั้งแล้วได้ batchId คนละตัว
     // ซึ่งจะทำให้ระบบกันบันทึกซ้ำใช้ไม่ได้ แล้วข้อมูลเข้าฐานสองชุด
     if (!st.rows.length || st.saving || app._saving) return;
+    // 🚨 โหมดตัวอย่างห้ามบันทึกเด็ดขาด กันข้อมูลปลอมหลุดเข้าฐานจริง
+    if (st.demo) { app.toast('อยู่ในโหมดดูตัวอย่าง บันทึกไม่ได้', 'ปิดโหมดก่อน', false); return; }
 
     if (!ISO.test(st.date || '')) {
       app.toast('เลือกวันที่ก่อนบันทึก', '', false);

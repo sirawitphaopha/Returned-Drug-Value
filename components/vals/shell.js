@@ -1,5 +1,6 @@
 // ค่าของโครงนอก: พื้นหลัง · แถบเมนู · ข้อความเด้ง
-import { thaiDate } from '@/lib/format';
+import { thaiDate, money } from '@/lib/format';
+
 
 export function shellVals(app, d) {
   const st = d.st;
@@ -11,13 +12,20 @@ export function shellVals(app, d) {
     wide: d.wide,
     narrow: !d.wide,
     recordNarrow: st.screen === 'record' && !d.wide,
+
+    // 🚨 หน้าบันทึกแบบคอม = หน้าเดียวที่ "ล็อกความสูงเท่าจอ" ไม่ให้ทั้งหน้าเลื่อน
+    //    ของทุกอย่างถูกตรึง เหลือแค่ในกรอบรายการที่เลื่อนได้ (พี่กันสั่ง)
+    //    หน้าอื่นยังเลื่อนทั้งหน้าตามปกติ ดูวิธีสลับที่ shell.jsx
+    fitScreen: st.screen === 'record' && d.wide,
     isRecord: st.screen === 'record',
     isHistory: st.screen === 'history',
     isSummary: st.screen === 'summary',
+    // cls = คลาสของแท็บฝั่งคอม · .tab-btn ให้กรอบจาง ๆ · .on บอกว่าแท็บนี้เปิดอยู่
+    //       (ตัวที่เปิดอยู่ห้ามเปลี่ยนสีตอนเอาเมาส์ชี้ ดู globals.css)
     tabs: [
-      { label: 'บันทึก', radius: '5px', fg: st.screen === 'record' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'record' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'record' ? '#2f7d5d' : '#8d948f', pick: pickScreen('record') },
-      { label: 'ประวัติ', radius: '50%', fg: st.screen === 'history' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'history' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'history' ? '#2f7d5d' : '#8d948f', pick: pickScreen('history') },
-      { label: 'สรุป', radius: '3px', fg: st.screen === 'summary' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'summary' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'summary' ? '#2f7d5d' : '#8d948f', pick: pickScreen('summary') }
+      { label: 'บันทึก', radius: '5px', on: st.screen === 'record', cls: st.screen === 'record' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'record' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'record' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'record' ? '#2f7d5d' : '#8d948f', pick: pickScreen('record') },
+      { label: 'ประวัติ', radius: '50%', on: st.screen === 'history', cls: st.screen === 'history' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'history' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'history' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'history' ? '#2f7d5d' : '#8d948f', pick: pickScreen('history') },
+      { label: 'สรุป', radius: '3px', on: st.screen === 'summary', cls: st.screen === 'summary' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'summary' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'summary' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'summary' ? '#2f7d5d' : '#8d948f', pick: pickScreen('summary') }
     ],
 
     orgName: st.orgName,
@@ -27,15 +35,32 @@ export function shellVals(app, d) {
     closeSettings: () => app.setState({ settingsOpen: false, favQuery: '' }),
 
     // สวิตช์บังคับดูแบบมือถือบนคอม (มอคอัปบรรทัด 655–663 · 1361–1367)
-    // โชว์เฉพาะตอนจอกว้างจริง บนมือถือไม่มีประโยชน์
-    showLayoutSwitch: st.vw >= 960,
+    // 🚨 ต้องผ่าน 2 ด่าน: จอกว้างจริง + มีเมาส์จริง
+    // ด่านความกว้างอย่างเดียวไม่พอ แท็บเล็ตแนวนอน 1024px จะหลุดขึ้นมาบังจอ (พี่กันสั่ง)
+    showLayoutSwitch: st.vw >= 960 && st.hasMouse,
     anyModalOpen: !!(st.confirm || st.sheet || st.settingsOpen),
-    layoutDeskBg: st.forceNarrow ? 'transparent' : '#1e2420',
+    // สีปุ่มที่เลือกอยู่ใช้เขียวของเว็บ ไม่ใช่ดำแบบมอคอัป — ชุดเดียวกับปุ่มเพิ่ม/แหล่งที่มา
+    layoutDeskBg: st.forceNarrow ? 'transparent' : '#2f7d5d',
     layoutDeskFg: st.forceNarrow ? '#6b746e' : '#fff',
-    layoutMobBg: st.forceNarrow ? '#1e2420' : 'transparent',
+    layoutMobBg: st.forceNarrow ? '#2f7d5d' : 'transparent',
     layoutMobFg: st.forceNarrow ? '#fff' : '#6b746e',
     useDesktop: () => app.setState({ forceNarrow: false }),
     useMobile: () => app.setState({ forceNarrow: true }),
+
+    // ── โหมดดูตัวอย่าง ──────────────────────────────────────────────────────
+    demo: !!st.demo,
+    toggleDemo: app.toggleDemo,
+    demoBtnLabel: st.demo ? 'กำลังดูข้อมูลตัวอย่าง — กดเพื่อปิด' : 'เปิดโหมดดูตัวอย่าง',
+    demoHint: st.demo
+      ? 'ข้อมูลชุดนี้เป็นของสมมติที่สร้างในเครื่อง ไม่ได้อยู่ในฐานข้อมูลจริง และบันทึกอะไรไม่ได้ระหว่างเปิดโหมดนี้'
+      : 'สร้างข้อมูลสมมติทั้งปีงบให้ดูว่าเว็บทำงานเต็มที่แล้วหน้าตาเป็นยังไง ข้อมูลอยู่ในเครื่องอย่างเดียว ไม่ถูกส่งขึ้นฐานข้อมูล',
+    demoBanner: 'กำลังดูข้อมูลตัวอย่าง — ตัวเลขทั้งหมดเป็นของสมมติ ไม่ได้อยู่ในฐานข้อมูลจริง',
+
+    isAbout: st.screen === 'about',
+    footerYear: (Number((st.today || '').slice(0, 4)) || new Date().getFullYear()) + 543,
+    aboutStat: 'ในระบบ: ' + Number(st.fy.records || 0).toLocaleString('en-US') + ' รายการ · ประหยัดสะสม ' + money(st.fy.saved || 0),
+    openAbout: app.openAbout,
+    closeAbout: app.closeAbout,
 
     toastOpen: !!st.toast,
     toastText: st.toast ? st.toast.text : '',

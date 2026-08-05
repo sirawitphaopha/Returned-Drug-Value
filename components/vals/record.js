@@ -2,9 +2,41 @@
 // ต่างจากต้นฉบับ 3 จุด: ตัดเลขคงคลังปลอม · ตัดสวิตช์จำลองเน็ตหลุด
 // · ยอดสะสมปีงบมาจากฐานข้อมูล ไม่ได้นับจากรายการในเครื่อง
 import { SOURCES, money, thaiDate } from '@/lib/format';
-import { cleanQty, qtyNum } from '../helpers';
+import { cleanQty, qtyNum, splitDrugName, markMatch } from '../helpers';
 
 const sumReuse = (rows) => rows.reduce((a, x) => a + (x.disposition === 'reuse' ? x.price * x.qty : 0), 0);
+
+// หัวตารางรายการในครั้งนี้ — กดเรียงได้เหมือนหน้าประวัติ
+const ROW_COLS = [
+  { key: 'name', label: 'ยา', w: '', align: 'left', flex: true },
+  { key: 'qty', label: 'จำนวน', w: '104px', align: 'right' },
+  { key: 'price', label: 'ราคา/หน่วย (฿)', w: '104px', align: 'right' },
+  { key: 'value', label: 'มูลค่า (฿)', w: '124px', align: 'right' },
+  { key: 'disposition', label: 'สถานะ', w: '150px', align: 'right' }
+];
+
+const ROW_VAL = {
+  name: (r) => r.name || '',
+  qty: (r) => Number(r.qty) || 0,
+  price: (r) => Number(r.price) || 0,
+  value: (r) => (Number(r.price) || 0) * (Number(r.qty) || 0),
+  disposition: (r) => (r.disposition === 'reuse' ? 0 : 1)
+};
+
+// เรียงในเครื่อง · ไม่เรียง = เรียงตามลำดับที่กดเพิ่ม (เหมือนเดิม)
+// ตัวหนังสือใช้ localeCompare('th') ไม่งั้น ก ข ค เรียงมั่ว
+function sortRows(rows, key, dir) {
+  if (!key || !ROW_VAL[key]) return rows;
+  return rows.slice().sort((a, b) => {
+    const va = ROW_VAL[key](a);
+    const vb = ROW_VAL[key](b);
+    let c;
+    if (typeof va === 'number' && typeof vb === 'number') c = va - vb;
+    else c = String(va).localeCompare(String(vb), 'th');
+    if (c === 0) c = a.rid - b.rid;
+    return dir === 'asc' ? c : -c;
+  });
+}
 
 export function recordVals(app, d) {
   const st = d.st;
@@ -27,6 +59,8 @@ export function recordVals(app, d) {
     searchPlaceholder: 'ค้นชื่อยา (' + st.drugs.length + ' รายการ)',
     // พิมพ์ใหม่ = เด้งไฮไลต์กลับไปแถวแรกเสมอ
     onQuery: (e) => app.setState({ query: e.target.value, hi: 0 }),
+    hasQuery: !!st.query,
+    clearQuery: app.clearQuery,
     onSearchKey: (e) => { if (e.key === 'Enter' && d.results.length) { e.preventDefault(); app.openSheet(d.results[d.hi] || d.results[0]); } },
     onSearchKeyDesktop: (e) => {
       // ลูกศรขึ้น/ลงเลื่อนเลือกในรายการผลค้นหา — เดิมกด Enter ได้ตัวแรกเสมอ
@@ -48,18 +82,30 @@ export function recordVals(app, d) {
     noResults: d.q.length >= 2 && d.results.length === 0,
     noResultsHint: 'ไม่พบยาชื่อนี้ ลองพิมพ์ชื่อสามัญ',
     openOffListDrug: app.openOffListDrug,
-    results: d.results.map((drug, i) => ({
-      name: drug.name,
-      // มอคอัปโชว์ "หน่วย · คงคลัง 1234" ซึ่งเป็นเลขมั่วของเดโม ตัดออกแล้ว
-      // ยาที่ยังไม่ใส่ราคาให้ขึ้นป้ายเตือนตรงนี้แทน
-      sub: drug.hasPrice ? drug.unit : drug.unit + ' · ยังไม่ใส่ราคา',
-      subColor: drug.hasPrice ? '#6b746e' : '#c2543c',
-      priceLabel: drug.price.toFixed(2) + ' ฿/' + drug.unit,
-      priceColor: drug.hasPrice ? '#2f7d5d' : '#c2543c',
-      rowBg: i === d.hi ? '#eef6f1' : '#fff',
-      pick: () => app.openSheet(drug),
-      pickInline: () => app.pickInline(drug)
-    })),
+    results: d.results.map((drug, i) => {
+      // แยกชื่อกับความแรง แล้วไฮไลต์คำที่พิมพ์ค้น — ตาไล่หาง่ายขึ้นมาก
+      const sp = splitDrugName(drug.name);
+      const mk = markMatch(sp.base, d.q);
+      return {
+        name: drug.name,
+        base: sp.base,
+        strength: sp.strength,
+        mkBefore: mk[0],
+        mkHit: mk[1],
+        mkAfter: mk[2],
+        // มอคอัปโชว์ "หน่วย · คงคลัง 1234" ซึ่งเป็นเลขมั่วของเดโม ตัดออกแล้ว
+        unitLabel: drug.unit,
+        noPrice: !drug.hasPrice,
+        // ยาที่ยังไม่ใส่ราคา ฝั่งขวาโชว์แค่ขีด — ข้อความเตือนอยู่ที่ป้ายแดงฝั่งซ้ายแล้ว
+        // (ถ้าเขียนทั้งสองที่จะกลายเป็น "ยังไม่ใส่ราคา ยังไม่ใส่ราคา" ในแถวเดียว)
+        priceLabel: drug.hasPrice ? drug.price.toFixed(2) + ' ฿' : '—',
+        priceSub: drug.hasPrice ? 'ต่อ ' + drug.unit : '',
+        priceColor: drug.hasPrice ? '#2f7d5d' : '#c0c5c1',
+        rowBg: i === d.hi ? '#eef6f1' : '#fff',
+        pick: () => app.openSheet(drug),
+        pickInline: () => app.pickInline(drug)
+      };
+    }),
 
     // ── ยาที่คืนบ่อย ──────────────────────────────────────────────────────────
     frequent: st.favIds
@@ -67,10 +113,12 @@ export function recordVals(app, d) {
       .filter(Boolean)
       .slice(0, 6)
       .map((drug) => {
-        const m = drug.name.match(/^(.*?)\s(\d[\w./ ]*)$/);
+        // ใช้ตัวแยกชื่อตัวเดียวกับผลค้นหา — ตัวเดิมแยกยาสูตรผสมผิดจุด
+        // ("Amoxicillin + Clavulanic acid 875 +" / "125 mg" มี + ห้อยท้าย)
+        const sp = splitDrugName(drug.name);
         return {
-          base: m ? m[1] : drug.name,
-          strength: m ? m[2] : ' ',
+          base: sp.base,
+          strength: sp.strength || ' ',
           priceLabel: drug.price.toFixed(2) + ' ฿',
           priceColor: drug.hasPrice ? '#6b746e' : '#c2543c',
           // มือถือ = เปิดป๊อปอัปใส่จำนวน · คอม = ยัดเข้าช่องรอเพิ่มแล้วเด้งไปช่องจำนวน
@@ -129,7 +177,22 @@ export function recordVals(app, d) {
         : 'เลือก ' + pending.name + ' แล้ว — ใส่จำนวนเป็น ' + pending.unit + ' แล้วกด Enter',
 
     // ── รายการที่กองอยู่ในครั้งนี้ ───────────────────────────────────────────
-    rows: st.rows.map((r) => {
+    // หัวตารางกดเรียงได้ ชุดเดียวกับหน้าประวัติ (พี่กันสั่งให้เหมือนกัน)
+    rowCols: ROW_COLS.map((c) => {
+      const on = st.rowSortKey === c.key;
+      return {
+        key: c.key,
+        label: c.label,
+        w: c.w,
+        flex: !!c.flex,
+        align: c.align,
+        arrow: on ? (st.rowSortDir === 'asc' ? '▲' : '▼') : '↕',
+        arrowColor: on ? '#2f7d5d' : 'rgba(30,36,32,.28)',
+        fg: on ? '#2f7d5d' : '#414a44',
+        pick: () => app.setRowSort(c.key)
+      };
+    }),
+    rows: sortRows(st.rows, st.rowSortKey, st.rowSortDir).map((r) => {
       const reuse = r.disposition === 'reuse';
       const drug = st.drugs.find((x) => x.id === r.drugId) || r;
       return {

@@ -73,7 +73,9 @@ export function summaryVals(app, d) {
     setDark: () => app.setTheme(true),
 
     exportCsv: app.exportCsv,
-    exportLabel: st.exporting ? 'กำลังสร้างไฟล์' : 'Export Excel',
+    // มอคอัปเขียน "Export Excel" แต่ไฟล์ที่ได้เป็น .csv → ผู้ใช้คาดว่าจะได้ .xlsx แล้วงง
+    // เปลี่ยนป้ายให้ตรงกับของจริง (ไฟล์ CSV เปิดใน Excel ได้ปกติ มี BOM ภาษาไทยไม่เพี้ยน)
+    exportLabel: st.exporting ? 'กำลังสร้างไฟล์' : 'ส่งออกไฟล์ CSV',
 
     // st.sumLoading เดิมถูกตั้งค่าไว้แต่ไม่มีใครเอาไปใช้เลย → หน้าสรุปเลยโชว์ 0.00
     // กราฟ 12 แท่งว่าง แยกไม่ออกว่า "ยังไม่มีข้อมูล" หรือ "เน็ตช้ายังโหลดไม่เสร็จ"

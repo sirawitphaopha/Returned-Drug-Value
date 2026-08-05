@@ -20,6 +20,7 @@ export function dataActions(app) {
   };
 
   app.boot = async () => {
+    if (app.state.demo) return;      // โหมดตัวอย่างไม่ดึงของจริงมาทับ
     try {
       const res = await fetchT('/api/bootstrap');
       const data = await res.json();
@@ -55,6 +56,7 @@ export function dataActions(app) {
   // ใช้ /api/summary ไม่ใช่ /api/bootstrap เพราะ bootstrap ลากยา 417 ตัวมาด้วยทุกครั้ง
   // ทั้งที่ต้องการแค่ตัวเลข 4 ตัว
   app.refreshFy = async () => {
+    if (app.state.demo) return;
     try {
       const res = await fetchT('/api/summary');
       const data = await res.json();

@@ -37,10 +37,32 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
 .tap{position:relative}
 .tap::before{content:'';position:absolute;inset:-11px;z-index:1}
 
+/* ปุ่มส่งออก CSV สีเทล — เข้มขึ้นตอนเอาเมาส์ชี้ */
+.hv-teal:hover{background:#24614a !important}
+
+/* ── แถบเมนู 3 แท็บ (บันทึก · ประวัติ · สรุป) ────────────────────────────────
+   พี่กันขอให้มีกรอบจาง ๆ ให้เห็นว่าเป็นปุ่ม แล้วเข้มขึ้นตอนเอาเมาส์ชี้
+   :not(.on) = แท็บที่กำลังเปิดอยู่ไม่ต้องเปลี่ยน มีสีพื้นเข้มของตัวเองแล้ว */
+.tab-btn{border:1px solid rgba(30,36,32,.10);transition:background .12s,border-color .12s,color .12s}
+.tab-btn.on{border-color:rgba(47,125,93,.30)}
+.tab-btn:not(.on):hover{background:#e3f0e8 !important;border-color:rgba(47,125,93,.34) !important;color:#2f7d5d !important}
+
+/* ── แถบกรองติดบนตอนเลื่อน (หน้าประวัติ แบบคอม) ──────────────────────────────
+   ชื่อหน้า + ช่องค้น + ปุ่มช่วงเวลา + ช่วงวันที่ + ถังขยะ + ส่งออก CSV
+   เลื่อนดูแถวที่ 200 แล้วอยากเปลี่ยนช่วงเวลา ไม่ต้องเลื่อนกลับขึ้นบนสุด
+
+   margin ลบ + padding เท่ากัน = แผ่ทับระยะขอบของหน้า (20px บน · 26px ข้าง)
+   ไม่งั้นแถวจะโผล่ให้เห็นตรงร่องขอบตอนเลื่อนผ่านใต้แถบ */
+.hist-head{position:sticky;top:0;z-index:5;background:#f6f7f4;
+  margin:-20px -26px 0;padding:20px 26px 2px}
+
 /* ── หัวตารางติดบนตอนเลื่อน ───────────────────────────────────────────────────
    ตารางประวัติแสดงได้ 60 แถว จอสูง 900px เห็นราว 12 แถว
-   เลื่อนลงไปหัวตารางหายหมด ไม่รู้ว่าคอลัมน์ไหนคือ "ราคา/หน่วย" ไหนคือ "มูลค่า" */
-.sticky-head{position:sticky;top:0;z-index:3}
+   เลื่อนลงไปหัวตารางหายหมด ไม่รู้ว่าคอลัมน์ไหนคือ "ราคา/หน่วย" ไหนคือ "มูลค่า"
+
+   --histhead = ความสูงจริงของแถบกรองด้านบน วัดด้วย ResizeObserver ใน MedReturnApp
+   ตั้งตายตัวไม่ได้เพราะแถบกรองขึ้นบรรทัดใหม่เองเมื่อจอแคบลง (flex-wrap) */
+.sticky-head{position:sticky;top:var(--histhead,0px);z-index:3}
 
 /* ── ป๊อปอัปหนีแป้นพิมพ์บนมือถือ ───────────────────────────────────────────────
    ค่านี้ถูกตั้งจาก JS ตามความสูงจริงของแป้นพิมพ์ (window.visualViewport)

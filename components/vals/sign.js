@@ -10,14 +10,19 @@ export function signVals(app, d) {
   return {
     recorderName: st.recorder || '',
     recorderMenuOpen: !!st.recorderMenuOpen,
-    // เมนูเด้งขึ้นบนถ้าช่องอยู่ค่อนไปทางล่างจอ กันโดนตัดขอบ
-    recorderMenuUp: !!st.recorderMenuUp,
+    // ตำแหน่ง+ความสูงของเมนู วัดจากที่ว่างจริงตอนกดเปิด
+    // (วางแบบ fixed จะได้ไม่โดนขอบแผงตัดหัวหาย เห็นกรอบครบทั้ง 4 ด้าน)
+    recorderBox: st.recorderBox,
     recorderList: st.staff.map((name) => ({
       name: name,
       on: st.recorder === name,
       pick: () => app.pickRecorder(name)
     })),
     recorderNew: st.recorderNew,
+    // ช่องพิมพ์ชื่อใหม่ กางเฉพาะตอนกด "+ เพิ่มชื่อใหม่" ไม่กางค้างไว้ตลอด
+    // (เดิมกางค้าง ทำให้เมนูสูงเกินจนล้นจอ ดูรก)
+    addingRecorder: !!st.addingRecorder,
+    startAddRecorder: app.startAddRecorder,
     canAddRecorder: !!typed,
     onRecorderNew: app.onRecorderNew,
     onRecorderNewKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); app.addRecorder(); } },
