@@ -20,7 +20,7 @@ export function settingsVals(app, d) {
 
     defaultSources: SOURCES.map((sc) => ({
       label: sc.label,
-      bg: st.defaultSource === sc.key ? '#1e2420' : '#f0f1ee',
+      bg: st.defaultSource === sc.key ? '#2f7d5d' : '#f0f1ee',
       fg: st.defaultSource === sc.key ? '#fff' : '#414a44',
       pick: () => app.pickDefaultSource(sc.key)
     })),
@@ -51,7 +51,7 @@ export function settingsVals(app, d) {
 
     themeLightBg: d.dark ? '#f0f1ee' : '#1e2420',
     themeLightFg: d.dark ? '#414a44' : '#fff',
-    themeDarkBg: d.dark ? '#1e2420' : '#f0f1ee',
+    themeDarkBg: d.dark ? '#2f7d5d' : '#f0f1ee',
     themeDarkFg: d.dark ? '#fff' : '#414a44',
     setLight: () => app.setTheme(false),
     setDark: () => app.setTheme(true),

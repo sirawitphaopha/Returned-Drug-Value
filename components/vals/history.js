@@ -13,10 +13,11 @@ export function historyVals(app, d) {
     { key: 'today', label: 'วันนี้' },
     { key: 'week', label: '7 วัน' },
     { key: 'month', label: 'เดือนนี้' },
-    { key: 'fy', label: 'ปีงบ ' + (st.today ? fyOf(st.today) : '') }
+    { key: 'fy', label: 'ปีงบ ' + (st.today ? fyOf(st.today) : '—') }
   ];
 
-  const rows = st.histRows;
+  // แถวหลัก + แถวที่กด "ดูเพิ่ม" มาต่อท้าย
+  const rows = st.histMore.length ? st.histRows.concat(st.histMore) : st.histRows;
 
   // จัดกลุ่มรายวันสำหรับมือถือ — แถวมาจากเซิร์ฟเวอร์เรียงวันใหม่→เก่าอยู่แล้ว
   const dayMap = {};
@@ -32,14 +33,18 @@ export function historyVals(app, d) {
     return {
       key: r.id,
       name: r.name,
-      detail: r.qty + ' ' + r.unit + ' × ' + price.toFixed(2) + ' · ' + srcLabel(r.source) + (r.hn ? ' · HN ' + r.hn : ''),
+      // บนมือถือคอลัมน์แคบมาก ตัดชื่อแหล่งที่มาออกจากบรรทัดรายละเอียด
+      // (ยังดูได้ในหน้าคอม) เหลือแค่ข้อมูลที่จำเป็นจริง ๆ
+      detail: r.qty + ' ' + r.unit + ' × ' + price.toFixed(2) + (r.hn ? ' · HN ' + r.hn : '') + (r.lot ? ' · ' + r.lot : ''),
       valueLabel: money(price * r.qty),
       color: reuse ? '#2f7d5d' : '#c2543c',
       dispLabel: reuse ? 'ใช้ต่อได้' : 'ทำลาย',
       dispColor: reuse ? '#9aa19c' : '#c2543c',
       border: reuse ? 'rgba(30,36,32,.08)' : 'rgba(194,84,60,.22)',
+      inTrash: !!r.deletedAt,
       edit: () => app.editRecord(r),
-      remove: () => app.askDeleteRecord(r)
+      remove: () => app.askDeleteRecord(r),
+      restore: () => app.askRestoreRecord(r)
     };
   };
 
@@ -49,7 +54,7 @@ export function historyVals(app, d) {
     ranges: rangeDefs.map((r) => ({
       key: r.key,
       label: r.label,
-      bg: st.histRange === r.key ? '#1e2420' : '#f0f1ee',
+      bg: st.histRange === r.key ? '#2f7d5d' : '#f0f1ee',
       fg: st.histRange === r.key ? '#fff' : '#414a44',
       pick: () => app.setHistRange(r.key)
     })),
@@ -78,8 +83,12 @@ export function historyVals(app, d) {
         dispFg: reuse ? '#2f7d5d' : '#c2543c',
         sourceLabel: srcLabel(r.source),
         hnLabel: r.hn || '—',
+        byLabel: r.by || '—',
+        lotLabel: r.lot || '—',
+        inTrash: !!r.deletedAt,
         edit: () => app.editRecord(r),
-        remove: () => app.askDeleteRecord(r)
+        remove: () => app.askDeleteRecord(r),
+        restore: () => app.askRestoreRecord(r)
       };
     }),
 
@@ -88,8 +97,39 @@ export function historyVals(app, d) {
     histEmpty: !st.histLoading && !rows.length,
     histCountLabel: st.histTotal.toLocaleString('en-US') + ' รายการ',
     histTotalLabel: money(st.histSaved),
-    histTruncated: st.histTotal > HIST_LIMIT,
-    histTruncLabel: 'แสดง ' + HIST_LIMIT + ' จาก ' + st.histTotal.toLocaleString('en-US') + ' รายการ — กรองช่วงวันที่ให้แคบลง',
+    histTruncated: st.histTotal > rows.length,
+    histTruncLabel: 'แสดง ' + rows.length.toLocaleString('en-US') + ' จาก ' + st.histTotal.toLocaleString('en-US') + ' รายการ',
+    loadMoreHistory: app.loadMoreHistory,
+    loadMoreLabel: st.histLoading ? 'กำลังโหลด' : 'ดูเพิ่มอีก 60 รายการ',
+
+    // ── ถังขยะ · ดูรายล็อต · ช่วงวันที่เลือกเอง ─────────────────────────────
+    histTrash: st.histTrash,
+    toggleTrash: app.toggleTrash,
+    trashLabel: st.histTrash ? 'กลับไปดูรายการปกติ' : 'ถังขยะ',
+    histLot: st.histLot,
+    clearLot: () => app.viewLot(''),
+    histFrom: st.histFrom,
+    histTo: st.histTo,
+    onHistFrom: app.onHistFrom,
+    onHistTo: app.onHistTo,
+    isCustomRange: st.histRange === 'custom',
+    histTitle: st.histTrash
+      ? 'ถังขยะ — รายการที่ลบไปแล้ว'
+      : st.histLot ? 'ล็อต ' + st.histLot : '',
+    histEmptyLabel: st.histTrash ? 'ถังขยะว่าง ไม่มีรายการที่ถูกลบ' : 'ไม่พบรายการตามเงื่อนไขนี้',
+
+    // รายการล็อต
+    lots: st.lots.map((l) => ({
+      key: l.lot,
+      lot: l.lot,
+      dateLabel: thaiDate(l.date),
+      by: l.by || '—',
+      itemsLabel: l.items + ' รายการ',
+      savedLabel: money(Number(l.saved || 0)),
+      open: () => app.viewLot(l.lot)
+    })),
+    lotsLoading: st.lotsLoading,
+    loadLots: app.loadLots,
 
     confirmOpen: !!st.confirm,
     confirmTitle: st.confirm ? st.confirm.title : '',

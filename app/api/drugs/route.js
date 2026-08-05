@@ -9,6 +9,7 @@ export async function GET() {
     const drugs = await loadCatalog();
     return NextResponse.json({ drugs: drugs });
   } catch (e) {
-    return NextResponse.json({ error: e.message || 'โหลดรายการยาไม่สำเร็จ' }, { status: 500 });
+    console.error('[api]', e);
+    return NextResponse.json({ error: 'โหลดรายการยาไม่สำเร็จ' }, { status: 500 });
   }
 }

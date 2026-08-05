@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "returned-drug-value",
+  // ต้องตรงกับชื่อ Worker บน Cloudflare เป๊ะ ไม่งั้น deploy จากเครื่องจะไปสร้างโปรเจกต์ใหม่อีกอัน
+  "name": "returndrug-pkh",
   "main": ".open-next/worker.js",
   "compatibility_date": "2025-03-25",
   "compatibility_flags": ["nodejs_compat"],

@@ -1,6 +1,7 @@
 // หน้าบันทึก — คัดจากมอคอัป มือถือ (บรรทัด 28–123) คอม (124–220) แถบบันทึกล่างจอมือถือ (541–565)
 // ตัดออกตามที่ตกลงไว้: สวิตช์จำลองเน็ตหลุด (ของเดโม) และเลขคงคลังปลอมใต้ชื่อยา
 import { s, sx } from '../helpers';
+import { renderRecorderField } from './recorder';
 
 // ── มือถือ ──────────────────────────────────────────────────────────────────
 export function renderRecordNarrow(V) {
@@ -41,7 +42,10 @@ export function renderRecordNarrow(V) {
         )}
 
         {V.noResults && (
-          <div style={s('margin-top:8px;padding:13px 14px;border:1px dashed rgba(30,36,32,.18);border-radius:12px;font:400 13px Sarabun,sans-serif;color:#6b746e')}>ไม่พบยาชื่อนี้ ลองพิมพ์ชื่อสามัญ เช่น amlo, metf, insu</div>
+          <div style={s('margin-top:8px;padding:13px 14px;border:1px dashed rgba(30,36,32,.18);border-radius:12px;text-align:center')}>
+            <div style={s('font:400 13px Sarabun,sans-serif;color:#6b746e;margin-bottom:9px')}>ไม่พบยาชื่อนี้ ลองพิมพ์ชื่อสามัญ เช่น amlo, metf, insu</div>
+            <div onClick={V.openOffListDrug} className="tap" style={s('display:inline-flex;align-items:center;padding:9px 16px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>ยาอื่น — พิมพ์ชื่อเอง</div>
+          </div>
         )}
 
         <div style={s('display:flex;gap:7px;margin-top:10px;flex-wrap:wrap')}>
@@ -62,6 +66,8 @@ export function renderRecordNarrow(V) {
                 <input value={V.hn} onChange={V.onHn} inputMode="numeric" placeholder="ปล่อยว่างได้" style={s("width:100%;height:42px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 14px 'IBM Plex Sans Thai',sans-serif")} />
               </div>
             </div>
+            {/* ผู้บันทึกล็อต — ต่อจากวันที่/HN ตามที่พี่กันสั่ง */}
+            {renderRecorderField(V, false)}
           </div>
         )}
       </div>
@@ -95,24 +101,32 @@ export function renderRecordNarrow(V) {
         {V.noRows && (
           <div style={s('text-align:center;padding:24px 12px;border:1px dashed rgba(30,36,32,.16);border-radius:12px')}>
             <div style={s('font:600 15px Sarabun,sans-serif;margin-bottom:4px')}>ยังไม่มีรายการในครั้งนี้</div>
-            <div style={s('font:400 12.5px/1.6 Sarabun,sans-serif;color:#6b746e')}>ค้นชื่อยาด้านบน หรือแตะยาที่คืนบ่อย</div>
+            {/* ถ้ายังไม่ได้ตั้งยาที่คืนบ่อย อย่าบอกให้ไปแตะสิ่งที่ไม่มีอยู่บนจอ */}
+            <div style={s('font:400 12.5px/1.6 Sarabun,sans-serif;color:#6b746e')}>{V.emptyHint}</div>
           </div>
         )}
 
+        {/* ต่างจากมอคอัปโดยจำเป็น: มอคอัปวางชื่อยากับปุ่มไว้บรรทัดเดียวกัน
+            ซึ่งทำงานได้ที่จอ 430px กับชื่อยาสั้น ๆ ของเดโมเท่านั้น
+            ของจริงที่ 360px คอลัมน์ชื่อเหลือ 83px "Amoxicillin + Clavulanic acid 875 + 125 mg"
+            แตกเป็น 4 บรรทัด และถ้ามูลค่าหลักล้านจะล้นไปทับปุ่มใช้ต่อ/ทำลาย
+            → แยกชื่อยาขึ้นบรรทัดบนเต็มความกว้าง ปุ่มกับตัวเลขลงบรรทัดล่าง */}
         <div style={s('display:flex;flex-direction:column;gap:7px')}>
           {V.rows.map((row) => (
-            <div key={row.rid} style={sx('background:#fff;border-radius:11px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:9px', { border: '1px solid ' + row.border })}>
-              <div onClick={row.edit} style={s('min-width:0;flex:1;cursor:pointer')}>
-                <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif')}>{row.name}</div>
+            <div key={row.rid} style={sx('background:#fff;border-radius:11px;padding:10px 12px', { border: '1px solid ' + row.border })}>
+              <div onClick={row.edit} style={s('min-width:0;cursor:pointer;margin-bottom:7px')}>
+                <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif;overflow-wrap:anywhere')}>{row.name}</div>
                 <div style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums')}>{row.detail}</div>
               </div>
-              <div style={s('display:flex;align-items:center;gap:8px;flex:none')}>
-                <div style={sx('display:flex;padding:2px;border-radius:7px', { background: row.pillBg })}>
-                  <div onClick={row.setReuse} style={sx('padding:3px 7px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.reuseBg, color: row.reuseFg })}>ใช้ต่อ</div>
-                  <div onClick={row.setDestroy} style={sx('padding:3px 7px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.destroyBg, color: row.destroyFg })}>ทำลาย</div>
+              <div style={s('display:flex;align-items:center;justify-content:space-between;gap:8px')}>
+                <div style={sx('display:flex;padding:2px;border-radius:7px;flex:none', { background: row.pillBg })}>
+                  <div onClick={row.setReuse} className="tap" style={sx('padding:5px 10px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.reuseBg, color: row.reuseFg })}>ใช้ต่อ</div>
+                  <div onClick={row.setDestroy} className="tap" style={sx('padding:5px 10px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.destroyBg, color: row.destroyFg })}>ทำลาย</div>
                 </div>
-                <div style={sx("font:600 15px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;text-align:right;min-width:74px", { color: row.color })}>{row.valueLabel}</div>
-                <div onClick={row.remove} className="hv-del" style={s('width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#c0c5c1;cursor:pointer;font:400 13px Sarabun,sans-serif')}>✕</div>
+                <div style={s('display:flex;align-items:center;gap:8px;min-width:0')}>
+                  <div style={sx("font:600 15px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;text-align:right", { color: row.color })}>{row.valueLabel}</div>
+                  <div onClick={row.remove} className="hv-del tap" style={s('width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#c0c5c1;cursor:pointer;font:400 14px Sarabun,sans-serif;flex:none')}>✕</div>
+                </div>
               </div>
             </div>
           ))}
@@ -131,6 +145,14 @@ export function renderRecordWide(V) {
           <div style={s('flex:1;min-width:0;position:relative')}>
             <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:5px')}>ยา</div>
             <input ref={V.searchRef} value={V.query} onChange={V.onQuery} onKeyDown={V.onSearchKeyDesktop} placeholder="พิมพ์ชื่อยา แล้วกด Enter" style={sx('width:100%;height:46px;padding:0 13px;border-radius:9px;background:#fff;font:500 15px Sarabun,sans-serif', { border: '1px solid ' + V.searchBorder })} />
+            {/* หน้าคอมเดิมไม่มีกล่อง "ไม่พบยา" (มอคอัปก็ไม่มี) พิมพ์ผิดแล้วเงียบสนิท
+                เภสัชกรไม่รู้ว่าพิมพ์ผิดหรือระบบค้าง — ฝั่งมือถือมีอยู่แล้ว เอามาใส่ให้เหมือนกัน */}
+            {V.noResults && (
+              <div style={s('position:absolute;left:0;right:0;top:100%;margin-top:6px;z-index:9;border:1px dashed rgba(30,36,32,.18);border-radius:10px;background:#fff;padding:14px;text-align:center')}>
+                <div style={s('font:400 13px Sarabun,sans-serif;color:#6b746e;margin-bottom:9px')}>{V.noResultsHint}</div>
+                <div onClick={V.openOffListDrug} className="tap" style={s('display:inline-flex;align-items:center;padding:9px 16px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>ยาอื่น — พิมพ์ชื่อเอง</div>
+              </div>
+            )}
             {V.hasResults && (
               <div style={s('position:absolute;left:0;right:0;top:100%;margin-top:6px;z-index:9;border:1px solid rgba(30,36,32,.10);border-radius:10px;background:#fff;box-shadow:0 12px 30px rgba(30,36,32,.14);overflow:hidden;max-height:290px;overflow-y:auto')}>
                 {V.results.map((r) => (
@@ -163,6 +185,28 @@ export function renderRecordWide(V) {
         </div>
 
         <div style={s('font:400 11.5px Sarabun,sans-serif;color:rgba(30,36,32,.45);margin-bottom:16px;min-height:16px')}>{V.desktopHint}</div>
+
+        {/* แถบยาที่คืนบ่อยฝั่งคอม — มอคอัปมีเฉพาะฝั่งมือถือ (บรรทัด 76–92) พี่กันขอให้มีบนคอมด้วย
+            ใช้การ์ดหน้าตาเดียวกับมือถือทุกอย่าง ต่างแค่เรียง 6 ช่องแนวนอนแทนตาราง 3 คอลัมน์ */}
+        {V.hasFrequent && (
+          <div style={s('margin-bottom:16px')}>
+            <div style={s('display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px')}>
+              <span style={s("font:600 11px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.08em;color:rgba(30,36,32,.45)")}>ยาที่คืนบ่อย</span>
+              <span style={s('font:400 11px Sarabun,sans-serif;color:rgba(30,36,32,.4)')}>กดเพื่อใส่จำนวน</span>
+            </div>
+            <div style={s('display:grid;grid-template-columns:repeat(6,1fr);gap:6px')}>
+              {V.frequent.map((f) => (
+                <div key={f.base + f.strength} onClick={f.pickWide} className="hv-bd-green" style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:11px;padding:7px 9px;display:flex;flex-direction:column;justify-content:space-between;height:66px;cursor:pointer;overflow:hidden')}>
+                  <div>
+                    <div style={s('font:600 12px/1.25 Sarabun,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>{f.base}</div>
+                    <div style={s('font:600 12px/1.25 Sarabun,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>{f.strength}</div>
+                  </div>
+                  <div style={sx("font:500 10.5px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums", { color: f.priceColor })}>{f.priceLabel}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px;overflow:hidden')}>
           <div style={s("display:flex;padding:10px 16px;background:#f6f7f4;border-bottom:1px solid rgba(30,36,32,.08);font:600 11px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.06em;color:rgba(30,36,32,.5)")}>
@@ -219,6 +263,9 @@ export function renderRecordWide(V) {
             <input value={V.hn} onChange={V.onHn} inputMode="numeric" placeholder="ไม่บังคับ" style={s("width:100%;height:42px;padding:0 10px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 13.5px 'IBM Plex Sans Thai',sans-serif")} />
           </div>
         </div>
+
+        {/* ผู้บันทึกล็อต — ต่อจากวันที่/HN ตามที่พี่กันสั่ง */}
+        <div style={s('margin-top:10px')}>{renderRecorderField(V, true)}</div>
 
         <div style={s('border-top:1px solid rgba(30,36,32,.08);padding-top:16px;margin-top:auto')}>
           <div style={s('display:flex;align-items:center;justify-content:space-between;margin-bottom:10px')}>

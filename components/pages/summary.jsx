@@ -3,10 +3,73 @@
 // เพราะของจริงต้องรอเซิร์ฟเวอร์ส่งรายการทั้งปีงบกลับมาก่อน
 import { s, sx } from '../helpers';
 
+// แถบบอกสถานะบนสุดของหน้าสรุป — ไม่มีในมอคอัป (มอคอัปมีข้อมูลอยู่ในเครื่องเลยไม่ต้องรอ)
+// ของจริงต้องรอเซิร์ฟเวอร์ ถ้าไม่บอกอะไรเลย ผู้ใช้จะเห็น 0.00 กราฟว่าง
+// แล้วแยกไม่ออกว่า "ยังไม่มีข้อมูล" หรือ "เน็ตช้ายังโหลดไม่เสร็จ"
+function renderSumBanner(V) {
+  if (V.sumLoading) {
+    return (
+      <div style={sx('display:flex;align-items:center;gap:9px;border-radius:11px;padding:11px 14px;margin-bottom:14px;font:500 13px Sarabun,sans-serif', { background: V.sumPanel, border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>
+        <span style={s('width:15px;height:15px;border-radius:50%;border:2px solid rgba(47,125,93,.25);border-top-color:#2f7d5d;animation:mrspin .7s linear infinite;flex:none')}></span>
+        {V.sumLoadingLabel}
+      </div>
+    );
+  }
+  return (
+    <>
+      {V.sumEmpty && (
+        <div style={sx('border-radius:11px;padding:14px;margin-bottom:14px;text-align:center;font:500 13px Sarabun,sans-serif', { border: '1px dashed ' + V.sumBorder, color: V.sumMuted })}>{V.sumEmptyLabel}</div>
+      )}
+      {V.zeroPriced > 0 && (
+        <div style={s('border-radius:11px;padding:11px 14px;margin-bottom:14px;background:#fdf3e7;border:1px solid rgba(214,138,42,.28);font:500 12.5px/1.5 Sarabun,sans-serif;color:#8a5a12')}>{V.zeroPricedLabel}</div>
+      )}
+    </>
+  );
+}
+
+// ปุ่มเลือกปีงบ + การ์ดยาที่ถูกคืนบ่อยที่สุด — ทั้งคู่ไม่มีในมอคอัป
+function renderFyPicks(V) {
+  if (V.fyPicks.length < 2) return null;
+  return (
+    <div style={s('display:flex;align-items:center;gap:6px;flex-wrap:wrap')}>
+      <span style={sx('font:500 11.5px Sarabun,sans-serif', { color: V.sumMuted })}>ปีงบ</span>
+      {V.fyPicks.map((y) => (
+        <div key={y.key} onClick={y.pick} className="tap" style={sx('padding:6px 13px;border-radius:999px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: y.on ? '#2f7d5d' : V.sumTrack, color: y.on ? '#fff' : V.sumMuted })}>{y.label}</div>
+      ))}
+    </div>
+  );
+}
+
+function renderTopReturned(V) {
+  if (!V.hasTopReturned) return null;
+  return (
+    <div style={sx('border-radius:12px;padding:15px 16px;margin-top:14px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
+      <div style={s('font:600 13.5px Sarabun,sans-serif;margin-bottom:2px')}>ยาที่ถูกคืนบ่อยที่สุด</div>
+      <div style={sx('font:400 11px/1.5 Sarabun,sans-serif;margin-bottom:12px', { color: V.sumMuted, opacity: .8 })}>{V.topReturnedHint}</div>
+      <div style={s('display:flex;flex-direction:column;gap:9px')}>
+        {V.topReturned.map((t) => (
+          <div key={t.key}>
+            <div style={s('display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:4px')}>
+              <span style={s('font:500 12.5px Sarabun,sans-serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{t.rank}. {t.name}</span>
+              <span style={sx("font:600 12.5px 'IBM Plex Sans Thai',sans-serif;flex:none;font-variant-numeric:tabular-nums", { color: V.sumMuted })}>{t.timesLabel}</span>
+            </div>
+            <div style={sx('height:7px;border-radius:99px;overflow:hidden', { background: V.sumTrack })}>
+              <div style={sx('height:100%;border-radius:99px;background:#2f7d5d', { width: t.w })}></div>
+            </div>
+            <div style={sx('font:400 10.5px Sarabun,sans-serif;margin-top:3px;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>{t.qtyLabel} · {t.valueLabel}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function renderSummaryWide(V) {
   return (
     <div style={sx('min-height:100%', { background: V.sumBg, color: V.sumFg })}>
       <div style={s('max-width:1400px;margin:0 auto;padding:18px 24px 26px')}>
+        {renderSumBanner(V)}
+        <div style={s('margin-bottom:14px')}>{renderFyPicks(V)}</div>
         <div style={s('display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px')}>
           <div style={s('display:flex;align-items:center;gap:10px')}>
             <div style={sx('width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;position:relative;flex:none', { background: V.sumGreen })}>
@@ -81,20 +144,28 @@ export function renderSummaryWide(V) {
               ))}
             </div>
             <div style={sx('padding-top:13px;margin-top:15px', { borderTop: '1px solid ' + V.sumBorder })}>
-              <div style={sx('font:500 12.5px Sarabun,sans-serif;margin-bottom:8px', { color: V.sumMuted })}>สัดส่วนตามแหล่งที่มา</div>
+              <div style={sx('font:500 12.5px Sarabun,sans-serif;margin-bottom:2px', { color: V.sumMuted })}>สัดส่วนตามแหล่งที่มา</div>
+              <div style={sx('font:400 11px Sarabun,sans-serif;margin-bottom:8px', { color: V.sumMuted, opacity: .75 })}>{V.srcBaseLabel}</div>
               <div style={sx('display:flex;height:9px;border-radius:99px;overflow:hidden;margin-bottom:8px', { background: V.sumTrack })}>
                 {V.srcShares.map((sh) => (
                   <div key={sh.key} style={sx('', { width: sh.w, background: sh.bg })}></div>
                 ))}
               </div>
+              {/* ฝั่งมือถือมีจุดสีกำกับอยู่แล้ว ฝั่งคอมเดิมเป็นตัวหนังสือล้วน
+                  ไม่รู้ว่าท่อนสีไหนเป็นของใคร — ใส่จุดสีให้เหมือนกัน */}
               <div style={sx('display:flex;flex-wrap:wrap;gap:12px;font:400 12.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>
                 {V.srcShares.map((sh) => (
-                  <span key={sh.key}>{sh.label}</span>
+                  <span key={sh.key} style={s('display:flex;align-items:center;gap:5px')}>
+                    <span style={sx('width:8px;height:8px;border-radius:2px;flex:none', { background: sh.bg })}></span>
+                    {sh.label}
+                  </span>
                 ))}
               </div>
             </div>
           </div>
         </div>
+
+        {renderTopReturned(V)}
       </div>
     </div>
   );
@@ -104,6 +175,8 @@ export function renderSummaryNarrow(V) {
   return (
     <div style={sx('min-height:100%', { background: V.sumBg, color: V.sumFg })}>
       <div style={s('max-width:520px;margin:0 auto;padding:14px 20px 24px')}>
+        {renderSumBanner(V)}
+        <div style={s('margin-bottom:14px')}>{renderFyPicks(V)}</div>
 
         <div style={s('display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px')}>
           <div style={s('display:flex;align-items:center;gap:9px;min-width:0')}>
@@ -188,7 +261,8 @@ export function renderSummaryNarrow(V) {
         </div>
 
         <div style={sx('border-radius:12px;padding:14px 14px;margin-bottom:14px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
-          <div style={s('font:600 13.5px Sarabun,sans-serif;margin-bottom:11px')}>สัดส่วนตามแหล่งที่มา</div>
+          <div style={s('font:600 13.5px Sarabun,sans-serif;margin-bottom:2px')}>สัดส่วนตามแหล่งที่มา</div>
+          <div style={sx('font:400 11px/1.4 Sarabun,sans-serif;margin-bottom:11px', { color: V.sumMuted, opacity: .75 })}>{V.srcBaseLabel}</div>
           <div style={sx('display:flex;height:9px;border-radius:99px;overflow:hidden;margin-bottom:11px', { background: V.sumTrack })}>
             {V.srcShares.map((sh) => (
               <div key={sh.key} style={sx('', { width: sh.w, background: sh.bg })}></div>
@@ -203,7 +277,9 @@ export function renderSummaryNarrow(V) {
           </div>
         </div>
 
-        <div onClick={V.exportCsv} style={sx('height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font:600 15.5px Sarabun,sans-serif;cursor:pointer', { border: '1px solid ' + V.sumBorder, background: V.sumPanel })}>{V.exportLabel}</div>
+        {renderTopReturned(V)}
+
+        <div onClick={V.exportCsv} style={sx('height:50px;border-radius:12px;margin-top:14px;display:flex;align-items:center;justify-content:center;font:600 15.5px Sarabun,sans-serif;cursor:pointer', { border: '1px solid ' + V.sumBorder, background: V.sumPanel })}>{V.exportLabel}</div>
 
       </div>
     </div>

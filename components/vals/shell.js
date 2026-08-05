@@ -26,6 +26,17 @@ export function shellVals(app, d) {
     openSettings: () => app.setState({ settingsOpen: true, favQuery: '' }),
     closeSettings: () => app.setState({ settingsOpen: false, favQuery: '' }),
 
+    // สวิตช์บังคับดูแบบมือถือบนคอม (มอคอัปบรรทัด 655–663 · 1361–1367)
+    // โชว์เฉพาะตอนจอกว้างจริง บนมือถือไม่มีประโยชน์
+    showLayoutSwitch: st.vw >= 960,
+    anyModalOpen: !!(st.confirm || st.sheet || st.settingsOpen),
+    layoutDeskBg: st.forceNarrow ? 'transparent' : '#1e2420',
+    layoutDeskFg: st.forceNarrow ? '#6b746e' : '#fff',
+    layoutMobBg: st.forceNarrow ? '#1e2420' : 'transparent',
+    layoutMobFg: st.forceNarrow ? '#fff' : '#6b746e',
+    useDesktop: () => app.setState({ forceNarrow: false }),
+    useMobile: () => app.setState({ forceNarrow: true }),
+
     toastOpen: !!st.toast,
     toastText: st.toast ? st.toast.text : '',
     toastValue: st.toast ? st.toast.value : '',

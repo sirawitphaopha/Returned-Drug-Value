@@ -4,13 +4,13 @@
 // เพราะตั้งค่าที่เครื่องหนึ่งแล้วอีกเครื่องต้องเห็นด้วย
 //
 // วิธี: เปลี่ยนบนจอทันที แล้วค่อยยิงเซิร์ฟเวอร์เบื้องหลัง ถ้าล้มเหลวย้อนกลับ + บอกให้รู้
-import { LS, writeCache, clearLS } from '../helpers';
+import { LS, writeCache, clearLS, fetchT } from '../helpers';
 
 export function settingsActions(app) {
   // ยิงขึ้นเซิร์ฟเวอร์ · patch = เฉพาะช่องที่เปลี่ยน
   app.pushSetting = async (patch, before) => {
     try {
-      const res = await fetch('/api/settings', {
+      const res = await fetchT('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)
@@ -21,7 +21,8 @@ export function settingsActions(app) {
       app.setState({
         orgName: data.setting.orgName,
         favIds: data.setting.favIds,
-        defaultSource: data.setting.defaultSource
+        defaultSource: data.setting.defaultSource,
+        staff: Array.isArray(data.setting.staff) ? data.setting.staff : []
       });
       writeCache(LS.setting, data.setting);
     } catch (e) {

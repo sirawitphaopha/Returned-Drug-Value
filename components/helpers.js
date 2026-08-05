@@ -89,10 +89,13 @@ export function clearLS(key) {
 }
 
 // แคชที่มีวันหมดอายุ — คืน null ถ้าเกิน TTL
+// age ติดลบ = นาฬิกาเครื่องเดินผิด (คอมเก่าถ่าน BIOS หมด เจอบ่อยในโรงพยาบาล)
+// ถ้าไม่กันไว้ แคชจะไม่มีวันหมดอายุ รายการยาค้างชุดเดิมตลอดไป
 export function readCache(key) {
   const box = readLS(key);
   if (!box || typeof box.ts !== 'number') return null;
-  if (Date.now() - box.ts > CACHE_TTL) return null;
+  const age = Date.now() - box.ts;
+  if (age < 0 || age > CACHE_TTL) return null;
   return box.v;
 }
 
@@ -100,4 +103,66 @@ export function writeCache(key, v) {
   writeLS(key, { ts: Date.now(), v: v });
 }
 
-export const APP_VERSION = '0.1.0.0';
+// ── ตัวช่วยกลางฝั่งเบราว์เซอร์ ────────────────────────────────────────────────
+
+// crypto.randomUUID มีเฉพาะ https กับ localhost — เปิดเว็บผ่าน http://192.168.x.x
+// (เทสจากมือถือในวงแลนโรงพยาบาล) จะเป็น undefined แล้วปุ่มบันทึกตายเงียบ
+export function newUuid() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+// เน็ตโรงพยาบาลแบบ "ต่ออยู่แต่ไม่ไปไหน" จะทำให้ fetch ไม่ throw ไม่ resolve
+// ปุ่มค้างว่ากำลังบันทึกตลอดกาล — ต้องมีตัวจับเวลาตัดทุกเส้น
+export async function fetchT(url, opts, ms) {
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), ms || 15000);
+  try {
+    return await fetch(url, Object.assign({}, opts, { signal: ac.signal }));
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw new Error('เชื่อมต่อนานเกินไป ลองใหม่อีกครั้ง');
+    throw e;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+export const MAX_QTY = 100000;   // ต้องตรงกับ app/api/returns/route.js
+
+// เหตุผลการทำลาย — ผู้บริหารถามว่า "ที่ทำลายไป 40,000 บาท เพราะอะไร"
+// เดิมระบบเก็บแค่ว่า "ทำลาย" ตอบไม่ได้เลย
+export const DESTROY_REASONS = [
+  'หมดอายุ',
+  'แกะจากซองเดิม',
+  'สภาพเปลี่ยน',
+  'ไม่ทราบแหล่งที่มา',
+  'อื่น ๆ'
+];
+
+// จำนวนรับทศนิยม 2 ตำแหน่ง — ยาน้ำคืนมาครึ่งขวด ยาแบ่งครึ่งเม็ด
+// กันจุดซ้ำ กันติดลบ กันทศนิยมเกิน 2 ตำแหน่ง แต่ยอมให้พิมพ์ "2." ค้างไว้ระหว่างพิมพ์
+export function cleanQty(raw) {
+  let v = String(raw == null ? '' : raw).replace(/[^0-9.]/g, '');
+  const first = v.indexOf('.');
+  if (first >= 0) v = v.slice(0, first + 1) + v.slice(first + 1).replace(/\./g, '');
+  const dot = v.indexOf('.');
+  if (dot >= 0) v = v.slice(0, dot + 3);
+  return v;
+}
+
+// แปลงข้อความในช่องเป็นตัวเลขจริง ปัดเหลือ 2 ตำแหน่ง
+export function qtyNum(raw) {
+  const n = Math.round((parseFloat(raw || '0') || 0) * 100) / 100;
+  return n > 0 ? Math.min(MAX_QTY, n) : 0;
+}
+
+// แสดงจำนวนบนจอ — จำนวนเต็มไม่ต้องโชว์ .00 (30 เม็ด ไม่ใช่ 30.00 เม็ด)
+export function qtyText(n) {
+  const v = Number(n) || 0;
+  return Number.isInteger(v) ? String(v) : String(v);
+}
+
+export const APP_VERSION = '0.2.0.0';

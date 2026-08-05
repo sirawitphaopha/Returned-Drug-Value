@@ -33,6 +33,12 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  // แป้นพิมพ์เด้งขึ้นมาแล้วให้พื้นที่เนื้อหาหดตาม ไม่ใช่ลอยทับ
+  // ไม่งั้นป๊อปอัปใส่จำนวนที่ตรึงล่างจอจะโดนแป้นพิมพ์บังปุ่ม "เพิ่ม" กับปุ่มลัด 10/30/60/90
+  interactiveWidget: 'resizes-content',
+  // ให้เนื้อหาไหลถึงขอบจอจริง env(safe-area-inset-*) ถึงจะมีค่า
+  // (โค้ดกันแถบล่าง iPhone เขียนไว้แล้วแต่ไม่เคยทำงานเพราะขาดบรรทัดนี้)
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }) {

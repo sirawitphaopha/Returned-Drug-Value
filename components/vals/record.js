@@ -2,6 +2,7 @@
 // ต่างจากต้นฉบับ 3 จุด: ตัดเลขคงคลังปลอม · ตัดสวิตช์จำลองเน็ตหลุด
 // · ยอดสะสมปีงบมาจากฐานข้อมูล ไม่ได้นับจากรายการในเครื่อง
 import { SOURCES, money, thaiDate } from '@/lib/format';
+import { cleanQty, qtyNum } from '../helpers';
 
 const sumReuse = (rows) => rows.reduce((a, x) => a + (x.disposition === 'reuse' ? x.price * x.qty : 0), 0);
 
@@ -9,8 +10,8 @@ export function recordVals(app, d) {
   const st = d.st;
   const pending = st.pending;
   const pendReuse = st.pendingDisp === 'reuse';
-  const qtyNum = parseInt(st.qtyInput || '0', 10) || 0;
-  const canAdd = !!pending && qtyNum > 0;
+  const pendQty = qtyNum(st.qtyInput);
+  const canAdd = !!pending && pendQty > 0;
   const fySaved = st.fy.saved;
 
   const setRowDisp = (rid, disp) => () => {
@@ -24,17 +25,29 @@ export function recordVals(app, d) {
     query: st.query,
     searchRef: app.searchRef,
     searchPlaceholder: 'ค้นชื่อยา (' + st.drugs.length + ' รายการ)',
-    onQuery: (e) => app.setState({ query: e.target.value }),
-    onSearchKey: (e) => { if (e.key === 'Enter' && d.results.length) { e.preventDefault(); app.openSheet(d.results[0]); } },
+    // พิมพ์ใหม่ = เด้งไฮไลต์กลับไปแถวแรกเสมอ
+    onQuery: (e) => app.setState({ query: e.target.value, hi: 0 }),
+    onSearchKey: (e) => { if (e.key === 'Enter' && d.results.length) { e.preventDefault(); app.openSheet(d.results[d.hi] || d.results[0]); } },
     onSearchKeyDesktop: (e) => {
+      // ลูกศรขึ้น/ลงเลื่อนเลือกในรายการผลค้นหา — เดิมกด Enter ได้ตัวแรกเสมอ
+      // ทั้งที่ระบบไฮไลต์แถวแรกไว้ ซึ่งสื่อว่าเลื่อนเลือกได้
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (!d.results.length) return;
+        e.preventDefault();
+        const step = e.key === 'ArrowDown' ? 1 : -1;
+        app.setState({ hi: Math.min(d.results.length - 1, Math.max(0, d.hi + step)) });
+        return;
+      }
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (pending && qtyNum > 0) { app.addInline(); return; }
-        if (d.results.length) app.pickInline(d.results[0]);
+        if (pending && pendQty > 0) { app.addInline(); return; }
+        if (d.results.length) app.pickInline(d.results[d.hi] || d.results[0]);
       }
     },
     hasResults: d.results.length > 0,
     noResults: d.q.length >= 2 && d.results.length === 0,
+    noResultsHint: 'ไม่พบยาชื่อนี้ ลองพิมพ์ชื่อสามัญ',
+    openOffListDrug: app.openOffListDrug,
     results: d.results.map((drug, i) => ({
       name: drug.name,
       // มอคอัปโชว์ "หน่วย · คงคลัง 1234" ซึ่งเป็นเลขมั่วของเดโม ตัดออกแล้ว
@@ -43,7 +56,7 @@ export function recordVals(app, d) {
       subColor: drug.hasPrice ? '#6b746e' : '#c2543c',
       priceLabel: drug.price.toFixed(2) + ' ฿/' + drug.unit,
       priceColor: drug.hasPrice ? '#2f7d5d' : '#c2543c',
-      rowBg: i === 0 ? '#eef6f1' : '#fff',
+      rowBg: i === d.hi ? '#eef6f1' : '#fff',
       pick: () => app.openSheet(drug),
       pickInline: () => app.pickInline(drug)
     })),
@@ -60,20 +73,30 @@ export function recordVals(app, d) {
           strength: m ? m[2] : ' ',
           priceLabel: drug.price.toFixed(2) + ' ฿',
           priceColor: drug.hasPrice ? '#6b746e' : '#c2543c',
-          pick: () => app.openSheet(drug)
+          // มือถือ = เปิดป๊อปอัปใส่จำนวน · คอม = ยัดเข้าช่องรอเพิ่มแล้วเด้งไปช่องจำนวน
+          // (ให้เข้ากับเส้นทางคีย์บอร์ดของฝั่งคอม ไม่ต้องเปิดป๊อปอัปให้เสียจังหวะ)
+          pick: () => app.openSheet(drug),
+          pickWide: () => app.pickInline(drug)
         };
       }),
     hasFrequent: st.favIds.length > 0,
+    emptyHint: st.favIds.length > 0
+      ? 'ค้นชื่อยาด้านบน หรือแตะยาที่คืนบ่อย'
+      : 'ค้นชื่อยาด้านบน — ตั้งยาที่คืนบ่อยได้ที่ปุ่ม ⋯ มุมขวาบน',
 
     // ── แหล่งที่มา · วันที่ · HN ─────────────────────────────────────────────
     sources: SOURCES.map((s) => ({
       label: s.label,
-      bg: st.source === s.key ? '#1e2420' : '#f0f1ee',
+      // พี่กันสั่งเปลี่ยนจากดำ (#1e2420 ของมอคอัป) เป็นเขียวเทลของธีม
+      bg: st.source === s.key ? '#2f7d5d' : '#f0f1ee',
       fg: st.source === s.key ? '#fff' : '#414a44',
-      pick: () => app.setState({ source: s.key })
+      // sourceTouched = ผู้ใช้แตะเองแล้ว · ใช้แยกจาก "ยังเป็นค่าเริ่มต้น"
+      pick: () => app.persist({ source: s.key, sourceTouched: true })
     })),
     dateIso: st.date,
-    onDate: (e) => app.setState({ date: e.target.value || st.today }),
+    dateMax: st.today,
+    isBackdated: !!st.today && !!st.date && st.date !== st.today,
+    onDate: (e) => app.persist({ date: e.target.value || st.today }),
     hn: st.hn,
     onHn: (e) => app.setState({ hn: e.target.value.replace(/[^0-9]/g, '') }),
     showMore: st.showMore,
@@ -82,10 +105,13 @@ export function recordVals(app, d) {
     // ── แถวใส่ยาบนคอม (พิมพ์ → Enter → ใส่จำนวน → Enter) ─────────────────────
     qtyRef: app.qtyRef,
     qtyInput: st.qtyInput,
-    onQtyInput: (e) => app.setState({ qtyInput: e.target.value.replace(/[^0-9]/g, '') }),
+    // รับทศนิยมได้ 2 ตำแหน่ง — ยาน้ำครึ่งขวด ยาแบ่งครึ่งเม็ด
+    // (เดิมกรอง [^0-9] ทิ้ง พิมพ์ 2.5 กลายเป็น 25 ซึ่งผิดเป็นสิบเท่า)
+    onQtyInput: (e) => app.setState({ qtyInput: cleanQty(e.target.value) }),
     onQtyKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); app.addInline(); } },
     addInline: app.addInline,
-    addBg: canAdd ? '#1e2420' : '#e9ebe8',
+    // ปุ่ม "เพิ่ม" — พี่กันสั่งเปลี่ยนจากดำเป็นเขียวเทลของธีม
+    addBg: canAdd ? '#2f7d5d' : '#e9ebe8',
     addFg: canAdd ? '#fff' : '#9aa19c',
     addHintFg: canAdd ? 'rgba(255,255,255,.5)' : '#b8bdb9',
     searchBorder: pending ? '#2f7d5d' : 'rgba(30,36,32,.16)',
@@ -98,8 +124,8 @@ export function recordVals(app, d) {
     setPendingDestroy: () => app.setState({ pendingDisp: 'destroy' }),
     desktopHint: !pending
       ? 'พิมพ์ชื่อยา → Enter เลือกผลแรก → ใส่จำนวน → Enter เพิ่มรายการ แล้วกลับไปช่องยาเอง'
-      : qtyNum > 0
-        ? 'Enter เพื่อเพิ่ม ' + pending.name + ' ' + qtyNum + ' ' + pending.unit + ' = ' + money(pending.price * qtyNum)
+      : pendQty > 0
+        ? 'Enter เพื่อเพิ่ม ' + pending.name + ' ' + pendQty + ' ' + pending.unit + ' = ' + money(pending.price * pendQty)
         : 'เลือก ' + pending.name + ' แล้ว — ใส่จำนวนเป็น ' + pending.unit + ' แล้วกด Enter',
 
     // ── รายการที่กองอยู่ในครั้งนี้ ───────────────────────────────────────────

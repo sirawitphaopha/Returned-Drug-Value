@@ -5,10 +5,23 @@ import { LS, writeLS } from '../helpers';
 
 export function uiActions(app) {
   // เก็บเฉพาะร่างที่ยังไม่บันทึก กับธีม — ที่เหลืออยู่บนเซิร์ฟเวอร์
+  // 🚨 batchId ต้องเก็บคู่กับร่างเสมอ — ถ้าส่งไม่สำเร็จแล้วผู้ใช้รีเฟรชหน้าเว็บ
+  // (คนทั่วไปทำแบบนี้เวลาเว็บค้าง) แล้ว batchId หาย ระบบกันบันทึกซ้ำจะไม่ทำงาน
+  // กดบันทึกใหม่ = ข้อมูลเข้าฐานสองชุด มูลค่า KPI เบิ้ล
+  // hn/source/date เก็บด้วย ไม่งั้นเปิดกลับมาแล้วยาอยู่ครบแต่ HN หาย
   app.persist = (patch) => {
     app.setState(patch, () => {
-      writeLS(LS.draft, app.state.rows);
-      writeLS(LS.dark, app.state.dark ? 1 : 0);
+      const st = app.state;
+      writeLS(LS.draft, {
+        v: 1,
+        rows: st.rows,
+        batchId: st.batchId,
+        hn: st.hn,
+        source: st.source,
+        sourceTouched: st.sourceTouched,
+        date: st.date
+      });
+      writeLS(LS.dark, st.dark ? 1 : 0);
     });
   };
 
@@ -17,7 +30,7 @@ export function uiActions(app) {
   app.goScreen = (name) => {
     app.setState({ screen: name }, () => {
       if (name === 'history') app.loadHistory();
-      if (name === 'summary') app.loadSummary();
+      if (name === 'summary') { app.loadSummary(); app.loadTopReturned(); }
     });
   };
 

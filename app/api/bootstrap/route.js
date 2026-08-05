@@ -16,7 +16,7 @@ export async function GET() {
 
     const [catalog, settingRes, summaryRes] = await Promise.all([
       loadCatalog(),
-      db.from('mr_setting').select('org_name,default_source,fav_ids').eq('id', 1).maybeSingle(),
+      db.from('mr_setting').select('org_name,default_source,fav_ids,staff,last_recorder').eq('id', 1).maybeSingle(),
       db.rpc('mr_summary', { p_from: range.from, p_to: range.to })
     ]);
     if (settingRes.error) throw new Error(settingRes.error.message);
@@ -32,17 +32,21 @@ export async function GET() {
       setting: {
         orgName: st.org_name || 'ห้องยาผู้ป่วยนอก · รพ.ปรางค์กู่',
         defaultSource: st.default_source || 'opd',
-        favIds: Array.isArray(st.fav_ids) ? st.fav_ids : []
+        favIds: Array.isArray(st.fav_ids) ? st.fav_ids : [],
+        staff: Array.isArray(st.staff) ? st.staff : [],
+        lastRecorder: st.last_recorder || ''
       },
       // ยอดสะสมปีงบ — เอาไปโชว์ตัวเลขใหญ่ทันทีตอนเปิดเว็บ ไม่ต้องรอหน้าสรุป
       fy: {
         saved: Number(sum.saved || 0),
         lost: Number(sum.lost || 0),
         records: Number(sum.records || 0),
-        qty: Number(sum.qty || 0)
+        qty: Number(sum.qty || 0),
+        zeroPriced: Number(sum.zeroPriced || 0)
       }
     });
   } catch (e) {
-    return NextResponse.json({ error: e.message || 'โหลดข้อมูลตั้งต้นไม่สำเร็จ' }, { status: 500 });
+    console.error('[api]', e);
+    return NextResponse.json({ error: 'โหลดข้อมูลตั้งต้นไม่สำเร็จ' }, { status: 500 });
   }
 }

@@ -16,7 +16,12 @@ export function summaryVals(app, d) {
   const byMonth = sum.byMonth || {};
   const bySrc = sum.bySrc || {};
 
-  const fyStartYear = Number(st.today.slice(5, 7)) >= 10 ? Number(st.today.slice(0, 4)) : Number(st.today.slice(0, 4)) - 1;
+  // ตอนเปิดเว็บ today ยังว่างจนกว่า /api/bootstrap จะตอบ — ถ้าไม่กันไว้ Number('') = 0
+  // จะได้ "ปีงบ 543" กับชื่อเดือนว่างโผล่แวบหนึ่ง
+  const hasToday = !!st.today;
+  const fyStartYear = hasToday
+    ? (Number(st.today.slice(5, 7)) >= 10 ? Number(st.today.slice(0, 4)) : Number(st.today.slice(0, 4)) - 1)
+    : 1900;
   const months = [];
   let maxM = 1;
   for (let i = 0; i < 12; i++) {
@@ -62,13 +67,47 @@ export function summaryVals(app, d) {
     togLightFg: dark ? 'rgba(255,255,255,.6)' : '#1e2420',
     togDarkBg: dark ? '#2b332d' : 'transparent',
     togDarkFg: dark ? '#fff' : '#6b746e',
-    setLight: app.setLight,
-    setDark: app.setDark,
+    // ใช้ app.setTheme ตัวเดียวกับหน้าตั้งค่า — เดิมมี app.setLight/setDark ซ้ำอีกชุด
+    // แล้วโดน settingsVals ทับทิ้ง กลายเป็นโค้ดตายที่แก้แล้วไม่มีอะไรเปลี่ยน
+    setLight: () => app.setTheme(false),
+    setDark: () => app.setTheme(true),
 
     exportCsv: app.exportCsv,
     exportLabel: st.exporting ? 'กำลังสร้างไฟล์' : 'Export Excel',
 
-    fyLabel: String(fyOf(st.today)),
+    // st.sumLoading เดิมถูกตั้งค่าไว้แต่ไม่มีใครเอาไปใช้เลย → หน้าสรุปเลยโชว์ 0.00
+    // กราฟ 12 แท่งว่าง แยกไม่ออกว่า "ยังไม่มีข้อมูล" หรือ "เน็ตช้ายังโหลดไม่เสร็จ"
+    sumLoading: !!st.sumLoading && !st.sum,
+    sumEmpty: !st.sumLoading && !!st.sum && Number(sum.records || 0) === 0,
+    sumEmptyLabel: 'ยังไม่มีรายการในปีงบนี้ — บันทึกรายการแรกที่หน้าบันทึก',
+    sumLoadingLabel: 'กำลังโหลดยอดสรุป',
+    // แถบเตือนเมื่อมีแถวที่บันทึกไปแล้วแต่มูลค่ายังเป็น 0
+    zeroPriced: Number(sum.zeroPriced || 0),
+    zeroPricedLabel: 'มี ' + Number(sum.zeroPriced || 0).toLocaleString('en-US') + ' รายการที่มูลค่ายังเป็น 0 — ใส่ราคายาแล้วกดตีราคาย้อนหลังได้ที่หน้าจัดการราคา',
+
+    // เลือกปีงบย้อนหลัง — เดิมดูได้แค่ปีปัจจุบัน พอขึ้นปีใหม่ตัวเลขปีเก่าหายหมด
+    fyPicks: (st.sumFyYears.length ? st.sumFyYears : [fyOf(st.today || '2026-01-01')]).map((y) => ({
+      key: y,
+      label: String(y),
+      on: (st.sumFy || (st.sum ? st.sum.fyYear : 0) || fyOf(st.today || '2026-01-01')) === y,
+      pick: () => app.setSumFy(y)
+    })),
+
+    // ยาที่ถูกคืนบ่อยที่สุด — เรียงตามจำนวนครั้ง ไม่ใช่มูลค่า
+    // ยาตัวไหนถูกคืนบ่อยมาก = อาจสั่งเกินจำเป็น เอาไปคุยกับแพทย์ลดการสั่งได้จริง
+    topReturned: st.topReturned.slice(0, 10).map((t, i) => ({
+      key: t.name,
+      rank: i + 1,
+      name: t.name,
+      timesLabel: Number(t.times || 0).toLocaleString('en-US') + ' ครั้ง',
+      qtyLabel: Number(t.qty || 0).toLocaleString('en-US') + ' ' + (t.unit || 'หน่วย'),
+      valueLabel: money(Number(t.value || 0)),
+      w: st.topReturned.length ? (Number(t.times || 0) / Number(st.topReturned[0].times || 1) * 100) + '%' : '0%'
+    })),
+    hasTopReturned: st.topReturned.length > 0,
+    topReturnedHint: 'ยาที่ถูกคืนบ่อย อาจเป็นยาที่สั่งเกินจำเป็น — เอาไปคุยกับแพทย์เพื่อลดการสั่งได้',
+
+    fyLabel: hasToday ? String(fyOf(st.today)) : '—',
     fySavedBig: Math.floor(fySaved).toLocaleString('en-US') + '.' + (fySaved.toFixed(2).split('.')[1] || '00'),
     fyLostLabel: money(fyLost),
     fyLostShort: Math.round(fyLost).toLocaleString('en-US') + ' ฿',
@@ -78,7 +117,9 @@ export function summaryVals(app, d) {
     fyReusePct: (fyGross ? (fySaved / fyGross * 100).toFixed(1) : '0') + '%',
     fyCount: sum.records.toLocaleString('en-US'),
     fyDrugCount: String(sum.drugCount),
-    fyRangeLabel: 'ต.ค. ' + (fyStartYear + 543) + ' – ' + TH_MONTHS[Number(st.today.slice(5, 7)) - 1] + ' ' + (Number(st.today.slice(0, 4)) + 543),
+    fyRangeLabel: hasToday
+      ? 'ต.ค. ' + (fyStartYear + 543) + ' – ' + TH_MONTHS[Number(st.today.slice(5, 7)) - 1] + ' ' + (Number(st.today.slice(0, 4)) + 543)
+      : '—',
 
     months: monthVals,
     topDrugs: topArr.map((t, i) => ({
@@ -89,6 +130,10 @@ export function summaryVals(app, d) {
       w: (t.v / topMax * 100) + '%',
       bg: greens[i]
     })),
+    // 🚨 สัดส่วนแหล่งที่มานับ "ทั้งใช้ต่อได้และทำลาย" ตามมอคอัป (บรรทัด 1087)
+    // แต่ตัวเลขใหญ่ด้านบนนับเฉพาะที่ใช้ต่อได้ → เอา % ไปคูณตัวเลขใหญ่ไม่ได้
+    // ถ้าไม่มีป้ายบอก ผู้บริหารจะเข้าใจผิดแน่นอน
+    srcBaseLabel: 'คิดจากมูลค่ายาที่คืนมาทั้งหมด (ใช้ต่อได้ + ทำลาย)',
     srcShares: SOURCES.map((sc, i) => ({
       key: sc.key,
       w: (Number(bySrc[sc.key] || 0) / srcTotal * 100) + '%',

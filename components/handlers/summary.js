@@ -1,11 +1,16 @@
 // หน้าสรุป — ดึงยอดทั้งปีงบก้อนเดียว · ส่งออกไฟล์ Excel
 // ยอดรวมทุกตัวคิดใน SQL แล้ว ที่นี่แค่รับมาเก็บ
 import { fyOf } from '@/lib/format';
+import { fetchT } from '../helpers';
 import { recordsToCsv, downloadCsv } from '@/lib/csv';
 
 const SUM_TTL = 60000;
 
 export function summaryActions(app) {
+  // เลขลำดับคำขอ แบบเดียวกับหน้าประวัติ — กดสรุป→ประวัติ→สรุปเร็วๆ จะยิงซ้อนกัน
+  // ถ้ารอบแรกกลับทีหลังจะทับตัวเลขรอบใหม่ แล้วเขียนของเก่าลงแคชค้างอีก 60 วินาที
+  app._sumSeq = 0;
+
   app.loadSummary = async (force) => {
     const c = app._sumCache;
     if (!force && c && Date.now() - c.ts < SUM_TTL) {
@@ -13,22 +18,53 @@ export function summaryActions(app) {
       return;
     }
 
+    const seq = ++app._sumSeq;
     app.setState({ sumLoading: true });
     try {
-      const res = await fetch('/api/summary');
+      const fy = app.state.sumFy;
+      const res = await fetchT('/api/summary' + (fy ? '?fy=' + fy : ''));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านยอดสรุปไม่สำเร็จ');
+      if (seq !== app._sumSeq) return;
 
       app._sumCache = { ts: Date.now(), data: data };
-      app.setState({ sum: data, sumLoading: false });
+      // /api/summary ส่ง today มาด้วย — ใช้เป็นตาข่ายรับกรณี /api/bootstrap ล่ม
+      // ไม่งั้น today ค้างเป็นค่าว่างตลอด แล้วป้ายปีงบเพี้ยนทั้งหน้า
+      const patch = { sum: data, sumLoading: false };
+      if (!app.state.today && data.today) {
+        patch.today = data.today;
+        if (!app.state.date) patch.date = data.today;
+      }
+      patch.sumFyYears = Array.isArray(data.fyYears) ? data.fyYears : [];
+      app.setState(patch);
     } catch (e) {
+      if (seq !== app._sumSeq) return;
       app.setState({ sumLoading: false });
       app.toast('อ่านยอดสรุปไม่สำเร็จ', '', false);
     }
   };
 
-  app.setLight = () => app.persist({ dark: false });
-  app.setDark = () => app.persist({ dark: true });
+  // เลือกปีงบย้อนหลัง — เดิมดูได้แค่ปีงบปัจจุบัน พอขึ้นปีใหม่ตัวเลขปีเก่าหายหมด
+  app.setSumFy = (fy) => {
+    if (fy === app.state.sumFy) return;
+    app._sumCache = null;
+    app.setState({ sumFy: fy, sum: null }, () => {
+      app.loadSummary(true);
+      app.loadTopReturned();
+    });
+  };
+
+  // ยาที่ถูกคืนบ่อยที่สุด — เรียงตามจำนวนครั้ง ไม่ใช่มูลค่า
+  // ยาตัวไหนถูกคืนบ่อยมาก = อาจสั่งเกินจำเป็น เอาไปคุยกับแพทย์ลดการสั่งได้
+  app.loadTopReturned = async () => {
+    try {
+      const fy = app.state.sumFy;
+      const res = await fetchT('/api/top-returned' + (fy ? '?fy=' + fy : ''));
+      const data = await res.json();
+      if (!res.ok) return;
+      app.setState({ topReturned: data.items || [] });
+    } catch (e) { /* ไม่ใช่ข้อมูลหลัก โหลดไม่ได้ก็ข้ามไป */ }
+  };
 
   // มอคอัปมีรายการทั้งปีอยู่ในเครื่องอยู่แล้ว เลยสร้างไฟล์ได้ทันที
   // ของจริงต้องขอรายการทั้งปีงบจากเซิร์ฟเวอร์ก่อน แล้วค่อยประกอบไฟล์ในเครื่อง
@@ -36,7 +72,7 @@ export function summaryActions(app) {
     if (app.state.exporting) return;
     app.setState({ exporting: true });
     try {
-      const res = await fetch('/api/returns?range=fy&limit=all');
+      const res = await fetchT('/api/returns?range=fy&limit=all');
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'ส่งออกไฟล์ไม่สำเร็จ');
 
@@ -47,7 +83,17 @@ export function summaryActions(app) {
         return;
       }
 
-      downloadCsv(recordsToCsv(rows), 'มูลค่ายาคืน-ปีงบ' + fyOf(app.state.today) + '.csv');
+      const st = app.state;
+      const fyLabel = String(st.sumFy || (st.sum && st.sum.fyYear) || fyOf(st.today));
+      downloadCsv(
+        recordsToCsv(rows, {
+          orgName: st.orgName,
+          fyLabel: fyLabel,
+          rangeLabel: st.sum ? (st.sum.from + ' ถึง ' + st.sum.to) : '',
+          printedOn: st.today
+        }),
+        'มูลค่ายาคืน-ปีงบ' + fyLabel + '.csv'
+      );
       app.setState({ exporting: false });
       app.toast('ส่งออกไฟล์แล้ว', rows.length.toLocaleString('en-US') + ' รายการ');
     } catch (e) {

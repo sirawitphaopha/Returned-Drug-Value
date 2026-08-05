@@ -2,7 +2,7 @@
 //
 // วิธีทำงานเหมือนหน้าบันทึก: แก้กองไว้ก่อน แล้วกดบันทึกทีเดียว
 // ไม่ใช่แก้ช่องไหนก็เขียนฐานทันที เพราะพิมพ์ราคาผิดกลางคันจะเขียนค่าครึ่ง ๆ ลงไป
-import { LS, clearLS } from '../helpers';
+import { LS, clearLS, fetchT } from '../helpers';
 
 const PAGE = 40;
 
@@ -28,7 +28,7 @@ export function pricesActions(app) {
     if (!force && app.state.priceItems.length) return;
     app.setState({ priceLoading: true });
     try {
-      const res = await fetch('/api/prices');
+      const res = await fetchT('/api/prices');
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'โหลดราคายาไม่สำเร็จ');
       app.setState({ priceItems: data.items, priceLoading: false });
@@ -80,7 +80,7 @@ export function pricesActions(app) {
 
     app.setState({ priceSaving: true });
     try {
-      const res = await fetch('/api/prices', {
+      const res = await fetchT('/api/prices', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: items })

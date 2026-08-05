@@ -15,6 +15,10 @@
 6. **ห้ามใส่ `NEXT_PUBLIC_` กับกุญแจ Supabase** — เบราว์เซอร์ต้องไม่เคยถือกุญแจฐานข้อมูล
 7. **การกระทำที่ย้อนยาก (ลบ) ต้องมีหน้าต่างยืนยันก่อนเสมอ** — ปุ่ม **"ยืนยันลบ" อยู่ซ้าย** "ยกเลิก" อยู่ขวา (สลับโดยตั้งใจ กันเผลอกด) และ **กดพื้นหลังไม่ปิด**
 8. **แก้สไตล์ให้แก้ในข้อความ CSS ตรง ๆ อย่าแปลงเป็น object เอง** — ดูข้อ 3 ด้านล่าง
+9. **ห้ามเปลี่ยน `ignoreDuplicates: true` เป็น `false` ใน `POST /api/returns`** — จะกลายเป็น `DO UPDATE` แล้วทับ `unit_price` ด้วยราคาปัจจุบัน = ผิดกฎแช่ราคาทันทีโดยไม่มีอะไรเตือน
+10. **ห้ามเปลี่ยนชื่อ `middleware.js` เป็น `proxy.ts`** — Cloudflare build ไม่ผ่าน (เคยพลาดที่ TB Dashboard)
+11. **ห้ามลบแถวจริงใน `mr_return`** — ใช้ `deleted_at` (ถังขยะ) เท่านั้น · ฟังก์ชันสรุป/ประวัติกรอง `deleted_at is null` อยู่แล้ว
+12. **`mr_backfill_price` เติมได้เฉพาะแถวที่ `unit_price = 0`** — ห้ามแก้ให้ทับแถวที่มีราคาแล้วเด็ดขาด
 
 ---
 
@@ -102,15 +106,32 @@ Supabase โปรเจกต์ `tb-calculator` (ref `ryewggkhunpuipgkgbfv`) �
 
 | ตาราง | เก็บอะไร |
 |---|---|
-| `mr_drug_price` | ราคาต่อหน่วย + หน่วยนับไทย + ชื่อที่โชว์ ของยาแต่ละตัว (`drug_id` ผูกกับ `drugs.id`) · 417 แถว |
-| `mr_return` | รายการยาคืน — **มี snapshot ของ ชื่อยา/หน่วย/ราคา อยู่ในแถวเอง** |
-| `mr_setting` | ตั้งค่าห้องยา · มีแถวเดียวเสมอ (`id = 1`) |
+| `mr_drug_price` | ราคาต่อหน่วย (`numeric(12,4)`) + หน่วยนับไทย + ชื่อที่โชว์ · 417 แถว |
+| `mr_return` | รายการยาคืน — **มี snapshot ของ ชื่อยา/หน่วย/ราคา อยู่ในแถวเอง** · `qty` เป็น `numeric(12,2)` (รับทศนิยม) |
+| `mr_setting` | ตั้งค่าห้องยา + รายชื่อผู้บันทึก (`staff`) + คนล่าสุด (`last_recorder`) · มีแถวเดียวเสมอ (`id = 1`) |
+| `mr_lot_seq` | ตัวนับล็อตต่อวัน — ใช้ upsert ให้ atomic (ถ้าใช้ `max()+1` สองเครื่องกดพร้อมกันได้เลขซ้ำ) |
+
+**คอลัมน์สำคัญใน `mr_return`**
+
+| คอลัมน์ | ใช้ทำอะไร |
+|---|---|
+| `lot_no` | เลขล็อตที่ระบบสร้าง `L690805-01` · 1 รอบกดบันทึก = 1 ล็อต · กดลองส่งใหม่ใช้เลขเดิม |
+| `recorded_by` | ชื่อผู้บันทึกล็อต — เลือกจาก `mr_setting.staff` |
+| `deleted_at` / `deleted_by` | ถังขยะ — ลบแล้วแค่ประทับเวลา กู้คืนได้ |
+| `price_fixed_at` / `price_fixed_by` | หลักฐานว่าแถวไหนถูกตีราคาย้อนหลัง |
+| `destroy_reason` | เหตุผลการทำลาย (5 ตัวเลือกใน `helpers.js` → `DESTROY_REASONS`) |
+| `drug_id` | **เป็น null ได้** สำหรับยานอกบัญชี รพ. ที่พิมพ์ชื่อเอง |
 
 **`mr_return.drug_id` ไม่ผูก FK โดยตั้งใจ** — แถวมี snapshot ครบแล้วไม่ต้อง join · FK จะไปขวางการแก้ตาราง `drugs` ของเว็บอื่น · ตรงกับที่ ME-DRP ทำไว้แล้ว
 
-**ฟังก์ชันใน `scripts/002_functions.sql`**
-- `mr_summary(p_from, p_to)` → jsonb ของหน้าสรุปทั้งก้อน
-- `mr_history(p_q, p_from, p_to, p_limit)` → แถวประวัติ + จำนวนรวม + ยอดรวม ในคำขอเดียว
+**ฟังก์ชันปัจจุบันอยู่ใน `scripts/005_functions_v2.sql`** (แทนที่ `002` ทั้งหมด)
+- `mr_summary(p_from, p_to)` → jsonb ของหน้าสรุปทั้งก้อน + `zeroPriced` + `byReason`
+- `mr_history(p_q, p_from, p_to, p_limit, p_trash, p_lot, p_offset)` → แถวประวัติ/ถังขยะ + ยอดรวม
+- `mr_lots(p_from, p_to, p_limit)` → รายการล็อต
+- `mr_next_lot_no(p_date)` → ออกเลขล็อตถัดไปของวันนั้น (atomic)
+- `mr_zero_price_count(p_drug_ids)` → นับแถวเก่าที่ราคายังเป็น 0
+- `mr_backfill_price(p_items, p_by)` → ตีราคาย้อนหลัง **เฉพาะแถวที่ราคาเป็น 0**
+- `mr_top_returned(p_from, p_to, p_limit)` → ยาที่ถูกคืนบ่อยที่สุด (เรียงตามจำนวนครั้ง)
 
 ⚠️ **กฎการนับที่ต้องตรงกับมอคอัปเป๊ะ:** `byDrug` กับ `byMonth` **นับเฉพาะ `reuse`** แต่ `bySrc` **นับทั้ง reuse และ destroy** (มอคอัปบรรทัด 1086–1088) · ยอดรวมรายวันในหน้าประวัติมือถือก็นับเฉพาะ reuse
 
@@ -126,13 +147,20 @@ RLS เปิดทั้ง 3 ตาราง **โดยไม่มี policy
 
 | เส้นทาง | เมธอด | หมายเหตุ |
 |---|---|---|
-| `/api/bootstrap` | GET | โหลดครั้งเดียวตอนเปิดเว็บ: ยา + การตั้งค่า + ยอดสะสมปีงบ |
+| `/api/auth` | POST · DELETE | ตรวจรหัสผ่านร่วม → ฝังคุกกี้ 30 วัน · DELETE = ออกจากระบบ |
+| `/api/bootstrap` | GET | โหลดครั้งเดียวตอนเปิดเว็บ: ยา + การตั้งค่า + รายชื่อผู้บันทึก + ยอดสะสมปีงบ |
 | `/api/drugs` | GET | รายการยาพร้อมราคา/หน่วย/`hasPrice` |
-| `/api/prices` | GET · PUT | PUT รับหลายตัวพร้อมกัน (upsert) |
-| `/api/settings` | GET · PUT | |
-| `/api/returns` | POST · GET | POST = บันทึกทั้งรอบทีเดียว · GET = ประวัติ |
-| `/api/returns/[id]` | PATCH · DELETE | **PATCH ห้ามแตะ `unit_price`** |
-| `/api/summary` | GET | |
+| `/api/prices` | GET · PUT | PUT รับหลายตัว + `backfill:true` เพื่อตีราคาย้อนหลัง |
+| `/api/settings` | GET · PUT | รวม `staff` (รายชื่อ) กับ `lastRecorder` |
+| `/api/returns` | POST · GET | POST = บันทึกทั้งล็อต (ออกเลขล็อต) · GET รับ `trash` `lot` `offset` `from` `to` |
+| `/api/returns/[id]` | PATCH · DELETE | **PATCH ห้ามแตะ `unit_price`** · `action:'restore'` = กู้คืน · DELETE = ย้ายเข้าถังขยะ |
+| `/api/summary` | GET | รับ `fy` เพื่อดูปีงบย้อนหลัง |
+| `/api/lots` | GET | รายการล็อต |
+| `/api/top-returned` | GET | ยาที่ถูกคืนบ่อยที่สุด |
+
+**ประตูตรวจรหัสผ่าน** อยู่ที่ `middleware.js` — กั้นทุกหน้าและทุก API ยกเว้น `/login` กับ `/api/auth`
+API ที่ยังไม่เข้าสู่ระบบตอบ **401 พร้อม `needAuth: true`** ไม่ใช่พาไปหน้า login
+(ฝั่งจอจะได้ไม่ได้ HTML มาแล้วแปลง JSON พัง)
 
 **Next.js 15: `params` เป็น Promise** → ต้อง `const params = await ctx.params;` ไม่ใช่ `ctx.params.id` ตรง ๆ
 

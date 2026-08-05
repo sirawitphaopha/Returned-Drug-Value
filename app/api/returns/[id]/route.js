@@ -27,9 +27,21 @@ export async function PATCH(req, ctx) {
     const body = await req.json();
     const patch = {};
 
+    // กู้คืนจากถังขยะ — เป็นการ "ล้างวันที่ลบ" ไม่ใช่การแก้เนื้อข้อมูล
+    if (body.action === 'restore') {
+      const db = getAdmin();
+      const res = await db.from('mr_return')
+        .update({ deleted_at: null, deleted_by: null })
+        .eq('id', id).not('deleted_at', 'is', null).select('id');
+      if (res.error) throw new Error(res.error.message);
+      if (!res.data || !res.data.length) return NextResponse.json({ error: 'ไม่พบรายการนี้ในถังขยะ' }, { status: 404 });
+      return NextResponse.json({ ok: true, id: id });
+    }
+
     if (body.qty !== undefined) {
-      const qty = Number(body.qty);
-      if (!Number.isInteger(qty) || qty < 1 || qty > MAX_QTY) return bad('จำนวนไม่ถูกต้อง');
+      // จำนวนรับทศนิยม 2 ตำแหน่ง — ยาน้ำครึ่งขวด ยาแบ่งครึ่งเม็ด
+      const qty = Math.round(Number(body.qty) * 100) / 100;
+      if (!Number.isFinite(qty) || qty <= 0 || qty > MAX_QTY) return bad('จำนวนไม่ถูกต้อง');
       patch.qty = qty;
     }
     if (body.disposition !== undefined) {
@@ -39,29 +51,43 @@ export async function PATCH(req, ctx) {
     if (!Object.keys(patch).length) return bad('ไม่มีอะไรให้แก้');
 
     const db = getAdmin();
-    const res = await db.from('mr_return').update(patch).eq('id', id).select('id');
+    // ห้ามแก้ของที่อยู่ในถังขยะ ต้องกู้คืนก่อน
+    const res = await db.from('mr_return').update(patch).eq('id', id).is('deleted_at', null).select('id');
     if (res.error) throw new Error(res.error.message);
     if (!res.data || !res.data.length) return NextResponse.json({ error: 'ไม่พบรายการนี้' }, { status: 404 });
 
     return NextResponse.json({ ok: true, id: id });
   } catch (e) {
-    return NextResponse.json({ error: e.message || 'แก้ไขไม่สำเร็จ' }, { status: 500 });
+    console.error('[api]', e);
+    return NextResponse.json({ error: 'แก้ไขไม่สำเร็จ' }, { status: 500 });
   }
 }
 
+// 🚨 ไม่ลบแถวจริง — แค่ประทับเวลาลง deleted_at (ถังขยะ)
+// ฟังก์ชัน mr_summary / mr_history กรอง deleted_at is null อยู่แล้ว ตัวเลข KPI จึงถูกต้อง
+// แต่ของยังอยู่ในฐาน กู้คืนได้ และตอบผู้ตรวจได้ว่าเคยมีอะไรแล้วใครลบ
 export async function DELETE(req, ctx) {
   try {
     const params = await ctx.params;
     const id = idOf(params.id);
     if (!id) return bad('รหัสรายการไม่ถูกต้อง');
 
+    let by = '';
+    try {
+      const body = await req.json();
+      by = String((body && body.by) || '').trim().slice(0, 80);
+    } catch (e) { /* DELETE ไม่มี body ก็ได้ */ }
+
     const db = getAdmin();
-    const res = await db.from('mr_return').delete().eq('id', id).select('id');
+    const res = await db.from('mr_return')
+      .update({ deleted_at: new Date().toISOString(), deleted_by: by || null })
+      .eq('id', id).is('deleted_at', null).select('id');
     if (res.error) throw new Error(res.error.message);
     if (!res.data || !res.data.length) return NextResponse.json({ error: 'ไม่พบรายการนี้' }, { status: 404 });
 
     return NextResponse.json({ ok: true, id: id });
   } catch (e) {
-    return NextResponse.json({ error: e.message || 'ลบไม่สำเร็จ' }, { status: 500 });
+    console.error('[api]', e);
+    return NextResponse.json({ error: 'ลบไม่สำเร็จ' }, { status: 500 });
   }
 }

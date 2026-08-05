@@ -52,7 +52,8 @@ export async function GET() {
       priced: items.filter((x) => x.hasPrice).length
     });
   } catch (e) {
-    return NextResponse.json({ error: e.message || 'โหลดราคายาไม่สำเร็จ' }, { status: 500 });
+    console.error('[api]', e);
+    return NextResponse.json({ error: 'โหลดราคายาไม่สำเร็จ' }, { status: 500 });
   }
 }
 
@@ -71,13 +72,20 @@ export async function PUT(req) {
         return NextResponse.json({ error: 'รหัสยาไม่ถูกต้อง' }, { status: 400 });
       }
       const price = Number(it.price);
-      if (!Number.isFinite(price) || price < 0) {
-        return NextResponse.json({ error: 'ราคาต้องเป็นตัวเลขไม่ติดลบ' }, { status: 400 });
+      // เพดานต้องต่ำกว่าที่ numeric(12,2) รับได้ ไม่งั้น Postgres ตีกลับเป็น 500
+      // แล้วราคาตัวอื่นที่แก้ค้างไว้พร้อมกันเป็นสิบตัวจะไม่ถูกบันทึกทั้งหมด (ส่งเป็นก้อนเดียว)
+      if (!Number.isFinite(price) || price < 0 || price > 999999.99) {
+        return NextResponse.json(
+          { error: 'ราคาของรหัสยา ' + id + ' ต้องอยู่ระหว่าง 0 ถึง 999999.99' },
+          { status: 400 }
+        );
       }
       const unitTh = String(it.unitTh == null ? '' : it.unitTh).trim().slice(0, 24);
       rows.push({
         drug_id: id,
-        unit_price: Math.round(price * 100) / 100,
+        // เก็บ 4 ตำแหน่ง — ไฟล์จาก HIS ให้ราคามาแบบ 0.4567 บาท/เม็ด
+        // ถ้าปัดเหลือ 2 ตำแหน่ง ยาที่ถูกกว่า 0.005 จะกลายเป็น 0 = ระบบถือว่ายังไม่ใส่ราคา
+        unit_price: Math.round(price * 10000) / 10000,
         unit_th: unitTh || null,
         updated_at: now
       });
@@ -88,8 +96,27 @@ export async function PUT(req) {
     const { error } = await db.from('mr_drug_price').upsert(rows, { onConflict: 'drug_id' });
     if (error) throw new Error(error.message);
 
-    return NextResponse.json({ ok: true, saved: rows.length });
+    // ── ตีราคาย้อนหลัง ────────────────────────────────────────────────────────
+    // backfill = true → เติมราคาให้แถวเก่าที่มูลค่ายังเป็น 0 ของยาชุดนี้
+    // 🚨 เติมเฉพาะแถวที่ราคาเป็น 0 เท่านั้น ไม่ทับแถวที่มีราคาอยู่แล้ว (กฎแช่ราคายังอยู่ครบ)
+    let backfilled = 0;
+    if (body.backfill) {
+      const items = rows
+        .filter((r) => r.unit_price > 0)
+        .map((r) => ({ drugId: r.drug_id, price: r.unit_price }));
+      if (items.length) {
+        const bf = await db.rpc('mr_backfill_price', {
+          p_items: items,
+          p_by: String(body.by || '').trim().slice(0, 80) || null
+        });
+        if (bf.error) throw new Error(bf.error.message);
+        backfilled = Number((bf.data || {}).updated || 0);
+      }
+    }
+
+    return NextResponse.json({ ok: true, saved: rows.length, backfilled: backfilled });
   } catch (e) {
-    return NextResponse.json({ error: e.message || 'บันทึกราคาไม่สำเร็จ' }, { status: 500 });
+    console.error('[api]', e);
+    return NextResponse.json({ error: 'บันทึกราคาไม่สำเร็จ' }, { status: 500 });
   }
 }

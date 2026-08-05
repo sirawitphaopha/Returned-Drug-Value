@@ -22,6 +22,25 @@ function renderLoading() {
   );
 }
 
+// สวิตช์บังคับดูหน้าจอแบบมือถือทั้งที่นั่งอยู่หน้าคอม — คัดจากมอคอัป (บรรทัด 655–663)
+// ต่างจากต้นฉบับ 3 จุด:
+//   1. ป้ายกำกับเปลี่ยนจาก "เดโม" เป็น "มุมมอง" เพราะของจริงไม่ใช่เดโมแล้ว
+//   2. ย้ายจากมุมขวาล่างไปมุมซ้ายล่าง — มุมขวาล่างเป็นที่ของปุ่มแก้/ลบ แถวล่างสุด
+//      ในตารางประวัติ สวิตช์ไปทับจนกดไม่ได้ทุกจอที่แคบกว่า ~1700px
+//   3. ซ่อนตอนมีหน้าต่างเด้งเปิดอยู่ ไม่งั้นลอยเด่นบนฉากมืด
+function renderLayoutSwitch(V) {
+  if (!V.showLayoutSwitch || V.anyModalOpen) return null;
+  return (
+    <div style={s('position:fixed;left:14px;bottom:14px;z-index:10;display:flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(30,36,32,.12);border-radius:10px;padding:5px 6px 5px 11px;box-shadow:0 6px 20px rgba(30,36,32,.14)')}>
+      <span style={s("font:500 10.5px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.06em;color:#9aa19c")}>มุมมอง</span>
+      <div style={s('display:flex;padding:2px;border-radius:8px;background:#f0f1ee;gap:2px')}>
+        <div onClick={V.useDesktop} style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutDeskBg, color: V.layoutDeskFg })}>คอม</div>
+        <div onClick={V.useMobile} style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutMobBg, color: V.layoutMobFg })}>มือถือ</div>
+      </div>
+    </div>
+  );
+}
+
 export function renderShell(app) {
   if (app.state.loading) return renderLoading();
   const V = renderVals(app);
@@ -43,6 +62,7 @@ export function renderShell(app) {
       {renderSettings(V)}
       {renderToast(V)}
       {renderConfirm(V)}
+      {renderLayoutSwitch(V)}
     </div>
   );
 }

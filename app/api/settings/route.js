@@ -13,7 +13,10 @@ function shape(row) {
   return {
     orgName: st.org_name || DEFAULT_ORG,
     defaultSource: st.default_source || 'opd',
-    favIds: Array.isArray(st.fav_ids) ? st.fav_ids : []
+    favIds: Array.isArray(st.fav_ids) ? st.fav_ids : [],
+    // รายชื่อคนในห้องยา — ใช้ในหน้าต่างเซ็นชื่อก่อนส่งล็อต
+    staff: Array.isArray(st.staff) ? st.staff : [],
+    lastRecorder: st.last_recorder || ''
   };
 }
 
@@ -22,13 +25,14 @@ export async function GET() {
     const db = getAdmin();
     const { data, error } = await db
       .from('mr_setting')
-      .select('org_name,default_source,fav_ids')
+      .select('org_name,default_source,fav_ids,staff,last_recorder')
       .eq('id', 1)
       .maybeSingle();
     if (error) throw new Error(error.message);
     return NextResponse.json({ setting: shape(data) });
   } catch (e) {
-    return NextResponse.json({ error: e.message || 'อ่านการตั้งค่าไม่สำเร็จ' }, { status: 500 });
+    console.error('[api]', e);
+    return NextResponse.json({ error: 'อ่านการตั้งค่าไม่สำเร็จ' }, { status: 500 });
   }
 }
 
@@ -62,17 +66,35 @@ export async function PUT(req) {
       patch.fav_ids = ids.slice(0, 6);
     }
 
+    if (body.staff !== undefined) {
+      if (!Array.isArray(body.staff)) {
+        return NextResponse.json({ error: 'รายชื่อผู้บันทึกไม่ถูกต้อง' }, { status: 400 });
+      }
+      const names = [];
+      for (const raw of body.staff) {
+        const n = String(raw == null ? '' : raw).trim().slice(0, 80);
+        if (n && names.indexOf(n) < 0) names.push(n);
+      }
+      patch.staff = names.slice(0, 60);
+    }
+
+    // จำคนที่เซ็นชื่อล่าสุด ครั้งหน้าจะได้ติ๊กไว้ให้แล้ว กดยืนยันอย่างเดียว
+    if (body.lastRecorder !== undefined) {
+      patch.last_recorder = String(body.lastRecorder || '').trim().slice(0, 80) || null;
+    }
+
     const db = getAdmin();
     const { data, error } = await db
       .from('mr_setting')
       .update(patch)
       .eq('id', 1)
-      .select('org_name,default_source,fav_ids')
+      .select('org_name,default_source,fav_ids,staff,last_recorder')
       .maybeSingle();
     if (error) throw new Error(error.message);
 
     return NextResponse.json({ setting: shape(data) });
   } catch (e) {
-    return NextResponse.json({ error: e.message || 'บันทึกการตั้งค่าไม่สำเร็จ' }, { status: 500 });
+    console.error('[api]', e);
+    return NextResponse.json({ error: 'บันทึกการตั้งค่าไม่สำเร็จ' }, { status: 500 });
   }
 }

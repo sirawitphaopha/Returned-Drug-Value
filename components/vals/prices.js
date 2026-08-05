@@ -37,7 +37,7 @@ export function pricesVals(app, d) {
     priceFilters: FILTERS.map((f) => ({
       key: f.key,
       label: f.label,
-      bg: st.priceFilter === f.key ? '#1e2420' : '#f0f1ee',
+      bg: st.priceFilter === f.key ? '#2f7d5d' : '#f0f1ee',
       fg: st.priceFilter === f.key ? '#fff' : '#414a44',
       pick: () => app.setPriceFilter(f.key)
     })),

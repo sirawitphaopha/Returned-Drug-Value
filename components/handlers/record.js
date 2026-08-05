@@ -1,15 +1,34 @@
 // หน้าบันทึก — เพิ่มยาเข้ารายการ · ป๊อปอัปใส่จำนวน · ส่งขึ้นฐานข้อมูล
 // คัดจากมอคอัป (บรรทัด 912–1051) ตัดสวิตช์จำลองเน็ตหลุดกับ resetDemo ออก
 import { money } from '@/lib/format';
+import { newUuid, fetchT, qtyNum } from '../helpers';
 
 const sumReuse = (rows) => rows.reduce((a, r) => a + (r.disposition === 'reuse' ? r.price * r.qty : 0), 0);
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+// จำนวนที่รับได้ — เพดานต้องตรงกับฝั่งเซิร์ฟเวอร์ ไม่งั้นกดบันทึกแล้วโดนตีกลับ
+// โดยที่ผู้ใช้ไม่รู้ว่าผิดตรงไหน
+const clampQty = (raw) => qtyNum(raw);
 
 export function recordActions(app) {
+  // 🚨 ยาที่ยังไม่ใส่ราคา ห้ามเพิ่มเข้ารายการ
+  // เพราะราคาถูกแช่ไว้ในแถวตอนบันทึก ถ้าบันทึกไปตอนราคาเป็น 0
+  // แถวนั้นจะมูลค่า 0 ตลอดกาล ไปใส่ราคาทีหลังก็ไม่ช่วย (ต้องตีราคาย้อนหลังเท่านั้น)
+  // เดิมมีแค่ตัวหนังสือแดงเล็ก ๆ ในผลค้นหา พอกดเลือกแล้วป้ายหายไป ไม่มีอะไรกั้นเลย
+  app.blockNoPrice = (drug) => {
+    if (drug && drug.price > 0) return false;
+    app.toast('ยา ' + (drug ? drug.name : '') + ' ยังไม่ใส่ราคา ไปตั้งราคาก่อน', '', false);
+    return true;
+  };
+
   app.addRow = (drug, qty, disp) => {
     const row = {
       rid: Date.now() + Math.random(),
       drugId: drug.id, name: drug.name, unit: drug.unit,
-      price: drug.price, qty: qty, disposition: disp
+      price: drug.price, qty: qty, disposition: disp,
+      // แปะ HN กับแหล่งที่มา ณ ตอนกดเพิ่มลงในแถวเลย
+      // ถ้าใช้ค่าของทั้งหน้าจอตอนกดบันทึก คนไข้คนที่ 2 จะทับ HN ของคนแรกทั้งล็อต
+      hn: app.state.hn || '', source: app.state.source
     };
     const rows = app.state.rows.concat([row]);
     app.persist({ rows: rows, saveFailed: false });
@@ -20,7 +39,8 @@ export function recordActions(app) {
 
   app.addInline = () => {
     const d = app.state.pending;
-    const qty = Math.max(0, parseInt(app.state.qtyInput || '0', 10) || 0);
+    const qty = clampQty(app.state.qtyInput);
+    if (d && app.blockNoPrice(d)) return;
     if (!d || !qty) {
       if (!d && app.searchRef.current) app.searchRef.current.focus();
       else if (app.qtyRef.current) app.qtyRef.current.focus();
@@ -43,32 +63,62 @@ export function recordActions(app) {
       sheet: { drug: drug, kind: editKind || 'add', id: editId || null },
       sheetQty: qty ? String(qty) : '',
       sheetDisp: disp || 'reuse',
+      sheetReason: '',
       query: ''
     }, () => { if (app.sheetQtyRef.current) app.sheetQtyRef.current.focus(); });
   };
 
-  app.closeSheet = () => app.setState({ sheet: null, sheetQty: '' });
+  app.closeSheet = () => app.setState({ sheet: null, sheetQty: '', sheetReason: '', sheetOff: null });
+
+  // ยานอกบัญชีโรงพยาบาล — คนไข้เอายาจาก รพ.อื่น/คลินิกมาคืน
+  // (เจอบ่อยตอนเยี่ยมบ้านและตอนคนไข้เสียชีวิต) เดิมค้นไม่เจอแล้วจบ ไม่มีทางไปต่อ
+  // มูลค่าก้อนนั้นหายจาก KPI ทั้งหมด
+  app.openOffListDrug = () => {
+    const name = (app.state.query || '').trim().slice(0, 160);
+    app.setState({
+      sheet: { drug: { id: null, name: name || 'ยาอื่น', unit: 'หน่วย', price: 0 }, kind: 'add', id: null },
+      sheetOff: { name: name, unit: 'หน่วย', price: '' },
+      sheetQty: '',
+      sheetDisp: 'reuse',
+      sheetReason: '',
+      query: ''
+    });
+  };
+
+  app.onOffField = (key) => (e) => {
+    const off = Object.assign({}, app.state.sheetOff || {});
+    off[key] = key === 'price' ? e.target.value.replace(/[^0-9.]/g, '').slice(0, 12) : e.target.value.slice(0, 160);
+    const drug = Object.assign({}, app.state.sheet.drug, {
+      name: (off.name || '').trim() || 'ยาอื่น',
+      unit: (off.unit || '').trim() || 'หน่วย',
+      price: Math.max(0, Math.round((parseFloat(off.price || '0') || 0) * 10000) / 10000)
+    });
+    app.setState({ sheetOff: off, sheet: Object.assign({}, app.state.sheet, { drug: drug }) });
+  };
 
   app.confirmSheet = () => {
     const s = app.state.sheet;
-    const qty = Math.max(0, parseInt(app.state.sheetQty || '0', 10) || 0);
+    const qty = clampQty(app.state.sheetQty);
     if (!s || !qty) return;
 
     if (s.kind === 'add') {
+      if (app.blockNoPrice(s.drug)) return;
       const row = {
         rid: Date.now() + Math.random(),
         drugId: s.drug.id, name: s.drug.name, unit: s.drug.unit,
-        price: s.drug.price, qty: qty, disposition: app.state.sheetDisp
+        price: s.drug.price, qty: qty, disposition: app.state.sheetDisp,
+        reason: app.state.sheetDisp === 'destroy' ? app.state.sheetReason : '',
+        hn: app.state.hn || '', source: app.state.source
       };
       const rows = app.state.rows.concat([row]);
-      app.persist({ rows: rows, sheet: null, sheetQty: '', saveFailed: false });
+      app.persist({ rows: rows, sheet: null, sheetQty: '', sheetReason: '', sheetOff: null, saveFailed: false });
       app.animateTo(sumReuse(rows));
       app.toast('เพิ่ม ' + s.drug.name, (app.state.sheetDisp === 'reuse' ? '+' : '−') + money(s.drug.price * qty));
       if (app.searchRef.current) app.searchRef.current.focus();
     } else if (s.kind === 'row') {
       const rows = app.state.rows.map((r) =>
-        r.rid === s.id ? Object.assign({}, r, { qty: qty, disposition: app.state.sheetDisp }) : r);
-      app.persist({ rows: rows, sheet: null, sheetQty: '' });
+        r.rid === s.id ? Object.assign({}, r, { qty: qty, disposition: app.state.sheetDisp, reason: app.state.sheetDisp === 'destroy' ? app.state.sheetReason : '' }) : r);
+      app.persist({ rows: rows, sheet: null, sheetQty: '', sheetReason: '' });
       app.animateTo(sumReuse(rows));
       app.toast('แก้ไขรายการแล้ว', money(s.drug.price * qty));
     } else {
@@ -80,18 +130,64 @@ export function recordActions(app) {
   // ส่งทั้งรอบขึ้นฐานข้อมูลทีเดียว
   // ใช้ batchId เดิมตอนกดลองส่งใหม่ เพราะที่เจอจริงบนเน็ตโรงพยาบาลคือ
   // "ข้อมูลเข้าฐานไปแล้วแต่คำตอบหายกลางทาง" ถ้าไม่กันไว้จะได้ข้อมูลซ้ำสองชุด
+  // ── ผู้บันทึกล็อต ──────────────────────────────────────────────────────────
+  // อยู่ในแผงข้างถัดจากวันที่/HN — เลือกครั้งเดียวค้างไว้ทั้งเวร ไม่มีป๊อปอัปกวน
+  app.toggleRecorderMenu = (e) => {
+    const open = !app.state.recorderMenuOpen;
+    // ถ้าช่องอยู่ค่อนไปทางล่างจอ ให้เมนูเด้งขึ้นบนแทน กันโดนตัดขอบล่าง
+    let up = false;
+    try {
+      const r = e && e.currentTarget && e.currentTarget.getBoundingClientRect();
+      if (r) up = r.bottom > window.innerHeight * 0.55;
+    } catch (err) { /* ไม่มี event ก็เด้งลงตามปกติ */ }
+    app.setState({ recorderMenuOpen: open, recorderMenuUp: up, recorderNew: '' });
+  };
+
+  app.closeRecorderMenu = () => app.setState({ recorderMenuOpen: false, recorderNew: '' });
+
+  app.pickRecorder = (name) => {
+    app.setState({ recorder: name, recorderMenuOpen: false, recorderNew: '' });
+    app.pushSetting({ lastRecorder: name });
+  };
+
+  app.onRecorderNew = (e) => app.setState({ recorderNew: e.target.value });
+
+  // พิมพ์ชื่อใหม่แล้วกดเพิ่ม → เก็บเข้ารายชื่อถาวร ครั้งหน้ามีให้เลือกเลย
+  app.addRecorder = () => {
+    const name = (app.state.recorderNew || '').trim().slice(0, 80);
+    if (!name) return;
+    const staff = app.state.staff.indexOf(name) < 0 ? app.state.staff.concat([name]) : app.state.staff;
+    app.setState({ staff: staff, recorder: name, recorderMenuOpen: false, recorderNew: '' });
+    app.pushSetting({ staff: staff, lastRecorder: name });
+  };
+
   app.save = async () => {
     const st = app.state;
-    if (!st.rows.length || st.saving) return;
+    // ยามในหน่วยความจำ ไม่ต้องรอ setState — กันกดรัวสองครั้งแล้วได้ batchId คนละตัว
+    // ซึ่งจะทำให้ระบบกันบันทึกซ้ำใช้ไม่ได้ แล้วข้อมูลเข้าฐานสองชุด
+    if (!st.rows.length || st.saving || app._saving) return;
 
-    const batchId = st.batchId || crypto.randomUUID();
-    const n = st.rows.length;
+    if (!ISO.test(st.date || '')) {
+      app.toast('เลือกวันที่ก่อนบันทึก', '', false);
+      return;
+    }
+    // ต้องมีชื่อผู้บันทึกเสมอ — ช่องอยู่ในแผงข้างถัดจากวันที่
+    if (!(st.recorder || '').trim()) {
+      app.toast('เลือกชื่อผู้บันทึกก่อน', '', false);
+      app.setState({ recorderMenuOpen: true, showMore: true });
+      return;
+    }
+
+    app._saving = true;
+    const batchId = st.batchId || newUuid();
+    const sending = st.rows;                       // ล็อกชุดที่จะส่งไว้ตรงนี้
+    const n = sending.length;
     const saved = app.savedTotal();
 
-    app.setState({ saving: true, saveFailed: false, batchId: batchId });
+    app.persist({ saving: true, saveFailed: false, saveError: '', batchId: batchId });
 
     try {
-      const res = await fetch('/api/returns', {
+      const res = await fetchT('/api/returns', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -99,27 +195,73 @@ export function recordActions(app) {
           date: st.date,
           source: st.source,
           hn: st.hn,
-          items: st.rows.map((r) => ({
+          recordedBy: st.recorder,
+          items: sending.map((r) => ({
             clientRid: String(r.rid),
             drugId: r.drugId,
+            // ยานอกบัญชี รพ. ไม่มีรหัสยา ต้องส่งชื่อ/หน่วย/ราคาที่พิมพ์เองไปแทน
+            name: r.drugId ? '' : r.name,
+            unit: r.drugId ? '' : r.unit,
+            price: r.drugId ? 0 : r.price,
             qty: r.qty,
-            disposition: r.disposition
+            disposition: r.disposition,
+            reason: r.reason || '',
+            // HN กับแหล่งที่มาติดไปกับแถวตอนกดเพิ่ม — คนไข้ 2 คนในล็อตเดียวจะได้ไม่ปนกัน
+            hn: r.hn || '',
+            source: r.source || st.source
           }))
         })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'บันทึกไม่สำเร็จ');
+      }, 20000);
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        // 400 = ข้อมูลไม่ผ่านการตรวจ กดลองส่งใหม่กี่ครั้งก็ไม่ผ่าน ต้องบอกสาเหตุจริง
+        // แยกจาก "ส่งไม่ถึงเซิร์ฟเวอร์" ที่กดลองใหม่แล้วช่วยได้
+        if (res.status >= 400 && res.status < 500) {
+          app.setState({ saving: false, saveFailed: false });
+          app.toast(data.error || 'ข้อมูลไม่ถูกต้อง แก้แล้วลองใหม่', '', false);
+          return;
+        }
+        throw new Error(data.error || 'บันทึกไม่สำเร็จ');
+      }
+
+      // 🚨 หักเฉพาะแถวที่ส่งไปแล้ว ห้ามล้างทั้งกระดาน
+      // ระหว่างรอเซิร์ฟเวอร์ตอบ (เน็ตโรงพยาบาลช้า 2-3 วิ) เภสัชกรพิมพ์ยาเพิ่มได้
+      // ถ้าล้างทั้งก้อน ยาตัวที่เพิ่งเพิ่มจะหายเงียบโดยไม่มีใครรู้
+      const sentRid = new Set(sending.map((r) => String(r.rid)));
+      const left = app.state.rows.filter((r) => !sentRid.has(String(r.rid)));
 
       app.persist({
-        rows: [], saveFailed: false, hn: '', batchId: null, saving: false,
+        rows: left,
+        saveFailed: false,
+        saveError: '',
+        hn: left.length ? app.state.hn : '',
+        // วันที่ต้องเด้งกลับเป็นวันนี้เสมอหลังบันทึก ไม่งั้นคนที่ย้อนวันไปกรอกของค้าง
+        // แล้วลืมกดกลับ จะบันทึกของวันนี้ลงวันเมื่อวานทั้งวัน
+        date: left.length ? app.state.date : (app.state.today || st.date),
+        batchId: null,
+        saving: false,
+        lastLot: data.lot || '',
         fy: data.fy || st.fy
       });
       app.invalidate();
-      app.animateTo(0);
-      app.toast('บันทึก ' + n + ' รายการแล้ว', money(saved));
+      app.animateTo(sumReuse(left));
+
+      // เซิร์ฟเวอร์บอกจำนวนที่เข้าฐานจริง ถ้าน้อยกว่าที่ส่งแปลว่าบางแถวเคยบันทึกไปแล้ว
+      // (กดลองส่งใหม่หลังเน็ตหลุด) ต้องบอกตรงๆ ไม่ใช่บอกว่าบันทึกครบ
+      const got = typeof data.saved === 'number' ? data.saved : n;
+      const lotTag = data.lot ? ' · ล็อต ' + data.lot : '';
+      if (got < n) {
+        app.toast('บันทึก ' + got + ' รายการ · อีก ' + (n - got) + ' รายการเคยบันทึกไปแล้ว', '', false);
+      } else {
+        app.toast('บันทึก ' + n + ' รายการแล้ว' + lotTag, money(saved));
+      }
     } catch (e) {
-      app.setState({ saving: false, saveFailed: true });
-      app.toast('ส่งไม่สำเร็จ กดลองส่งใหม่ได้', '', false);
+      const msg = (e && e.message) || '';
+      app.setState({ saving: false, saveFailed: true, saveError: msg });
+      app.toast(msg || 'ส่งไม่สำเร็จ กดลองส่งใหม่ได้', '', false);
+    } finally {
+      app._saving = false;
     }
   };
 }

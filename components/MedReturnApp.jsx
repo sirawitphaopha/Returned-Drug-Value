@@ -5,6 +5,7 @@ import React from 'react';
 import { installHandlers } from './handlers';
 import { renderShell } from './shell';
 import { LS, readLS, readCache } from './helpers';
+import { todayISO } from '@/lib/format';
 
 export default class MedReturnApp extends React.Component {
   constructor(props) {
@@ -23,20 +24,37 @@ export default class MedReturnApp extends React.Component {
       // ยอดสะสมปีงบ มาจากฐานข้อมูล ไม่ได้นับจากรายการในเครื่องเหมือนมอคอัป
       fy: { saved: 0, lost: 0, records: 0, qty: 0 },
 
+      // บังคับดูหน้าจอแบบมือถือทั้งที่นั่งอยู่หน้าคอม — สวิตช์อยู่มุมขวาล่าง
+      forceNarrow: false,
+
       query: '',
+      hi: 0,               // แถวที่ไฮไลต์ในผลค้นหา — เลื่อนด้วยลูกศรขึ้น/ลง
       hn: '',
       source: 'opd',
+      sourceTouched: false,
       orgName: 'ห้องยาผู้ป่วยนอก · รพ.ปรางค์กู่',
       favIds: [],
+
+      // ── เซ็นชื่อก่อนส่งล็อต ────────────────────────────────────────────────
+      // 1 รอบกดบันทึก = 1 ล็อต · ต้องรู้ว่าใครเป็นคนบันทึก ไม่งั้นสืบกลับไม่ได้
+      staff: [],              // รายชื่อคนในห้องยา (ก๊อปมาจาก ME-DRP 16 คน แก้ได้ในหน้าตั้งค่า)
+      recorder: '',           // คนที่เลือกไว้ตอนนี้ — ค้างไว้ทั้งเวร
+      recorderMenuOpen: false,
+      recorderMenuUp: false,  // เมนูเด้งขึ้นบนเมื่อช่องอยู่ค่อนล่างจอ
+      recorderNew: '',        // ช่องพิมพ์ชื่อใหม่ เผื่อมีคนใหม่มาช่วย
+      lastLot: '',            // เลขล็อตที่เพิ่งบันทึกสำเร็จ
       defaultSource: 'opd',
       settingsOpen: false,
       favQuery: '',
       showMore: false,
       saveFailed: false,
+      saveError: '',
       rows: [],
       sheet: null,
       sheetQty: '',
       sheetDisp: 'reuse',
+      sheetReason: '',
+      sheetOff: null,        // ยานอกบัญชี รพ. — {name, unit, price} ที่พิมพ์เอง
 
       // ประวัติมาจากฐานข้อมูล ไม่ได้กองอยู่ในเครื่องเหมือนมอคอัป (มอคอัปใช้ state.records)
       histQuery: '',
@@ -45,11 +63,22 @@ export default class MedReturnApp extends React.Component {
       histTotal: 0,
       histSaved: 0,
       histLoading: false,
+      histTrash: false,      // เปิดดูถังขยะแทนรายการปกติ
+      histLot: '',           // ดูเฉพาะล็อตเดียว (เว้นว่าง = ทุกล็อต)
+      histFrom: '',          // ช่วงวันที่เลือกเอง
+      histTo: '',
+      histOffset: 0,         // ดูเพิ่มทีละ 60 แถว
+      histMore: [],          // แถวที่โหลดเพิ่มมาแล้ว
+      lots: [],              // รายการล็อต — หน้าแยกดูรายล็อต
+      lotsLoading: false,
       confirm: null,
 
       // หน้าสรุป — ยอดทั้งปีงบคิดมาจากฐานข้อมูลก้อนเดียว
       sum: null,
       sumLoading: false,
+      sumFy: 0,              // ปีงบที่เลือกดู (0 = ปีปัจจุบัน)
+      sumFyYears: [],
+      topReturned: [],       // ยาที่ถูกคืนบ่อยที่สุด — เรียงตามจำนวนครั้ง
       exporting: false,
       dark: false,
       animSaved: 0,
@@ -75,7 +104,11 @@ export default class MedReturnApp extends React.Component {
     this.qtyRef = React.createRef();
     this.sheetQtyRef = React.createRef();
 
-    this._onResize = () => this.setState({ vw: window.innerWidth });
+    // วาดใหม่เฉพาะตอนความกว้างเปลี่ยนจริง — ลากขอบหน้าต่างจะยิง event รัวมาก
+    // แต่ละครั้งวิ่ง renderVals ใหม่ทั้งก้อน (กรองยา 417 ตัว) เครื่องเก่าจะกระตุก
+    this._onResize = () => {
+      if (window.innerWidth !== this.state.vw) this.setState({ vw: window.innerWidth });
+    };
     this._raf = null;
     this._toastTimer = null;
     this._orgTimer = null;
@@ -92,13 +125,33 @@ export default class MedReturnApp extends React.Component {
     const setting = readCache(LS.setting);
 
     const patch = { loading: false, vw: window.innerWidth, dark: dark };
-    if (Array.isArray(draft)) patch.rows = draft;
+
+    // วันที่ต้องมีค่าตั้งแต่วินาทีแรก ไม่งั้นถ้า /api/bootstrap ล่ม (เน็ตโรงพยาบาลสะดุด)
+    // ช่องวันที่จะว่างตลอด แล้วกดบันทึกกี่ครั้งก็ไม่ผ่าน โดยไม่มีใครบอกว่าทำไม
+    patch.today = todayISO();
+    patch.date = patch.today;
+
+    // ร่างรุ่นเก่าเก็บเป็น array ล้วน รุ่นใหม่เป็น object ที่มี batchId/hn/source/date ด้วย
+    const box = Array.isArray(draft) ? { rows: draft } : (draft || {});
+    // กรองแถวที่รูปแบบเสียทิ้ง ไม่งั้นแถวที่ขาดช่อง price จะทำให้จอขาวถาวร
+    // (รีเฟรชก็อ่านของเสียชุดเดิมกลับมาอีก วนไม่จบ)
+    if (Array.isArray(box.rows)) {
+      patch.rows = box.rows.filter(
+        (r) => r && r.rid != null && typeof r.price === 'number' && typeof r.qty === 'number'
+      );
+      if (box.batchId) patch.batchId = box.batchId;
+      if (typeof box.hn === 'string') patch.hn = box.hn;
+      if (typeof box.source === 'string') patch.source = box.source;
+      if (box.sourceTouched) patch.sourceTouched = true;
+      if (typeof box.date === 'string' && box.date) patch.date = box.date;
+    }
+
     if (Array.isArray(drugs)) patch.drugs = drugs;
-    if (setting) {
+    if (setting && Array.isArray(setting.favIds)) {
       patch.orgName = setting.orgName;
       patch.favIds = setting.favIds;
       patch.defaultSource = setting.defaultSource;
-      patch.source = setting.defaultSource;
+      if (!patch.sourceTouched) patch.source = setting.defaultSource;
     }
 
     this.setState(patch, () => {
@@ -106,14 +159,52 @@ export default class MedReturnApp extends React.Component {
       this.boot();
     });
     window.addEventListener('resize', this._onResize);
+    window.addEventListener('keydown', this._onKey);
+    // ทวนวันทุก 1 นาที — คอมห้องยาเปิดค้างข้ามคืนเป็นเรื่องปกติ
+    this._dayTimer = setInterval(this.checkDayRollover, 60000);
+    document.addEventListener('visibilitychange', this._onVisible);
+
+    // ป๊อปอัปหนีแป้นพิมพ์บนมือถือ — บาง iOS ไม่หดพื้นที่ให้แม้ตั้ง interactiveWidget แล้ว
+    // เลยวัดความสูงจริงของแป้นพิมพ์เอง แล้วส่งเป็นตัวแปร --kb ให้ CSS ใช้ดันป๊อปอัปขึ้น
+    if (window.visualViewport) {
+      this._vv = window.visualViewport;
+      this._onVV = () => {
+        const gap = Math.max(0, window.innerHeight - this._vv.height - this._vv.offsetTop);
+        document.documentElement.style.setProperty('--kb', Math.round(gap) + 'px');
+      };
+      this._vv.addEventListener('resize', this._onVV);
+      this._vv.addEventListener('scroll', this._onVV);
+    }
   }
+
+  // Esc ปิดหน้าต่างที่เปิดอยู่ทีละชั้น เริ่มจากชั้นบนสุด
+  // (หน้าต่างยืนยันลบกดพื้นหลังไม่ปิดโดยตั้งใจ ถ้าไม่มี Esc ก็เหลือทางเดียวคือเมาส์)
+  _onKey = (e) => {
+    if (e.key !== 'Escape') return;
+    const st = this.state;
+    if (st.confirm) { this.closeConfirm(); return; }
+    if (st.recorderMenuOpen) { this.closeRecorderMenu(); return; }
+    if (st.sheet) { this.closeSheet(); return; }
+    if (st.settingsOpen) { this.setState({ settingsOpen: false, favQuery: '' }); }
+  };
+
+  _onVisible = () => {
+    if (!document.hidden) this.checkDayRollover();
+  };
 
   componentWillUnmount() {
     if (this._raf) cancelAnimationFrame(this._raf);
     if (this._toastTimer) clearTimeout(this._toastTimer);
     if (this._orgTimer) clearTimeout(this._orgTimer);
     if (this._histTimer) clearTimeout(this._histTimer);
+    if (this._dayTimer) clearInterval(this._dayTimer);
     window.removeEventListener('resize', this._onResize);
+    window.removeEventListener('keydown', this._onKey);
+    document.removeEventListener('visibilitychange', this._onVisible);
+    if (this._vv && this._onVV) {
+      this._vv.removeEventListener('resize', this._onVV);
+      this._vv.removeEventListener('scroll', this._onVV);
+    }
   }
 
   render() {
