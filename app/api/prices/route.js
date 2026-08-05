@@ -14,7 +14,7 @@ export async function GET() {
     const db = getAdmin();
     const [drugsRes, priceRes] = await Promise.all([
       db.from('drugs').select('id,generic,strength,unit,percent,form,release,hidden').order('id'),
-      db.from('mr_drug_price').select('drug_id,unit_price,unit_th,display_name,note')
+      db.from('mr_drug_price').select('drug_id,unit_price,unit_th,display_name,note,needs_check,suggestions')
     ]);
     if (drugsRes.error) throw new Error(drugsRes.error.message);
     if (priceRes.error) throw new Error(priceRes.error.message);
@@ -41,7 +41,11 @@ export async function GET() {
           defaultUnit: FORM_UNIT[(d.form || '').trim()] || UNIT_FALLBACK,
           price,
           hasPrice: price > 0,
-          note: (p.note || '').trim()
+          note: (p.note || '').trim(),
+          // จับคู่กับ HIS ไม่ชัวร์ รอเภสัชกรกดเลือก · ราคายังเป็น 0 อยู่
+          needsCheck: p.needs_check === true,
+          // ตัวเลือกราคาที่ระบบเสนอ ให้กดเลือกในหน้าจัดการราคา
+          suggestions: Array.isArray(p.suggestions) ? p.suggestions : []
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name, 'en'));
@@ -81,14 +85,32 @@ export async function PUT(req) {
         );
       }
       const unitTh = String(it.unitTh == null ? '' : it.unitTh).trim().slice(0, 24);
-      rows.push({
+      const row = {
         drug_id: id,
         // เก็บ 4 ตำแหน่ง — ไฟล์จาก HIS ให้ราคามาแบบ 0.4567 บาท/เม็ด
         // ถ้าปัดเหลือ 2 ตำแหน่ง ยาที่ถูกกว่า 0.005 จะกลายเป็น 0 = ระบบถือว่ายังไม่ใส่ราคา
         unit_price: Math.round(price * 10000) / 10000,
         unit_th: unitTh || null,
         updated_at: now
-      });
+      };
+
+      // ── ช่องเสริมสำหรับการนำเข้าราคาจาก HIS ────────────────────────────────
+      // ส่งมาเมื่อไหร่ก็เขียนทับ ไม่ส่งมาก็ไม่แตะของเดิม
+      // note        = ที่มาของราคา เช่น "HIS 5 ส.ค. 69 · CefTRI-axone 1 g/vial"
+      // needsCheck  = จับคู่ไม่ชัวร์ รอเภสัชกรกดเลือก
+      // suggestions = ตัวเลือกราคาที่ระบบเสนอ ให้กดเลือกในหน้าจัดการราคา
+      if (it.note !== undefined) row.note = String(it.note || '').trim().slice(0, 400) || null;
+      if (it.needsCheck !== undefined) row.needs_check = !!it.needsCheck;
+      if (it.suggestions !== undefined) {
+        const list = Array.isArray(it.suggestions) ? it.suggestions : [];
+        row.suggestions = list.slice(0, 6).map((sg) => ({
+          name: String(sg.name || '').slice(0, 90),
+          price: Number(sg.price) || 0,
+          unit: String(sg.unit || '').slice(0, 24)
+        }));
+      }
+
+      rows.push(row);
     }
 
     const db = getAdmin();

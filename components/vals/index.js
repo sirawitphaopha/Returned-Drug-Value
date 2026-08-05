@@ -9,6 +9,7 @@ import { sheetVals } from './sheet';
 import { settingsVals } from './settings';
 import { pricesVals } from './prices';
 import { signVals } from './sign';
+import { himportVals } from './himport';
 
 export function renderVals(app) {
   const d = derive(app);
@@ -21,7 +22,8 @@ export function renderVals(app) {
     sheetVals(app, d),
     settingsVals(app, d),
     pricesVals(app, d),
-    signVals(app, d)
+    signVals(app, d),
+    himportVals(app, d)
   );
 
   // เตือนตอน dev ถ้ามีคีย์ซ้ำข้ามไฟล์ — เคยพลาดมาแล้ว (fyLabel ของหน้าบันทึกโดน summary ทับ

@@ -70,11 +70,22 @@ export function pricesActions(app) {
         app.toast('ราคาต้องเป็นตัวเลขไม่ติดลบ', '', false);
         return;
       }
-      items.push({
+      const row = {
         drugId: base.id,
         price: price,
         unitTh: e.unitTh === undefined ? base.unitTh : e.unitTh.trim()
-      });
+      };
+
+      // ยาที่ระบบจับคู่มาไม่ชัวร์ พอเภสัชกรใส่ราคาแล้ว = ตัดสินใจแล้ว
+      // ต้องเคลียร์ธง "รอกดเลือก" ไม่งั้นค้างอยู่ในแท็บนั้นตลอดไป
+      // และแทนที่หมายเหตุด้วยของที่บอกว่าใครยืนยัน จะได้แยกออกจากที่ระบบเดามาเอง
+      if (base.needsCheck && price > 0) {
+        row.needsCheck = false;
+        row.suggestions = [];
+        row.note = 'ยืนยันโดยเภสัชกร' + (app.state.recorder ? ' · ' + app.state.recorder : '');
+      }
+
+      items.push(row);
     }
     if (!items.length) { app.setState({ priceEdits: {} }); return; }
 

@@ -109,7 +109,20 @@ export default class MedReturnApp extends React.Component {
       priceQuery: '',
       priceFilter: 'all',
       priceEdits: {},
-      priceShown: 40
+      priceShown: 40,
+
+      // ── นำเข้าราคาจากไฟล์ HIS ────────────────────────────────────────────
+      // hisRows = ผลจับคู่รายตัว ถืออยู่ในหน่วยความจำอย่างเดียว
+      // ไม่เก็บลง localStorage เพราะเป็นข้อมูลทั้งบัญชียาของโรงพยาบาล
+      hisOpen: false,
+      hisRows: [],
+      hisTotal: 0,
+      hisFileName: '',
+      hisReading: false,
+      hisError: '',
+      hisTab: 'sure',
+      hisSaving: false,
+      hisBackfill: true
     };
 
     this.searchRef = React.createRef();

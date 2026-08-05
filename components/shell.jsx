@@ -13,6 +13,7 @@ import { renderToast } from './pages/toast';
 import { renderConfirm } from './pages/confirm';
 import { renderAbout } from './pages/about';
 import { renderFooter } from './pages/footer';
+import { renderHisImport } from './pages/himport';
 
 // เซิร์ฟเวอร์ยังไม่รู้ความกว้างจอ ถ้าวาดเลยจะเห็นหน้ามือถือแวบหนึ่งบนคอม
 // เลยรอวัดจอใน componentDidMount ก่อน ระหว่างนั้นโชว์วงกลมหมุน
@@ -70,6 +71,7 @@ export function renderShell(app) {
       {V.recordNarrow && renderSaveBar(V)}
       {V.isPrices && renderPriceBar(V)}
       {renderSettings(V)}
+      {renderHisImport(V)}
       {renderToast(V)}
       {renderConfirm(V)}
     </div>

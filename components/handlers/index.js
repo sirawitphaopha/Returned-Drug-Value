@@ -7,6 +7,7 @@ import { summaryActions } from './summary';
 import { settingsActions } from './settings';
 import { pricesActions } from './prices';
 import { demoActions } from './demo';
+import { himportActions } from './himport';
 
 export function installHandlers(app) {
   uiActions(app);
@@ -17,4 +18,5 @@ export function installHandlers(app) {
   settingsActions(app);
   pricesActions(app);
   demoActions(app);
+  himportActions(app);
 }

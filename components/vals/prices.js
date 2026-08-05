@@ -3,6 +3,9 @@ import { priceDirty } from '../handlers/prices';
 
 const FILTERS = [
   { key: 'all', label: 'ทั้งหมด' },
+  // แคลร์จับคู่ราคาจาก HIS มาให้แล้ว แต่ที่ไม่ชัวร์ต้องให้เภสัชกรกดเลือกเอง
+  // แท็บนี้คือรายการงานที่พี่กันต้องไล่เคลียร์ ตั้งไว้เป็นตัวที่สองเพราะเป็นงานหลัก
+  { key: 'check', label: 'รอกดเลือก' },
   { key: 'todo', label: 'ยังไม่ใส่ราคา' },
   { key: 'done', label: 'ใส่ราคาแล้ว' }
 ];
@@ -14,10 +17,13 @@ export function pricesVals(app, d) {
 
   const matched = st.priceItems.filter((it) => {
     if (q.length && it.name.toLowerCase().indexOf(q) < 0) return false;
+    if (st.priceFilter === 'check') return !!it.needsCheck;
     if (st.priceFilter === 'todo') return !it.hasPrice;
     if (st.priceFilter === 'done') return it.hasPrice;
     return true;
   });
+
+  const needCheck = st.priceItems.filter((it) => it.needsCheck).length;
 
   const dirty = st.priceItems.filter((it) => priceDirty(it, edits));
   const priced = st.priceItems.filter((it) => it.hasPrice).length;
@@ -36,9 +42,10 @@ export function pricesVals(app, d) {
     onPriceQuery: app.onPriceQuery,
     priceFilters: FILTERS.map((f) => ({
       key: f.key,
-      label: f.label,
-      bg: st.priceFilter === f.key ? '#2f7d5d' : '#f0f1ee',
-      fg: st.priceFilter === f.key ? '#fff' : '#414a44',
+      // แท็บ "รอกดเลือก" ติดตัวเลขงานค้างไว้ จะได้รู้ว่าเหลืออีกกี่ตัว
+      label: f.key === 'check' && needCheck ? f.label + ' ' + needCheck : f.label,
+      bg: st.priceFilter === f.key ? '#2f7d5d' : (f.key === 'check' && needCheck ? '#fdf1ed' : '#f0f1ee'),
+      fg: st.priceFilter === f.key ? '#fff' : (f.key === 'check' && needCheck ? '#c2543c' : '#414a44'),
       pick: () => app.setPriceFilter(f.key)
     })),
 
@@ -63,7 +70,20 @@ export function pricesVals(app, d) {
         // ปล่อยว่าง = ใช้หน่วยเริ่มต้นของกลุ่ม placeholder โชว์ให้เห็นว่าจะได้หน่วยอะไร
         unitValue: e.unitTh === undefined ? it.unitTh : e.unitTh,
         unitPlaceholder: it.defaultUnit,
-        onUnit: (ev) => app.editUnit(it.id, ev.target.value)
+        onUnit: (ev) => app.editUnit(it.id, ev.target.value),
+
+        // ── ที่มาของราคา + ตัวเลือกที่ระบบเสนอ ────────────────────────────
+        // แคลร์จับคู่จากไฟล์ HIS มาให้ล่วงหน้า พี่กันแค่กดเลือกตัวที่ถูก
+        note: it.note || '',
+        needsCheck: !!it.needsCheck,
+        suggests: (it.suggestions || []).map((sg, i) => ({
+          key: it.id + '-' + i,
+          name: sg.name,
+          priceLabel: Number(sg.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ฿/' + (sg.unit || '-'),
+          // กดแล้วเติมราคาลงช่องเลย ยังไม่บันทึกจนกว่าจะกดปุ่มบันทึกด้านล่าง
+          pick: () => app.editPrice(it.id, String(sg.price)),
+          on: String(e.price === undefined ? (it.price || '') : e.price) === String(sg.price)
+        }))
       };
     }),
 

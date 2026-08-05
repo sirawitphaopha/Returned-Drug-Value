@@ -22,6 +22,15 @@ export function renderPrices(V) {
           <div style={{ width: V.priceProgressW, background: '#2f7d5d' }}></div>
         </div>
 
+        {/* นำเข้าราคาทีเดียวจากไฟล์ HIS — เร็วกว่าพิมพ์ทีละตัว 417 รอบมาก
+            แต่ยังต้องตรวจทานก่อนบันทึกเสมอ เพราะชื่อยาสองฝั่งเขียนคนละแบบ */}
+        <div onClick={V.openHisImport} className="hv-teal tap" style={s('display:flex;align-items:center;justify-content:center;gap:8px;height:44px;border-radius:12px;background:#2f7d5d;color:#fff;font:600 14px Sarabun,sans-serif;cursor:pointer;margin-bottom:10px;box-shadow:0 2px 8px -2px rgba(47,125,93,.55)')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
+            <path d="M12 20.5v-11" /><path d="M7.2 13.8 12 9l4.8 4.8" /><path d="M4.5 4.5h15" />
+          </svg>
+          นำเข้าราคาจาก HIS
+        </div>
+
         <input value={V.priceQuery} onChange={V.onPriceQuery} placeholder="ค้นชื่อยา" style={s('width:100%;height:46px;padding:0 14px;border:1px solid rgba(30,36,32,.16);border-radius:12px;background:#f6f7f4;font:400 15px Sarabun,sans-serif;color:#1e2420')} />
 
         <div style={s('display:flex;gap:6px;margin-top:10px;flex-wrap:wrap')}>
@@ -50,16 +59,46 @@ export function renderPrices(V) {
 
         <div style={s('display:flex;flex-direction:column;gap:7px')}>
           {V.priceRows.map((p) => (
-            <div key={p.id} style={sx('background:#fff;border-radius:11px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap', { border: '1px solid ' + p.border })}>
-              <div style={s('min-width:150px;flex:1')}>
-                <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif')}>{p.name}</div>
-                <div style={sx('font:400 11.5px/1.3 Sarabun,sans-serif', { color: p.subColor })}>{p.sub}{p.warnLabel}</div>
+            <div key={p.id} style={sx('background:#fff;border-radius:11px;padding:10px 12px', { border: '1px solid ' + p.border })}>
+              <div style={s('display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap')}>
+                <div style={s('min-width:150px;flex:1')}>
+                  <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif')}>{p.name}</div>
+                  <div style={sx('font:400 11.5px/1.3 Sarabun,sans-serif', { color: p.subColor })}>{p.sub}{p.warnLabel}</div>
+                  {/* ที่มาของราคา — บอกว่าไปหยิบมาจากบรรทัดไหนในไฟล์ HIS
+                      สำคัญมาก เพราะเภสัชกรต้องดูออกว่าจับคู่ถูกตัวหรือเปล่า */}
+                  {p.note && (
+                    <div style={s('font:400 11px/1.4 Sarabun,sans-serif;color:#9aa19c;margin-top:2px;overflow-wrap:anywhere')}>{p.note}</div>
+                  )}
+                </div>
+                <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
+                  <input value={p.priceValue} onChange={p.onPrice} inputMode="decimal" placeholder="0.00" style={s("width:96px;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:600 15px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;text-align:right;color:#1e2420")} />
+                  <span style={s("font:500 13px 'IBM Plex Sans Thai',sans-serif;color:#6b746e;flex:none")}>฿ /</span>
+                  <input value={p.unitValue} onChange={p.onUnit} placeholder={p.unitPlaceholder} style={s('width:82px;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 14px Sarabun,sans-serif;color:#1e2420')} />
+                </div>
               </div>
-              <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
-                <input value={p.priceValue} onChange={p.onPrice} inputMode="decimal" placeholder="0.00" style={s("width:96px;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:600 15px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;text-align:right;color:#1e2420")} />
-                <span style={s("font:500 13px 'IBM Plex Sans Thai',sans-serif;color:#6b746e;flex:none")}>฿ /</span>
-                <input value={p.unitValue} onChange={p.onUnit} placeholder={p.unitPlaceholder} style={s('width:82px;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 14px Sarabun,sans-serif;color:#1e2420')} />
-              </div>
+
+              {/* ราคาที่ระบบเสนอ — กดปุ่มแล้วเติมลงช่องราคาให้เลย ไม่ต้องพิมพ์เอง
+                  ยังไม่บันทึกจนกว่าจะกดปุ่มบันทึกที่แถบล่างจอ */}
+              {p.suggests.length > 0 && (
+                <div style={s('margin-top:9px;padding-top:9px;border-top:1px dashed rgba(30,36,32,.12)')}>
+                  <div style={s("font:600 10.5px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.06em;color:rgba(30,36,32,.45);margin-bottom:6px")}>เลือกราคาที่ถูกต้อง</div>
+                  <div style={s('display:flex;flex-direction:column;gap:5px')}>
+                    {p.suggests.map((sg) => (
+                      <div key={sg.key} onClick={sg.pick} className="tap" style={sx('display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;cursor:pointer', {
+                        background: sg.on ? '#e3f0e8' : '#f6f7f4',
+                        border: '1px solid ' + (sg.on ? 'rgba(47,125,93,.36)' : 'transparent')
+                      })}>
+                        <span style={sx('width:14px;height:14px;border-radius:50%;flex:none', {
+                          border: '1.6px solid ' + (sg.on ? '#2f7d5d' : 'rgba(30,36,32,.3)'),
+                          background: sg.on ? '#2f7d5d' : '#fff'
+                        })}></span>
+                        <span style={s('flex:1;min-width:0;font:400 12px/1.4 Sarabun,sans-serif;overflow-wrap:anywhere')}>{sg.name}</span>
+                        <span style={s("flex:none;font:600 12.5px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{sg.priceLabel}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
