@@ -204,6 +204,11 @@ scripts/
   005_functions_v2.sql      ฟังก์ชันรุ่น 2 — กรองของที่ลบ · เลขล็อต · ตีราคาย้อนหลัง
 ```
 
+```
+.claude/skills/working-with-gun/SKILL.md   กฎการทำงานกลาง (พกไปได้ทุกโปรเจกต์)
+docs/CLAIRE-CONTEXT.md                     บริบทเฉพาะโปรเจกต์นี้ + การตัดสินใจที่เคาะแล้ว
+```
+
 รายละเอียดว่าไฟล์ไหนทำอะไร แก้ตรงไหน อ่านที่ [CLAUDE.md](CLAUDE.md)
 รายการบั๊กที่เจอกับข้อเสนอ อ่านที่ [docs/REPORT-2026-08-05.md](docs/REPORT-2026-08-05.md)
 งานที่ยังไม่ได้ทำ อ่านที่ [docs/ROADMAP.md](docs/ROADMAP.md)

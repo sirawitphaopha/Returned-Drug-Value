@@ -115,6 +115,8 @@ export default class MedReturnApp extends React.Component {
     this.searchRef = React.createRef();
     this.qtyRef = React.createRef();
     this.sheetQtyRef = React.createRef();
+    // พื้นที่เลื่อนหลักของทั้งแอป — goScreen ใช้เด้งกลับบนสุดตอนสลับแท็บ
+    this.scrollRef = React.createRef();
 
     // ── วัดความสูงแถบกรองหน้าประวัติ ─────────────────────────────────────────
     // หัวตารางต้องติดใต้แถบกรองพอดี ห่างเกินไปจะเห็นแถวลอดผ่าน ชิดเกินไปก็ทับกัน

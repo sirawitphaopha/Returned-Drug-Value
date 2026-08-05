@@ -40,7 +40,10 @@ export function renderShell(app) {
       )}
       {/* พื้นที่เลื่อน — ใช้ flex คอลัมน์เพื่อดันท้ายเว็บลงล่างสุดเสมอ
           แม้เนื้อหาจะสั้นกว่าจอ (margin-top:auto ในตัว footer) */}
-      <div style={s('flex:1;overflow-y:auto;min-height:0;position:relative;display:flex;flex-direction:column')}>
+      {/* overflow-anchor:none = ปิดระบบ "ยึดตำแหน่งเลื่อน" ของเบราว์เซอร์
+          ปกติมันช่วยไม่ให้จอกระตุกตอนเนื้อหาข้างบนโตขึ้น แต่ที่นี่มันกลับดึงตำแหน่งเดิมกลับมา
+          หลังสลับแท็บแล้วข้อมูลโหลดเสร็จ ทำให้เปิดหน้าสรุปมาแล้วอยู่กลางหน้า (พี่กันแจ้งบั๊ก) */}
+      <div ref={app.scrollRef} style={s('flex:1;overflow-y:auto;overflow-anchor:none;min-height:0;position:relative;display:flex;flex-direction:column')}>
         {/* กล่องครอบเนื้อหา — ยืดเต็มพื้นที่ที่เหลือ ท้ายเว็บเลยถูกดันลงล่างสุดเอง
             ไม่ต้องพึ่ง margin-top:auto
 
