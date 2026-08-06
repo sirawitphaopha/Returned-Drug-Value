@@ -117,6 +117,19 @@ export function renderSettings(V) {
             <div onClick={V.openPrices} className="hv-bg-e3f" style={s('height:46px;border-radius:10px;background:#eef6f1;display:flex;align-items:center;justify-content:center;gap:9px;font:600 14px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>
               ตั้งราคายา <span style={s("font:500 12px 'IBM Plex Sans Thai',sans-serif;color:#6b746e;font-variant-numeric:tabular-nums")}>{V.priceProgressLabel}</span>
             </div>
+
+            {/* ออกจากระบบ — โผล่เฉพาะตอนเว็บล็อกด้วยรหัสผ่านห้องยาอยู่ (พี่กันขอ)
+                วางไว้ล่างสุด สีจางกว่าปุ่มอื่น เพราะเป็นของที่นาน ๆ ใช้ที ไม่ใช่ปุ่มประจำวัน */}
+            {V.showLogout && (
+              <div onClick={V.askLogout} className="hv-bg-fbe tap" style={s('height:46px;border-radius:10px;border:1px solid rgba(194,84,60,.26);background:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font:600 14px Sarabun,sans-serif;color:#c2543c;cursor:pointer')}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
+                  <path d="M9.5 20.5H5.2a1.7 1.7 0 0 1-1.7-1.7V5.2a1.7 1.7 0 0 1 1.7-1.7h4.3" />
+                  <path d="M16 16.5 20.5 12 16 7.5" />
+                  <path d="M20.5 12H9.5" />
+                </svg>
+                ออกจากระบบ
+              </div>
+            )}
           </div>
 
         </div>

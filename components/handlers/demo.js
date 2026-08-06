@@ -41,6 +41,9 @@ export function demoActions(app) {
       favIds: box.drugs.slice(0, 6).map((d) => d.id),
       recorder: 'ภก. สิรวิชญ์ เผ่าผา',
       hn: '6418302',
+      // เลขที่ชุดตัวอย่าง — ของจริงฐานข้อมูลออกให้ตอนกดบันทึก เดาล่วงหน้าไม่ได้
+      // แต่โหมดนี้มีไว้ให้เห็นภาพ ถ้าปล่อยว่างพี่กันจะไม่รู้ว่าเลขหน้าตาเป็นยังไง (พี่กันขอ)
+      lastLot: (box.lots && box.lots[0] && box.lots[0].lot) || '',
       rows: draft,
       fy: { saved: sum.saved, lost: sum.lost, records: sum.records, qty: sum.qty },
       fyYear: sum.fyYear,
@@ -80,6 +83,7 @@ export function demoActions(app) {
       settingsOpen: false,
       drugs: [],
       favIds: [],
+      lastLot: '',
       sum: null,
       topReturned: [],
       lots: [],
@@ -97,6 +101,32 @@ export function demoActions(app) {
   // หน้าเกี่ยวกับ — ยกโครงมาจาก ME-DRP ตามที่พี่กันสั่ง
   app.openAbout = () => app.setState({ screen: 'about', settingsOpen: false });
   app.closeAbout = () => app.setState({ screen: 'record' });
+
+  // ── ออกจากระบบ ────────────────────────────────────────────────────────────
+  // ต้องยืนยันก่อน 1 ชั้น เพราะออกแล้วต้องไปตามหารหัสผ่านห้องยามากรอกใหม่
+  // ซึ่งคนที่ยืนอยู่หน้าเคาน์เตอร์ตอนคนไข้รออาจไม่รู้รหัส
+  app.askLogout = () => {
+    app.setState({
+      settingsOpen: false,
+      confirm: {
+        title: 'ยืนยันออกจากระบบ',
+        detail: 'เครื่องนี้จะลืมรหัสผ่านห้องยาทันที',
+        note: 'ครั้งหน้าต้องกรอกรหัสผ่านใหม่ · ยาที่กรอกค้างไว้ยังอยู่ครบ ไม่หายไปไหน',
+        okLabel: 'ออกจากระบบ',
+        run: () => app.doLogout()
+      }
+    });
+  };
+
+  app.doLogout = async () => {
+    try {
+      await fetch('/api/auth', { method: 'DELETE' });
+    } catch (e) {
+      // ลบคุกกี้ไม่สำเร็จก็ยังพาไปหน้าล็อกอินอยู่ดี
+      // ประตูตรวจที่ middleware จะเป็นคนตัดสินอีกทีว่าเข้าได้ไหม
+    }
+    window.location.href = '/login';
+  };
 
   // ── ตัวแทนการโหลดข้อมูลตอนอยู่ในโหมดตัวอย่าง ─────────────────────────────
   app.demoLoadHistory = () => {

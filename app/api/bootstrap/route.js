@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { getAdmin } from '@/lib/supabaseAdmin';
 import { loadCatalog } from '@/lib/catalog';
 import { todayISO, fyOf, fyRange } from '@/lib/format';
+import { authEnabled } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,9 @@ export async function GET() {
     return NextResponse.json({
       today: today,
       fyYear: fyOf(today),
+      // เว็บนี้ล็อกด้วยรหัสผ่านห้องยาอยู่ไหม — ใช้ตัดสินว่าจะโชว์ปุ่มออกจากระบบ
+      // ถ้าไม่ได้ตั้ง MRV_PASSWORD (เช่นตอนรันในเครื่อง) ปุ่มนั้นกดไปก็ไม่มีความหมาย
+      authOn: authEnabled(),
       drugs: catalog,
       setting: {
         orgName: st.org_name || 'ห้องยาผู้ป่วยนอก · รพ.ปรางค์กู่',

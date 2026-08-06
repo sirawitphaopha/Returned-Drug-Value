@@ -2,7 +2,7 @@
 // ต่างจากต้นฉบับ 3 จุด: ตัดเลขคงคลังปลอม · ตัดสวิตช์จำลองเน็ตหลุด
 // · ยอดสะสมปีงบมาจากฐานข้อมูล ไม่ได้นับจากรายการในเครื่อง
 import { SOURCES, money, thaiDate } from '@/lib/format';
-import { cleanQty, qtyNum, splitDrugName, markMatch } from '../helpers';
+import { cleanQty, qtyNum, qtyText, splitDrugName, markMatch } from '../helpers';
 
 const sumReuse = (rows) => rows.reduce((a, x) => a + (x.disposition === 'reuse' ? x.price * x.qty : 0), 0);
 
@@ -228,13 +228,45 @@ export function recordVals(app, d) {
     rowCount: st.rows.length,
     rowsLabel: 'รายการในครั้งนี้ ' + st.rows.length,
 
+    // ── กล่อง "ล็อตนี้" ในแผงขวาฝั่งคอม (แบบ ก ที่พี่กันเลือก) ────────────────
+    // จุดสุดท้ายก่อนข้อมูลเข้าฐาน ราคาถูกแช่แข็งทันทีที่กดบันทึก แก้ทีหลังยาก
+    // ให้ทวนได้ว่ากำลังจะส่งอะไร กี่ตัว ใช้ต่อกี่ ทำลายกี่ ก่อนกดปุ่ม
+    lotItemsLabel: st.rows.length + ' ตัว',
+    // 🚨 ห้ามรวมจำนวนข้ามหน่วยนับแล้วเขียนว่า "414 หน่วย" (พี่กันทักว่าหน่วยอะไร)
+    //    เอาเม็ดไปบวกกับขวดกับหลอด ได้ตัวเลขที่ไม่มีความหมายอะไรเลย
+    //    แยกตามหน่วยนับจริงแทน เภสัชกรถึงจะทวนกับของตรงหน้าได้
+    lotUnitsLabel: (() => {
+      const by = {};
+      for (const r of st.rows) {
+        const u = (r.unit || 'หน่วย').trim();
+        by[u] = (by[u] || 0) + (Number(r.qty) || 0);
+      }
+      const list = Object.keys(by).map((u) => ({ u, n: by[u] })).sort((a, b) => b.n - a.n);
+      if (!list.length) return '';
+      // โชว์ 2 หน่วยแรก ที่เหลือยุบเป็น "และอีก N"
+      // 2 ตัวเพราะกล่องกว้างแค่ 238px ถ้าใส่ 3 ตัวจะตกบรรทัดที่สอง
+      // แล้วแผงขวาสูงเกินจอ 768 ของพี่กัน ต้องเลื่อนหาแหล่งที่มา
+      const head = list.slice(0, 2).map((x) => qtyText(x.n) + ' ' + x.u).join(' · ');
+      return list.length > 2 ? head + ' · และอีก ' + (list.length - 2) : head;
+    })(),
+    lotReuseLabel: String(st.rows.filter((r) => r.disposition === 'reuse').length),
+    lotDestroyLabel: String(st.rows.filter((r) => r.disposition === 'destroy').length),
+    // 🚨 เลขล็อตออกโดยฐานข้อมูลตอนกดบันทึก (mr_next_lot_no) เดาล่วงหน้าไม่ได้
+    //    เครื่องอื่นอาจกดบันทึกแทรกก่อน แล้วเลขที่เดาไว้จะผิด
+    //    จึงโชว์เลขจริงเฉพาะหลังบันทึกสำเร็จ ระหว่างกรอกบอกตรง ๆ ว่ายังไม่มีเลข
+    lotNoLabel: st.lastLot || 'ระบบออกให้ตอนกดบันทึก',
+    lotNoTitle: 'เลข Lot',
+    lotNoIsReal: !!st.lastLot,
+
     // ── ตัวเลขสรุปท้ายจอ ─────────────────────────────────────────────────────
     animSavedLabel: st.animSaved.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     lostLabel: d.lost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     savedBarW: d.gross ? (d.saved / d.gross * 100) + '%' : '0%',
     lostBarW: d.gross ? (d.lost / d.gross * 100) + '%' : '0%',
+    // ย่อจาก "ของมูลค่าที่คืนมา" เหลือ "จาก" เพื่อให้อยู่บรรทัดเดียวในแผงกว้าง 238px
+    // ตกบรรทัดที่สองเมื่อไหร่ แผงขวาจะสูงเกินจอ 768 ทันที
     proportionLabel: d.gross
-      ? 'ใช้ต่อได้ ' + Math.round(d.saved / d.gross * 100) + '% ของมูลค่าที่คืนมา ' + money(d.gross)
+      ? 'ใช้ต่อได้ ' + Math.round(d.saved / d.gross * 100) + '% จาก ' + money(d.gross)
       : 'ยังไม่มีมูลค่าในครั้งนี้',
     cumulativeLabel: money(fySaved),
     fyLabel: String(st.fyYear || ''),

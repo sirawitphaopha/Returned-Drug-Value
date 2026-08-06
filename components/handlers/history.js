@@ -188,7 +188,7 @@ export function historyActions(app) {
         return;
       }
 
-      const scope = st.histTrash ? 'ถังขยะ' : st.histLot ? 'ล็อต ' + st.histLot : rangeName(st);
+      const scope = st.histTrash ? 'ถังขยะ' : st.histLot ? 'ชุด ' + st.histLot : rangeName(st);
       downloadCsv(
         recordsToCsv(rows, {
           orgName: st.orgName,

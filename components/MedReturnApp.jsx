@@ -122,7 +122,11 @@ export default class MedReturnApp extends React.Component {
       hisError: '',
       hisTab: 'sure',
       hisSaving: false,
-      hisBackfill: true
+      hisBackfill: true,
+
+      // เว็บล็อกด้วยรหัสผ่านห้องยาอยู่ไหม — มาจาก /api/bootstrap
+      // ปุ่มออกจากระบบจะโผล่เฉพาะตอนล็อกอยู่จริง
+      authOn: false
     };
 
     this.searchRef = React.createRef();

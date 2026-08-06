@@ -301,7 +301,10 @@ export function renderRecordWide(V) {
 
       {/* แผงขวาถูกตรึงเช่นกัน — overflow-y:auto ไว้เผื่อจอเตี้ยมากจนของในแผงล้น
           ให้เลื่อนอยู่ในแผงเอง ไม่ไปดันทั้งหน้าให้ยาว */}
-      <div style={s('width:296px;flex:none;min-height:0;overflow-y:auto;background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:16px')}>
+      {/* ระยะห่างถูกรีดลงจาก 18/20 gap16 → 14/16 gap11 เพื่อให้กล่อง "ล็อตนี้" มีที่ยืน
+          วัดแล้วก่อนหน้านี้แผงกิน 502px ในพื้นที่ 503px = แน่นเป๊ะไม่มีที่เหลือเลย
+          จอ 1366x768 ของพี่กันเหลือพื้นที่จริงราว 640px ยิ่งต้องประหยัดทุกพิกเซล */}
+      <div style={s('width:296px;flex:none;min-height:0;overflow-y:auto;background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:11px')}>
         <div>
           <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:6px')}>แหล่งที่มา</div>
           <div style={s('display:flex;flex-wrap:wrap;gap:6px')}>
@@ -323,28 +326,86 @@ export function renderRecordWide(V) {
         </div>
 
         {/* ผู้บันทึกล็อต — ต่อจากวันที่/HN ตามที่พี่กันสั่ง */}
-        <div style={s('margin-top:10px')}>{renderRecorderField(V)}</div>
+        <div>{renderRecorderField(V)}</div>
 
-        <div style={s('border-top:1px solid rgba(30,36,32,.08);padding-top:16px;margin-top:auto')}>
-          <div style={s('display:flex;align-items:center;justify-content:space-between;margin-bottom:10px')}>
+        {/* ── กล่อง "ล็อตนี้" — เดิมตรงนี้เป็นช่องว่างเปล่า ๆ (พี่กันเลือกแบบ ก) ──
+            เป็นจุดสุดท้ายก่อนข้อมูลเข้าฐาน ราคาถูกแช่แข็งทันทีที่กดบันทึก แก้ทีหลังยาก
+            ให้ทวนได้ว่ากำลังจะส่งอะไร กี่ตัว ใช้ต่อกี่ ทำลายกี่ ก่อนกดปุ่ม */}
+        {/* 🚨 ต้องเป็น flex:1 1 auto ไม่ใช่ flex:1
+            flex:1 ย่อมาจาก 1 1 0% = ฐานความสูงเป็นศูนย์ การคำนวณการหดจะได้ศูนย์ตาม
+            กล่องเลยไม่ยอมหดเลยแม้ใส่ min-height:0 แล้วไปดันปุ่มบันทึกตกขอบแผง
+            ใช้ฐาน auto (เท่าเนื้อหา) แทน จะโตตอนที่ว่างเหลือ และหดตอนที่ว่างไม่พอ */}
+        <div style={s('flex:1 1 auto;background:#f6f7f4;border-radius:9px;padding:11px 12px;display:flex;flex-direction:column')}>
+          <div style={s("font:600 10.5px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.06em;color:rgba(30,36,32,.45);margin-bottom:6px")}>Lot นี้</div>
+
+          {/* 🚨 ห้ามใส่ overflow-y:auto + min-height:0 ตรงนี้ (พี่กันเจอบั๊กที่จอ 768)
+              เคยใส่ไว้ให้กล่องยุบได้ตอนที่ว่างไม่พอ ผลคือกล่องยุบจนเหลือ 23px
+              แล้วซ่อนบรรทัดแยกหน่วยนับไว้ข้างใน กลายเป็นกล่องเล็ก ๆ ที่มีแถบเลื่อนจิ๋ว
+              = อ่านไม่ได้ ดูเหมือนเว็บพัง ทั้งที่แผงยังมีที่ว่างเหลือ
+              ปล่อยให้กล่องสูงเท่าเนื้อหาเสมอ ถ้าที่ไม่พอค่อยให้ "ทั้งแผง" เลื่อนแทน
+              ซึ่งปลอดภัยแล้วเพราะปุ่มบันทึกถูกตรึงไว้ก้นแผง */}
+          <div>
+          {V.noRows ? (
+            <div style={s('min-height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font:400 11.5px/1.6 Sarabun,sans-serif;color:#9aa19c;padding:6px 4px')}>
+              ยังไม่มียาใน Lot นี้<br />เพิ่มยาจากช่องด้านซ้าย
+            </div>
+          ) : (
+            /* จัด 2 คอลัมน์ ใช้ความสูงครึ่งเดียวของแบบเรียงลงมา 4 บรรทัด
+               จำเป็นเพราะจอ 1366x768 เหลือพื้นที่แนวตั้งน้อยมาก */
+            <div>
+              <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;font-variant-numeric:tabular-nums')}>
+                <div style={s('display:flex;justify-content:space-between;gap:5px;font:400 11.5px Sarabun,sans-serif')}>
+                  <span style={s('color:#6b746e')}>รายการ</span><span style={s('font-weight:500')}>{V.lotItemsLabel}</span>
+                </div>
+                <div style={s('display:flex;justify-content:space-between;gap:5px;font:400 11.5px Sarabun,sans-serif')}>
+                  <span style={s('color:#2f7d5d')}>ใช้ต่อ</span><span style={s('font-weight:500;color:#2f7d5d')}>{V.lotReuseLabel}</span>
+                </div>
+                <div></div>
+                <div style={s('display:flex;justify-content:space-between;gap:5px;font:400 11.5px Sarabun,sans-serif')}>
+                  <span style={s('color:#c2543c')}>ทำลาย</span><span style={s('font-weight:500;color:#c2543c')}>{V.lotDestroyLabel}</span>
+                </div>
+              </div>
+              {/* แยกจำนวนตามหน่วยนับจริง ไม่รวมข้ามหน่วยแล้วเขียนว่า "หน่วย" ลอย ๆ
+                  วางเต็มความกว้างเพราะยาวกว่าครึ่งคอลัมน์ */}
+              <div style={s('margin-top:5px;font:400 11px/1.5 Sarabun,sans-serif;color:#414a44;font-variant-numeric:tabular-nums;overflow-wrap:anywhere')}>{V.lotUnitsLabel}</div>
+            </div>
+          )}
+          </div>
+
+          {/* เลขล็อตออกโดยฐานข้อมูลตอนกดบันทึก เดาล่วงหน้าไม่ได้ (เครื่องอื่นอาจแทรกก่อน)
+              จึงโชว์เลขจริงเฉพาะหลังบันทึกสำเร็จ ระหว่างกรอกบอกตรง ๆ ว่ายังไม่มีเลข */}
+          <div style={s('flex:none;border-top:1px dashed rgba(30,36,32,.14);margin-top:7px;padding-top:7px;display:flex;justify-content:space-between;gap:6px;font:400 11px Sarabun,sans-serif')}>
+            <span style={s('color:#6b746e;flex:none')}>เลข Lot</span>
+            <span style={sx('text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', V.lotNoIsReal
+              ? { font: "600 11.5px var(--font-plex),'IBM Plex Sans Thai',sans-serif", color: '#2f7d5d' }
+              : { color: '#9aa19c' })}>{V.lotNoLabel}</span>
+          </div>
+        </div>
+
+        {/* 🚨 ตรึงก้อนสรุป+ปุ่มบันทึกไว้ก้นแผง ไม่ว่าจอจะเตี้ยแค่ไหนก็ต้องเห็นปุ่มเสมอ
+            เคยเจอ: จอ 640px + แถบเตือนโหมดตัวอย่าง = ปุ่มบันทึกตกขอบแผง ต้องเลื่อนหา
+            margin ลบ + padding เท่ากัน = แผ่ทับระยะขอบของแผง ไม่งั้นเห็นเนื้อหาลอดตรงร่อง
+            bottom:-14px หักลบ padding ล่างของแผง ให้ก้อนนี้ติดก้นแผงพอดี */}
+        <div style={s('flex:none;position:sticky;bottom:-14px;z-index:2;background:#fff;border-top:1px solid rgba(30,36,32,.08);margin:0 -16px -14px;padding:11px 16px 14px')}>
+          <div style={s('display:flex;align-items:center;justify-content:space-between;margin-bottom:8px')}>
             <span style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e')}>สะสมปีงบ {V.fyLabel}</span>
             <span style={s("font:600 12.5px 'IBM Plex Sans Thai',sans-serif;color:#414a44;font-variant-numeric:tabular-nums")}>{V.cumulativeLabel}</span>
           </div>
-          <div style={s('display:flex;gap:9px;margin-bottom:10px')}>
-            <div style={s('flex:1;background:#eef6f1;border-radius:11px;padding:9px 11px')}>
-              <div style={s('font:500 11px Sarabun,sans-serif;color:#2f7d5d')}>ประหยัด</div>
-              <div style={s("font:700 22px/1.15 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums;letter-spacing:-.025em")}>{V.animSavedLabel}</div>
+          <div style={s('display:flex;gap:8px;margin-bottom:8px')}>
+            <div style={s('flex:1;background:#eef6f1;border-radius:10px;padding:7px 10px')}>
+              <div style={s('font:500 10.5px Sarabun,sans-serif;color:#2f7d5d')}>ประหยัด</div>
+              <div style={s("font:700 20px/1.15 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums;letter-spacing:-.025em")}>{V.animSavedLabel}</div>
             </div>
-            <div style={s('flex:1;background:#fdf1ed;border-radius:11px;padding:9px 11px')}>
-              <div style={s('font:500 11px Sarabun,sans-serif;color:#c2543c')}>สูญเสีย</div>
-              <div style={s("font:700 22px/1.15 'IBM Plex Sans Thai',sans-serif;color:#c2543c;font-variant-numeric:tabular-nums;letter-spacing:-.025em")}>{V.lostLabel}</div>
+            <div style={s('flex:1;background:#fdf1ed;border-radius:10px;padding:7px 10px')}>
+              <div style={s('font:500 10.5px Sarabun,sans-serif;color:#c2543c')}>สูญเสีย</div>
+              <div style={s("font:700 20px/1.15 'IBM Plex Sans Thai',sans-serif;color:#c2543c;font-variant-numeric:tabular-nums;letter-spacing:-.025em")}>{V.lostLabel}</div>
             </div>
           </div>
-          <div style={s('display:flex;height:8px;border-radius:99px;overflow:hidden;margin-bottom:5px;background:#eef1ee')}>
+          <div style={s('display:flex;height:7px;border-radius:99px;overflow:hidden;margin-bottom:4px;background:#eef1ee')}>
             <div style={{ width: V.savedBarW, background: '#2f7d5d' }}></div>
             <div style={{ width: V.lostBarW, background: '#c2543c' }}></div>
           </div>
-          <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:12px;font-variant-numeric:tabular-nums')}>{V.proportionLabel}</div>
+          <div style={s('font:400 11px/1.4 Sarabun,sans-serif;color:#6b746e;margin-bottom:9px;font-variant-numeric:tabular-nums')}>{V.proportionLabel}</div>
 
           {V.saveFailed && (
             <div style={s('border:1px solid rgba(194,84,60,.28);background:#fdf1ed;border-radius:11px;padding:11px 12px;margin-bottom:10px')}>

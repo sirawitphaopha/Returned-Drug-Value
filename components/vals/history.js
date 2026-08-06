@@ -179,7 +179,7 @@ export function historyVals(app, d) {
     isCustomRange: st.histRange === 'custom',
     histTitle: st.histTrash
       ? 'ถังขยะ — รายการที่ลบไปแล้ว'
-      : st.histLot ? 'ล็อต ' + st.histLot : '',
+      : st.histLot ? 'Lot ' + st.histLot : '',
     histEmptyLabel: st.histTrash ? 'ถังขยะว่าง ไม่มีรายการที่ถูกลบ' : 'ไม่พบรายการตามเงื่อนไขนี้',
 
     // รายการล็อต

@@ -293,7 +293,7 @@ export function recordActions(app) {
       // เซิร์ฟเวอร์บอกจำนวนที่เข้าฐานจริง ถ้าน้อยกว่าที่ส่งแปลว่าบางแถวเคยบันทึกไปแล้ว
       // (กดลองส่งใหม่หลังเน็ตหลุด) ต้องบอกตรงๆ ไม่ใช่บอกว่าบันทึกครบ
       const got = typeof data.saved === 'number' ? data.saved : n;
-      const lotTag = data.lot ? ' · ล็อต ' + data.lot : '';
+      const lotTag = data.lot ? ' · Lot ' + data.lot : '';
       if (got < n) {
         app.toast('บันทึก ' + got + ' รายการ · อีก ' + (n - got) + ' รายการเคยบันทึกไปแล้ว', '', false);
       } else {

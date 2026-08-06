@@ -32,6 +32,8 @@ export function dataActions(app) {
       app.setState({
         drugs: data.drugs,
         today: data.today,
+        // เว็บล็อกด้วยรหัสผ่านห้องยาอยู่ไหม — ใช้ตัดสินว่าจะโชว์ปุ่มออกจากระบบ
+        authOn: data.authOn === true,
         // วันที่บันทึกตั้งเป็นวันนี้เสมอตอนเปิดเว็บ ถ้าผู้ใช้เปลี่ยนเองระหว่างใช้งานถึงจะค้างไว้
         date: app.state.date || data.today,
         fyYear: data.fyYear,

@@ -22,7 +22,7 @@ function renderHistTools(V) {
 
       {V.histLot && (
         <div onClick={V.clearLot} className="tap" style={s('display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>
-          ล็อต {V.histLot} <span style={s('font:400 13px Sarabun,sans-serif')}>✕</span>
+          Lot {V.histLot} <span style={s('font:400 13px Sarabun,sans-serif')}>✕</span>
         </div>
       )}
 
@@ -41,7 +41,7 @@ export function renderHistoryWide(V) {
       <div ref={V.histHeadRef} className="hist-head">
       <div style={s('display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px')}>
         <div style={s('font:600 19px Sarabun,sans-serif')}>{V.histTitle || 'ประวัติการบันทึก'}</div>
-        <input value={V.histQuery} onChange={V.onHistQuery} placeholder="ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลขล็อต" style={s('width:320px;height:42px;padding:0 13px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 14px Sarabun,sans-serif')} />
+        <input value={V.histQuery} onChange={V.onHistQuery} placeholder="ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลข Lot" style={s('width:320px;height:42px;padding:0 13px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 14px Sarabun,sans-serif')} />
         <div style={s('display:flex;gap:6px')}>
           {V.ranges.map((g) => (
             <div key={g.key} onClick={g.pick} className="tap" style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
@@ -139,14 +139,14 @@ export function renderHistoryNarrow(V) {
           <div onClick={V.openAbout} title="เกี่ยวกับ" className="hv-bg-f6" style={s('margin-left:auto;width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
           <div onClick={V.openSettings} title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
         </div>
-        <input value={V.histQuery} onChange={V.onHistQuery} placeholder="ชื่อยา · HN · ชื่อคนบันทึก · เลขล็อต" style={s('width:100%;height:44px;padding:0 13px;border:1px solid rgba(30,36,32,.14);border-radius:10px;background:#f6f7f4;font:400 14.5px Sarabun,sans-serif;margin-bottom:9px')} />
+        <input value={V.histQuery} onChange={V.onHistQuery} placeholder="ชื่อยา · HN · ชื่อคนบันทึก · เลข Lot" style={s('width:100%;height:44px;padding:0 13px;border:1px solid rgba(30,36,32,.14);border-radius:10px;background:#f6f7f4;font:400 14.5px Sarabun,sans-serif;margin-bottom:9px')} />
         <div style={s('display:flex;gap:6px;flex-wrap:wrap')}>
           {V.ranges.map((g) => (
             <div key={g.key} onClick={g.pick} className="tap" style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
           ))}
           <div onClick={V.toggleTrash} className="tap" style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>{V.trashLabel}</div>
           {V.histLot && (
-            <div onClick={V.clearLot} className="tap" style={s('display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>ล็อต {V.histLot} ✕</div>
+            <div onClick={V.clearLot} className="tap" style={s('display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>ชุด {V.histLot} ✕</div>
           )}
         </div>
         <div style={s('display:flex;align-items:center;gap:6px;margin-top:9px')}>

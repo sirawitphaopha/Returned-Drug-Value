@@ -28,6 +28,11 @@ export function shellVals(app, d) {
       { label: 'สรุป', radius: '3px', on: st.screen === 'summary', cls: st.screen === 'summary' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'summary' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'summary' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'summary' ? '#2f7d5d' : '#8d948f', pick: pickScreen('summary') }
     ],
 
+    // ปุ่มออกจากระบบ — โผล่เฉพาะตอนเว็บล็อกด้วยรหัสผ่านห้องยาอยู่จริง
+    // ตอนรันในเครื่องที่ไม่ได้ตั้ง MRV_PASSWORD กดไปก็ไม่มีความหมาย
+    showLogout: st.authOn === true,
+    askLogout: app.askLogout,
+
     orgName: st.orgName,
     dateLabel: st.date ? thaiDate(st.date) : '—',
     settingsOpen: st.settingsOpen,
