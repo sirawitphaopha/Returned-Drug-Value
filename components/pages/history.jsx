@@ -102,6 +102,15 @@ export function renderHistoryWide(V) {
             <span style={s('width:88px;color:#6b746e')}>{hr.sourceLabel}</span>
             <span style={s('width:84px;color:#6b746e')}>{hr.hnLabel}</span>
             <span title={hr.byLabel} style={s('width:104px;color:#6b746e;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px')}>{hr.byLabel}</span>
+            {/* เลข Lot — กดแล้วกรองดูเฉพาะ Lot นั้น */}
+            <span style={s('width:96px;padding-right:8px;overflow:hidden')}>
+              {hr.hasLot ? (
+                <span onClick={hr.openLot} className="hv-lot" title={'ดูเฉพาะ ' + hr.lotLabel}
+                  style={s("font:500 11.5px 'IBM Plex Sans Thai',sans-serif;color:#6b746e;cursor:pointer;border-bottom:1px dashed rgba(30,36,32,.28);white-space:nowrap")}>{hr.lotLabel}</span>
+              ) : (
+                <span style={s('font:400 12px Sarabun,sans-serif;color:#c0c5c1')}>{hr.lotLabel}</span>
+              )}
+            </span>
             <span style={s('width:80px;display:flex;justify-content:flex-end;gap:6px')}>
               {hr.inTrash ? (
                 <span onClick={hr.restore} className="hv-bg-e3f tap" style={s('padding:6px 9px;border-radius:7px;background:#e3f0e8;font:500 11.5px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>กู้คืน</span>
@@ -176,8 +185,14 @@ export function renderHistoryNarrow(V) {
               <span style={s("font:600 13px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{d.total}</span>
             </div>
             <div style={s('display:flex;flex-direction:column;gap:7px')}>
+              {/* แถบซ้ายบอกกลุ่ม Lot — ใช้เส้นขอบซ้ายแทนพื้นสีเหมือนฝั่งคอม
+                  เพราะการ์ดมือถือมีพื้นขาวกับกรอบอยู่แล้ว เปลี่ยนพื้นอีกจะเลอะ
+                  Lot เดียวกัน = แถบซ้ายสีเดียวกัน สลับเข้ม/จางเมื่อขึ้น Lot ใหม่ */}
               {d.items.map((it) => (
-                <div key={it.key} style={sx('background:#fff;border-radius:11px;padding:10px 12px', { border: '1px solid ' + it.border })}>
+                <div key={it.key} style={sx('background:#fff;border-radius:11px;padding:10px 12px 10px 11px', {
+                  border: '1px solid ' + it.border,
+                  borderLeft: '3px solid ' + (it.hasLot ? (it.lotBand ? '#2f7d5d' : '#a8d3bd') : 'transparent')
+                })}>
                   <div onClick={it.edit} style={s('min-width:0;cursor:pointer;margin-bottom:7px')}>
                     <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif;overflow-wrap:anywhere')}>{it.name}</div>
                     <div style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums')}>{it.detail}</div>
@@ -185,7 +200,14 @@ export function renderHistoryNarrow(V) {
                   <div style={s('display:flex;align-items:center;justify-content:space-between;gap:9px')}>
                     <div style={s('min-width:0')}>
                       <div style={sx("font:600 15px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums", { color: it.color })}>{it.valueLabel}</div>
-                      <div style={sx('font:400 10.5px Sarabun,sans-serif', { color: it.dispColor })}>{it.dispLabel}</div>
+                      <div style={s('display:flex;align-items:center;gap:7px;flex-wrap:wrap')}>
+                        <span style={sx('font:400 10.5px Sarabun,sans-serif', { color: it.dispColor })}>{it.dispLabel}</span>
+                        {/* ป้าย Lot กดได้ → กรองดูเฉพาะ Lot นั้น
+                            ดึงออกมาจากบรรทัดรายละเอียดที่เดิมยัดรวมกันจนอ่านยาก */}
+                        {it.hasLot && (
+                          <span onClick={it.openLot} className="tap" style={s("font:500 10px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;background:#e3f0e8;border-radius:5px;padding:2px 7px;cursor:pointer;white-space:nowrap")}>{it.lotLabel}</span>
+                        )}
+                      </div>
                     </div>
                     <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
                       {it.inTrash ? (

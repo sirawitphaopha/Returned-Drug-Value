@@ -129,11 +129,46 @@ export function renderSummaryWide(V) {
                 </div>
               ))}
             </div>
+
+            {/* ── สัดส่วนตามแหล่งที่มา แบบโดนัท ──────────────────────────────
+                ย้ายมาจากกล่องขวา (พี่กันเลือกแบบ ค) เดิมกล่องซ้ายเหลือที่ว่างใต้กราฟเยอะ
+                ส่วนกล่องขวายาวเกิน · ย้ายมาแล้วสองกล่องสูงพอ ๆ กัน ไม่ต้องหาข้อมูลใหม่ */}
+            <div style={sx('margin-top:16px;padding-top:14px', { borderTop: '1px solid ' + V.sumBorder })}>
+              <div style={sx('font:500 12.5px Sarabun,sans-serif;margin-bottom:2px', { color: V.sumMuted })}>สัดส่วนตามแหล่งที่มา</div>
+              <div style={sx('font:400 11px Sarabun,sans-serif;margin-bottom:12px', { color: V.sumMuted, opacity: .75 })}>{V.srcBaseLabel}</div>
+
+              <div style={s('display:flex;align-items:center;gap:18px;flex-wrap:wrap')}>
+                {/* รัศมี 15.9 = เส้นรอบวง ~100 พอดี ใส่เปอร์เซ็นต์ลง dasharray ได้ตรง ๆ
+                    transform หมุน -90 องศา ให้ชิ้นแรกเริ่มที่ 12 นาฬิกา */}
+                <svg width="118" height="118" viewBox="0 0 42 42" style={{ flex: 'none' }}>
+                  <circle cx="21" cy="21" r="15.9" fill="none" stroke={V.sumTrack} strokeWidth="6"></circle>
+                  {!V.srcEmpty && V.srcShares.map((sh) => (
+                    <circle key={sh.key} cx="21" cy="21" r="15.9" fill="none"
+                      stroke={sh.bg} strokeWidth="6"
+                      strokeDasharray={sh.dash} strokeDashoffset={sh.dashOffset}></circle>
+                  ))}
+                </svg>
+
+                <div style={s('flex:1;min-width:150px;display:grid;grid-template-columns:1fr 1fr;gap:8px 12px')}>
+                  {V.srcShares.map((sh) => (
+                    <span key={sh.key} style={sx('display:flex;align-items:center;gap:6px;font:400 12.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>
+                      <span style={sx('width:9px;height:9px;border-radius:3px;flex:none', { background: sh.bg })}></span>
+                      {sh.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div style={sx('flex:1 1 340px;min-width:0;border-radius:12px;padding:16px 20px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
-            <div style={s('font:600 14.5px Sarabun,sans-serif;margin-bottom:14px')}>ยาที่คืนมูลค่าสูงสุด 10 อันดับ (฿)</div>
-            <div style={s('display:flex;flex-direction:column;gap:9px')}>
+          {/* กล่องนี้สูงเท่ากล่องซ้ายอยู่แล้ว (flex ยืดให้เท่ากันเอง)
+              แต่เนื้อหาไม่เต็ม เลยเหลือช่องว่างขาว ๆ ก้นกล่อง (พี่กันทัก)
+              แก้ด้วยการให้ 10 อันดับกระจายเต็มความสูงแทนการกำหนดระยะห่างตายตัว
+              → ปรับตามจอทุกขนาดเอง ไม่ต้องมานั่งจูนตัวเลขทีละความสูง */}
+          <div style={sx('flex:1 1 340px;min-width:0;border-radius:12px;padding:16px 20px;display:flex;flex-direction:column', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
+            <div style={s('flex:none;font:600 14.5px Sarabun,sans-serif;margin-bottom:14px')}>ยาที่คืนมูลค่าสูงสุด 10 อันดับ (฿)</div>
+            {/* gap = ระยะห่างขั้นต่ำ · space-between เอาที่ว่างที่เหลือมาแบ่งเพิ่มให้เท่า ๆ กัน */}
+            <div style={s('flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:9px')}>
               {V.topDrugs.map((t) => (
                 <div key={t.key}>
                   <div style={s('display:flex;justify-content:space-between;gap:12px;font:400 13.5px Sarabun,sans-serif;margin-bottom:3px')}>
@@ -145,25 +180,6 @@ export function renderSummaryWide(V) {
                   </div>
                 </div>
               ))}
-            </div>
-            <div style={sx('padding-top:13px;margin-top:15px', { borderTop: '1px solid ' + V.sumBorder })}>
-              <div style={sx('font:500 12.5px Sarabun,sans-serif;margin-bottom:2px', { color: V.sumMuted })}>สัดส่วนตามแหล่งที่มา</div>
-              <div style={sx('font:400 11px Sarabun,sans-serif;margin-bottom:8px', { color: V.sumMuted, opacity: .75 })}>{V.srcBaseLabel}</div>
-              <div style={sx('display:flex;height:9px;border-radius:99px;overflow:hidden;margin-bottom:8px', { background: V.sumTrack })}>
-                {V.srcShares.map((sh) => (
-                  <div key={sh.key} style={sx('', { width: sh.w, background: sh.bg })}></div>
-                ))}
-              </div>
-              {/* ฝั่งมือถือมีจุดสีกำกับอยู่แล้ว ฝั่งคอมเดิมเป็นตัวหนังสือล้วน
-                  ไม่รู้ว่าท่อนสีไหนเป็นของใคร — ใส่จุดสีให้เหมือนกัน */}
-              <div style={sx('display:flex;flex-wrap:wrap;gap:12px;font:400 12.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>
-                {V.srcShares.map((sh) => (
-                  <span key={sh.key} style={s('display:flex;align-items:center;gap:5px')}>
-                    <span style={sx('width:8px;height:8px;border-radius:2px;flex:none', { background: sh.bg })}></span>
-                    {sh.label}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
         </div>

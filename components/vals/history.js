@@ -31,7 +31,8 @@ export function historyVals(app, d) {
     disposition: (r) => (r.disposition === 'reuse' ? 0 : 1),
     source: (r) => srcLabel(r.source),
     hn: (r) => r.hn || '',
-    by: (r) => r.by || ''
+    by: (r) => r.by || '',
+    lot: (r) => r.lot || ''
   };
 
   const sortKey = st.histSortKey;
@@ -57,8 +58,28 @@ export function historyVals(app, d) {
     { key: 'disposition', label: 'สถานะ', w: '90px', align: 'center' },
     { key: 'source', label: 'แหล่งที่มา', w: '88px', align: 'left' },
     { key: 'hn', label: 'HN', w: '84px', align: 'left' },
-    { key: 'by', label: 'ผู้บันทึก', w: '104px', align: 'left' }
+    { key: 'by', label: 'ผู้บันทึก', w: '104px', align: 'left' },
+    { key: 'lot', label: 'Lot', w: '96px', align: 'left' }
   ];
+
+  // ── แถบสีจางแยกแต่ละ Lot (พี่กันเลือกแบบ ข) ───────────────────────────────
+  // ฐานข้อมูลเรียง วันที่ใหม่→เก่า, id ใหม่→เก่า แถวใน Lot เดียวกันจึงติดกันเองอยู่แล้ว
+  // สลับพื้นขาว↔เขียวจางทุกครั้งที่ขึ้น Lot ใหม่ ตากวาดแล้วเห็นเป็นก้อน ๆ
+  //
+  // 🚨 ทำงานเฉพาะตอนเรียงตามวันที่เท่านั้น
+  //    ถ้ากดเรียงตามราคา/ชื่อยา แถวจาก Lot ต่าง ๆ จะสลับกันมั่ว
+  //    สีจางจะกลายเป็นลายพร้อยที่ไม่มีความหมาย หลอกตาว่าเป็นกลุ่มทั้งที่ไม่ใช่
+  const bandOn = !sortKey || sortKey === 'date';
+  const bandOf = {};
+  if (bandOn) {
+    let band = false, prevLot = null;
+    for (const r of rows) {
+      const lot = r.lot || ('__' + r.date);   // แถวเก่าที่ยังไม่มีเลข Lot ให้จับกลุ่มตามวัน
+      if (prevLot !== null && lot !== prevLot) band = !band;
+      prevLot = lot;
+      bandOf[r.id] = band;
+    }
+  }
 
   // จัดกลุ่มรายวันสำหรับมือถือ — แถวมาจากเซิร์ฟเวอร์เรียงวันใหม่→เก่าอยู่แล้ว
   const dayMap = {};
@@ -76,7 +97,16 @@ export function historyVals(app, d) {
       name: r.name,
       // บนมือถือคอลัมน์แคบมาก ตัดชื่อแหล่งที่มาออกจากบรรทัดรายละเอียด
       // (ยังดูได้ในหน้าคอม) เหลือแค่ข้อมูลที่จำเป็นจริง ๆ
-      detail: r.qty + ' ' + r.unit + ' × ' + price.toFixed(2) + (r.hn ? ' · HN ' + r.hn : '') + (r.lot ? ' · ' + r.lot : ''),
+      //
+      // ดึงเลข Lot ออกจากบรรทัดนี้ไปทำเป็นป้ายกดได้ต่างหาก (พี่กันขอให้เกลามือถือ)
+      // เดิมยัดรวมกันจนเป็นพืดยาว "60 เม็ด × 0.45 · HN 6418302 · L690806-03" อ่านยาก
+      detail: r.qty + ' ' + r.unit + ' × ' + price.toFixed(2) + (r.hn ? ' · HN ' + r.hn : ''),
+      lotLabel: r.lot || '',
+      hasLot: !!r.lot,
+      openLot: r.lot ? () => app.viewLot(r.lot) : null,
+      // แถบสีจางแยก Lot บนมือถือด้วย — แต่ใช้เส้นขอบซ้ายแทนพื้นสี
+      // เพราะการ์ดมือถือมีพื้นขาวกับกรอบอยู่แล้ว ถ้าเปลี่ยนพื้นอีกจะเลอะ
+      lotBand: !!bandOf[r.id],
       valueLabel: money(price * r.qty),
       color: reuse ? '#2f7d5d' : '#c2543c',
       dispLabel: reuse ? 'ใช้ต่อได้' : 'ทำลาย',
@@ -137,7 +167,9 @@ export function historyVals(app, d) {
         priceLabel: price.toFixed(2),
         valueLabel: money(price * r.qty),
         color: reuse ? '#2f7d5d' : '#c2543c',
-        bg: reuse ? '#fff' : '#fdf7f5',
+        // แถว "ทำลาย" คงสีแดงจางไว้เหมือนเดิม เพราะเป็นสัญญาณที่สำคัญกว่าการจับกลุ่ม
+        // ส่วนแถวใช้ต่อได้สลับ ขาว ↔ เขียวจาง ตาม Lot
+        bg: reuse ? (bandOf[r.id] ? '#f4faf7' : '#fff') : '#fdf7f5',
         dispLabel: reuse ? 'ใช้ต่อได้' : 'ทำลาย',
         dispBg: reuse ? '#e3f0e8' : '#fbe4dd',
         dispFg: reuse ? '#2f7d5d' : '#c2543c',
@@ -145,6 +177,10 @@ export function historyVals(app, d) {
         hnLabel: r.hn || '—',
         byLabel: r.by || '—',
         lotLabel: r.lot || '—',
+        // กดเลข Lot = กรองดูเฉพาะ Lot นั้น · เดิมมีฟีเจอร์นี้อยู่แล้วแต่หน้าคอมไม่เคยโชว์เลข
+        // คนใช้เลยไม่มีทางรู้ว่าเลขคืออะไร กลายเป็นฟีเจอร์ที่มีแต่ใช้ไม่ได้
+        openLot: r.lot ? () => app.viewLot(r.lot) : null,
+        hasLot: !!r.lot,
         inTrash: !!r.deletedAt,
         edit: () => app.editRecord(r),
         remove: () => app.askDeleteRecord(r),

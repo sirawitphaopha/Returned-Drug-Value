@@ -136,11 +136,28 @@ export function summaryVals(app, d) {
     // แต่ตัวเลขใหญ่ด้านบนนับเฉพาะที่ใช้ต่อได้ → เอา % ไปคูณตัวเลขใหญ่ไม่ได้
     // ถ้าไม่มีป้ายบอก ผู้บริหารจะเข้าใจผิดแน่นอน
     srcBaseLabel: 'คิดจากมูลค่ายาที่คืนมาทั้งหมด (ใช้ต่อได้ + ทำลาย)',
-    srcShares: SOURCES.map((sc, i) => ({
-      key: sc.key,
-      w: (Number(bySrc[sc.key] || 0) / srcTotal * 100) + '%',
-      bg: greens[i * 2 < greens.length ? i * 2 : greens.length - 1],
-      label: sc.label + ' ' + Math.round(Number(bySrc[sc.key] || 0) / srcTotal * 100) + '%'
-    }))
+    // ── สัดส่วนตามแหล่งที่มา ──────────────────────────────────────────────────
+    // dash/dashOffset = ค่าที่วงกลมโดนัทใน SVG ต้องใช้ (พี่กันเลือกแบบ ค)
+    // เคล็ดลับ: ตั้งรัศมี 15.9 จะได้เส้นรอบวง ~100 พอดี เลยใส่เปอร์เซ็นต์ลงไปตรง ๆ ได้เลย
+    // ไม่ต้องคูณหารอะไร · offset เริ่มที่ 25 เพื่อให้ชิ้นแรกเริ่มที่ตำแหน่ง 12 นาฬิกา
+    srcShares: (() => {
+      let acc = 0;
+      return SOURCES.map((sc, i) => {
+        const pct = (Number(bySrc[sc.key] || 0) / srcTotal) * 100;
+        const row = {
+          key: sc.key,
+          w: pct + '%',
+          pct: pct,
+          dash: pct + ' ' + (100 - pct),
+          dashOffset: 25 - acc,
+          bg: greens[i * 2 < greens.length ? i * 2 : greens.length - 1],
+          label: sc.label + ' ' + Math.round(pct) + '%'
+        };
+        acc += pct;
+        return row;
+      });
+    })(),
+    // ยังไม่มีข้อมูลเลย → วาดโดนัทเป็นวงเทาว่าง ๆ แทนวงที่บิดเบี้ยว
+    srcEmpty: !srcTotal
   };
 }
