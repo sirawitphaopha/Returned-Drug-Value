@@ -140,9 +140,24 @@ export const MAX_QTY = 100000;   // ต้องตรงกับ app/api/retur
 //    ("Amoxicillin + Clavulanic acid 875 +" / "125 mg" — มี + ห้อยท้ายชื่อ)
 export function splitDrugName(name) {
   const full = String(name || '');
-  const m = full.match(/^(.*?)\s(\d[\d\w./+\- ]*)$/);
+  // ต้องยอมให้ % อยู่ในกลุ่มความแรงด้วย ไม่งั้นยาที่มีความเข้มข้นเป็น %
+  // ("Chlortetracycline 10 mg/1 g 1%") จะแยกไม่ออก แล้วชื่อไปกองรวมเป็นก้อนเดียว
+  // ยาสูตรผสมมีความแรงอยู่ในวงเล็บ "(2 + 1 g)" ต้องรับด้วย
+  // 🚨 ในวงเล็บต้องขึ้นต้นด้วยตัวเลขเท่านั้น ไม่งั้นจะไปจับวงเล็บที่ต่อท้ายชื่อยาซ้ำ
+  //    ("Ampicillin 250 mg (vial)") มาเป็นความแรงแทน
+  const m = full.match(/^(.*?)\s(\(\d[^)]*\)|\d[\d\w./+\-% ]*)$/);
   if (!m) return { base: full, strength: '' };
   return { base: m[1].trim(), strength: m[2].trim() };
+}
+
+// แยกความเข้มข้น % ออกจากท้ายข้อความ เพื่อเอาไปใส่วงเล็บและทาสีต่างหาก (พี่กันขอ)
+//   "10 mg/1 g 1%" → { main: "10 mg/1 g", percent: "1%" }
+// ทำเป็นตัวกลางเพราะใช้ทั้งผลค้นหาหน้าบันทึกและหน้าตั้งราคายา
+export function splitPercent(text) {
+  const s = String(text || '').trim();
+  const m = s.match(/^(.*?)\s*(\d[\d.]*%)$/);
+  if (!m) return { main: s, percent: '' };
+  return { main: m[1].trim(), percent: m[2] };
 }
 
 // ตัดข้อความเป็น 3 ท่อน [ก่อน, ที่ตรงกับคำค้น, หลัง] ไว้ทำไฮไลต์
@@ -189,4 +204,4 @@ export function qtyText(n) {
   return Number.isInteger(v) ? String(v) : String(v);
 }
 
-export const APP_VERSION = '0.4.3.0';
+export const APP_VERSION = '0.4.4.0';

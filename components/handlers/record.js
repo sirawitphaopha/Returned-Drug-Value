@@ -37,6 +37,28 @@ export function recordActions(app) {
     return rows;
   };
 
+  // ── ลบยาออกจากรายการในครั้งนี้ ────────────────────────────────────────────
+  // ต้องยืนยันก่อน 1 ชั้น (พี่กันสั่ง 10 ส.ค. 2569 — "กดลบง่ายไป เผลอได้")
+  // ปุ่ม ✕ อยู่ท้ายแถวติดกับปุ่มใช้ต่อ/ทำลาย นิ้วเลื่อนนิดเดียวก็โดน
+  // และยาที่กรอกค้างไว้ยังไม่ได้บันทึกลงระบบ ลบแล้วไม่มีถังขยะให้กู้
+  app.askRemoveRow = (row) => {
+    app.setState({
+      confirm: {
+        title: 'ยืนยันลบรายการนี้',
+        detail: row.name + ' · ' + row.qty + ' ' + row.unit + ' · ' + money(row.price * row.qty),
+        note: 'ยาตัวนี้จะหายจากรายการในครั้งนี้ · ยังไม่ได้บันทึกลงระบบจึงกู้คืนไม่ได้',
+        okLabel: 'ยืนยันลบ',
+        run: () => app.removeRow(row.rid)
+      }
+    });
+  };
+
+  app.removeRow = (rid) => {
+    const rows = app.state.rows.filter((x) => x.rid !== rid);
+    app.persist({ rows: rows });
+    app.animateTo(sumReuse(rows));
+  };
+
   app.addInline = () => {
     const d = app.state.pending;
     const qty = clampQty(app.state.qtyInput);

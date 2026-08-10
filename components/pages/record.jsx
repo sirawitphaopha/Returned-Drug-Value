@@ -29,6 +29,16 @@ function renderDrugOption(r, big) {
           {r.strength && (
             <span style={s("font-weight:500;color:#6b746e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:6px")}>{r.strength}</span>
           )}
+          {/* ความเข้มข้น % ในวงเล็บ สีส้มอำพัน — พี่กันขอให้เห็นง่าย
+              เลือกสีนี้เพราะไม่ชนกับเทล (ชื่อการค้า) และไม่ชนกับแดง (ทำลาย) */}
+          {r.hasPercent && (
+            <span style={s("font-weight:700;color:#96650f;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px")}>{r.percentLabel}</span>
+          )}
+          {/* รูปแบบยา (tab · cap · injection) — ลำดับเดียวกับ ME-DRP คือก่อนชื่อการค้า
+              บอกได้ตั้งแต่ตอนค้นว่าเป็นยากินหรือยาฉีด */}
+          {r.form && (
+            <span style={s('font-weight:600;color:#414a44;margin-left:6px')}>{r.form}</span>
+          )}
           {/* ชื่อการค้าในวงเล็บ สีเทลตัวหนา — แสดงเฉพาะยาที่มี (37 ตัวจาก 417)
               ทำตามแบบ ME-DRP ที่พี่กันชี้ให้ดู · ไฮไลต์คำค้นข้างในด้วยเพราะค้นจากชื่อการค้าได้ */}
           {r.hasBrand && (
@@ -38,6 +48,14 @@ function renderDrugOption(r, big) {
           )}
         </div>
         <div style={s('display:flex;align-items:center;gap:6px;margin-top:2px')}>
+          {/* ทางให้ยา (IV · oral) นำหน้าหน่วยนับ ตำแหน่งเดียวกับ ME-DRP
+              เข้มกว่าหน่วยนับนิดหนึ่ง เพราะเป็นข้อมูลของตัวยา ส่วนหน่วยนับเป็นเรื่องการนับ */}
+          {r.route && (
+            <>
+              <span style={s('font:500 11.5px/1.3 Sarabun,sans-serif;color:#6b746e')}>{r.route}</span>
+              <span style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#cfd4d0')}>·</span>
+            </>
+          )}
           <span style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#9aa19c')}>{r.unitLabel}</span>
           {r.noPrice && (
             <span style={s('font:600 10px Sarabun,sans-serif;color:#c2543c;background:#fbe4dd;border-radius:4px;padding:1px 6px;flex:none')}>ยังไม่ใส่ราคา</span>

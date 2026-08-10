@@ -64,6 +64,8 @@ export function renderPrices(V) {
                 <div style={s('min-width:150px;flex:1')}>
                   <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif')}>
                     {p.name}
+                    {/* ความเข้มข้น % ในวงเล็บสีส้มอำพัน ให้เหมือนผลค้นหาหน้าบันทึก */}
+                    {p.hasPercent && <span style={s("font-weight:700;color:#96650f;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px")}>{p.percentLabel}</span>}
                     {/* ชื่อการค้าในวงเล็บสีเทล เฉพาะยาที่มี (แบบเดียวกับ ME-DRP) */}
                     {p.hasBrand && <span style={s('color:#2f7d5d;margin-left:6px')}>({p.brand})</span>}
                   </div>

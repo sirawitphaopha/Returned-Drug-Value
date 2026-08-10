@@ -2,7 +2,7 @@
 // ต่างจากต้นฉบับ 3 จุด: ตัดเลขคงคลังปลอม · ตัดสวิตช์จำลองเน็ตหลุด
 // · ยอดสะสมปีงบมาจากฐานข้อมูล ไม่ได้นับจากรายการในเครื่อง
 import { SOURCES, money, thaiDate } from '@/lib/format';
-import { cleanQty, qtyNum, qtyText, splitDrugName, markMatch } from '../helpers';
+import { cleanQty, qtyNum, qtyText, splitDrugName, splitPercent, markMatch } from '../helpers';
 
 const sumReuse = (rows) => rows.reduce((a, x) => a + (x.disposition === 'reuse' ? x.price * x.qty : 0), 0);
 
@@ -90,19 +90,27 @@ export function recordVals(app, d) {
       // แยกชื่อกับความแรง แล้วไฮไลต์คำที่พิมพ์ค้น — ตาไล่หาง่ายขึ้นมาก
       const sp = splitDrugName(drug.name);
       const mk = markMatch(sp.base, d.q);
+      // แยก % ออกจากความแรง เอาไปใส่วงเล็บทาสีต่างหาก จะได้สะดุดตา (พี่กันขอ)
+      const pc = splitPercent(sp.strength);
       // ชื่อการค้า — ไฮไลต์คำค้นข้างในด้วย เพราะค้นจากชื่อการค้าได้แล้ว
       const bk = markMatch(drug.brand || '', d.q);
       return {
         name: drug.name,
         base: sp.base,
-        strength: sp.strength,
+        strength: pc.main,
+        percentLabel: pc.percent ? '(' + pc.percent + ')' : '',
+        hasPercent: !!pc.percent,
         mkBefore: mk[0],
         mkHit: mk[1],
         mkAfter: mk[2],
+        // รูปแบบยา — วางต่อจากความแรง ก่อนชื่อการค้า (ลำดับเดียวกับ ME-DRP)
+        form: (drug.form || '').trim(),
         hasBrand: !!(drug.brand || '').trim(),
         bdBefore: bk[0],
         bdHit: bk[1],
         bdAfter: bk[2],
+        // ทางให้ยา — วางนำหน้าหน่วยนับในบรรทัดล่าง ตำแหน่งเดียวกับ ME-DRP
+        route: (drug.route || '').trim(),
         // มอคอัปโชว์ "หน่วย · คงคลัง 1234" ซึ่งเป็นเลขมั่วของเดโม ตัดออกแล้ว
         unitLabel: drug.unit,
         noPrice: !drug.hasPrice,
@@ -227,11 +235,9 @@ export function recordVals(app, d) {
           Object.assign({}, drug, { id: r.drugId, name: r.name, unit: r.unit, price: r.price }),
           'row', r.rid, r.qty, r.disposition
         ),
-        remove: () => {
-          const rows = st.rows.filter((x) => x.rid !== r.rid);
-          app.persist({ rows: rows });
-          app.animateTo(sumReuse(rows));
-        }
+        // กดแล้วเปิดป๊อปอัปยืนยันก่อน ไม่ลบทันที (พี่กันสั่ง — ปุ่ม ✕ กดพลาดง่าย)
+        // ตัวลบจริงอยู่ที่ handlers/record.js ตามสัญญาโครงสร้าง (vals ห้าม setState เอง)
+        remove: () => app.askRemoveRow(r)
       };
     }),
     noRows: st.rows.length === 0,
