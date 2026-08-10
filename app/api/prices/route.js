@@ -13,7 +13,7 @@ export async function GET() {
   try {
     const db = getAdmin();
     const [drugsRes, priceRes] = await Promise.all([
-      db.from('drugs').select('id,generic,strength,unit,percent,form,release,hidden').order('id'),
+      db.from('drugs').select('id,generic,strength,unit,percent,form,release,brand,hidden').order('id'),
       db.from('mr_drug_price').select('drug_id,unit_price,unit_th,display_name,note,needs_check,suggestions')
     ]);
     if (drugsRes.error) throw new Error(drugsRes.error.message);
@@ -34,6 +34,8 @@ export async function GET() {
         return {
           id: d.id,
           name: names.get(d.id),
+          // ชื่อการค้า — โชว์ในวงเล็บสีเทลต่อท้ายชื่อยา เฉพาะตัวที่มี
+          brand: (d.brand || '').trim(),
           form: (d.form || '').trim(),
           unit: resolveUnit(d.form, p.unit_th),
           // ว่าง = ยังใช้หน่วยเริ่มต้นของกลุ่มอยู่ ไม่ได้แก้รายตัว
@@ -114,9 +116,34 @@ export async function PUT(req) {
     }
 
     const db = getAdmin();
+
+    // ── 🚨 ต้องแยกส่งเป็นกลุ่มตาม "ชุดช่องที่เหมือนกัน" ห้ามส่งรวมทีเดียว ─────────
+    //
+    // บั๊กที่เคยเจอ (10 ส.ค. 2569): กดบันทึกทีละตัวได้ แต่กดหลายตัวพร้อมกันแล้วพัง
+    //   null value in column "needs_check" violates not-null constraint
+    //
+    // สาเหตุ: ตอนส่งหลายแถวพร้อมกัน ฐานข้อมูลจะรวมรายชื่อช่องจากทุกแถวเป็นชุดเดียว
+    //         แถวไหนไม่มีช่องนั้นจะถูกเติมค่าว่างลงไป
+    //         แถวยาปกติไม่ได้ส่ง needs_check/suggestions มาด้วย เลยโดนเติมค่าว่าง
+    //         แต่สองช่องนี้ห้ามเป็นค่าว่าง → ตีกลับทั้งก้อน ทั้งที่ข้อมูลถูกต้องหมด
+    //
+    // ทางแก้ที่ไม่เลือก: เติมค่าเริ่มต้นให้ทุกแถว
+    //   เพราะจะไปล้าง note กับ suggestions ของยาที่ผู้ใช้ไม่ได้ตั้งใจแตะ = ข้อมูลหาย
+    //
+    // จัดกลุ่มตามรายชื่อช่องแล้วส่งทีละกลุ่ม → แถวไหนไม่ได้ส่งช่องไหนมา ช่องนั้นไม่ถูกแตะเลย
+    // วิธีนี้รองรับช่องที่จะเพิ่มในอนาคตเองโดยไม่ต้องมาแก้ซ้ำ
+    const groups = new Map();
+    for (const r of rows) {
+      const sig = Object.keys(r).sort().join(',');
+      if (!groups.has(sig)) groups.set(sig, []);
+      groups.get(sig).push(r);
+    }
+
     // ยาทั้ง 417 ตัวมีแถวราคาอยู่แล้วจาก 003_seed_prices.sql · upsert ไว้กันยาที่เพิ่มใหม่ทีหลัง
-    const { error } = await db.from('mr_drug_price').upsert(rows, { onConflict: 'drug_id' });
-    if (error) throw new Error(error.message);
+    for (const chunk of groups.values()) {
+      const { error } = await db.from('mr_drug_price').upsert(chunk, { onConflict: 'drug_id' });
+      if (error) throw new Error(error.message);
+    }
 
     // ── ตีราคาย้อนหลัง ────────────────────────────────────────────────────────
     // backfill = true → เติมราคาให้แถวเก่าที่มูลค่ายังเป็น 0 ของยาชุดนี้

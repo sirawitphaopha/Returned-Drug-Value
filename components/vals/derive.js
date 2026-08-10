@@ -14,8 +14,17 @@ function rankResults(drugs, q) {
   const hit = [];
   for (const d of drugs) {
     const low = d.name.toLowerCase();
-    const at = low.indexOf(q);
-    if (at < 0) continue;
+    let at = low.indexOf(q);
+
+    // ค้นจากชื่อการค้าได้ด้วย — เภสัชกรจำ "Augmentin" ได้ก่อน "Amoxicillin + Clavulanic acid"
+    // (ME-DRP ค้นแบบนี้อยู่แล้ว พี่กันชี้ให้ทำคล้ายกัน)
+    // เจอในชื่อการค้าให้จัดอันดับรองจากที่เจอในชื่อสามัญ ใช้ at ใหญ่ ๆ ถ่วงไว้
+    if (at < 0) {
+      const brandLow = String(d.brand || '').toLowerCase();
+      if (!brandLow || brandLow.indexOf(q) < 0) continue;
+      at = 900 + brandLow.indexOf(q);
+    }
+
     hit.push({ d: d, starts: at === 0 ? 0 : 1, at: at, st: strengthOf(d.name) });
   }
   hit.sort((a, b) =>
@@ -42,6 +51,10 @@ export function derive(app) {
     dark: st.dark,
     q: q,
     results: results,
+    // เลือกยาไปแล้ว (ช่องค้นหาเป็นชื่อยาที่เลือกพอดี) — ไม่ใช่ "หาไม่เจอ"
+    // ต้องส่งค่านี้ออกไปด้วย ไม่งั้นกล่อง "ไม่พบยาชื่อนี้" จะเด้งขึ้นหลังกดเลือกสำเร็จ
+    // เพราะตอนเลือกแล้วเราสั่งให้ results เป็นศูนย์เพื่อปิดรายการผลค้นหา
+    picked: picked,
     // แถวที่ไฮไลต์อยู่ในรายการผลค้นหา (เลื่อนด้วยลูกศรขึ้น/ลง)
     hi: Math.min(st.hi || 0, Math.max(0, results.length - 1)),
     saved: saved,

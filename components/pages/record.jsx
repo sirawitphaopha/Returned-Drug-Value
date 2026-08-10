@@ -17,12 +17,24 @@ function renderDrugOption(r, big) {
       style={sx('display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid rgba(30,36,32,.06);cursor:pointer', { background: r.rowBg })}>
 
       <div style={s('min-width:0;flex:1')}>
-        <div style={sx('font-family:var(--font-sarabun),Sarabun,sans-serif;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', { fontSize: nameSize })}>
+        {/* 🚨 ห้ามใช้ white-space:nowrap + ellipsis ตรงนี้ (พี่กันแจ้ง 10 ส.ค. 2569)
+            ยาชื่อยาวอย่าง "Gramicidin + Neomycin sulfate + Polymyxin b sulfate"
+            ทำให้ความแรงโดนตัด และชื่อการค้าหายทั้งอัน — ทั้งที่ค้นด้วยชื่อการค้าอยู่แท้ ๆ
+            ความแรงเป็นข้อมูลความปลอดภัย (25 กับ 5000 mcg คนละเรื่อง) ซ่อนไม่ได้
+            ยอมให้แถวสูงขึ้นเฉพาะยาชื่อยาว ดีกว่าซ่อนของสำคัญ */}
+        <div style={sx('font-family:var(--font-sarabun),Sarabun,sans-serif;line-height:1.35;overflow-wrap:anywhere', { fontSize: nameSize })}>
           <span style={s('font-weight:600;color:#1e2420')}>{r.mkBefore}</span>
           <span style={s('font-weight:700;color:#2f7d5d;background:#dcefe4;border-radius:3px;padding:0 1px')}>{r.mkHit}</span>
           <span style={s('font-weight:600;color:#1e2420')}>{r.mkAfter}</span>
           {r.strength && (
             <span style={s("font-weight:500;color:#6b746e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:6px")}>{r.strength}</span>
+          )}
+          {/* ชื่อการค้าในวงเล็บ สีเทลตัวหนา — แสดงเฉพาะยาที่มี (37 ตัวจาก 417)
+              ทำตามแบบ ME-DRP ที่พี่กันชี้ให้ดู · ไฮไลต์คำค้นข้างในด้วยเพราะค้นจากชื่อการค้าได้ */}
+          {r.hasBrand && (
+            <span style={s('font-weight:600;color:#2f7d5d;margin-left:6px')}>
+              ({r.bdBefore}<span style={s('background:#dcefe4;border-radius:3px;padding:0 1px')}>{r.bdHit}</span>{r.bdAfter})
+            </span>
           )}
         </div>
         <div style={s('display:flex;align-items:center;gap:6px;margin-top:2px')}>

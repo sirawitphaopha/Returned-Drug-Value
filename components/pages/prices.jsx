@@ -62,7 +62,11 @@ export function renderPrices(V) {
             <div key={p.id} style={sx('background:#fff;border-radius:11px;padding:10px 12px', { border: '1px solid ' + p.border })}>
               <div style={s('display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap')}>
                 <div style={s('min-width:150px;flex:1')}>
-                  <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif')}>{p.name}</div>
+                  <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif')}>
+                    {p.name}
+                    {/* ชื่อการค้าในวงเล็บสีเทล เฉพาะยาที่มี (แบบเดียวกับ ME-DRP) */}
+                    {p.hasBrand && <span style={s('color:#2f7d5d;margin-left:6px')}>({p.brand})</span>}
+                  </div>
                   <div style={sx('font:400 11.5px/1.3 Sarabun,sans-serif', { color: p.subColor })}>{p.sub}{p.warnLabel}</div>
                   {/* ที่มาของราคา — บอกว่าไปหยิบมาจากบรรทัดไหนในไฟล์ HIS
                       สำคัญมาก เพราะเภสัชกรต้องดูออกว่าจับคู่ถูกตัวหรือเปล่า */}

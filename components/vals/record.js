@@ -79,13 +79,19 @@ export function recordVals(app, d) {
       }
     },
     hasResults: d.results.length > 0,
-    noResults: d.q.length >= 2 && d.results.length === 0,
+    // 🚨 ต้องเช็ค !d.picked ด้วย (พี่กันแจ้งบั๊ก 10 ส.ค. 2569)
+    //    พอกดเลือกยาสำเร็จ ระบบตั้ง results = [] เพื่อปิดรายการผลค้นหา
+    //    ถ้าดูแค่ "results ว่าง" กล่อง "ไม่พบยาชื่อนี้" จะเด้งขึ้นทันทีหลังเลือกสำเร็จ
+    //    ทั้งที่เพิ่งเลือกยาตัวนั้นไปหมาด ๆ
+    noResults: !d.picked && d.q.length >= 2 && d.results.length === 0,
     noResultsHint: 'ไม่พบยาชื่อนี้ ลองพิมพ์ชื่อสามัญ',
     openOffListDrug: app.openOffListDrug,
     results: d.results.map((drug, i) => {
       // แยกชื่อกับความแรง แล้วไฮไลต์คำที่พิมพ์ค้น — ตาไล่หาง่ายขึ้นมาก
       const sp = splitDrugName(drug.name);
       const mk = markMatch(sp.base, d.q);
+      // ชื่อการค้า — ไฮไลต์คำค้นข้างในด้วย เพราะค้นจากชื่อการค้าได้แล้ว
+      const bk = markMatch(drug.brand || '', d.q);
       return {
         name: drug.name,
         base: sp.base,
@@ -93,6 +99,10 @@ export function recordVals(app, d) {
         mkBefore: mk[0],
         mkHit: mk[1],
         mkAfter: mk[2],
+        hasBrand: !!(drug.brand || '').trim(),
+        bdBefore: bk[0],
+        bdHit: bk[1],
+        bdAfter: bk[2],
         // มอคอัปโชว์ "หน่วย · คงคลัง 1234" ซึ่งเป็นเลขมั่วของเดโม ตัดออกแล้ว
         unitLabel: drug.unit,
         noPrice: !drug.hasPrice,

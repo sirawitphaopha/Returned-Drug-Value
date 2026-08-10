@@ -60,6 +60,9 @@ export function pricesVals(app, d) {
       return {
         id: it.id,
         name: it.name,
+        // ชื่อการค้า — วงเล็บสีเทลต่อท้ายชื่อยา เฉพาะตัวที่มี (แบบเดียวกับผลค้นหาในหน้าบันทึก)
+        brand: (it.brand || '').trim(),
+        hasBrand: !!(it.brand || '').trim(),
         // form เป็นภาษาอังกฤษตามที่ HIS ส่งมา เก็บไว้ให้เภสัชกรดูออกว่าเป็นยารูปแบบไหน
         sub: it.form || 'ไม่ระบุรูปแบบ',
         subColor: warn ? '#c2543c' : '#6b746e',
