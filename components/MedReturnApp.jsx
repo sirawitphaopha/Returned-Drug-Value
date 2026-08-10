@@ -77,8 +77,13 @@ export default class MedReturnApp extends React.Component {
       histSortKey: '',       // คอลัมน์ที่กดเรียง (ว่าง = เรียงวันใหม่→เก่าตามที่เซิร์ฟเวอร์ส่งมา)
       histSortDir: 'desc',
       histMore: [],          // แถวที่โหลดเพิ่มมาแล้ว
-      lots: [],              // รายการล็อต — หน้าแยกดูรายล็อต
+      lots: [],              // รายการ Lot — หน้าแยกดูราย Lot
       lotsLoading: false,
+      lotsRange: 'month',    // ช่วงเวลาของหน้ารายการ Lot (แยกจากหน้าประวัติ)
+      lotsShown: 40,         // แสดงทีละ 40 Lot — ปีงบหนึ่งมีหลายร้อย วาดหมดทีเดียวจอค้าง
+      slipLot: null,         // ใบสรุป Lot ที่เปิดอยู่ (null = ไม่ได้เปิด)
+      slipRows: [],          // รายการยาใน Lot นั้น — ดึงตอนกดเปิดใบ
+      slipLoading: false,
       confirm: null,
 
       // หน้าสรุป — ยอดทั้งปีงบคิดมาจากฐานข้อมูลก้อนเดียว
@@ -148,6 +153,36 @@ export default class MedReturnApp extends React.Component {
       this._histHeadRO = new ResizeObserver(write);
       this._histHeadRO.observe(el);
     };
+
+    // ── วัดความสูงของแถบล่างจอในโหมดมือถือ ──────────────────────────────────
+    // ข้อความเด้ง (toast) ของมอคอัปตรึงไว้ที่ bottom:96px ตายตัว
+    // แต่ในเว็บจริงหน้าบันทึกมีแถบบันทึกซ้อนอยู่เหนือแถบเมนู รวมกันสูงกว่า 200px
+    // ข้อความเด้ง "บันทึกสำเร็จ" จึงไปทับตัวเลขมูลค่ารวมพอดี = อ่านไม่ออกทั้งคู่
+    //
+    // มีสองกล่องแยกกัน (แถบเมนู + แถบบันทึก) และแถบบันทึกโผล่เฉพาะบางหน้า
+    // จึงวัดทีละกล่องแล้วบวกกัน เขียนผลรวมลง --bottombar ให้ toast เอาไปใช้
+    this._barRO = { nav: null, save: null };
+    this._barH = { nav: 0, save: 0 };
+    this._writeBottomBar = () => {
+      const total = this._barH.nav + this._barH.save;
+      document.documentElement.style.setProperty('--bottombar', total + 'px');
+    };
+    // สร้าง ref ไว้ตายตัวใน constructor — ถ้าสร้างใหม่ทุกครั้งที่วาดจอ
+    // React จะถอดแล้วต่อตัววัดใหม่ทุกเฟรม
+    const makeBarRef = (name) => (el) => {
+      if (this._barRO[name]) { this._barRO[name].disconnect(); this._barRO[name] = null; }
+      if (!el || typeof ResizeObserver === 'undefined') {
+        this._barH[name] = 0;              // กล่องหายไปจากจอ = ไม่นับความสูงของมัน
+        this._writeBottomBar();
+        return;
+      }
+      const write = () => { this._barH[name] = el.offsetHeight; this._writeBottomBar(); };
+      write();
+      this._barRO[name] = new ResizeObserver(write);
+      this._barRO[name].observe(el);
+    };
+    this.navBarRef = makeBarRef('nav');
+    this.saveBarRef = makeBarRef('save');
 
     // วาดใหม่เฉพาะตอนความกว้างเปลี่ยนจริง — ลากขอบหน้าต่างจะยิง event รัวมาก
     // แต่ละครั้งวิ่ง renderVals ใหม่ทั้งก้อน (กรองยา 417 ตัว) เครื่องเก่าจะกระตุก

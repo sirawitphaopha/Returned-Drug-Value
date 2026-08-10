@@ -59,6 +59,32 @@ export function recordActions(app) {
     app.animateTo(sumReuse(rows));
   };
 
+  // ── ล้างรายการทั้งหมดในครั้งนี้ ────────────────────────────────────────────
+  // เดิมต้องกด ✕ ทีละแถว · กรอกผิดคนไข้ทั้งล็อตแล้วต้องกด 20 ครั้ง
+  // 🚨 พี่กันสั่งว่าต้องมีป๊อปอัปยืนยันอีกชั้น "เผื่อหลง" — ลบทีเดียวหมด ไม่มีถังขยะให้กู้
+  //    จึงบอกให้ชัดว่ากำลังจะเสียอะไรไป: กี่รายการ · มูลค่ารวมเท่าไหร่
+  app.askClearAll = () => {
+    const rows = app.state.rows;
+    if (!rows.length) return;
+    const reuse = sumReuse(rows);
+    const all = rows.reduce((a, x) => a + x.price * x.qty, 0);
+    app.setState({
+      confirm: {
+        title: 'ยืนยันล้างรายการทั้งหมด',
+        detail: rows.length + ' รายการ · มูลค่ารวม ' + money(all) + (reuse !== all ? ' (ใช้ต่อได้ ' + money(reuse) + ')' : ''),
+        note: 'รายการทั้งหมดในครั้งนี้จะหายไป · ยังไม่ได้บันทึกลงระบบจึงกู้คืนไม่ได้',
+        okLabel: 'ยืนยันล้างทั้งหมด',
+        run: () => app.clearAll()
+      }
+    });
+  };
+
+  app.clearAll = () => {
+    app.persist({ rows: [] });
+    app.animateTo(0);
+    app.toast('ล้างรายการทั้งหมดแล้ว', '');
+  };
+
   app.addInline = () => {
     const d = app.state.pending;
     const qty = clampQty(app.state.qtyInput);

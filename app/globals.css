@@ -71,3 +71,41 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
    ค่านี้ถูกตั้งจาก JS ตามความสูงจริงของแป้นพิมพ์ (window.visualViewport)
    ถ้าไม่มีแป้นพิมพ์ ค่าเป็น 0 = ป๊อปอัปอยู่ที่เดิมเป๊ะ */
 :root{--kb:0px}
+
+/* ── ใบสรุป Lot ตอนสั่งพิมพ์ ─────────────────────────────────────────────────
+   หน้าเว็บมีเมนู ปุ่ม แถบล่าง เต็มไปหมด ถ้าสั่งพิมพ์ทั้งหน้าจะติดไปในกระดาษด้วย
+   วิธีที่ใช้: ซ่อนทุกอย่าง แล้วดึงเฉพาะใบสรุปขึ้นมาเป็นทั้งหน้ากระดาษ
+
+   ทำไมไม่เปิดหน้าต่างใหม่แล้วพิมพ์: หน้าต่างใหม่ต้องโหลดฟอนต์ไทยซ้ำ
+   และเบราว์เซอร์บางตัวบล็อกหน้าต่างที่เปิดเอง = พิมพ์ไม่ออกโดยไม่มีอะไรเตือน */
+@media print {
+  /* ซ่อนทั้งเว็บก่อน */
+  body > * { display: none !important; }
+
+  /* แล้วเปิดเฉพาะสายที่พาไปถึงใบสรุป */
+  body > div:has(.slip-sheet) { display: block !important; }
+  .slip-backdrop {
+    display: block !important;
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .slip-sheet {
+    max-width: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* แถบหัวที่มีปุ่มพิมพ์กับปุ่มปิด ไม่ต้องติดไปในกระดาษ */
+  .slip-hide { display: none !important; }
+
+  /* บังคับให้พิมพ์สีตามที่เห็นบนจอ — ไม่งั้นเส้นเขียวกับตัวเลขแดงหายหมด
+     กลายเป็นใบขาวดำที่แยกไม่ออกว่าอันไหนใช้ต่อ อันไหนทำลาย */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  /* ห้ามตัดแถวกลางคัน — ครึ่งบรรทัดอยู่หน้าหนึ่ง อีกครึ่งอยู่อีกหน้า อ่านไม่รู้เรื่อง */
+  tr, td, th { break-inside: avoid; }
+
+  @page { margin: 14mm 12mm; }
+}

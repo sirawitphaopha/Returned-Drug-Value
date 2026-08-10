@@ -2,7 +2,7 @@
 // ของจริงต้องยืนยันก่อน เพราะรายการที่ลบไปแล้วกู้คืนไม่ได้ และมูลค่าสะสมจะลดตาม
 // ปุ่มยืนยันอยู่ "ซ้าย" ตั้งใจสลับที่กับปุ่มยกเลิก เพื่อกันนิ้วกดต่อจากปุ่มลบทันที
 // กดพื้นหลังไม่ปิด ต้องเลือกปุ่มเอง
-import { s } from '../helpers';
+import { s, kb } from '../helpers';
 
 export function renderConfirm(V) {
   if (!V.confirmOpen) return null;
@@ -16,8 +16,8 @@ export function renderConfirm(V) {
           <div style={s('font:400 12.5px/1.6 Sarabun,sans-serif;color:#c2543c;margin-bottom:16px')}>{V.confirmNote}</div>
 
           <div style={s('display:flex;gap:9px')}>
-            <div onClick={V.confirmRun} className="hv-red" style={s('flex:1;height:46px;border-radius:11px;background:#c2543c;color:#fff;display:flex;align-items:center;justify-content:center;font:600 14.5px Sarabun,sans-serif;cursor:pointer')}>{V.confirmOkLabel}</div>
-            <div onClick={V.closeConfirm} className="hv-bg-f6" style={s('flex:1;height:46px;border-radius:11px;border:1px solid rgba(30,36,32,.16);display:flex;align-items:center;justify-content:center;font:600 14.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>ยกเลิก</div>
+            <div {...kb(V.confirmRun)} className="hv-red" style={s('flex:1;height:46px;border-radius:11px;background:#c2543c;color:#fff;display:flex;align-items:center;justify-content:center;font:600 14.5px Sarabun,sans-serif;cursor:pointer')}>{V.confirmOkLabel}</div>
+            <div {...kb(V.closeConfirm)} className="hv-bg-f6" style={s('flex:1;height:46px;border-radius:11px;border:1px solid rgba(30,36,32,.16);display:flex;align-items:center;justify-content:center;font:600 14.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>ยกเลิก</div>
           </div>
         </div>
       </div>

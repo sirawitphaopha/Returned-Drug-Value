@@ -1,4 +1,50 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = { reactStrictMode: true };
+
+// ── ส่วนหัวความปลอดภัย (security headers) ────────────────────────────────────
+// คำสั่งที่เว็บบอกเบราว์เซอร์ว่าอนุญาตให้ทำอะไรได้บ้างในหน้านี้
+// กันคนแทรกโค้ดอันตรายเข้ามาขโมยข้อมูล — ในเว็บนี้มี HN ซึ่งเป็นข้อมูลผู้ป่วย
+// ยกชุดเดียวกับที่ TB Dashboard ใช้อยู่แล้วมาปรับให้เข้ากับโปรเจกต์นี้
+//
+// 🚨 'unsafe-inline' ใน style-src ตัดออกไม่ได้
+//    ทั้งเว็บวาดด้วยสไตล์ฝังในแท็ก (แปลงจากมอคอัปด้วย s()) ราว 600 จุด
+//    ถ้าตัดออก หน้าเว็บจะกลายเป็นข้อความเปล่าไม่มีสีไม่มีเลย์เอาต์เลย
+//
+// 🚨 'unsafe-eval' ใส่เฉพาะตอนรันในเครื่อง — เครื่องมือรีเฟรชอัตโนมัติของ Next ต้องใช้
+//    เว็บจริงไม่มีบรรทัดนี้
+const isDev = process.env.NODE_ENV === 'development';
+
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'" + (isDev ? " 'unsafe-eval'" : ''),
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  // ws: เฉพาะตอนรันในเครื่อง — ตัวรีเฟรชอัตโนมัติของ Next คุยผ่าน WebSocket
+  // ถ้าไม่เปิดให้ หน้าเว็บจะไม่อัปเดตเองตอนแก้โค้ด (เว็บจริงไม่มีบรรทัดนี้)
+  "connect-src 'self'" + (isDev ? ' ws: wss:' : ''),
+  "object-src 'none'",       // ห้ามฝัง Flash/PDF viewer เก่า ๆ ที่เป็นช่องโหว่
+  "base-uri 'self'",         // ห้ามเปลี่ยนที่อยู่ฐานของหน้า (ใช้หลอกให้โหลดสคริปต์จากที่อื่น)
+  "form-action 'self'",      // ฟอร์มส่งไปที่อื่นไม่ได้ — กันขโมยรหัสผ่านห้องยา
+  "frame-ancestors 'none'"   // ห้ามเว็บอื่นเอาเว็บนี้ไปฝังในกรอบ (clickjacking)
+].join('; ');
+
+const securityHeaders = [
+  { key: 'Content-Security-Policy', value: csp },
+  // ห้ามเอาไปฝังในกรอบ — ซ้ำกับ frame-ancestors ไว้เผื่อเบราว์เซอร์เก่าที่ยังไม่รู้จัก CSP
+  { key: 'X-Frame-Options', value: 'DENY' },
+  // ห้ามเบราว์เซอร์เดาชนิดไฟล์เอง (ไฟล์ข้อความถูกเดาเป็นสคริปต์แล้วรันได้)
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  // ไปเว็บอื่นแล้วไม่ส่งที่อยู่หน้าเต็มไปด้วย — ที่อยู่มีเลข Lot กับคำค้นติดไปได้
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // เว็บนี้ไม่ต้องใช้กล้อง ไมค์ ตำแหน่ง — ปิดทิ้งให้หมด
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' }
+];
+
+const nextConfig = {
+  reactStrictMode: true,
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }];
+  }
+};
 
 module.exports = nextConfig;

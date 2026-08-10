@@ -9,7 +9,7 @@
 //
 // ทำเมนูเอง ไม่ใช้ <select> ของระบบ เพราะชื่อยาว ("ภก. ธีร์ธวัช รัตนวรวิเศษ")
 // แล้ว iOS จะตัดเหลือ 2 บรรทัดจนอ่านไม่ออก (ME-DRP เคยเจอปัญหานี้มาแล้ว)
-import { s, sx } from '../helpers';
+import { s, sx, kb } from '../helpers';
 
 export function renderRecorderField(V) {
   const open = V.recorderMenuOpen;
@@ -24,7 +24,7 @@ export function renderRecorderField(V) {
 
       {/* ปุ่มเปิดเมนู — โครงเดียวกับ ME-DRP: ขอบ 1.5px เปลี่ยนสีตอนเปิด · ลูกศรหมุน 180° */}
       <div
-        onClick={V.toggleRecorderMenu}
+        {...kb(V.toggleRecorderMenu)}
         style={sx('width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;border-radius:11px;padding:12px 14px;background:#fff;cursor:pointer', {
           border: '1.5px solid ' + (!has ? 'rgba(194,84,60,.55)' : open ? '#2f7d5d' : 'rgba(30,36,32,.14)'),
           color: has ? '#1e2420' : '#9aa19c'
@@ -41,7 +41,7 @@ export function renderRecorderField(V) {
       {open && (
         <>
           {/* ฉากบาง ๆ รับการกดนอกเมนู */}
-          <div onClick={V.closeRecorderMenu} style={s('position:fixed;inset:0;z-index:29')}></div>
+          <div {...kb(V.closeRecorderMenu)} style={s('position:fixed;inset:0;z-index:29')}></div>
 
           {/* 🎯 วางแบบ fixed ตามตำแหน่งจริงของช่อง — ไม่ใช่ absolute ในแผง
               เพราะแผงข้างมีขอบของตัวเอง เมนูที่สูงกว่าที่ว่างจะโดนตัดหัวหาย
@@ -58,7 +58,7 @@ export function renderRecorderField(V) {
             {V.recorderList.map((p) => (
               <div
                 key={p.name}
-                onClick={p.pick}
+                {...kb(p.pick)}
                 className="hv-bg-eef"
                 style={sx('display:flex;align-items:center;gap:8px;padding:13px 14px;font:400 15px Sarabun,sans-serif;cursor:pointer;border-bottom:1px solid rgba(30,36,32,.05);white-space:nowrap;overflow:hidden;text-overflow:ellipsis', {
                   background: p.on ? '#eef6f1' : '#fff',
@@ -76,7 +76,7 @@ export function renderRecorderField(V) {
                 (เดิมกางช่องพิมพ์ค้างไว้ตลอด ทำให้เมนูสูงเกินจนดูรก) */}
             {!V.addingRecorder && (
               <div
-                onClick={V.startAddRecorder}
+                {...kb(V.startAddRecorder)}
                 className="hv-bg-eef"
                 style={s('display:flex;align-items:center;gap:8px;padding:13px 14px;font:500 14px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer;background:#f6f7f4')}
               >
@@ -96,7 +96,7 @@ export function renderRecorderField(V) {
                   style={s('flex:1;min-width:0;height:38px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 14px Sarabun,sans-serif')}
                 />
                 <div
-                  onClick={V.addRecorder}
+                  {...kb(V.addRecorder)}
                   style={sx('height:38px;padding:0 14px;border-radius:9px;display:flex;align-items:center;font:600 13px Sarabun,sans-serif;flex:none', {
                     background: V.canAddRecorder ? '#2f7d5d' : '#e9ebe8',
                     color: V.canAddRecorder ? '#fff' : '#9aa19c',

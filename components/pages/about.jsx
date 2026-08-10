@@ -5,7 +5,7 @@
 //   1. ชุดสี teal ของ ME-DRP (#0B655D / #0F8A80) → เขียวเทลของเว็บนี้ (#2f7d5d / #24614a)
 //   2. เนื้อหาเปลี่ยนเป็นของเว็บมูลค่ายาคืน · TypeScript → JavaScript (เว็บนี้ไม่ใช้ TS)
 //   3. ตัวเลขในระบบเปลี่ยนจาก "Med/DRP กี่เคส" เป็น "กี่รายการ · มูลค่าสะสมเท่าไร"
-import { s, sx } from '../helpers';
+import { s, sx, kb } from '../helpers';
 
 const CARD = 'background:#fff;border:1px solid rgba(47,125,93,.16);border-radius:16px;padding:20px 22px';
 const TITLE = 'font:700 15px Sarabun,sans-serif;color:#24614a;margin-bottom:14px';
@@ -27,7 +27,7 @@ export function renderAbout(V) {
   return (
     <div style={s('max-width:640px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column;gap:15px')}>
 
-      <div onClick={V.closeAbout} className="hv-bg-f6 tap" style={s('align-self:flex-start;display:flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid rgba(30,36,32,.14);border-radius:9px;background:#fff;font:500 13px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>
+      <div {...kb(V.closeAbout)} className="hv-bg-f6 tap" style={s('align-self:flex-start;display:flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid rgba(30,36,32,.14);border-radius:9px;background:#fff;font:500 13px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>
         <span>←</span> กลับ
       </div>
 

@@ -63,6 +63,29 @@ export function sx(css, extra) {
   return extra ? Object.assign({}, s(css), extra) : s(css);
 }
 
+// ── kb() ทำให้ปุ่มกดด้วยคีย์บอร์ดได้ ─────────────────────────────────────────
+// มอคอัปทำปุ่มทุกอันเป็น <div onClick> (ทั้งเว็บมี 107 จุด) ซึ่งมีปัญหา 2 อย่าง
+//   1. Tab ไม่ถึง — หน้าบันทึกกด Tab ได้แค่ 4 ชิ้น ทั้งที่กดด้วยเมาส์ได้ 15 ชิ้น
+//      กรอกยาครบแล้วต้องปล่อยแป้นพิมพ์ไปคว้าเมาส์กดบันทึกทุกรอบ
+//   2. โปรแกรมอ่านหน้าจอไม่รู้ว่าเป็นปุ่ม
+//
+// ใช้แทน onClick ตรง ๆ:  <div {...kb(V.save)} style={...}>
+// ได้ครบทีเดียว — กดเมาส์ได้เหมือนเดิม · Tab ถึง · Enter กับ Space ใช้ได้
+//
+// 🚨 Space ต้อง preventDefault ไม่งั้นหน้าจะเลื่อนลงไปด้วยตอนกด
+export function kb(fn) {
+  return {
+    onClick: fn,
+    role: 'button',
+    tabIndex: 0,
+    onKeyDown: (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      if (fn) fn(e);
+    }
+  };
+}
+
 // ── ข้อมูลที่เก็บไว้ในเครื่อง ─────────────────────────────────────────────────
 export const LS = {
   draft: 'mrv.session',     // แถวที่กองอยู่ ยังไม่กดบันทึก — หายเมื่อบันทึกสำเร็จ
@@ -204,4 +227,4 @@ export function qtyText(n) {
   return Number.isInteger(v) ? String(v) : String(v);
 }
 
-export const APP_VERSION = '0.4.4.0';
+export const APP_VERSION = '0.5.0.0';

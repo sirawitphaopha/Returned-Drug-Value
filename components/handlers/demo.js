@@ -13,8 +13,11 @@ export function demoActions(app) {
     const sum = demoSummary(box);
 
     // ยาในช่องค้นหาก็ใช้ชุดตัวอย่าง จะได้มีราคาให้เห็นตัวเลขจริง ๆ
+    // 🚨 ต้องส่ง brand · form · route ต่อไปด้วย ไม่งั้นผลค้นหาในโหมดตัวอย่าง
+    //    จะไม่มีชื่อการค้าสีเทล ไม่มีรูปแบบยา ไม่มีทางให้ยา = เทสของที่เพิ่งแก้ไม่ได้
     const drugs = box.drugs.map((d) => ({
-      id: d.id, name: d.name, unit: d.unit, price: d.price, hasPrice: true
+      id: d.id, name: d.name, unit: d.unit, price: d.price, hasPrice: true,
+      brand: d.brand || '', form: d.form || '', route: d.route || ''
     }));
 
     // ล็อตที่ "กำลังกรอกค้างไว้" ให้หน้าบันทึกมีของโชว์ด้วย (พี่กันขอ)

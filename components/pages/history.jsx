@@ -1,6 +1,6 @@
 // หน้าประวัติการบันทึก — คัดจากมอคอัป (คอม 224–265 · มือถือ 267–313)
 // เพิ่มจากต้นฉบับอย่างเดียวคือข้อความ "กำลังโหลด" เพราะของจริงต้องรอเซิร์ฟเวอร์
-import { s, sx } from '../helpers';
+import { s, sx, kb } from '../helpers';
 import { renderExportBtn } from './exportbtn';
 
 // แถบเครื่องมือเสริม — ไม่มีในมอคอัป
@@ -16,12 +16,18 @@ function renderHistTools(V) {
         <input type="date" value={V.histTo} onChange={V.onHistTo} style={sx("height:38px;padding:0 9px;border-radius:8px;background:#fff;font:400 12.5px 'IBM Plex Sans Thai',sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
       </div>
 
-      <div onClick={V.toggleTrash} className="hv-bg-f6 tap" style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>
+      {/* หน้ารายการ Lot — ประวัติเป็นรายแถวยา มองไม่ออกว่ารอบไหนรับคืนไปเท่าไหร่
+          ต้องไล่บวกเอง · หน้านั้นตอบได้ในบรรทัดเดียวต่อ Lot และพิมพ์ใบสรุปได้ */}
+      <div {...kb(V.openLots)} className="hv-bg-f6 tap" style={s('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer;background:#f0f1ee;color:#414a44')}>
+        รายการ Lot
+      </div>
+
+      <div {...kb(V.toggleTrash)} className="hv-bg-f6 tap" style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>
         {V.trashLabel}
       </div>
 
       {V.histLot && (
-        <div onClick={V.clearLot} className="tap" style={s('display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>
+        <div {...kb(V.clearLot)} className="tap" style={s('display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>
           Lot {V.histLot} <span style={s('font:400 13px Sarabun,sans-serif')}>✕</span>
         </div>
       )}
@@ -44,7 +50,7 @@ export function renderHistoryWide(V) {
         <input value={V.histQuery} onChange={V.onHistQuery} placeholder="ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลข Lot" style={s('width:320px;height:42px;padding:0 13px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 14px Sarabun,sans-serif')} />
         <div style={s('display:flex;gap:6px')}>
           {V.ranges.map((g) => (
-            <div key={g.key} onClick={g.pick} className="tap" style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
+            <div key={g.key} {...kb(g.pick)} className="tap" style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
           ))}
         </div>
         <div style={s('margin-left:auto;display:flex;align-items:baseline;gap:14px;font:400 13px Sarabun,sans-serif;color:#6b746e')}>
@@ -65,7 +71,7 @@ export function renderHistoryWide(V) {
           {V.histCols.map((c) => (
             <span
               key={c.key}
-              onClick={c.pick}
+              {...kb(c.pick)}
               className="hv-bg-e3f"
               style={sx('display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;border-radius:5px;margin:-3px 0;padding:3px 0', Object.assign(
                 { color: c.fg },
@@ -105,7 +111,7 @@ export function renderHistoryWide(V) {
             {/* เลข Lot — กดแล้วกรองดูเฉพาะ Lot นั้น */}
             <span style={s('width:96px;padding-right:8px;overflow:hidden')}>
               {hr.hasLot ? (
-                <span onClick={hr.openLot} className="hv-lot" title={'ดูเฉพาะ ' + hr.lotLabel}
+                <span {...kb(hr.openLot)} className="hv-lot" title={'ดูเฉพาะ ' + hr.lotLabel}
                   style={s("font:500 11.5px 'IBM Plex Sans Thai',sans-serif;color:#6b746e;cursor:pointer;border-bottom:1px dashed rgba(30,36,32,.28);white-space:nowrap")}>{hr.lotLabel}</span>
               ) : (
                 <span style={s('font:400 12px Sarabun,sans-serif;color:#c0c5c1')}>{hr.lotLabel}</span>
@@ -113,11 +119,11 @@ export function renderHistoryWide(V) {
             </span>
             <span style={s('width:80px;display:flex;justify-content:flex-end;gap:6px')}>
               {hr.inTrash ? (
-                <span onClick={hr.restore} className="hv-bg-e3f tap" style={s('padding:6px 9px;border-radius:7px;background:#e3f0e8;font:500 11.5px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>กู้คืน</span>
+                <span {...kb(hr.restore)} className="hv-bg-e3f tap" style={s('padding:6px 9px;border-radius:7px;background:#e3f0e8;font:500 11.5px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>กู้คืน</span>
               ) : (
                 <>
-                  <span onClick={hr.edit} className="hv-bg-e6e tap" style={s('padding:6px 9px;border-radius:7px;background:#f0f1ee;font:500 11.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>แก้</span>
-                  <span onClick={hr.remove} className="hv-bg-fbe tap" style={s('padding:6px 9px;border-radius:7px;background:#fdf1ed;font:500 11.5px Sarabun,sans-serif;color:#c2543c;cursor:pointer')}>ลบ</span>
+                  <span {...kb(hr.edit)} className="hv-bg-e6e tap" style={s('padding:6px 9px;border-radius:7px;background:#f0f1ee;font:500 11.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>แก้</span>
+                  <span {...kb(hr.remove)} className="hv-bg-fbe tap" style={s('padding:6px 9px;border-radius:7px;background:#fdf1ed;font:500 11.5px Sarabun,sans-serif;color:#c2543c;cursor:pointer')}>ลบ</span>
                 </>
               )}
             </span>
@@ -128,7 +134,7 @@ export function renderHistoryWide(V) {
       {V.histTruncated && (
         <div style={s('text-align:center;padding:14px 0 0')}>
           <div style={s('font:400 12px Sarabun,sans-serif;color:#9aa19c;margin-bottom:8px')}>{V.histTruncLabel}</div>
-          <div onClick={V.loadMoreHistory} className="hv-bg-f6 tap" style={s('display:inline-flex;align-items:center;padding:10px 20px;border:1px solid rgba(30,36,32,.16);border-radius:999px;background:#fff;font:600 13px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>{V.loadMoreLabel}</div>
+          <div {...kb(V.loadMoreHistory)} className="hv-bg-f6 tap" style={s('display:inline-flex;align-items:center;padding:10px 20px;border:1px solid rgba(30,36,32,.16);border-radius:999px;background:#fff;font:600 13px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>{V.loadMoreLabel}</div>
         </div>
       )}
     </div>
@@ -145,17 +151,20 @@ export function renderHistoryNarrow(V) {
             <span style={s("font:700 13px 'IBM Plex Sans Thai',sans-serif;color:#fff;line-height:1")}>฿</span>
           </div>
           <div style={s('font:600 18px Sarabun,sans-serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{V.histTitle || 'ประวัติการบันทึก'}</div>
-          <div onClick={V.openAbout} title="เกี่ยวกับ" className="hv-bg-f6" style={s('margin-left:auto;width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
-          <div onClick={V.openSettings} title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
+          <div {...kb(V.openAbout)} title="เกี่ยวกับ" className="hv-bg-f6" style={s('margin-left:auto;width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
+          <div {...kb(V.openSettings)} title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
         </div>
         <input value={V.histQuery} onChange={V.onHistQuery} placeholder="ชื่อยา · HN · ชื่อคนบันทึก · เลข Lot" style={s('width:100%;height:44px;padding:0 13px;border:1px solid rgba(30,36,32,.14);border-radius:10px;background:#f6f7f4;font:400 14.5px Sarabun,sans-serif;margin-bottom:9px')} />
         <div style={s('display:flex;gap:6px;flex-wrap:wrap')}>
           {V.ranges.map((g) => (
-            <div key={g.key} onClick={g.pick} className="tap" style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
+            <div key={g.key} {...kb(g.pick)} className="tap" style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
           ))}
-          <div onClick={V.toggleTrash} className="tap" style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>{V.trashLabel}</div>
+          <div {...kb(V.openLots)} className="tap" style={s('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer;background:#f0f1ee;color:#414a44')}>รายการ Lot</div>
+          <div {...kb(V.toggleTrash)} className="tap" style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>{V.trashLabel}</div>
+          {/* 🚨 เขียน "Lot" เป็นภาษาอังกฤษเสมอ ห้ามแปลว่า "ชุด" (พี่กันสั่ง — แคลร์เคยแปลผิดมาแล้ว)
+              ตรงนี้หลุดมาจากรอบก่อน เพิ่งเจอตอนไล่ทำหน้ารายการ Lot */}
           {V.histLot && (
-            <div onClick={V.clearLot} className="tap" style={s('display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>ชุด {V.histLot} ✕</div>
+            <div {...kb(V.clearLot)} className="tap" style={s('display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>Lot {V.histLot} ✕</div>
           )}
         </div>
         <div style={s('display:flex;align-items:center;gap:6px;margin-top:9px')}>
@@ -193,7 +202,7 @@ export function renderHistoryNarrow(V) {
                   border: '1px solid ' + it.border,
                   borderLeft: '3px solid ' + (it.hasLot ? (it.lotBand ? '#2f7d5d' : '#a8d3bd') : 'transparent')
                 })}>
-                  <div onClick={it.edit} style={s('min-width:0;cursor:pointer;margin-bottom:7px')}>
+                  <div {...kb(it.edit)} style={s('min-width:0;cursor:pointer;margin-bottom:7px')}>
                     <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif;overflow-wrap:anywhere')}>{it.name}</div>
                     <div style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums')}>{it.detail}</div>
                   </div>
@@ -205,17 +214,17 @@ export function renderHistoryNarrow(V) {
                         {/* ป้าย Lot กดได้ → กรองดูเฉพาะ Lot นั้น
                             ดึงออกมาจากบรรทัดรายละเอียดที่เดิมยัดรวมกันจนอ่านยาก */}
                         {it.hasLot && (
-                          <span onClick={it.openLot} className="tap" style={s("font:500 10px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;background:#e3f0e8;border-radius:5px;padding:2px 7px;cursor:pointer;white-space:nowrap")}>{it.lotLabel}</span>
+                          <span {...kb(it.openLot)} className="tap" style={s("font:500 10px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;background:#e3f0e8;border-radius:5px;padding:2px 7px;cursor:pointer;white-space:nowrap")}>{it.lotLabel}</span>
                         )}
                       </div>
                     </div>
                     <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
                       {it.inTrash ? (
-                        <div onClick={it.restore} className="hv-bg-e3f tap" style={s('padding:7px 11px;border-radius:7px;background:#e3f0e8;font:500 11.5px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>กู้คืน</div>
+                        <div {...kb(it.restore)} className="hv-bg-e3f tap" style={s('padding:7px 11px;border-radius:7px;background:#e3f0e8;font:500 11.5px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>กู้คืน</div>
                       ) : (
                         <>
-                          <div onClick={it.edit} className="hv-bg-e6e tap" style={s('padding:7px 11px;border-radius:7px;background:#f0f1ee;font:500 11.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>แก้</div>
-                          <div onClick={it.remove} className="hv-bg-fbe tap" style={s('padding:7px 11px;border-radius:7px;background:#fdf1ed;font:500 11.5px Sarabun,sans-serif;color:#c2543c;cursor:pointer')}>ลบ</div>
+                          <div {...kb(it.edit)} className="hv-bg-e6e tap" style={s('padding:7px 11px;border-radius:7px;background:#f0f1ee;font:500 11.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>แก้</div>
+                          <div {...kb(it.remove)} className="hv-bg-fbe tap" style={s('padding:7px 11px;border-radius:7px;background:#fdf1ed;font:500 11.5px Sarabun,sans-serif;color:#c2543c;cursor:pointer')}>ลบ</div>
                         </>
                       )}
                     </div>

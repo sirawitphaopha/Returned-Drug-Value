@@ -38,7 +38,10 @@ export function summaryVals(app, d) {
     short: m.v ? compact(m.v) : '—',
     h: (m.v ? Math.max(4, (m.v / maxM) * 100) : 1.5) + '%',
     bg: m.v === 0 ? (dark ? 'rgba(255,255,255,.1)' : '#e6e9e5') : m.isNow ? (dark ? 'repeating-linear-gradient(135deg,#2f7d5d 0 6px,#25654b 6px 12px)' : 'repeating-linear-gradient(135deg,#a8d3bd 0 6px,#cbe4d6 6px 12px)') : (m.v === maxM ? (dark ? 'linear-gradient(180deg,#9ce8c2,#4fae82)' : '#2f7d5d') : (dark ? '#2f7d5d' : '#a8d3bd')),
-    labelColor: m.v === 0 ? (dark ? 'rgba(255,255,255,.3)' : '#c0c5c1') : m.v === maxM ? (dark ? '#7fd6ab' : '#2f7d5d') : (dark ? 'rgba(255,255,255,.5)' : '#6b746e'),
+    // ป้ายเดือนที่ยังไม่มีข้อมูล (ขีด —) เดิมใช้ #c0c5c1 ซึ่งจางเกินเกณฑ์อ่านได้
+    // (คอนทราสต์ 1.8:1 จากเกณฑ์ 4.5:1) มองไม่เห็นเลยบนโปรเจกเตอร์ห้องประชุมที่สีซีดกว่าจอคอม
+    // เปลี่ยนเป็นสีเดียวกับตัวเลขปกติ (4.8:1) — ขีดกับตัวเลขต่างกันชัดอยู่แล้ว ไม่ต้องพึ่งความจาง
+    labelColor: m.v === 0 ? (dark ? 'rgba(255,255,255,.55)' : '#6b746e') : m.v === maxM ? (dark ? '#7fd6ab' : '#2f7d5d') : (dark ? 'rgba(255,255,255,.5)' : '#6b746e'),
     nameColor: dark ? 'rgba(255,255,255,.5)' : '#6b746e'
   }));
 

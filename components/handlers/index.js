@@ -8,6 +8,7 @@ import { settingsActions } from './settings';
 import { pricesActions } from './prices';
 import { demoActions } from './demo';
 import { himportActions } from './himport';
+import { lotsActions } from './lots';
 
 export function installHandlers(app) {
   uiActions(app);
@@ -19,4 +20,5 @@ export function installHandlers(app) {
   pricesActions(app);
   demoActions(app);
   himportActions(app);
+  lotsActions(app);
 }

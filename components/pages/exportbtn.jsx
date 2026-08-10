@@ -4,7 +4,7 @@
 // ทำเป็นชิ้นเดียวตามกฎ "อะไรที่คล้ายกันต้องทำให้เหมือนกัน" — ก่อนหน้านี้มี 3 แบบ 3 ที่
 //   หน้าประวัติคอม = ปุ่มขาวขอบเทา · หน้าสรุปคอม = ปุ่มโปร่งขอบจาง · หน้าสรุปมือถือ = แถบยาวสีพื้น
 // ตอนนี้เหลือหน้าตาเดียว แก้ที่ไฟล์นี้ที่เดียวเปลี่ยนครบทุกจอ
-import { sx } from '../helpers';
+import { sx, kb } from '../helpers';
 
 export const EXPORT_TEAL = '#2f7d5d';
 
@@ -35,7 +35,7 @@ export function renderExportBtn(onClick, label, opt) {
 
   return (
     <div
-      onClick={onClick}
+      {...kb(onClick)}
       className="hv-teal tap"
       style={sx(
         'display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:#fff;white-space:nowrap;background:#2f7d5d;box-shadow:0 2px 8px -2px rgba(47,125,93,.55);' + shape,

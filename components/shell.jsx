@@ -1,6 +1,6 @@
 // โครงนอกของทั้งแอป — คัดจากมอคอัป (บรรทัด 23–27 กับ 476–673)
 // ลำดับใน DOM ตามต้นฉบับเป๊ะ ตำแหน่งจริงบนจอคุมด้วย order ของ flex
-import { s, sx } from './helpers';
+import { s, sx, kb } from './helpers';
 import { renderVals } from './vals';
 import { renderRecordNarrow, renderRecordWide, renderSaveBar } from './pages/record';
 import { renderHistoryNarrow, renderHistoryWide } from './pages/history';
@@ -9,6 +9,7 @@ import { renderNavNarrow, renderNavWide } from './pages/nav';
 import { renderSheet } from './pages/sheet';
 import { renderSettings } from './pages/settings';
 import { renderPrices, renderPriceBar } from './pages/prices';
+import { renderLots, renderLotSlip } from './pages/lots';
 import { renderToast } from './pages/toast';
 import { renderConfirm } from './pages/confirm';
 import { renderAbout } from './pages/about';
@@ -34,7 +35,7 @@ export function renderShell(app) {
       {/* แถบเตือนโหมดดูตัวอย่าง — ต้องเห็นตลอดเวลาที่เปิดโหมด
           จะได้ไม่มีใครเผลอคิดว่าตัวเลขบนจอคือของจริง */}
       {V.demo && (
-        <div onClick={V.toggleDemo} style={s('flex:none;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 14px;background:#d68a2a;color:#fff;font:600 12px Sarabun,sans-serif;cursor:pointer;text-align:center')}>
+        <div {...kb(V.toggleDemo)} style={s('flex:none;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 14px;background:#d68a2a;color:#fff;font:600 12px Sarabun,sans-serif;cursor:pointer;text-align:center')}>
           <span>⚠ {V.demoBanner}</span>
           <span style={s('font:600 11px Sarabun,sans-serif;background:rgba(255,255,255,.25);border-radius:6px;padding:2px 8px;flex:none')}>กดเพื่อปิด</span>
         </div>
@@ -60,6 +61,7 @@ export function renderShell(app) {
           {V.isHistory && (V.narrow ? renderHistoryNarrow(V) : renderHistoryWide(V))}
           {V.isSummary && (V.narrow ? renderSummaryNarrow(V) : renderSummaryWide(V))}
           {V.isPrices && renderPrices(V)}
+          {V.isLots && renderLots(V)}
           {V.isAbout && renderAbout(V)}
         </div>
         {renderFooter(V)}
@@ -72,6 +74,7 @@ export function renderShell(app) {
       {V.isPrices && renderPriceBar(V)}
       {renderSettings(V)}
       {renderHisImport(V)}
+      {renderLotSlip(V)}
       {renderToast(V)}
       {renderConfirm(V)}
     </div>

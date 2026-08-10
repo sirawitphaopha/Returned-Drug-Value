@@ -204,6 +204,7 @@ export function historyVals(app, d) {
 
     // ── ถังขยะ · ดูรายล็อต · ช่วงวันที่เลือกเอง ─────────────────────────────
     histTrash: st.histTrash,
+    openLots: app.openLots,
     toggleTrash: app.toggleTrash,
     trashLabel: st.histTrash ? 'กลับไปดูรายการปกติ' : 'ถังขยะ',
     histLot: st.histLot,

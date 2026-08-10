@@ -10,6 +10,7 @@ import { settingsVals } from './settings';
 import { pricesVals } from './prices';
 import { signVals } from './sign';
 import { himportVals } from './himport';
+import { lotsVals } from './lots';
 
 export function renderVals(app) {
   const d = derive(app);
@@ -23,7 +24,8 @@ export function renderVals(app) {
     settingsVals(app, d),
     pricesVals(app, d),
     signVals(app, d),
-    himportVals(app, d)
+    himportVals(app, d),
+    lotsVals(app, d)
   );
 
   // เตือนตอน dev ถ้ามีคีย์ซ้ำข้ามไฟล์ — เคยพลาดมาแล้ว (fyLabel ของหน้าบันทึกโดน summary ทับ

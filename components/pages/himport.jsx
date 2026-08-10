@@ -2,7 +2,7 @@
 //
 // หลักคิด: ระบบ "เสนอ" พี่กัน "ตัดสิน" — ไม่มีการนำเข้าอัตโนมัติทั้งดุ้น
 // เพราะราคาถูกแช่แข็งลงแถวตอนบันทึก จับคู่ผิดแล้วตัวเลข KPI ผิดถาวร
-import { s, sx } from '../helpers';
+import { s, sx, kb } from '../helpers';
 
 export function renderHisImport(V) {
   if (!V.hisOpen) return null;
@@ -18,7 +18,7 @@ export function renderHisImport(V) {
           {/* ── หัวหน้าต่าง ─────────────────────────────────────────────── */}
           <div style={s('flex:none;display:flex;align-items:center;gap:12px;padding:16px 20px;background:#fff;border-bottom:1px solid rgba(30,36,32,.08)')}>
             <div style={s('font:600 17px Sarabun,sans-serif;flex:1;min-width:0')}>นำเข้าราคาจาก HIS</div>
-            <div onClick={V.closeHisImport} className="hv-bg-f6 tap" style={s('width:34px;height:34px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>✕</div>
+            <div {...kb(V.closeHisImport)} className="hv-bg-f6 tap" style={s('width:34px;height:34px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>✕</div>
           </div>
 
           {/* ── เลือกไฟล์ ──────────────────────────────────────────────── */}
@@ -64,11 +64,11 @@ export function renderHisImport(V) {
                 <div style={s('font:400 12.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:9px')}>{V.hisSummary}</div>
                 <div style={s('display:flex;align-items:center;gap:8px;flex-wrap:wrap')}>
                   {V.hisTabs.map((t) => (
-                    <div key={t.key} onClick={t.pick} className="tap" style={sx('padding:7px 14px;border-radius:999px;font:600 12.5px Sarabun,sans-serif;cursor:pointer', { background: t.bg, color: t.fg })}>{t.label}</div>
+                    <div key={t.key} {...kb(t.pick)} className="tap" style={sx('padding:7px 14px;border-radius:999px;font:600 12.5px Sarabun,sans-serif;cursor:pointer', { background: t.bg, color: t.fg })}>{t.label}</div>
                   ))}
                   <div style={s('margin-left:auto;display:flex;gap:6px')}>
-                    <div onClick={V.checkHisTabOn} className="hv-bg-e3f tap" style={s('padding:7px 12px;border-radius:8px;border:1px solid rgba(47,125,93,.3);background:#e3f0e8;color:#2f7d5d;font:600 12px Sarabun,sans-serif;cursor:pointer')}>{V.hisBulkLabel}</div>
-                    <div onClick={V.checkHisTabOff} className="hv-bg-f6 tap" style={s('padding:7px 12px;border-radius:8px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#6b746e;font:600 12px Sarabun,sans-serif;cursor:pointer')}>เอาออกทั้งกลุ่ม</div>
+                    <div {...kb(V.checkHisTabOn)} className="hv-bg-e3f tap" style={s('padding:7px 12px;border-radius:8px;border:1px solid rgba(47,125,93,.3);background:#e3f0e8;color:#2f7d5d;font:600 12px Sarabun,sans-serif;cursor:pointer')}>{V.hisBulkLabel}</div>
+                    <div {...kb(V.checkHisTabOff)} className="hv-bg-f6 tap" style={s('padding:7px 12px;border-radius:8px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#6b746e;font:600 12px Sarabun,sans-serif;cursor:pointer')}>เอาออกทั้งกลุ่ม</div>
                   </div>
                 </div>
               </div>
@@ -83,7 +83,7 @@ export function renderHisImport(V) {
                     <div style={s('display:flex;align-items:flex-start;gap:11px')}>
                       {/* ช่องติ๊ก — ถ้ายังไม่มีราคาที่ใช้ได้ ติ๊กไม่ได้ */}
                       <div
-                        onClick={r.canCheck ? r.toggle : undefined}
+                        {...kb(r.canCheck ? r.toggle : undefined)}
                         style={sx('width:20px;height:20px;border-radius:6px;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font:700 12px Sarabun,sans-serif', {
                           border: '1.5px solid ' + (r.checked ? '#2f7d5d' : 'rgba(30,36,32,.22)'),
                           background: r.checked ? '#2f7d5d' : '#fff',
@@ -113,7 +113,7 @@ export function renderHisImport(V) {
                     {r.alts.length > 0 && (
                       <div style={s('margin-top:9px;padding-top:9px;border-top:1px dashed rgba(30,36,32,.12);display:flex;flex-direction:column;gap:5px')}>
                         {r.alts.map((a) => (
-                          <div key={a.key} onClick={a.pick} className="tap" style={sx('display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;cursor:pointer', {
+                          <div key={a.key} {...kb(a.pick)} className="tap" style={sx('display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;cursor:pointer', {
                             background: a.on ? '#e3f0e8' : '#f6f7f4',
                             border: '1px solid ' + (a.on ? 'rgba(47,125,93,.34)' : 'transparent')
                           })}>
@@ -148,7 +148,7 @@ export function renderHisImport(V) {
 
               {/* ── แถบบันทึก ─────────────────────────────────────────── */}
               <div style={s('flex:none;padding:13px 20px;background:#fff;border-top:1px solid rgba(30,36,32,.08);display:flex;align-items:center;gap:12px;flex-wrap:wrap')}>
-                <div onClick={V.toggleHisBackfill} className="tap" style={s('display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0')}>
+                <div {...kb(V.toggleHisBackfill)} className="tap" style={s('display:flex;align-items:center;gap:8px;cursor:pointer;min-width:0')}>
                   <span style={sx('width:18px;height:18px;border-radius:5px;flex:none;display:flex;align-items:center;justify-content:center;font:700 11px Sarabun,sans-serif;color:#fff', {
                     border: '1.5px solid ' + (V.hisBackfill ? '#2f7d5d' : 'rgba(30,36,32,.22)'),
                     background: V.hisBackfill ? '#2f7d5d' : '#fff'
@@ -159,9 +159,9 @@ export function renderHisImport(V) {
                 </div>
 
                 <div style={s('margin-left:auto;display:flex;gap:9px;flex:none')}>
-                  <div onClick={V.closeHisImport} className="hv-bg-f6 tap" style={s('height:42px;padding:0 18px;border-radius:10px;border:1px solid rgba(30,36,32,.16);background:#fff;display:flex;align-items:center;font:600 13.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>ยกเลิก</div>
+                  <div {...kb(V.closeHisImport)} className="hv-bg-f6 tap" style={s('height:42px;padding:0 18px;border-radius:10px;border:1px solid rgba(30,36,32,.16);background:#fff;display:flex;align-items:center;font:600 13.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>ยกเลิก</div>
                   <div
-                    onClick={V.hisCanSave ? V.saveHisImport : undefined}
+                    {...kb(V.hisCanSave ? V.saveHisImport : undefined)}
                     className={V.hisCanSave ? 'hv-teal tap' : ''}
                     style={sx('height:42px;padding:0 20px;border-radius:10px;display:flex;align-items:center;font:600 13.5px Sarabun,sans-serif', {
                       background: V.hisCanSave ? '#2f7d5d' : '#e6e8e4',

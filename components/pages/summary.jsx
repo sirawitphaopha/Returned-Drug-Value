@@ -1,7 +1,7 @@
 // หน้าสรุปภาพรวม — คัดจากมอคอัป (คอม 317–386 · มือถือ 388–473)
 // ต่างจากต้นฉบับอย่างเดียวคือข้อความบนปุ่มส่งออกเปลี่ยนเป็น "กำลังสร้างไฟล์" ตอนกำลังทำงาน
 // เพราะของจริงต้องรอเซิร์ฟเวอร์ส่งรายการทั้งปีงบกลับมาก่อน
-import { s, sx } from '../helpers';
+import { s, sx, kb } from '../helpers';
 import { renderExportBtn } from './exportbtn';
 
 // แถบบอกสถานะบนสุดของหน้าสรุป — ไม่มีในมอคอัป (มอคอัปมีข้อมูลอยู่ในเครื่องเลยไม่ต้องรอ)
@@ -35,7 +35,7 @@ function renderFyPicks(V) {
     <div style={s('display:flex;align-items:center;gap:6px;flex-wrap:wrap')}>
       <span style={sx('font:500 11.5px Sarabun,sans-serif', { color: V.sumMuted })}>ปีงบ</span>
       {V.fyPicks.map((y) => (
-        <div key={y.key} onClick={y.pick} className="tap" style={sx('padding:6px 13px;border-radius:999px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: y.on ? '#2f7d5d' : V.sumTrack, color: y.on ? '#fff' : V.sumMuted })}>{y.label}</div>
+        <div key={y.key} {...kb(y.pick)} className="tap" style={sx('padding:6px 13px;border-radius:999px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: y.on ? '#2f7d5d' : V.sumTrack, color: y.on ? '#fff' : V.sumMuted })}>{y.label}</div>
       ))}
     </div>
   );
@@ -83,17 +83,17 @@ export function renderSummaryWide(V) {
           <div style={s('display:flex;align-items:center;gap:10px')}>
             {renderExportBtn(V.exportCsv, V.exportLabel, {})}
             <div style={sx('display:flex;padding:3px;border-radius:10px;gap:3px', { background: V.togTrack })}>
-              <div onClick={V.setLight} style={sx('display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;cursor:pointer', { background: V.togLightBg })}>
+              <div {...kb(V.setLight)} style={sx('display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;cursor:pointer', { background: V.togLightBg })}>
                 <span style={s('width:12px;height:12px;border-radius:50%;background:#fff;border:1px solid rgba(30,36,32,.28)')}></span>
                 <span style={sx('font:600 13.5px Sarabun,sans-serif', { color: V.togLightFg })}>สว่าง</span>
               </div>
-              <div onClick={V.setDark} style={sx('display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;cursor:pointer', { background: V.togDarkBg })}>
+              <div {...kb(V.setDark)} style={sx('display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;cursor:pointer', { background: V.togDarkBg })}>
                 <span style={s('width:12px;height:12px;border-radius:50%;background:#151a17;border:1px solid rgba(255,255,255,.3)')}></span>
                 <span style={sx('font:600 13.5px Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
               </div>
             </div>
-            <div onClick={V.openAbout} title="เกี่ยวกับ" style={sx('width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:700 16px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>ℹ</div>
-            <div onClick={V.openSettings} title="ตั้งค่า" style={sx('width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:600 17px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⚙</div>
+            <div {...kb(V.openAbout)} title="เกี่ยวกับ" style={sx('width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:700 16px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>ℹ</div>
+            <div {...kb(V.openSettings)} title="ตั้งค่า" style={sx('width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:600 17px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⚙</div>
           </div>
         </div>
 
@@ -209,17 +209,17 @@ export function renderSummaryNarrow(V) {
             </div>
           </div>
           <div style={sx('display:flex;padding:2px;border-radius:9px;gap:2px;flex:none', { background: V.togTrack })}>
-            <div onClick={V.setLight} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togLightBg })}>
+            <div {...kb(V.setLight)} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togLightBg })}>
               <span style={s('width:11px;height:11px;border-radius:50%;background:#fff;border:1px solid rgba(30,36,32,.28)')}></span>
               <span style={sx('font:600 12px Sarabun,sans-serif', { color: V.togLightFg })}>สว่าง</span>
             </div>
-            <div onClick={V.setDark} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togDarkBg })}>
+            <div {...kb(V.setDark)} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togDarkBg })}>
               <span style={s('width:11px;height:11px;border-radius:50%;background:#151a17;border:1px solid rgba(255,255,255,.3)')}></span>
               <span style={sx('font:600 12px Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
             </div>
           </div>
-          <div onClick={V.openAbout} title="เกี่ยวกับ" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 14px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>ℹ</div>
-          <div onClick={V.openSettings} title="ตั้งค่า" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 15px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⚙</div>
+          <div {...kb(V.openAbout)} title="เกี่ยวกับ" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 14px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>ℹ</div>
+          <div {...kb(V.openSettings)} title="ตั้งค่า" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 15px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⚙</div>
         </div>
 
         <div style={sx('border-radius:14px;padding:16px 17px 15px;margin-bottom:10px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>

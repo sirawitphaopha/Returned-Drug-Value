@@ -67,6 +67,10 @@ export function shellVals(app, d) {
     openAbout: app.openAbout,
     closeAbout: app.closeAbout,
 
+    // ตัววัดความสูงแถบล่างจอ — ข้อความเด้งเอาไปเว้นระยะให้ไม่ทับตัวเลข
+    navBarRef: app.navBarRef,
+    saveBarRef: app.saveBarRef,
+
     toastOpen: !!st.toast,
     toastText: st.toast ? st.toast.text : '',
     toastValue: st.toast ? st.toast.value : '',

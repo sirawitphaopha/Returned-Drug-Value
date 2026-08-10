@@ -3,7 +3,7 @@
 // วางไว้ท้ายพื้นที่เลื่อน เลื่อนสุดแล้วเจอ · ไม่ลอยทับอะไร
 // คอม = แถวเดียว ซ้าย-ขวา · มือถือ = ซ้อนกลางจอ ตัวเล็กลง
 // หน้าสรุปมีธีมเข้มด้วย เลยรับสีมาจาก V แทนที่จะฝังสีตายตัว
-import { s, sx } from '../helpers';
+import { s, sx, kb } from '../helpers';
 
 export function renderFooter(V) {
   if (V.isAbout) return null;      // หน้าเกี่ยวกับมีเนื้อหาพวกนี้อยู่แล้ว ไม่ต้องซ้ำ
@@ -33,7 +33,7 @@ export function renderFooter(V) {
           <span style={sx('font:400 11px Sarabun,sans-serif', { color: muted })}>
             © {V.footerYear} ภก. สิรวิชญ์ เผ่าผา · กลุ่มงานเภสัชกรรม รพ.ปรางค์กู่
           </span>
-          <span onClick={V.openAbout} className="tap" style={sx('font:600 11px Sarabun,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px', { color: V.isSummary ? V.sumMuted : '#2f7d5d' })}>
+          <span {...kb(V.openAbout)} className="tap" style={sx('font:600 11px Sarabun,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px', { color: V.isSummary ? V.sumMuted : '#2f7d5d' })}>
             เกี่ยวกับ
           </span>
         </div>
