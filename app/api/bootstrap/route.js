@@ -15,13 +15,18 @@ export async function GET() {
     const today = todayISO();
     const range = fyRange(today);
 
-    const [catalog, settingRes, summaryRes] = await Promise.all([
+    const [catalog, settingRes, summaryRes, hotRes] = await Promise.all([
       loadCatalog(),
       db.from('mr_setting').select('org_name,default_source,fav_ids,staff,last_recorder').eq('id', 1).maybeSingle(),
-      db.rpc('mr_summary', { p_from: range.from, p_to: range.to })
+      db.rpc('mr_summary', { p_from: range.from, p_to: range.to }),
+      // รหัสยาที่ถูกคืนบ่อยที่สุดในปีงบนี้ — ให้ช่องค้นหาดันตัวที่ใช้บ่อยขึ้นก่อน
+      // ต้องมาตั้งแต่เปิดเว็บ เพราะช่องค้นหาใช้ทันที (หน้าสรุปโหลดทีหลัง)
+      db.rpc('mr_hot_drug_ids', { p_from: range.from, p_to: range.to, p_limit: 20 })
     ]);
     if (settingRes.error) throw new Error(settingRes.error.message);
     if (summaryRes.error) throw new Error(summaryRes.error.message);
+    // ยาคืนบ่อยเป็นของเสริม พังก็ไม่ควรทำให้ทั้งเว็บเปิดไม่ขึ้น
+    const hotIds = hotRes.error ? [] : (Array.isArray(hotRes.data) ? hotRes.data : []);
 
     const st = settingRes.data || {};
     const sum = summaryRes.data || {};
@@ -33,6 +38,7 @@ export async function GET() {
       // ถ้าไม่ได้ตั้ง MRV_PASSWORD (เช่นตอนรันในเครื่อง) ปุ่มนั้นกดไปก็ไม่มีความหมาย
       authOn: authEnabled(),
       drugs: catalog,
+      hotIds: hotIds,
       setting: {
         orgName: st.org_name || 'ห้องยาผู้ป่วยนอก · รพ.ปรางค์กู่',
         defaultSource: st.default_source || 'opd',

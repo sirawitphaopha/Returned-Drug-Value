@@ -2,7 +2,8 @@
 // ต่างจากต้นฉบับ 3 จุด: ตัดเลขคงคลังปลอม · ตัดสวิตช์จำลองเน็ตหลุด
 // · ยอดสะสมปีงบมาจากฐานข้อมูล ไม่ได้นับจากรายการในเครื่อง
 import { SOURCES, money, thaiDate } from '@/lib/format';
-import { cleanQty, qtyNum, qtyText, splitDrugName, splitPercent, markMatch } from '../helpers';
+import { cleanQty, qtyNum, qtyText, splitDrugName, splitPercent, splitRelease, markMatch } from '../helpers';
+import { moveHi } from '@/lib/drugSearch';
 
 const sumReuse = (rows) => rows.reduce((a, x) => a + (x.disposition === 'reuse' ? x.price * x.qty : 0), 0);
 
@@ -61,15 +62,23 @@ export function recordVals(app, d) {
     onQuery: (e) => app.setState({ query: e.target.value, hi: 0 }),
     hasQuery: !!st.query,
     clearQuery: app.clearQuery,
+    // ป้ายบอกคำที่ระบบแปลงให้ตอนลืมสลับแป้นพิมพ์ (พี่กันขอ 10 ส.ค. 2569)
+    // โผล่ข้างปุ่ม ✕ ในช่องค้นหา — ผู้ใช้จะได้รู้ว่าระบบเข้าใจว่ากำลังหาคำว่าอะไร
+    // ไม่ใช่งงว่าทำไมพิมพ์ไทยแล้วเจอยาภาษาอังกฤษ
+    showSwap: !!d.qSwapped,
+    swapLabel: d.qUsed,
     onSearchKey: (e) => { if (e.key === 'Enter' && d.results.length) { e.preventDefault(); app.openSheet(d.results[d.hi] || d.results[0]); } },
     onSearchKeyDesktop: (e) => {
       // ลูกศรขึ้น/ลงเลื่อนเลือกในรายการผลค้นหา — เดิมกด Enter ได้ตัวแรกเสมอ
       // ทั้งที่ระบบไฮไลต์แถวแรกไว้ ซึ่งสื่อว่าเลื่อนเลือกได้
+      //
+      // 🔄 วนรอบเหมือน ME-DRP (พี่กันสั่งให้ทำตาม) — ลงจากตัวสุดท้ายกลับตัวแรก
+      //    ขึ้นจากตัวแรกไปตัวสุดท้าย · อยากดูตัวท้าย ๆ กดขึ้นทีเดียวถึงเลย
+      //    ตัวเลื่อนอยู่ใน lib/drugSearch.js → moveHi()
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         if (!d.results.length) return;
         e.preventDefault();
-        const step = e.key === 'ArrowDown' ? 1 : -1;
-        app.setState({ hi: Math.min(d.results.length - 1, Math.max(0, d.hi + step)) });
+        app.setState({ hi: moveHi(d.hi, e.key === 'ArrowDown' ? 1 : -1, d.results.length) });
         return;
       }
       if (e.key === 'Enter') {
@@ -89,17 +98,27 @@ export function recordVals(app, d) {
     results: d.results.map((drug, i) => {
       // แยกชื่อกับความแรง แล้วไฮไลต์คำที่พิมพ์ค้น — ตาไล่หาง่ายขึ้นมาก
       const sp = splitDrugName(drug.name);
-      const mk = markMatch(sp.base, d.q);
+      const mk = markMatch(sp.base, d.qUsed);
+      // แยกรูปแบบการออกฤทธิ์ (ER/IR/SR) ออกก่อน แล้วค่อยแยก %
+      // ลำดับสำคัญ เพราะ release อยู่ท้ายสุดของชื่อ ("10 mg/1 g 1% ER")
+      const rl = splitRelease(sp.strength);
       // แยก % ออกจากความแรง เอาไปใส่วงเล็บทาสีต่างหาก จะได้สะดุดตา (พี่กันขอ)
-      const pc = splitPercent(sp.strength);
+      const pc = splitPercent(rl.main);
       // ชื่อการค้า — ไฮไลต์คำค้นข้างในด้วย เพราะค้นจากชื่อการค้าได้แล้ว
-      const bk = markMatch(drug.brand || '', d.q);
+      const bk = markMatch(drug.brand || '', d.qUsed);
+      // ตัวย่อ — ไม่วาดถ้ามีอยู่ในชื่อยาอยู่แล้ว กัน "(HCTZ)(HCTZ)"
+      const abRaw = (drug.abbrev || '').trim();
+      const abShow = abRaw && drug.name.toLowerCase().indexOf(abRaw.toLowerCase()) < 0 ? abRaw : '';
+      const abMk = markMatch(abShow, d.qUsed);
       return {
         name: drug.name,
         base: sp.base,
         strength: pc.main,
         percentLabel: pc.percent ? '(' + pc.percent + ')' : '',
         hasPercent: !!pc.percent,
+        // รูปแบบการออกฤทธิ์ — เอียง หนา วงเล็บ สีแดงอมชมพู (พี่กันเลือกแบบ ง)
+        releaseLabel: rl.release ? '(' + rl.release + ')' : '',
+        hasRelease: !!rl.release,
         mkBefore: mk[0],
         mkHit: mk[1],
         mkAfter: mk[2],
@@ -111,6 +130,17 @@ export function recordVals(app, d) {
         bdAfter: bk[2],
         // ทางให้ยา — วางนำหน้าหน่วยนับในบรรทัดล่าง ตำแหน่งเดียวกับ ME-DRP
         route: (drug.route || '').trim(),
+        // ตัวย่อที่เภสัชกรเรียกกันจริง (CPM · HCTZ) — วงเล็บสีม่วงต่อจากชื่อยา (พี่กันเลือกสีเอง)
+        // ไฮไลต์คำค้นข้างในด้วย เพราะค้นด้วยตัวย่อได้แล้ว
+        //
+        // 🚨 ยาบางตัวมีตัวย่ออยู่ในชื่ออยู่แล้ว เช่น "Hydrochlorothiazide (HCTZ)"
+        //    ถ้าวาดซ้ำจะได้ "Hydrochlorothiazide (HCTZ)(HCTZ)" — ตรวจก่อนว่ามีในชื่อไหม
+        //    (ยังไม่ย้ายตัวย่อออกจากชื่อ เพราะ ME-DRP ยังไม่รู้จักช่องนี้ ดูสกิล pharmacy-web-logic)
+        abbrev: abShow,
+        hasAbbrev: !!abShow,
+        abBefore: abMk[0],
+        abHit: abMk[1],
+        abAfter: abMk[2],
         // มอคอัปโชว์ "หน่วย · คงคลัง 1234" ซึ่งเป็นเลขมั่วของเดโม ตัดออกแล้ว
         unitLabel: drug.unit,
         noPrice: !drug.hasPrice,
@@ -120,6 +150,9 @@ export function recordVals(app, d) {
         priceSub: drug.hasPrice ? 'ต่อ ' + drug.unit : '',
         priceColor: drug.hasPrice ? '#2f7d5d' : '#c0c5c1',
         rowBg: i === d.hi ? '#eef6f1' : '#fff',
+        // ติด ref ไว้เฉพาะแถวที่ถูกไฮไลต์ เพื่อให้กรอบเลื่อนตามลูกศรขึ้น/ลง
+        // (ตัวเลื่อนอยู่ใน componentDidUpdate ของ MedReturnApp)
+        hiRef: i === d.hi ? app.hiRef : null,
         pick: () => app.openSheet(drug),
         pickInline: () => app.pickInline(drug)
       };

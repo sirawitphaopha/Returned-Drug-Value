@@ -13,7 +13,7 @@ export async function GET() {
   try {
     const db = getAdmin();
     const [drugsRes, priceRes] = await Promise.all([
-      db.from('drugs').select('id,generic,strength,unit,percent,form,route,release,brand,hidden').order('id'),
+      db.from('drugs').select('id,generic,strength,unit,percent,form,route,release,brand,abbrev,hidden').order('id'),
       db.from('mr_drug_price').select('drug_id,unit_price,unit_th,display_name,note,needs_check,suggestions')
     ]);
     if (drugsRes.error) throw new Error(drugsRes.error.message);
@@ -39,6 +39,8 @@ export async function GET() {
           form: (d.form || '').trim(),
           // ทางให้ยา — โชว์คู่กับรูปแบบยาในบรรทัดล่าง ให้ตรงกับผลค้นหาหน้าบันทึก
           route: (d.route || '').trim(),
+          // ตัวย่อที่เภสัชกรใช้เรียกกันจริง — ค้นหาได้ + โชว์ในวงเล็บสีม่วง
+          abbrev: (d.abbrev || '').trim(),
           unit: resolveUnit(d.form, p.unit_th),
           // ว่าง = ยังใช้หน่วยเริ่มต้นของกลุ่มอยู่ ไม่ได้แก้รายตัว
           unitTh: (p.unit_th || '').trim(),

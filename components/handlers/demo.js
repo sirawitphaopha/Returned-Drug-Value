@@ -34,12 +34,22 @@ export function demoActions(app) {
       source: st0.source, sourceTouched: st0.sourceTouched, date: st0.date
     };
 
+    // ยาที่ถูกคืนบ่อยในชุดตัวอย่าง — ให้ช่องค้นหาดันขึ้นก่อนเหมือนของจริง
+    // (ของจริงมาจาก mr_hot_drug_ids ตอน bootstrap)
+    const times = {};
+    for (const r of box.rows) times[r.drugId] = (times[r.drugId] || 0) + 1;
+    const hotIds = Object.keys(times)
+      .sort((a, b) => times[b] - times[a])
+      .slice(0, 20)
+      .map((k) => Number(k));
+
     app._demo = box;
     app.invalidate();
     app.setState({
       demo: true,
       settingsOpen: false,
       drugs: drugs,
+      hotIds: hotIds,
       // ยาที่คืนบ่อย 6 ตัวแรกของชุดตัวอย่าง
       favIds: box.drugs.slice(0, 6).map((d) => d.id),
       recorder: 'ภก. สิรวิชญ์ เผ่าผา',
@@ -85,6 +95,7 @@ export function demoActions(app) {
       demo: false,
       settingsOpen: false,
       drugs: [],
+      hotIds: [],            // ล้างยาคืนบ่อยของชุดตัวอย่าง · boot() จะโหลดของจริงมาทับ
       favIds: [],
       lastLot: '',
       sum: null,

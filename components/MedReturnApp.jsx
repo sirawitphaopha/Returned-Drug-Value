@@ -77,6 +77,7 @@ export default class MedReturnApp extends React.Component {
       histSortKey: '',       // คอลัมน์ที่กดเรียง (ว่าง = เรียงวันใหม่→เก่าตามที่เซิร์ฟเวอร์ส่งมา)
       histSortDir: 'desc',
       histMore: [],          // แถวที่โหลดเพิ่มมาแล้ว
+      hotIds: [],            // รหัสยาที่ถูกคืนบ่อย — ช่องค้นหาดันขึ้นก่อน
       lots: [],              // รายการ Lot — หน้าแยกดูราย Lot
       lotsLoading: false,
       lotsRange: 'month',    // ช่วงเวลาของหน้ารายการ Lot (แยกจากหน้าประวัติ)
@@ -194,7 +195,27 @@ export default class MedReturnApp extends React.Component {
     this._orgTimer = null;
     this._histTimer = null;
 
+    // แถวที่กำลังถูกไฮไลต์ในรายการผลค้นยา — ใช้เลื่อนกรอบตามลูกศรขึ้น/ลง
+    // (ดู componentDidUpdate ด้านล่าง)
+    this.hiRef = React.createRef();
+
     installHandlers(this);
+  }
+
+  // ── กดลูกศรแล้วกรอบผลค้นหาต้องเลื่อนตาม ────────────────────────────────────
+  // 🚨 บั๊กที่พี่กันเจอ 10 ส.ค. 2569: กรอบผลค้นหาสูงได้แค่ ~290px (เห็นราว 5 แถว)
+  //    กดลูกศรลงไปแถวที่ 6 ตัวที่ถูกเลือกไปซ่อนอยู่ใต้ขอบกรอบ กรอบไม่เลื่อนตาม
+  //    ผู้ใช้กดต่อไปเรื่อย ๆ แบบตาบอด ไม่รู้ว่ากำลังเลือกยาตัวไหนอยู่ = เลือกผิดตัวได้
+  //
+  // block:'nearest' = เลื่อนน้อยที่สุดเท่าที่จำเป็น ถ้าแถวอยู่ในสายตาแล้วจะไม่ขยับเลย
+  // และเลื่อนเฉพาะกรอบที่ใกล้ที่สุด ไม่ลากทั้งหน้าตาม
+  //
+  // ทำที่นี่แทนที่จะทำใน ref callback เพราะ ref ถูกเรียกทุกครั้งที่วาดจอ
+  // ซึ่งจะดึงกรอบกลับตอนผู้ใช้เลื่อนดูเองด้วยเมาส์
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.hi !== this.state.hi && this.hiRef.current) {
+      this.hiRef.current.scrollIntoView({ block: 'nearest' });
+    }
   }
 
   componentDidMount() {

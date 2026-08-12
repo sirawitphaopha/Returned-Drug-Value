@@ -1,6 +1,6 @@
 // ค่าของหน้าตั้งราคายา — ไม่มีในมอคอัป ใช้ภาษาภาพชุดเดียวกับหน้าบันทึก
 import { priceDirty } from '../handlers/prices';
-import { splitPercent } from '../helpers';
+import { splitPercent, splitRelease } from '../helpers';
 
 const FILTERS = [
   { key: 'all', label: 'ทั้งหมด' },
@@ -58,16 +58,26 @@ export function pricesVals(app, d) {
       const e = edits[String(it.id)] || {};
       const isDirty = priceDirty(it, edits);
       const warn = !it.hasPrice && !isDirty;
-      // แยก % ออกมาใส่วงเล็บทาสีต่างหาก ให้เหมือนผลค้นหาหน้าบันทึก
-      const pc = splitPercent(it.name);
+      // แยกรูปแบบการออกฤทธิ์ (ER/IR/SR) ออกก่อน แล้วค่อยแยก %
+      // ให้เหมือนผลค้นหาหน้าบันทึกทุกประการ
+      const rl = splitRelease(it.name);
+      const pc = splitPercent(rl.main);
+      const abRaw = (it.abbrev || '').trim();
+      const abShow = abRaw && it.name.toLowerCase().indexOf(abRaw.toLowerCase()) < 0 ? abRaw : '';
       return {
         id: it.id,
         name: pc.main,
         percentLabel: pc.percent ? '(' + pc.percent + ')' : '',
         hasPercent: !!pc.percent,
+        releaseLabel: rl.release ? '(' + rl.release + ')' : '',
+        hasRelease: !!rl.release,
         // ชื่อการค้า — วงเล็บสีเทลต่อท้ายชื่อยา เฉพาะตัวที่มี (แบบเดียวกับผลค้นหาในหน้าบันทึก)
         brand: (it.brand || '').trim(),
         hasBrand: !!(it.brand || '').trim(),
+        // ตัวย่อ — วงเล็บสีม่วง ให้ตรงกับผลค้นหาหน้าบันทึก
+        // ไม่วาดถ้ามีอยู่ในชื่อยาอยู่แล้ว กัน "(HCTZ)(HCTZ)"
+        abbrev: abShow,
+        hasAbbrev: !!abShow,
         // form เป็นภาษาอังกฤษตามที่ HIS ส่งมา เก็บไว้ให้เภสัชกรดูออกว่าเป็นยารูปแบบไหน
         // ต่อด้วยทางให้ยา (IV · oral) ให้ตรงกับผลค้นหาหน้าบันทึก
         sub: [it.form || 'ไม่ระบุรูปแบบ', (it.route || '').trim()].filter(Boolean).join(' · '),

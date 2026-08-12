@@ -183,6 +183,23 @@ export function splitPercent(text) {
   return { main: m[1].trim(), percent: m[2] };
 }
 
+// ── แยกรูปแบบการออกฤทธิ์ออกจากท้ายข้อความ ──────────────────────────────────
+//   "10 mg ER" → { main: "10 mg", release: "ER" }
+//
+// 🚨 ข้อมูลความปลอดภัยระดับสูงสุดในบรรทัดชื่อยา
+//    ER (ออกฤทธิ์นาน) กับ IR (ออกฤทธิ์ทันที) เป็นคนละยากันโดยสิ้นเชิง
+//    Morphine 10 mg ER กิน 2 ครั้ง/วัน · Morphine 10 mg IR กิน 6 ครั้ง/วัน
+//    สลับกันแล้วอันตรายถึงชีวิต จึงต้องทาสีให้สะดุดตาแยกจากตัวอื่น
+//
+// รับเฉพาะรหัสมาตรฐานที่รู้จัก ไม่ใช่ทุกคำท้ายชื่อ
+// ไม่งั้นยาที่ลงท้ายด้วยตัวย่ออื่นจะโดนตัดมั่ว
+export function splitRelease(text) {
+  const s = String(text || '').trim();
+  const m = s.match(/^(.*?)\s(ER|IR|SR|XR|CR|LA|MR|XL)$/);
+  if (!m) return { main: s, release: '' };
+  return { main: m[1].trim(), release: m[2] };
+}
+
 // ตัดข้อความเป็น 3 ท่อน [ก่อน, ที่ตรงกับคำค้น, หลัง] ไว้ทำไฮไลต์
 // (ME-DRP ก็ไฮไลต์คำค้นแบบนี้ในตัวเลือกยา)
 export function markMatch(text, q) {
@@ -227,4 +244,4 @@ export function qtyText(n) {
   return Number.isInteger(v) ? String(v) : String(v);
 }
 
-export const APP_VERSION = '0.5.0.0';
+export const APP_VERSION = '0.6.0.0';

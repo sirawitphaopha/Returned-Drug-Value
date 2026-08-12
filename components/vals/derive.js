@@ -1,40 +1,8 @@
 // ค่าที่หลายหน้าใช้ร่วมกัน — คิดครั้งเดียวต่อการวาดจอหนึ่งรอบ
-
-// ดึงตัวเลขความแรงตัวแรกออกมาจากชื่อยา ใช้เรียงลำดับ
-const strengthOf = (name) => {
-  const m = name.match(/(\d+(?:\.\d+)?)/);
-  return m ? parseFloat(m[1]) : Infinity;
-};
-
-// จัดอันดับผลค้นหา — เดิมเรียงตามตัวอักษรอย่างเดียว
-// พิมพ์ "enal" กด Enter เลยได้ Enalapril 20 mg ไม่ใช่ 5 mg เพราะ "2" มาก่อน "5"
-// มียา 70 ชื่อในคลังที่มีหลายความแรง เสี่ยงกรอกผิดโดยไม่รู้ตัว
-// กติกาใหม่: ขึ้นต้นตรงกับที่พิมพ์มาก่อน → ความแรงน้อยกว่ามาก่อน → ตามตัวอักษร
-function rankResults(drugs, q) {
-  const hit = [];
-  for (const d of drugs) {
-    const low = d.name.toLowerCase();
-    let at = low.indexOf(q);
-
-    // ค้นจากชื่อการค้าได้ด้วย — เภสัชกรจำ "Augmentin" ได้ก่อน "Amoxicillin + Clavulanic acid"
-    // (ME-DRP ค้นแบบนี้อยู่แล้ว พี่กันชี้ให้ทำคล้ายกัน)
-    // เจอในชื่อการค้าให้จัดอันดับรองจากที่เจอในชื่อสามัญ ใช้ at ใหญ่ ๆ ถ่วงไว้
-    if (at < 0) {
-      const brandLow = String(d.brand || '').toLowerCase();
-      if (!brandLow || brandLow.indexOf(q) < 0) continue;
-      at = 900 + brandLow.indexOf(q);
-    }
-
-    hit.push({ d: d, starts: at === 0 ? 0 : 1, at: at, st: strengthOf(d.name) });
-  }
-  hit.sort((a, b) =>
-    a.starts - b.starts ||
-    a.at - b.at ||
-    a.st - b.st ||
-    a.d.name.localeCompare(b.d.name)
-  );
-  return hit.map((h) => h.d);
-}
+//
+// 🔍 สมองของการค้นหายาอยู่ที่ lib/drugSearch.js (โมดูลอิสระ ยกไปโปรเจกต์อื่นได้)
+//    ไฟล์นี้แค่เรียกใช้ ไม่มีตรรกะการค้นหาอยู่ในนี้แล้ว
+import { searchDrugsEx } from '@/lib/drugSearch';
 
 export function derive(app) {
   const st = app.state;
@@ -42,7 +10,15 @@ export function derive(app) {
   // เลือกยาไปแล้ว (pending) และช่องค้นหายังเป็นชื่อยาตัวนั้นอยู่ → ปิดรายการผลค้นหา
   // มอคอัปไม่ได้กันไว้ พอกดเลือกแล้วรายการค้างเปิดทับหน้าจอ (บรรทัด 951 + 1077)
   const picked = !!st.pending && st.query === st.pending.name;
-  const results = (!picked && q.length >= 2) ? rankResults(st.drugs, q).slice(0, 8) : [];
+  // แสดง 14 ตัว — เดิม 8 ซึ่งน้อยไปสำหรับคำค้นที่ตรงกับยาหลายตัว
+  // ("met" ตรง 11 ตัว · "amox" ตรง 7 ตัว) กรอบเลื่อนได้อยู่แล้ว
+  // และตอนนี้กดลูกศรลงกรอบเลื่อนตามด้วย จึงไม่มีของซ่อนที่มองไม่เห็น
+  // hotIds = ยาที่ถูกคืนบ่อยในปีงบนี้ ให้ลอยขึ้นก่อนเมื่อคะแนนอื่นเท่ากัน
+  // (ยังแพ้ "เจอที่ต้นชื่อ" เสมอ — พิมพ์ met ก็ยังได้ยาที่ขึ้นต้นด้วย met ก่อน)
+  const found = picked
+    ? { list: [], used: q, swapped: false }
+    : searchDrugsEx(st.drugs, q, { limit: 14, hotIds: st.hotIds });
+  const results = found.list;
   const saved = app.savedTotal();
   const lost = app.lostTotal();
 
@@ -50,6 +26,10 @@ export function derive(app) {
     st: st,
     dark: st.dark,
     q: q,
+    // คำที่ระบบใช้ค้นจริง — ต่างจาก q เมื่อผู้ใช้ลืมสลับแป้นแล้วระบบแปลงให้
+    // ต้องใช้ตัวนี้ไฮไลต์ในชื่อยา ไม่งั้นเจอยาแต่ไม่มีอะไรไฮไลต์เลย
+    qUsed: found.used,
+    qSwapped: found.swapped,
     results: results,
     // เลือกยาไปแล้ว (ช่องค้นหาเป็นชื่อยาที่เลือกพอดี) — ไม่ใช่ "หาไม่เจอ"
     // ต้องส่งค่านี้ออกไปด้วย ไม่งั้นกล่อง "ไม่พบยาชื่อนี้" จะเด้งขึ้นหลังกดเลือกสำเร็จ

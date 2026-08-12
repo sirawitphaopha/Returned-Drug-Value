@@ -31,6 +31,8 @@ export function dataActions(app) {
 
       app.setState({
         drugs: data.drugs,
+        // รหัสยาที่คืนบ่อย — ช่องค้นหาใช้ดันตัวที่ใช้บ่อยขึ้นก่อน
+        hotIds: Array.isArray(data.hotIds) ? data.hotIds : [],
         today: data.today,
         // เว็บล็อกด้วยรหัสผ่านห้องยาอยู่ไหม — ใช้ตัดสินว่าจะโชว์ปุ่มออกจากระบบ
         authOn: data.authOn === true,

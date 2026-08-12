@@ -13,7 +13,7 @@ import { renderRecorderField } from './recorder';
 function renderDrugOption(r, big) {
   const nameSize = big ? '15.5px' : '14.5px';
   return (
-    <div key={r.name} {...kb(big ? r.pick : r.pickInline)} className="hv-bg-eef"
+    <div key={r.name} ref={r.hiRef} {...kb(big ? r.pick : r.pickInline)} className="hv-bg-eef"
       style={sx('display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid rgba(30,36,32,.06);cursor:pointer', { background: r.rowBg })}>
 
       <div style={s('min-width:0;flex:1')}>
@@ -26,6 +26,14 @@ function renderDrugOption(r, big) {
           <span style={s('font-weight:600;color:#1e2420')}>{r.mkBefore}</span>
           <span style={s('font-weight:700;color:#2f7d5d;background:#dcefe4;border-radius:3px;padding:0 1px')}>{r.mkHit}</span>
           <span style={s('font-weight:600;color:#1e2420')}>{r.mkAfter}</span>
+          {/* ตัวย่อที่เภสัชกรเรียกกันจริง (CPM · HCTZ · INH) — วงเล็บสีม่วง
+              วางถัดจากชื่อยาทันที เพราะเป็น "ชื่อเรียกอีกแบบ" ของยาตัวเดียวกัน
+              คนละสีกับชื่อการค้า (เทล) เพื่อให้แยกออกว่าอันไหนตัวย่อ อันไหนยี่ห้อ */}
+          {r.hasAbbrev && (
+            <span style={s("font-weight:600;color:#6d3b9e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px")}>
+              ({r.abBefore}<span style={s('background:#ece3f6;border-radius:3px;padding:0 1px')}>{r.abHit}</span>{r.abAfter})
+            </span>
+          )}
           {r.strength && (
             <span style={s("font-weight:500;color:#6b746e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:6px")}>{r.strength}</span>
           )}
@@ -38,6 +46,13 @@ function renderDrugOption(r, big) {
               บอกได้ตั้งแต่ตอนค้นว่าเป็นยากินหรือยาฉีด */}
           {r.form && (
             <span style={s('font-weight:600;color:#414a44;margin-left:6px')}>{r.form}</span>
+          )}
+          {/* 🚨 รูปแบบการออกฤทธิ์ (ER · IR · SR) — เอียง หนา วงเล็บ แดงอมชมพู
+              พี่กันเลือกแบบ ง · ตั้งใจให้สะดุดตากว่าทุกตัวในบรรทัด
+              เพราะ Morphine 10 mg ER กับ IR เป็นคนละยากัน สลับกันแล้วอันตราย
+              และในคลังมี Sodium valproate 200 mg ทั้ง ER และ IR ชื่อเหมือนกันเป๊ะ */}
+          {r.hasRelease && (
+            <span style={s("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px")}>{r.releaseLabel}</span>
           )}
           {/* ชื่อการค้าในวงเล็บ สีเทลตัวหนา — แสดงเฉพาะยาที่มี (37 ตัวจาก 417)
               ทำตามแบบ ME-DRP ที่พี่กันชี้ให้ดู · ไฮไลต์คำค้นข้างในด้วยเพราะค้นจากชื่อการค้าได้ */}
@@ -101,6 +116,13 @@ export function renderRecordNarrow(V) {
           <input ref={V.searchRef} value={V.query} onChange={V.onQuery} onKeyDown={V.onSearchKey} placeholder={V.searchPlaceholder} style={s('width:100%;height:50px;padding:0 46px 0 14px;border:1px solid rgba(30,36,32,.16);border-radius:12px;background:#f6f7f4;font:400 15.5px Sarabun,sans-serif;color:#1e2420')} />
           {V.hasQuery && (
             <div {...kb(V.clearQuery)} className="hv-bg-e6e" style={s('position:absolute;right:9px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;background:rgba(30,36,32,.06)')}>✕</div>
+          )}
+          {/* ลืมสลับแป้นพิมพ์ — บอกให้เห็นว่าระบบกำลังค้นด้วยคำว่าอะไร
+              วางชิดซ้ายปุ่ม ✕ · ไม่ใช่ปุ่ม กดไม่ได้ แค่บอกให้รู้ */}
+          {V.showSwap && (
+            <div style={s("position:absolute;right:47px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:#e3f0e8;font:600 12.5px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;pointer-events:none;max-width:45%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis")}>
+              <span style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;flex:none')}>ค้นว่า</span>{V.swapLabel}
+            </div>
           )}
         </div>
 
@@ -226,6 +248,13 @@ export function renderRecordWide(V) {
             {/* ปุ่ม ✕ ล้างช่องค้นหาทีเดียว — พี่กันขอ ไม่ต้องกด Backspace รัว */}
             {V.hasQuery && (
               <div {...kb(V.clearQuery)} className="hv-bg-e6e" style={s('position:absolute;right:8px;top:calc(50% + 9px);transform:translateY(-50%);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:400 14px Sarabun,sans-serif;color:#6b746e;cursor:pointer;background:rgba(30,36,32,.06);z-index:10')}>✕</div>
+            )}
+            {/* ลืมสลับแป้นพิมพ์ — บอกให้เห็นว่าระบบกำลังค้นด้วยคำว่าอะไร
+                วางชิดซ้ายปุ่ม ✕ · ไม่ใช่ปุ่ม กดไม่ได้ แค่บอกให้รู้ */}
+            {V.showSwap && (
+              <div style={s("position:absolute;right:44px;top:calc(50% + 9px);transform:translateY(-50%);z-index:10;display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:#e3f0e8;font:600 12.5px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;pointer-events:none;max-width:55%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis")}>
+                <span style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;flex:none')}>ค้นว่า</span>{V.swapLabel}
+              </div>
             )}
             {/* หน้าคอมเดิมไม่มีกล่อง "ไม่พบยา" (มอคอัปก็ไม่มี) พิมพ์ผิดแล้วเงียบสนิท
                 เภสัชกรไม่รู้ว่าพิมพ์ผิดหรือระบบค้าง — ฝั่งมือถือมีอยู่แล้ว เอามาใส่ให้เหมือนกัน */}
