@@ -15,13 +15,17 @@ export async function GET() {
     const today = todayISO();
     const range = fyRange(today);
 
-    const [catalog, settingRes, summaryRes, hotRes] = await Promise.all([
+    const [catalog, settingRes, summaryRes, hotRes, revRes] = await Promise.all([
       loadCatalog(),
       db.from('mr_setting').select('org_name,default_source,fav_ids,staff,last_recorder').eq('id', 1).maybeSingle(),
       db.rpc('mr_summary', { p_from: range.from, p_to: range.to }),
       // รหัสยาที่ถูกคืนบ่อยที่สุดในปีงบนี้ — ให้ช่องค้นหาดันตัวที่ใช้บ่อยขึ้นก่อน
       // ต้องมาตั้งแต่เปิดเว็บ เพราะช่องค้นหาใช้ทันที (หน้าสรุปโหลดทีหลัง)
-      db.rpc('mr_hot_drug_ids', { p_from: range.from, p_to: range.to, p_limit: 20 })
+      db.rpc('mr_hot_drug_ids', { p_from: range.from, p_to: range.to, p_limit: 20 }),
+      // ลายเซ็นคลังยา ณ วินาทีที่ส่งรายการยาชุดนี้ออกไป
+      // ต้องมาคู่กับ drugs เสมอ ไม่งั้นถ้ามีคนแก้ยาระหว่างเปิดเว็บกับการถามครั้งแรก
+      // เว็บจะจำลายเซ็นใหม่ไปเลยโดยที่ยังถือรายการยาชุดเก่าอยู่ = พลาดการแก้ครั้งนั้นถาวร
+      db.from('drug_audit').select('id').order('id', { ascending: false }).limit(1)
     ]);
     if (settingRes.error) throw new Error(settingRes.error.message);
     if (summaryRes.error) throw new Error(summaryRes.error.message);
@@ -38,6 +42,8 @@ export async function GET() {
       // ถ้าไม่ได้ตั้ง MRV_PASSWORD (เช่นตอนรันในเครื่อง) ปุ่มนั้นกดไปก็ไม่มีความหมาย
       authOn: authEnabled(),
       drugs: catalog,
+      // รูปแบบเดียวกับที่ /api/drugs/rev คืน — เทียบกันตรง ๆ ได้
+      drugRev: (revRes.error || !revRes.data?.length ? 0 : Number(revRes.data[0].id)) + ':' + catalog.length,
       hotIds: hotIds,
       setting: {
         orgName: st.org_name || 'ห้องยาผู้ป่วยนอก · รพ.ปรางค์กู่',

@@ -10,6 +10,7 @@ import { renderSheet } from './pages/sheet';
 import { renderSettings } from './pages/settings';
 import { renderPrices, renderPriceBar } from './pages/prices';
 import { renderLots, renderLotSlip } from './pages/lots';
+import { renderCatalog } from './pages/catalog';
 import { renderToast } from './pages/toast';
 import { renderConfirm } from './pages/confirm';
 import { renderAbout } from './pages/about';
@@ -62,6 +63,7 @@ export function renderShell(app) {
           {V.isSummary && (V.narrow ? renderSummaryNarrow(V) : renderSummaryWide(V))}
           {V.isPrices && renderPrices(V)}
           {V.isLots && renderLots(V)}
+          {V.isCatalog && renderCatalog(V)}
           {V.isAbout && renderAbout(V)}
         </div>
         {renderFooter(V)}

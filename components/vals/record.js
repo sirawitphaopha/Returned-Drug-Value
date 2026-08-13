@@ -7,6 +7,47 @@ import { moveHi } from '@/lib/drugSearch';
 
 const sumReuse = (rows) => rows.reduce((a, x) => a + (x.disposition === 'reuse' ? x.price * x.qty : 0), 0);
 
+// ก้อนในบรรทัดชื่อยาที่สั้นพอ จะถูกสั่งห้ามตัดขาดกลาง (white-space:nowrap)
+// ก้อนที่ยาวกว่านี้ปล่อยให้ตัดตามปกติ ไม่งั้นล้นออกนอกกรอบมือถือ
+//
+// เกณฑ์ 26 ตัวอักษร ≈ 165px ที่ขนาดตัวอักษร 13px — กรอบผลค้นหาบนมือถือกว้างราว 430px
+// วัดจากคลังจริง: ความแรงยาวสุด 42 ("25 + 2 + 5000 mcg/1 mL + mg/1 mL + IU/1 mL") = ตัดได้
+// ส่วน "(40 + 200 mg/5 mL)" 18 ตัว · ชื่อการค้ายาวสุด 17 · รูปแบบยา 17 · ตัวย่อ 15 = ไม่ตัด
+const NOWRAP_MAX = 26;
+const fits = (text) => String(text || '').trim().length > 0 && String(text).trim().length <= NOWRAP_MAX;
+
+// ── สีความแรง ────────────────────────────────────────────────────────────────
+// ยาชื่อเดียวกันที่มีหลายความแรงในผลค้นหาเดียวกัน ต้องแยกออกจากกันด้วยสี
+// Morphine 10 · 20 · 30 mg หยิบสลับกันแล้วอันตรายถึงชีวิต ตาต้องจับได้ตั้งแต่กวาดผ่าน
+//
+// 🚨 ห้ามใช้สีที่จองไว้แล้ว — เทล (ชื่อการค้า + ไฮไลต์คำค้น) · ม่วง (ตัวย่อ)
+//    ส้ม (เปอร์เซ็นต์) · แดงอมชมพู (ER/IR) · แดง (ทำลาย/ยังไม่ใส่ราคา)
+// พี่กันเลือกชุดนี้เอง 13 ส.ค. 2569
+const ST_COLORS = ['#0b62d6', '#b04a00', '#00808f', '#5b34c9', '#6b6b52'];
+
+// แยกตัวเลขนำหน้าออกจากหน่วย — "10 mg/5mL" → "10" กับ " mg/5mL"
+// ทาสีเฉพาะตัวเลข ส่วนหน่วยคงเทาเดิม บรรทัดจะได้ไม่รกไปกว่านี้
+const NUM_HEAD = /^\(?\s*[\d.+\s]*\d/;
+const numPart = (text) => { const m = String(text || '').match(NUM_HEAD); return m ? m[0] : ''; };
+const restPart = (text) => { const s = String(text || ''); return s.slice(numPart(s).length); };
+
+// คืนฟังก์ชันที่บอกว่ายาตัวนี้ควรได้สีอะไร — null = ไม่ต้องทาสี (เจอชื่อนี้ตัวเดียว)
+// จับกลุ่มด้วยชื่อยาที่ตัดความแรงออกแล้ว ไม่ใช่ชื่อเต็ม เพราะชื่อเต็มมีความแรงติดอยู่
+export function makeStColorOf(results) {
+  const groups = new Map();
+  for (const drug of results) {
+    const key = splitDrugName(drug.name).base.toLowerCase();
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(drug.id);
+  }
+  return (drug) => {
+    const key = splitDrugName(drug.name).base.toLowerCase();
+    const g = groups.get(key);
+    if (!g || g.length < 2) return null;
+    return ST_COLORS[g.indexOf(drug.id) % ST_COLORS.length];
+  };
+}
+
 // หัวตารางรายการในครั้งนี้ — กดเรียงได้เหมือนหน้าประวัติ
 const ROW_COLS = [
   { key: 'name', label: 'ยา', w: '', align: 'left', flex: true },
@@ -96,6 +137,10 @@ export function recordVals(app, d) {
     noResultsHint: 'ไม่พบยาชื่อนี้ ลองพิมพ์ชื่อสามัญ',
     openOffListDrug: app.openOffListDrug,
     results: d.results.map((drug, i) => {
+      // สีความแรง — ทายาที่ชื่อเดียวกันแต่ความแรงต่างกันให้คนละสี (พี่กันเคาะชุด 2)
+      // ทำงานเฉพาะตอนผลค้นหามียาชื่อเดียวกันหลายรายการ · เจอตัวเดียวคงสีเทาเหมือนเดิม
+      // เหตุผล: Morphine 10 · 20 · 30 mg หยิบสลับกันแล้วอันตราย ต้องแยกออกตั้งแต่ตอนกวาดตา
+      const stColor = d.stColorOf(drug);
       // แยกชื่อกับความแรง แล้วไฮไลต์คำที่พิมพ์ค้น — ตาไล่หาง่ายขึ้นมาก
       const sp = splitDrugName(drug.name);
       const mk = markMatch(sp.base, d.qUsed);
@@ -114,6 +159,16 @@ export function recordVals(app, d) {
         name: drug.name,
         base: sp.base,
         strength: pc.main,
+        // 🚨 ก้อนสั้นห้ามถูกตัดขาดกลางเวลาบรรทัดยาวเกิน
+        //    "(40 + 200 mg/5 mL)" เคยตัด "(40 + 200" ค้างบรรทัดบน "mg/5 mL)" ตกบรรทัดล่าง
+        //    อ่านแล้วสับสนว่าความแรงเท่าไหร่กันแน่ (ME-DRP แก้เรื่องเดียวกันไปแล้ว)
+        //    แต่ก้อนที่ยาวจริง ๆ ต้องยอมให้ตัด ไม่งั้นล้นออกนอกจอมือถือ
+        //    ที่ยาวสุดในคลังคือ "25 + 2 + 5000 mcg/1 mL + mg/1 mL + IU/1 mL" (42 ตัวอักษร)
+        strengthNoWrap: fits(pc.main),
+        // ตัวเลขความแรงแยกออกมาทาสี ส่วนหน่วยคงสีเทาเดิม — เน้นเฉพาะจุดที่ต่างกันจริง
+        stNum: stColor ? numPart(pc.main) : '',
+        stRest: stColor ? restPart(pc.main) : pc.main,
+        stColor: stColor,
         percentLabel: pc.percent ? '(' + pc.percent + ')' : '',
         hasPercent: !!pc.percent,
         // รูปแบบการออกฤทธิ์ — เอียง หนา วงเล็บ สีแดงอมชมพู (พี่กันเลือกแบบ ง)
@@ -124,7 +179,9 @@ export function recordVals(app, d) {
         mkAfter: mk[2],
         // รูปแบบยา — วางต่อจากความแรง ก่อนชื่อการค้า (ลำดับเดียวกับ ME-DRP)
         form: (drug.form || '').trim(),
+        formNoWrap: fits(drug.form),
         hasBrand: !!(drug.brand || '').trim(),
+        brandNoWrap: fits(drug.brand),
         bdBefore: bk[0],
         bdHit: bk[1],
         bdAfter: bk[2],
@@ -138,6 +195,7 @@ export function recordVals(app, d) {
         //    (ยังไม่ย้ายตัวย่อออกจากชื่อ เพราะ ME-DRP ยังไม่รู้จักช่องนี้ ดูสกิล pharmacy-web-logic)
         abbrev: abShow,
         hasAbbrev: !!abShow,
+        abbrevNoWrap: fits(abShow),
         abBefore: abMk[0],
         abHit: abMk[1],
         abAfter: abMk[2],

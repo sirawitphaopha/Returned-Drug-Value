@@ -9,6 +9,7 @@ import { pricesActions } from './prices';
 import { demoActions } from './demo';
 import { himportActions } from './himport';
 import { lotsActions } from './lots';
+import { catalogActions } from './catalog';
 
 export function installHandlers(app) {
   uiActions(app);
@@ -21,4 +22,5 @@ export function installHandlers(app) {
   demoActions(app);
   himportActions(app);
   lotsActions(app);
+  catalogActions(app);
 }

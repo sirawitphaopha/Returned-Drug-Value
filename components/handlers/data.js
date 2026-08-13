@@ -28,6 +28,8 @@ export function dataActions(app) {
 
       writeCache(LS.drugs, data.drugs);
       writeCache(LS.setting, data.setting);
+      // จำลายเซ็นของคลังยาชุดที่เพิ่งได้มา — ใช้เทียบทีหลังว่ามีใครแก้ยาไปแล้วหรือยัง
+      app._drugRev = data.drugRev || null;
 
       app.setState({
         drugs: data.drugs,
@@ -73,6 +75,42 @@ export function dataActions(app) {
           qty: Number(data.qty || 0)
         }
       });
+    } catch (e) {}
+  };
+
+  // ── คลังยาซิงก์ข้ามเว็บ ────────────────────────────────────────────────────
+  // ตาราง drugs ใช้ร่วมกัน 3 เว็บ · เภสัชกรแก้ยาที่ ME-DRP แล้วเว็บนี้ต้องเห็นด้วย
+  // ไม่ต่อ Supabase realtime ตรง ๆ เพราะต้องเอากุญแจไปไว้ในเบราว์เซอร์
+  // ซึ่งขัดกฎเหล็กข้อ 6 ของโปรเจกต์นี้ → ถามหลังบ้านตัวเองแทน (พี่กันเคาะ 13 ส.ค. 2569)
+  //
+  // ถามแค่ "ลายเซ็น" (ตัวเลข 2 ตัว) ไม่ได้ลากยา 417 ตัวมาทุกครั้ง
+  // ลายเซ็นเปลี่ยนเมื่อไหร่ค่อยดึงของจริง
+  app._drugRev = null;
+
+  app.syncDrugs = async (force) => {
+    if (app.state.demo) return;        // โหมดตัวอย่างไม่ยุ่งกับของจริง
+    try {
+      const res = await fetchT('/api/drugs/rev');
+      if (!res.ok) return;
+      const sig = await res.json();
+      const key = sig.rev + ':' + sig.count;
+
+      // ลายเซ็นตั้งต้นมาพร้อมรายการยาจาก boot() แล้ว ตรงนี้จึงเทียบได้เลย
+      // (ถ้ายังไม่มี = boot ยังไม่เสร็จ ปล่อยผ่านไปก่อน เดี๋ยวรอบหน้าค่อยเทียบ)
+      if (app._drugRev === null) { app._drugRev = key; return; }
+      if (key === app._drugRev && !force) return;
+      app._drugRev = key;
+
+      const dres = await fetchT('/api/drugs');
+      if (!dres.ok) return;
+      const data = await dres.json();
+      const list = Array.isArray(data.drugs) ? data.drugs : null;
+      if (!list) return;
+
+      // 🚨 ต้องล้างแคชในเครื่องด้วย ไม่งั้นรีเฟรชแล้วของเก่ากลับมาอีก (แคชอายุ 12 ชม.)
+      writeCache(LS.drugs, list);
+      app.setState({ drugs: list });
+      app.toast('คลังยามีการแก้ไข อัปเดตให้แล้ว', '', true);
     } catch (e) {}
   };
 

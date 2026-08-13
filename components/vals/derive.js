@@ -3,6 +3,7 @@
 // 🔍 สมองของการค้นหายาอยู่ที่ lib/drugSearch.js (โมดูลอิสระ ยกไปโปรเจกต์อื่นได้)
 //    ไฟล์นี้แค่เรียกใช้ ไม่มีตรรกะการค้นหาอยู่ในนี้แล้ว
 import { searchDrugsEx } from '@/lib/drugSearch';
+import { makeStColorOf } from './record';
 
 export function derive(app) {
   const st = app.state;
@@ -31,6 +32,8 @@ export function derive(app) {
     qUsed: found.used,
     qSwapped: found.swapped,
     results: results,
+    // ตัวตัดสินสีความแรง — ต้องดูผลค้นหาทั้งชุดพร้อมกันถึงจะรู้ว่ายาตัวไหนมีเพื่อนชื่อเดียวกัน
+    stColorOf: makeStColorOf(results),
     // เลือกยาไปแล้ว (ช่องค้นหาเป็นชื่อยาที่เลือกพอดี) — ไม่ใช่ "หาไม่เจอ"
     // ต้องส่งค่านี้ออกไปด้วย ไม่งั้นกล่อง "ไม่พบยาชื่อนี้" จะเด้งขึ้นหลังกดเลือกสำเร็จ
     // เพราะตอนเลือกแล้วเราสั่งให้ results เป็นศูนย์เพื่อปิดรายการผลค้นหา

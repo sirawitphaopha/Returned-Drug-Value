@@ -82,6 +82,20 @@ export default class MedReturnApp extends React.Component {
       lotsLoading: false,
       lotsRange: 'month',    // ช่วงเวลาของหน้ารายการ Lot (แยกจากหน้าประวัติ)
       lotsShown: 40,         // แสดงทีละ 40 Lot — ปีงบหนึ่งมีหลายร้อย วาดหมดทีเดียวจอค้าง
+      // ── หน้าคลังยา (ตาราง drugs ของกลาง ใช้ร่วม 3 เว็บ) ──────────────────
+      catalog: [],           // ยาดิบทั้งตาราง รวมตัวที่ซ่อนไว้ (ต่างจาก drugs ที่กรองแล้ว)
+      catLoading: false,
+      catSearch: '',
+      catFilters: [],        // ตัวกรอง — กดหลายอันพร้อมกันได้
+      catSort: null,         // { key, dir } — กดหัวคอลัมน์เพื่อเรียง
+      catShowFull: false,    // คอลัมน์ "ชื่อที่เห็นตอนค้นหา" — ยาวมาก จึงซ่อนไว้ตั้งต้น
+      catEdit: null,         // ยาที่กำลังแก้อยู่ในป๊อป
+      catEditOrig: null,     // ค่าก่อนแก้ ใช้เทียบว่าแก้อะไรไปแล้วหรือยัง
+      catEditNew: false,     // ป๊อปนี้เป็นการเพิ่มยาใหม่ ไม่ใช่แก้ของเดิม
+      catConfirmClose: false,
+      catBusy: false,
+      catHideTarget: null,   // ยาที่กำลังจะซ่อน (รอยืนยัน)
+      catLog: null,          // ประวัติการแก้ที่กำลังเปิดดู
       slipLot: null,         // ใบสรุป Lot ที่เปิดอยู่ (null = ไม่ได้เปิด)
       slipRows: [],          // รายการยาใน Lot นั้น — ดึงตอนกดเปิดใบ
       slipLoading: false,
@@ -277,6 +291,7 @@ export default class MedReturnApp extends React.Component {
     // ทวนวันทุก 1 นาที — คอมห้องยาเปิดค้างข้ามคืนเป็นเรื่องปกติ
     this._dayTimer = setInterval(this.checkDayRollover, 60000);
     document.addEventListener('visibilitychange', this._onVisible);
+    window.addEventListener('online', this._onOnline);
 
     // ป๊อปอัปหนีแป้นพิมพ์บนมือถือ — บาง iOS ไม่หดพื้นที่ให้แม้ตั้ง interactiveWidget แล้ว
     // เลยวัดความสูงจริงของแป้นพิมพ์เอง แล้วส่งเป็นตัวแปร --kb ให้ CSS ใช้ดันป๊อปอัปขึ้น
@@ -303,8 +318,16 @@ export default class MedReturnApp extends React.Component {
   };
 
   _onVisible = () => {
-    if (!document.hidden) this.checkDayRollover();
+    if (document.hidden) return;
+    this.checkDayRollover();
+    // กลับมาที่แท็บนี้อีกที = จังหวะที่คุ้มจะถามว่าคลังยาถูกแก้ไปหรือยัง
+    // ไม่ตั้งตัวจับเวลาถามเป็นระยะ เพราะการแก้ชื่อยาเกิดปีละไม่กี่ครั้ง
+    // แต่เว็บเปิดค้างทั้งวัน — ถามทุก 30 วินาทีจะได้คำขอเปล่าวันละพันกว่าครั้ง
+    this.syncDrugs();
   };
+
+  // เน็ตโรงพยาบาลหลุดแล้วกลับมา — ระหว่างที่หลุดอาจมีคนแก้ยาไปแล้ว
+  _onOnline = () => { this.syncDrugs(); };
 
   componentWillUnmount() {
     if (this._histHeadRO) { this._histHeadRO.disconnect(); this._histHeadRO = null; }
@@ -320,6 +343,7 @@ export default class MedReturnApp extends React.Component {
     window.removeEventListener('resize', this._onResize);
     window.removeEventListener('keydown', this._onKey);
     document.removeEventListener('visibilitychange', this._onVisible);
+    window.removeEventListener('online', this._onOnline);
     if (this._vv && this._onVV) {
       this._vv.removeEventListener('resize', this._onVV);
       this._vv.removeEventListener('scroll', this._onVV);

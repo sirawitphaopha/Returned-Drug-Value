@@ -3,6 +3,11 @@
 import { s, sx, kb } from '../helpers';
 import { renderRecorderField } from './recorder';
 
+// ก้อนสั้นในบรรทัดชื่อยาห้ามถูกตัดขาดกลาง (ความแรง · ตัวย่อ · % · รูปแบบ · ER · ชื่อการค้า)
+// เว้นวรรคระหว่างก้อนทำด้วย margin-left ไม่ใช่ช่องว่างในข้อความ จึงยังขึ้นบรรทัดใหม่ระหว่างก้อนได้
+// ธง *NoWrap คำนวณจากความยาวใน vals/record.js — ก้อนที่ยาวเกินกรอบยอมให้ตัดตามปกติ
+const nw = (on) => (on ? { whiteSpace: 'nowrap' } : null);
+
 // ── หนึ่งบรรทัดในรายการผลค้นยา ───────────────────────────────────────────────
 // ต่างจากมอคอัปที่โชว์ชื่อยาเป็นพืดเดียวกับ "หน่วย · คงคลัง 1234" (เลขมั่วของเดโม)
 // พี่กันขอให้อ่านง่ายขึ้น เลยจัดใหม่เป็น
@@ -30,34 +35,40 @@ function renderDrugOption(r, big) {
               วางถัดจากชื่อยาทันที เพราะเป็น "ชื่อเรียกอีกแบบ" ของยาตัวเดียวกัน
               คนละสีกับชื่อการค้า (เทล) เพื่อให้แยกออกว่าอันไหนตัวย่อ อันไหนยี่ห้อ */}
           {r.hasAbbrev && (
-            <span style={s("font-weight:600;color:#6d3b9e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px")}>
+            <span style={sx("font-weight:600;color:#6d3b9e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px", nw(r.abbrevNoWrap))}>
               ({r.abBefore}<span style={s('background:#ece3f6;border-radius:3px;padding:0 1px')}>{r.abHit}</span>{r.abAfter})
             </span>
           )}
+          {/* ความแรง — ถ้าผลค้นหามียาชื่อเดียวกันหลายตัว ตัวเลขจะถูกทาสีคนละสีเพื่อไม่ให้หยิบสลับ
+              (Morphine 10 · 20 · 30 mg) · หน่วยคงสีเทาเดิม บรรทัดจะได้ไม่รก */}
           {r.strength && (
-            <span style={s("font-weight:500;color:#6b746e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:6px")}>{r.strength}</span>
+            <span style={sx("font-weight:500;color:#6b746e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:6px", nw(r.strengthNoWrap))}>
+              {r.stColor
+                ? <><span style={{ color: r.stColor, fontWeight: 700 }}>{r.stNum}</span>{r.stRest}</>
+                : r.strength}
+            </span>
           )}
           {/* ความเข้มข้น % ในวงเล็บ สีส้มอำพัน — พี่กันขอให้เห็นง่าย
               เลือกสีนี้เพราะไม่ชนกับเทล (ชื่อการค้า) และไม่ชนกับแดง (ทำลาย) */}
           {r.hasPercent && (
-            <span style={s("font-weight:700;color:#96650f;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px")}>{r.percentLabel}</span>
+            <span style={sx("font-weight:700;color:#96650f;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px", nw(true))}>{r.percentLabel}</span>
           )}
           {/* รูปแบบยา (tab · cap · injection) — ลำดับเดียวกับ ME-DRP คือก่อนชื่อการค้า
               บอกได้ตั้งแต่ตอนค้นว่าเป็นยากินหรือยาฉีด */}
           {r.form && (
-            <span style={s('font-weight:600;color:#414a44;margin-left:6px')}>{r.form}</span>
+            <span style={sx('font-weight:600;color:#414a44;margin-left:6px', nw(r.formNoWrap))}>{r.form}</span>
           )}
           {/* 🚨 รูปแบบการออกฤทธิ์ (ER · IR · SR) — เอียง หนา วงเล็บ แดงอมชมพู
               พี่กันเลือกแบบ ง · ตั้งใจให้สะดุดตากว่าทุกตัวในบรรทัด
               เพราะ Morphine 10 mg ER กับ IR เป็นคนละยากัน สลับกันแล้วอันตราย
               และในคลังมี Sodium valproate 200 mg ทั้ง ER และ IR ชื่อเหมือนกันเป๊ะ */}
           {r.hasRelease && (
-            <span style={s("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px")}>{r.releaseLabel}</span>
+            <span style={sx("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px", nw(true))}>{r.releaseLabel}</span>
           )}
           {/* ชื่อการค้าในวงเล็บ สีเทลตัวหนา — แสดงเฉพาะยาที่มี (37 ตัวจาก 417)
               ทำตามแบบ ME-DRP ที่พี่กันชี้ให้ดู · ไฮไลต์คำค้นข้างในด้วยเพราะค้นจากชื่อการค้าได้ */}
           {r.hasBrand && (
-            <span style={s('font-weight:600;color:#2f7d5d;margin-left:6px')}>
+            <span style={sx('font-weight:600;color:#2f7d5d;margin-left:6px', nw(r.brandNoWrap))}>
               ({r.bdBefore}<span style={s('background:#dcefe4;border-radius:3px;padding:0 1px')}>{r.bdHit}</span>{r.bdAfter})
             </span>
           )}

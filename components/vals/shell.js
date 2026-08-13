@@ -25,7 +25,10 @@ export function shellVals(app, d) {
     tabs: [
       { label: 'บันทึก', radius: '5px', on: st.screen === 'record', cls: st.screen === 'record' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'record' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'record' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'record' ? '#2f7d5d' : '#8d948f', pick: pickScreen('record') },
       { label: 'ประวัติ', radius: '50%', on: st.screen === 'history', cls: st.screen === 'history' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'history' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'history' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'history' ? '#2f7d5d' : '#8d948f', pick: pickScreen('history') },
-      { label: 'สรุป', radius: '3px', on: st.screen === 'summary', cls: st.screen === 'summary' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'summary' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'summary' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'summary' ? '#2f7d5d' : '#8d948f', pick: pickScreen('summary') }
+      { label: 'สรุป', radius: '3px', on: st.screen === 'summary', cls: st.screen === 'summary' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'summary' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'summary' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'summary' ? '#2f7d5d' : '#8d948f', pick: pickScreen('summary') },
+      // คลังยา — ตาราง drugs ของกลาง ใช้ร่วมกันทุกเว็บห้องยา (พี่กันสั่งให้เป็นแท็บ 13 ส.ค. 2569)
+      // ต้องเรียก openCatalog ไม่ใช่ pickScreen เฉย ๆ เพราะต้องสั่งโหลดคลังยาดิบด้วย
+      { label: 'คลังยา', radius: '8px', on: st.screen === 'catalog', cls: st.screen === 'catalog' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'catalog' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'catalog' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'catalog' ? '#2f7d5d' : '#8d948f', pick: app.openCatalog }
     ],
 
     // ปุ่มออกจากระบบ — โผล่เฉพาะตอนเว็บล็อกด้วยรหัสผ่านห้องยาอยู่จริง
