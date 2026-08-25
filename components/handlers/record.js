@@ -1,7 +1,7 @@
 // หน้าบันทึก — เพิ่มยาเข้ารายการ · ป๊อปอัปใส่จำนวน · ส่งขึ้นฐานข้อมูล
 // คัดจากมอคอัป (บรรทัด 912–1051) ตัดสวิตช์จำลองเน็ตหลุดกับ resetDemo ออก
-import { money } from '@/lib/format';
-import { newUuid, fetchT, qtyNum, evalQty, cleanQtyExpr } from '../helpers';
+import { money, thaiDate, SOURCES } from '@/lib/format';
+import { newUuid, fetchT, qtyNum, evalQty, cleanQtyExpr, qtyText } from '../helpers';
 
 const sumReuse = (rows) => rows.reduce((a, r) => a + (r.disposition === 'reuse' ? r.price * r.qty : 0), 0);
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -82,7 +82,14 @@ export function recordActions(app) {
   };
 
   app.clearAll = () => {
-    app.persist({ rows: [] });
+    // 🚨 ต้องล้างเลขก้อนการบันทึกด้วย ไม่ใช่แค่ล้างแถว (ผลตรวจข้อ ส-6)
+    //
+    //    เลขก้อนถูกใช้กันบันทึกซ้ำตอนกดลองส่งใหม่ ถ้าไม่ล้าง:
+    //    กดบันทึกแล้วเน็ตสะดุด (ข้อมูลเข้าฐานแล้วแต่คำตอบหายกลางทาง)
+    //    → เภสัชกรไม่กดลองใหม่ แต่กดล้างทั้งหมดแล้วรับคนไข้รายถัดไป
+    //    → กรอกชุดใหม่ กดบันทึก → ฐานเห็นก้อนเดิม เลยใช้เลข Lot เดิมของคนไข้รายก่อน
+    //    → ใบสรุปพิมพ์รวมสองรอบเป็นก้อนเดียว สืบกลับผิดคน
+    app.persist({ rows: [], batchId: null, saveFailed: false, saveError: '' });
     app.animateTo(0);
     app.toast('ล้างรายการทั้งหมดแล้ว', '');
   };
@@ -349,6 +356,77 @@ export function recordActions(app) {
     app.pushSetting({ staff: staff, lastRecorder: name });
   };
 
+  // ── ป๊อปยืนยันก่อนส่งขึ้นระบบ ─────────────────────────────────────────────
+  //
+  // พี่กันสั่ง 25 ส.ค. 2569: "ตอนจะกดส่งข้อมูล เราอยากให้มันมีป๊อปอัปถามยืนยันอีกครั้ง
+  // ว่าจะกดส่งจริงไหม แล้วก็มี แหล่งที่มา วันที่ ชื่อผู้บันทึก และรายละเอียดล็อตแบบคร่าว ๆ
+  // แสดงให้ดูก่อน"
+  //
+  // เหตุผลที่ต้องมี: เลข Lot ออกตอนกดบันทึก แก้ทีหลังต้องเข้าหน้าแก้ไขล็อต
+  // และชื่อผู้บันทึกคือหลักฐานว่าใครเซ็นรับล็อตนั้น กดผิดคนแล้วสืบกลับผิดคน
+  //
+  // 🚨 ตรวจช่องบังคับ "ก่อน" เปิดป๊อป — ไม่งั้นผู้ใช้กดยืนยันแล้วเพิ่งมาบอกว่ากรอกไม่ครบ
+  //    เสียจังหวะและดูเหมือนปุ่มเสีย
+  app.askSave = () => {
+    const st = app.state;
+    if (!st.rows.length || st.saving || app._saving) return;
+    if (st.demo) { app.toast('อยู่ในโหมดดูตัวอย่าง บันทึกไม่ได้', 'ปิดโหมดก่อน', false); return; }
+    if (!ISO.test(st.date || '')) { app.toast('เลือกวันที่ก่อนบันทึก', '', false); return; }
+    if (!(st.recorder || '').trim()) {
+      app.toast('เลือกชื่อผู้บันทึกก่อน', '', false);
+      app.setState({ recorderMenuOpen: true, showMore: true });
+      return;
+    }
+
+    // จำนวนรวมแยกตามหน่วยนับจริง — ห้ามบวกข้ามหน่วย (กฎข้อ 3.4 ใน CLAUDE.md)
+    const byUnit = {};
+    for (const r of st.rows) {
+      const u = (r.unit || 'หน่วย').trim();
+      byUnit[u] = (byUnit[u] || 0) + (Number(r.qty) || 0);
+    }
+    const qtyLabel = Object.keys(byUnit)
+      .map((u) => ({ u, n: byUnit[u] }))
+      .sort((a, b) => b.n - a.n)
+      .map((x) => qtyText(x.n) + ' ' + x.u)
+      .join(' · ');
+
+    const reuse = st.rows.filter((r) => r.disposition === 'reuse');
+    const destroy = st.rows.filter((r) => r.disposition === 'destroy');
+    const sum = (list) => list.reduce((a, r) => a + (Number(r.price) || 0) * (Number(r.qty) || 0), 0);
+    const vReuse = sum(reuse);
+    const vDestroy = sum(destroy);
+    const src = (SOURCES.find((s) => s.key === st.source) || {}).label || st.source;
+    const noPrice = st.rows.filter((r) => !(Number(r.price) > 0)).length;
+
+    const lines = [
+      { label: 'วันที่รับคืน', value: thaiDate(st.date) },
+      { label: 'แหล่งที่มา', value: src },
+      { label: 'ผู้บันทึก', value: st.recorder },
+      { label: 'HN', value: (st.hn || '').trim() || 'ไม่ระบุ', tone: (st.hn || '').trim() ? '' : 'soft' },
+      { label: 'รายการยา', value: st.rows.length + ' รายการ', sep: true },
+      { label: 'จำนวนรวม', value: qtyLabel },
+      { label: 'มูลค่ารวม', value: money(vReuse + vDestroy) },
+      { label: 'ใช้ต่อได้', value: reuse.length + ' รายการ · ' + money(vReuse), tone: 'green', indent: true }
+    ];
+    if (destroy.length) {
+      lines.push({ label: 'ทำลาย', value: destroy.length + ' รายการ · ' + money(vDestroy), tone: 'red', indent: true });
+    }
+
+    app.setState({
+      confirm: {
+        kind: 'normal',
+        title: 'ยืนยันบันทึกรายการยาคืน',
+        lines: lines,
+        // เตือนเฉพาะตอนมียาที่ยังไม่ใส่ราคาจริง ๆ ไม่ใช่ขึ้นทุกครั้งจนคนเลิกอ่าน
+        note: noPrice
+          ? 'มียาที่ยังไม่ใส่ราคา ' + noPrice + ' รายการ บันทึกได้ตามปกติ ระบบจะตีราคาย้อนหลังให้เมื่อใส่ราคาแล้ว'
+          : 'ระบบจะออกเลข Lot ให้หลังบันทึกสำเร็จ',
+        okLabel: 'ยืนยันบันทึก',
+        run: () => app.save()
+      }
+    });
+  };
+
   app.save = async () => {
     const st = app.state;
     // ยามในหน่วยความจำ ไม่ต้องรอ setState — กันกดรัวสองครั้งแล้วได้ batchId คนละตัว
@@ -377,7 +455,7 @@ export function recordActions(app) {
     app.persist({ saving: true, saveFailed: false, saveError: '', batchId: batchId });
 
     try {
-      const res = await fetchT('/api/returns', {
+      const res = await app.fetchT('/api/returns', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

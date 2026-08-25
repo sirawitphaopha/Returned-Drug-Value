@@ -22,7 +22,7 @@ export function dataActions(app) {
   app.boot = async () => {
     if (app.state.demo) return;      // โหมดตัวอย่างไม่ดึงของจริงมาทับ
     try {
-      const res = await fetchT('/api/bootstrap');
+      const res = await app.fetchT('/api/bootstrap');
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'โหลดข้อมูลตั้งต้นไม่สำเร็จ');
 
@@ -96,7 +96,7 @@ export function dataActions(app) {
   app.refreshFy = async () => {
     if (app.state.demo) return;
     try {
-      const res = await fetchT('/api/summary');
+      const res = await app.fetchT('/api/summary');
       const data = await res.json();
       if (!res.ok) return;
       app.setState({
@@ -122,7 +122,7 @@ export function dataActions(app) {
   app.syncDrugs = async (force) => {
     if (app.state.demo) return;        // โหมดตัวอย่างไม่ยุ่งกับของจริง
     try {
-      const res = await fetchT('/api/drugs/rev');
+      const res = await app.fetchT('/api/drugs/rev');
       if (!res.ok) return;
       const sig = await res.json();
       const key = sig.rev + ':' + sig.count;
@@ -133,7 +133,7 @@ export function dataActions(app) {
       if (key === app._drugRev && !force) return;
       app._drugRev = key;
 
-      const dres = await fetchT('/api/drugs');
+      const dres = await app.fetchT('/api/drugs');
       if (!dres.ok) return;
       const data = await dres.json();
       const list = Array.isArray(data.drugs) ? data.drugs : null;

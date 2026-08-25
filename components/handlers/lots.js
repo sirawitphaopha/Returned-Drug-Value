@@ -66,7 +66,7 @@ export function lotsActions(app) {
 
     app.setState({ lotsLoading: true });
     try {
-      const res = await fetchT('/api/lots?range=' + encodeURIComponent(key));
+      const res = await app.fetchT('/api/lots?range=' + encodeURIComponent(key));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านรายการ Lot ไม่สำเร็จ');
       app._lotsCache[key] = { ts: Date.now(), lots: data.lots || [] };
@@ -96,7 +96,7 @@ export function lotsActions(app) {
     }
 
     try {
-      const res = await fetchT('/api/returns?range=fy&q=&lot=' + encodeURIComponent(lot.lot));
+      const res = await app.fetchT('/api/returns?range=fy&q=&lot=' + encodeURIComponent(lot.lot));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านรายการใน Lot ไม่สำเร็จ');
       app.setState({ slipRows: data.rows || [], slipLoading: false });
@@ -118,7 +118,7 @@ export function lotsActions(app) {
     if (app.state.demo) { app.toast('โหมดดูตัวอย่างแก้ข้อมูลไม่ได้', '', false); return; }
     app.setState({ lotEdit: { lot: lot }, lotEditLoading: true, lotEditBusy: false, lotEditConfirm: false, lotEditLogOpen: false });
     try {
-      const res = await fetchT('/api/lots/' + encodeURIComponent(lot));
+      const res = await app.fetchT('/api/lots/' + encodeURIComponent(lot));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านข้อมูลล็อตไม่สำเร็จ');
       app.setState({
@@ -221,7 +221,7 @@ export function lotsActions(app) {
       if (e.source !== e.orig.source) body.source = e.source;
       if (e.date !== e.orig.date) body.date = e.date;
 
-      const res = await fetchT('/api/lots/' + encodeURIComponent(e.lot), {
+      const res = await app.fetchT('/api/lots/' + encodeURIComponent(e.lot), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)

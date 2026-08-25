@@ -1,5 +1,6 @@
 // ค่าที่หน้าคลังยาใช้วาด — ไม่แตะ DOM ไม่ยิง API
 import { splitDrugName, splitPercent, splitRelease } from '../helpers';
+import { money, thaiDate } from '@/lib/format';
 import { buildDrugNames } from '@/lib/drugName';
 // ตัวแปลงแป้นพิมพ์ไทย→อังกฤษ ใช้ตัวเดียวกับช่องค้นหายาหน้าบันทึก จะได้ไม่เพี้ยนกัน
 import { thaiToEnglish } from '@/lib/drugSearch';
@@ -98,7 +99,35 @@ export function catalogVals(app, d) {
   const forms = formChips(list);
   const hiddenCount = list.filter((x) => x.hidden).length;
 
+  // ── ป๊อปแก้ราคาย้อนหลัง (พี่กันสั่ง 25 ส.ค. 2569) ──────────────────────────
+  // โผล่เองหลังแก้ราคายา เมื่อพบว่ามีรายการเก่าที่ใช้ราคาอื่นอยู่
+  // 🚨 ต้องเลือกชื่อผู้แก้ + กรอกเหตุผล ถึงจะกดยืนยันได้
+  const pf = st.priceFix;
+  const pfCanSave = !!(pf && pf.who && String(pf.reason || '').trim() && !pf.busy);
+
   return {
+    pfOpen: !!pf,
+    pfDrugName: pf ? pf.drugName : '',
+    pfRows: pf ? pf.rows : 0,
+    pfLines: pf ? [
+      { label: 'ยา', value: pf.drugName },
+      { label: 'ราคาใหม่', value: pf.newPrice.toFixed(2) + ' ฿ ต่อหน่วย' },
+      { label: 'รายการที่กระทบ', value: pf.rows + ' รายการ · ' + pf.qty + ' หน่วย', sep: true },
+      { label: 'ช่วงวันที่', value: pf.firstDate === pf.lastDate ? thaiDate(pf.firstDate) : thaiDate(pf.firstDate) + ' ถึง ' + thaiDate(pf.lastDate) },
+      { label: 'Lot ที่เกี่ยว', value: pf.lots.length ? pf.lots.slice(0, 3).join(' · ') + (pf.lots.length > 3 ? ' และอีก ' + (pf.lots.length - 3) : '') : '—' },
+      { label: 'มูลค่าเดิม', value: money(pf.valueBefore), tone: 'red', sep: true },
+      { label: 'มูลค่าใหม่', value: money(pf.valueAfter), tone: 'green' }
+    ] : null,
+    pfWho: pf ? pf.who : '',
+    pfReason: pf ? pf.reason : '',
+    pfBusy: pf ? !!pf.busy : false,
+    pfCanSave: pfCanSave,
+    pfStaff: st.staff || [],
+    setPfWho: app.setPriceFixWho,
+    setPfReason: app.setPriceFixReason,
+    doPriceFix: app.doPriceFix,
+    closePriceFix: app.closePriceFix,
+
     isCatalog: st.screen === 'catalog',
     catCols: COLS,
     catShowFull: st.catShowFull,

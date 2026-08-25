@@ -23,7 +23,7 @@ export function summaryActions(app) {
     app.setState({ sumLoading: true });
     try {
       const fy = app.state.sumFy;
-      const res = await fetchT('/api/summary' + (fy ? '?fy=' + fy : ''));
+      const res = await app.fetchT('/api/summary' + (fy ? '?fy=' + fy : ''));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านยอดสรุปไม่สำเร็จ');
       if (seq !== app._sumSeq) return;
@@ -61,7 +61,7 @@ export function summaryActions(app) {
     if (app.state.demo) return;
     try {
       const fy = app.state.sumFy;
-      const res = await fetchT('/api/top-returned' + (fy ? '?fy=' + fy : ''));
+      const res = await app.fetchT('/api/top-returned' + (fy ? '?fy=' + fy : ''));
       const data = await res.json();
       if (!res.ok) return;
       app.setState({ topReturned: data.items || [] });
@@ -74,7 +74,9 @@ export function summaryActions(app) {
     if (app.state.exporting) return;
     app.setState({ exporting: true });
     try {
-      const res = await fetchT('/api/returns?range=fy&limit=all');
+      // 🚨 ต้องส่งปีงบที่กำลังดูไปด้วย ไม่งั้นได้ข้อมูลปีปัจจุบันเสมอ (ผลตรวจข้อ ส-4)
+    const fyNow = Number(app.state.sumFy || (app.state.sum ? app.state.sum.fyYear : 0) || 0);
+    const res = await app.fetchT('/api/returns?range=fy&limit=all' + (fyNow ? '&fy=' + fyNow : ''));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'ส่งออกไฟล์ไม่สำเร็จ');
 

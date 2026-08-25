@@ -9,6 +9,7 @@
 // 🚨 กดพื้นหลังไม่ปิด — ในนี้มีของที่แก้ค้างไว้ กดพลาดแล้วงานหายหมด
 // 🚨 แยกเป็นไฟล์ของตัวเอง ไม่รวมกับ lots.jsx เพราะยาวพอ ๆ กับทั้งหน้ารายการล็อต
 import { s, sx, kb } from '../helpers';
+import { renderDrugName } from './drugname';
 
 export function renderLotEdit(V) {
   if (!V.lotEditOpen) return null;
@@ -88,11 +89,7 @@ export function renderLotEdit(V) {
               {V.lotEditRows.map((r) => (
                 <div key={r.key} style={sx('display:flex;align-items:center;padding:11px 20px;border-bottom:1px solid rgba(30,36,32,.05);font:400 13.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { background: r.rowBg })}>
                   <span style={s('flex:1;min-width:0;line-height:1.35;overflow-wrap:anywhere')}>
-                    <span style={s('font-weight:600;color:#1e2420')}>{r.np.base}</span>
-                    {r.np.strength && <span style={s("font-weight:500;color:#6b746e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:6px;white-space:nowrap")}>{r.np.strength}</span>}
-                    {r.np.hasPercent && <span style={s("font-weight:700;color:#96650f;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px")}>{r.np.percentLabel}</span>}
-                    {r.np.form && <span style={s('font-weight:600;color:#414a44;margin-left:6px;white-space:nowrap')}>{r.np.form}</span>}
-                    {r.np.hasRelease && <span style={s("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px")}>{r.np.releaseLabel}</span>}
+                    {renderDrugName(r.np, { size: '13.5px' })}
                     {r.wasLabel && <span style={s('font:600 10px Sarabun,sans-serif;color:#96650f;background:#fdf6e9;border-radius:4px;padding:1px 6px;margin-left:7px;white-space:nowrap')}>{r.wasLabel}</span>}
                   </span>
 

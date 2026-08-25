@@ -28,7 +28,7 @@ export function pricesActions(app) {
     if (!force && app.state.priceItems.length) return;
     app.setState({ priceLoading: true });
     try {
-      const res = await fetchT('/api/prices');
+      const res = await app.fetchT('/api/prices');
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'โหลดราคายาไม่สำเร็จ');
       app.setState({ priceItems: data.items, priceLoading: false });
@@ -91,7 +91,7 @@ export function pricesActions(app) {
 
     app.setState({ priceSaving: true });
     try {
-      const res = await fetchT('/api/prices', {
+      const res = await app.fetchT('/api/prices', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         // ตีราคาย้อนหลังให้แถวเก่าที่มูลค่ายังเป็น 0 ของยาชุดนี้เสมอ

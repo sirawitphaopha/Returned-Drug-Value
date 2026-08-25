@@ -2,6 +2,7 @@
 import { money, thaiDate, SOURCES } from '@/lib/format';
 import { qtyText, evalQty, isQtyExpr, exprText } from '../helpers';
 import { nameParts } from './record';
+import { pillColorOf } from '@/lib/drugPillColors';
 
 const RANGES = [
   { key: 'today', label: 'วันนี้' },
@@ -184,7 +185,21 @@ function lotEditVals(app, st) {
       const canSave = editing && nq > 0 && nq !== Number(r.qty);
       return {
         key: r.id,
-        np: nameParts({ name: r.name }, null),
+        np: (() => {
+          // ชื่อยาต้องหน้าตาเหมือนทุกหน้าในเว็บ — ดึงข้อมูลดิบจากคลังด้วยรหัสยา
+          // ยานอกบัญชีที่ไม่มีรหัส ตกไปใช้ชื่อที่แช่ไว้ในแถว
+          const master = r.drugId != null ? (st.drugs || []).find((x) => x.id === r.drugId) : null;
+          const pill = master ? pillColorOf(master) : null;
+          const base = nameParts(master || { name: r.name }, pill ? pill.color : '');
+          return Object.assign({}, base, {
+            mkBefore: base.base, mkHit: '', mkAfter: '',
+            abBefore: base.abbrev, abHit: '', abAfter: '',
+            bdBefore: base.brand, bdHit: '', bdAfter: '',
+            pillLabel: pill ? pill.label : '',
+            pillColor: pill ? pill.color : '',
+            strengthNoWrap: true, formNoWrap: true, brandNoWrap: true, abbrevNoWrap: true
+          });
+        })(),
         qtyLabel: qtyText(r.qty) + ' ' + r.unit,
         priceLabel: Number(r.price || 0).toFixed(2),
         valueLabel: money(Number(r.price || 0) * Number(r.qty || 0)),

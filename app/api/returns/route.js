@@ -39,7 +39,18 @@ function validDate(iso, today) {
 
 // แปลงชื่อช่วงเวลาเป็นวันเริ่ม–วันจบ · คิดด้วยวันที่ไทย ไม่ใช่นาฬิกา DB ที่เป็น UTC
 // กติกาเดียวกับมอคอัปบรรทัด 1128–1131
-function rangeOf(key, today) {
+// 🚨 ปีงบเจาะจง — ส่ง fy=2568 มาได้ (ผลตรวจข้อ ส-4)
+//    เดิมไม่ว่าจะส่ง range อะไรที่ไม่ใช่ today/week/month ก็ได้ "ปีงบปัจจุบัน" เสมอ
+//    ผู้บริหารขอสรุปปีงบที่เพิ่งจบ → กดปุ่มปี 2568 → กดส่งออก
+//    → ได้ไฟล์ชื่อ "ปีงบ2568" ที่ข้างในเป็นแถวของ 2569 ทั้งไฟล์
+//    ปีงบไทยเริ่ม 1 ต.ค. ของปีก่อนหน้า → ปีงบ 2569 = 1 ต.ค. 2568 ถึง 30 ก.ย. 2569
+function fyRangeOf(fy) {
+  const startCe = Number(fy) - 543 - 1;
+  return { from: startCe + '-10-01', to: (startCe + 1) + '-09-30' };
+}
+
+function rangeOf(key, today, fy) {
+  if (fy) return fyRangeOf(fy);
   if (key === 'today') return { from: today, to: today };
   if (key === 'week') {
     const d = new Date(today + 'T00:00:00');
@@ -55,7 +66,10 @@ export async function GET(req) {
     const url = new URL(req.url);
     const today = todayISO();
     const key = url.searchParams.get('range') || 'month';
-    const range = rangeOf(key, today);
+    // ปีงบ พ.ศ. ที่ขอมาเจาะจง (2500–2700 กันค่าเพี้ยน) — ใช้กับปุ่มส่งออกในหน้าสรุป
+    const fyRaw = Number(url.searchParams.get('fy') || 0);
+    const fy = fyRaw >= 2500 && fyRaw <= 2700 ? fyRaw : 0;
+    const range = rangeOf(key, today, fy);
     const q = (url.searchParams.get('q') || '').slice(0, 80);
     const limit = url.searchParams.get('limit') === 'all' ? EXPORT_LIMIT : HIST_LIMIT;
     const trash = url.searchParams.get('trash') === '1';

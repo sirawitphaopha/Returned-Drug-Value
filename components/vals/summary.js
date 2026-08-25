@@ -2,6 +2,9 @@
 // ต่างจากมอคอัปแค่ "ที่มาของตัวเลข": มอคอัปนับจากรายการในเครื่อง ของจริงรับก้อนสรุปจาก /api/summary
 // ส่วนที่คิดในเบราว์เซอร์เหมือนเดิมทุกอย่าง — ความสูงแท่ง สีไล่ระดับ เปอร์เซ็นต์ ข้อความ
 import { TH_MONTHS, SOURCES, money, compact, fyOf } from '@/lib/format';
+// ชื่อยาต้องหน้าตาเหมือนกันทุกหน้า — ใช้ตัวแยกชิ้นส่วนตัวเดียวกับหน้าบันทึกและหน้าประวัติ
+import { nameParts } from './record';
+import { pillColorOf } from '@/lib/drugPillColors';
 
 const EMPTY = { saved: 0, lost: 0, records: 0, qty: 0, drugCount: 0, byMonth: {}, bySrc: {}, topDrugs: [] };
 
@@ -19,9 +22,21 @@ export function summaryVals(app, d) {
   // ตอนเปิดเว็บ today ยังว่างจนกว่า /api/bootstrap จะตอบ — ถ้าไม่กันไว้ Number('') = 0
   // จะได้ "ปีงบ 543" กับชื่อเดือนว่างโผล่แวบหนึ่ง
   const hasToday = !!st.today;
-  const fyStartYear = hasToday
-    ? (Number(st.today.slice(5, 7)) >= 10 ? Number(st.today.slice(0, 4)) : Number(st.today.slice(0, 4)) - 1)
-    : 1900;
+  // 🚨 ปีงบที่กำลังดูอยู่ ไม่ใช่ปีงบปัจจุบันเสมอไป (ผลตรวจข้อ ส-4)
+  //
+  //    เดิมสร้างคีย์เดือนจากวันนี้เสมอ พอเลือกดูปีงบย้อนหลัง คีย์ที่สร้าง (2025-10…2026-09)
+  //    ไม่ตรงกับข้อมูลที่ฐานส่งมา (2024-10…2025-09) สักคีย์เดียว
+  //    → กราฟขึ้น "—" ทั้ง 12 แท่ง ทั้งที่ปีนั้นมีข้อมูลอยู่จริง
+  //    ผู้บริหารเห็นแล้วนึกว่าปีนั้นห้องยาไม่ได้รับยาคืนเลย
+  //
+  //    เซิร์ฟเวอร์ส่ง fyYear (พ.ศ.) มาให้อยู่แล้ว หยิบมาใช้แทน
+  //    ปีงบ 2569 เริ่ม ต.ค. 2568 → ปี ค.ศ. ที่เริ่ม = 2569 - 543 - 1 = 2025
+  const fyViewing = Number((st.sum && st.sum.fyYear) || st.sumFy || 0);
+  const fyStartYear = fyViewing
+    ? fyViewing - 543 - 1
+    : hasToday
+      ? (Number(st.today.slice(5, 7)) >= 10 ? Number(st.today.slice(0, 4)) : Number(st.today.slice(0, 4)) - 1)
+      : 1900;
   const months = [];
   let maxM = 1;
   for (let i = 0; i < 12; i++) {
@@ -46,7 +61,9 @@ export function summaryVals(app, d) {
   }));
 
   // ฐานข้อมูลเรียงและตัด 10 อันดับมาให้แล้ว ที่นี่แค่แปลงเป็นความกว้างแท่งกับสี
-  const topArr = (sum.topDrugs || []).map((t) => ({ name: t.name, v: Number(t.v || 0) }));
+  const topArr = (sum.topDrugs || []).map((t) => ({ name: t.name, v: Number(t.v || 0), id: t.id == null ? null : Number(t.id) }));
+  // แผนที่รหัสยา → ข้อมูลดิบในคลัง ใช้วาดชื่อพร้อมสี (ฐานส่งชื่อมาเป็นข้อความก้อนเดียว)
+  const drugById = new Map((st.drugs || []).map((d) => [d.id, d]));
   const topMax = topArr.length ? topArr[0].v : 1;
   const greens = dark
     ? ['#7fd6ab', '#5fc394', '#4fae82', '#419a72', '#3a8c67', '#34805d', '#2f7d5d', '#2b7255', '#28684e', '#245e47']
@@ -100,19 +117,36 @@ export function summaryVals(app, d) {
 
     // ยาที่ถูกคืนบ่อยที่สุด — เรียงตามจำนวนครั้ง ไม่ใช่มูลค่า
     // ยาตัวไหนถูกคืนบ่อยมาก = อาจสั่งเกินจำเป็น เอาไปคุยกับแพทย์ลดการสั่งได้จริง
-    topReturned: st.topReturned.slice(0, 10).map((t, i) => ({
+    topReturned: st.topReturned.slice(0, 10).map((t, i) => {
+      const master = t.id != null ? drugById.get(Number(t.id)) : null;
+      const pill = master ? pillColorOf(master) : null;
+      const np = nameParts(master || { name: t.name }, pill ? pill.color : '');
+      return {
       key: t.name,
       rank: i + 1,
       name: t.name,
+      // ชิ้นส่วนชื่อยาสำหรับวาดพร้อมสี — ตัวเดียวกับทุกหน้าในเว็บ
+      parts: {
+        ...np,
+        mkBefore: np.base, mkHit: '', mkAfter: '',
+        abBefore: np.abbrev, abHit: '', abAfter: '',
+        bdBefore: np.brand, bdHit: '', bdAfter: '',
+        pillLabel: pill ? pill.label : '',
+        pillColor: pill ? pill.color : '',
+        strengthNoWrap: true, formNoWrap: true, brandNoWrap: true, abbrevNoWrap: true
+      },
       timesLabel: Number(t.times || 0).toLocaleString('en-US') + ' ครั้ง',
       qtyLabel: Number(t.qty || 0).toLocaleString('en-US') + ' ' + (t.unit || 'หน่วย'),
       valueLabel: money(Number(t.value || 0)),
       w: st.topReturned.length ? (Number(t.times || 0) / Number(st.topReturned[0].times || 1) * 100) + '%' : '0%'
-    })),
+      };
+    }),
     hasTopReturned: st.topReturned.length > 0,
     topReturnedHint: 'ยาที่ถูกคืนบ่อย อาจเป็นยาที่สั่งเกินจำเป็น — เอาไปคุยกับแพทย์เพื่อลดการสั่งได้',
 
-    fyLabel: hasToday ? String(fyOf(st.today)) : '—',
+    // 🚨 ป้ายปีต้องเป็นปีที่กำลังดูอยู่ (ผลตรวจข้อ ส-4)
+    //    เดิมเขียน "ปีงบประมาณ 2569" ทับตัวเลขของ 2568 ที่กำลังเปิดดู
+    fyLabel: fyViewing ? String(fyViewing) : (hasToday ? String(fyOf(st.today)) : '—'),
     fySavedBig: Math.floor(fySaved).toLocaleString('en-US') + '.' + (fySaved.toFixed(2).split('.')[1] || '00'),
     fyLostLabel: money(fyLost),
     fyLostShort: Math.round(fyLost).toLocaleString('en-US') + ' ฿',
@@ -127,14 +161,30 @@ export function summaryVals(app, d) {
       : '—',
 
     months: monthVals,
-    topDrugs: topArr.map((t, i) => ({
+    topDrugs: topArr.map((t, i) => {
+      const master = t.id != null ? drugById.get(t.id) : null;
+      const pill = master ? pillColorOf(master) : null;
+      // สีเม็ดยาเป็นสีของตัวเลขความแรงด้วย เหมือนหน้าค้นหาและหน้าประวัติ
+      const np = nameParts(master || { name: t.name }, pill ? pill.color : '');
+      return {
       key: t.name,
       rank: String(i + 1),
       name: t.name,
+      // ชิ้นส่วนชื่อยาสำหรับวาดพร้อมสี (components/pages/drugname.jsx)
+      parts: {
+        ...np,
+        mkBefore: np.base, mkHit: '', mkAfter: '',
+        abBefore: np.abbrev, abHit: '', abAfter: '',
+        bdBefore: np.brand, bdHit: '', bdAfter: '',
+        pillLabel: pill ? pill.label : '',
+        pillColor: pill ? pill.color : '',
+        strengthNoWrap: true, formNoWrap: true, brandNoWrap: true, abbrevNoWrap: true
+      },
       value: Math.round(t.v).toLocaleString('en-US'),
       w: (t.v / topMax * 100) + '%',
       bg: greens[i]
-    })),
+      };
+    }),
     // 🚨 สัดส่วนแหล่งที่มานับ "ทั้งใช้ต่อได้และทำลาย" ตามมอคอัป (บรรทัด 1087)
     // แต่ตัวเลขใหญ่ด้านบนนับเฉพาะที่ใช้ต่อได้ → เอา % ไปคูณตัวเลขใหญ่ไม่ได้
     // ถ้าไม่มีป้ายบอก ผู้บริหารจะเข้าใจผิดแน่นอน

@@ -10,7 +10,7 @@ export function settingsActions(app) {
   // ยิงขึ้นเซิร์ฟเวอร์ · patch = เฉพาะช่องที่เปลี่ยน
   app.pushSetting = async (patch, before) => {
     try {
-      const res = await fetchT('/api/settings', {
+      const res = await app.fetchT('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch)

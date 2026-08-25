@@ -1,6 +1,7 @@
 // หน้าบันทึก — คัดจากมอคอัป มือถือ (บรรทัด 28–123) คอม (124–220) แถบบันทึกล่างจอมือถือ (541–565)
 // ตัดออกตามที่ตกลงไว้: สวิตช์จำลองเน็ตหลุด (ของเดโม) และเลขคงคลังปลอมใต้ชื่อยา
 import { s, sx, kb } from '../helpers';
+import { renderDrugName } from './drugname';
 import { renderRecorderField } from './recorder';
 
 // ก้อนสั้นในบรรทัดชื่อยาห้ามถูกตัดขาดกลาง (ความแรง · ตัวย่อ · % · รูปแบบ · ER · ชื่อการค้า)
@@ -444,30 +445,8 @@ export function renderRecordWide(V) {
             <div key={row.rid} style={sx('display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(30,36,32,.05);font:400 14px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { background: row.deskBg })}>
               {/* ชื่อยาหน้าตาเหมือนตอนค้นหาเป๊ะ — สีความแรง · รูปแบบยา · ER · ชื่อการค้า
                   (พี่กันสั่ง 25 ส.ค. 2569) ยาฉีดกับยากินจะได้แยกออกตั้งแต่กวาดตา */}
-              <span style={s('flex:1;min-width:0;line-height:1.35;overflow-wrap:anywhere')}>
-                <span style={s('font-weight:600;color:#1e2420')}>{row.np.base}</span>
-                {row.np.hasAbbrev && (
-                  <span style={s("font-weight:600;color:#6d3b9e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px;white-space:nowrap")}>({row.np.abbrev})</span>
-                )}
-                {row.np.strength && (
-                  <span style={s("font-weight:500;color:#6b746e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:6px;white-space:nowrap")}>
-                    {row.np.stColor
-                      ? <><span style={{ color: row.np.stColor, fontWeight: 700 }}>{row.np.stNum}</span>{row.np.stRest}</>
-                      : row.np.strength}
-                  </span>
-                )}
-                {row.np.hasPercent && (
-                  <span style={s("font-weight:700;color:#96650f;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px;white-space:nowrap")}>{row.np.percentLabel}</span>
-                )}
-                {row.np.form && (
-                  <span style={s('font-weight:600;color:#414a44;margin-left:6px;white-space:nowrap')}>{row.np.form}</span>
-                )}
-                {row.np.hasRelease && (
-                  <span style={s("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px;white-space:nowrap")}>{row.np.releaseLabel}</span>
-                )}
-                {row.np.hasBrand && (
-                  <span style={s('font-weight:600;color:#2f7d5d;margin-left:6px;white-space:nowrap')}>({row.np.brand})</span>
-                )}
+              <span style={s('flex:1;min-width:0')}>
+                {renderDrugName(row.np, { size: '14px' })}
               </span>
 
               {/* จำนวนแก้ได้ทั้งที่กด Enter ลงมาแล้ว — มีปุ่มดินสอบอกชัด ๆ ว่ากดแก้ได้

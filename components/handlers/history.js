@@ -4,6 +4,8 @@
 import { money } from '@/lib/format';
 import { fetchT } from '../helpers';
 import { recordsToCsv, downloadCsv } from '@/lib/csv';
+// ตัวแปลงแป้นพิมพ์ไทยเป็นอังกฤษ — ไฟล์เดียวกับที่หน้าบันทึกและหน้าคลังยาใช้
+import { thaiToEnglish } from '@/lib/drugSearch';
 
 const HIST_TTL = 60000;
 const DEBOUNCE = 300;
@@ -18,10 +20,12 @@ export function historyActions(app) {
     return [st.histRange, st.histQuery.trim(), st.histTrash ? 'T' : '', st.histLot, st.histFrom, st.histTo].join('\n');
   };
 
-  const urlOf = (offset) => {
+  // qUse = คำที่ใช้ค้นจริง · ปกติคือคำที่พิมพ์ แต่ถ้าลืมสลับแป้นจะเป็นคำที่แปลงแล้ว
+  const urlOf = (offset, qUse) => {
     const st = app.state;
+    const q = qUse == null ? st.histQuery.trim() : qUse;
     let u = '/api/returns?range=' + encodeURIComponent(st.histRange) +
-      '&q=' + encodeURIComponent(st.histQuery.trim());
+      '&q=' + encodeURIComponent(q);
     if (st.histTrash) u += '&trash=1';
     if (st.histLot) u += '&lot=' + encodeURIComponent(st.histLot);
     if (st.histRange === 'custom') {
@@ -36,7 +40,13 @@ export function historyActions(app) {
     const k = keyOf();
     const c = app._histCache[k];
     if (!force && c && Date.now() - c.ts < HIST_TTL) {
-      app.setState({ histRows: c.rows, histTotal: c.total, histSaved: c.saved, histMore: [], histOffset: 0, histLoading: false });
+      // ต้องคืนธงลืมสลับแป้นมาด้วย ไม่งั้นพอหยิบจากแคช ป้าย "ค้นว่า ..." จะหายไปเฉย ๆ
+      // ทั้งที่ผลลัพธ์บนจอยังเป็นของคำที่แปลงแล้ว
+      app.setState({
+        histRows: c.rows, histTotal: c.total, histSaved: c.saved,
+        histMore: [], histOffset: 0, histLoading: false,
+        histSwapped: !!c.swapped, histSwapLabel: c.swapLabel || ''
+      });
       return;
     }
 
@@ -44,18 +54,41 @@ export function historyActions(app) {
     app.setState({ histLoading: true });
 
     try {
-      const res = await fetchT(urlOf(0));
-      const data = await res.json();
+      const raw = app.state.histQuery.trim();
+      let res = await app.fetchT(urlOf(0));
+      let data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านประวัติไม่สำเร็จ');
+
+      // ── ลืมสลับแป้นพิมพ์ ──────────────────────────────────────────────
+      // ตั้งใจพิมพ์ metformin แต่แป้นค้างที่ไทย ได้ "ทำะดนพทรื" แล้วไม่เจออะไรเลย
+      // กติกาเดียวกับหน้าบันทึกและหน้าคลังยา (สกิล pharmacy-web-logic ข้อ 12)
+      //
+      // ต่างจากสองหน้านั้นตรงที่หน้านี้ค้นที่เซิร์ฟเวอร์ จึงรู้ผลก็ต่อเมื่อคำตอบกลับมาแล้ว
+      // เลยต้องยิงรอบสอง — เกิดเฉพาะตอนพิมพ์ผิดแป้นจริง ๆ ซึ่งนาน ๆ ครั้ง
+      let swapped = false;
+      let swapLabel = '';
+      if (Number(data.total || 0) === 0 && /[฀-๿]/.test(raw)) {
+        const alt = thaiToEnglish(raw).trim();
+        if (alt && alt !== raw) {
+          const res2 = await app.fetchT(urlOf(0, alt));
+          const data2 = await res2.json();
+          if (res2.ok && Number(data2.total || 0) > 0) {
+            res = res2; data = data2; swapped = true; swapLabel = alt;
+          }
+        }
+      }
 
       // ตรวจหมายเลขลำดับ "ก่อน" เขียนแคช ไม่งั้นคำตอบเก่าที่ถูกทิ้งจะยังปนเปื้อนแคช
       // แล้วรายการที่เพิ่งลบไปจะโผล่กลับมาเมื่อสลับแท็บกลับภายใน 60 วินาที
       if (seq !== app._histSeq) return;
+      app.setState({ histSwapped: swapped, histSwapLabel: swapLabel });
       app._histCache[k] = {
         ts: Date.now(),
         rows: data.rows,
         total: Number(data.total || 0),
-        saved: Number(data.saved || 0)
+        saved: Number(data.saved || 0),
+        swapped: swapped,
+        swapLabel: swapLabel
       };
       app.setState({
         histRows: data.rows,
@@ -81,7 +114,9 @@ export function historyActions(app) {
     const offset = app.state.histRows.length + app.state.histMore.length;
     app.setState({ histLoading: true });
     try {
-      const res = await fetchT(urlOf(offset));
+      // 🚨 ต้องใช้คำที่แปลงแล้วด้วย ไม่งั้นกด "ดูเพิ่ม" ตอนค้นแบบลืมสลับแป้น
+      //    จะยิงคำภาษาไทยกลับไปแล้วได้ศูนย์แถว ดูเหมือนข้อมูลหมดทั้งที่ยังมีอีก
+      const res = await app.fetchT(urlOf(offset, app.state.histSwapped ? app.state.histSwapLabel : undefined));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านประวัติไม่สำเร็จ');
       app.setState({
@@ -101,6 +136,13 @@ export function historyActions(app) {
     app.setState({ histQuery: e.target.value });
     if (app._histTimer) clearTimeout(app._histTimer);
     app._histTimer = setTimeout(() => app.loadHistory(), DEBOUNCE);
+  };
+
+  // ล้างช่องค้นหา — ทำเหมือนหน้าคลังยา ปุ่ม ✕ ในช่อง
+  // ยิงทันทีไม่ต้องรอหน่วง เพราะเป็นการกดปุ่ม ไม่ใช่การพิมพ์รัว
+  app.clearHistQuery = () => {
+    if (app._histTimer) clearTimeout(app._histTimer);
+    app.setState({ histQuery: '', histSwapped: false, histSwapLabel: '' }, () => app.loadHistory());
   };
 
   app.setHistRange = (key) => {
@@ -134,7 +176,7 @@ export function historyActions(app) {
     const back = { histRows: app.state.histRows };
     app.setState({ histRows: app.state.histRows.filter((x) => x.id !== r.id), confirm: null });
     try {
-      const res = await fetchT('/api/returns/' + r.id, {
+      const res = await app.fetchT('/api/returns/' + r.id, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action: 'restore' })
@@ -177,7 +219,7 @@ export function historyActions(app) {
         rows = st.histRows.concat(st.histMore);
       } else {
         // ขอทั้งชุดที่ตรงเงื่อนไข ไม่ใช่แค่ 60 แถวที่โชว์บนจอ
-        const res = await fetchT(urlOf(0).replace('range=', 'limit=all&range='));
+        const res = await app.fetchT(urlOf(0).replace('range=', 'limit=all&range='));
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'ส่งออกไฟล์ไม่สำเร็จ');
         rows = data.rows || [];
@@ -211,7 +253,7 @@ export function historyActions(app) {
     if (app.state.demo) return;      // โหมดตัวอย่างเตรียมรายการล็อตไว้แล้ว
     app.setState({ lotsLoading: true });
     try {
-      const res = await fetchT('/api/lots?range=' + encodeURIComponent(app.state.histRange === 'custom' ? 'month' : app.state.histRange));
+      const res = await app.fetchT('/api/lots?range=' + encodeURIComponent(app.state.histRange === 'custom' ? 'month' : app.state.histRange));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านรายการล็อตไม่สำเร็จ');
       app.setState({ lots: data.lots || [], lotsLoading: false });
@@ -246,7 +288,7 @@ export function historyActions(app) {
     app.setState({ histRows: after, histSaved: st.histSaved - oldVal + newVal, sheet: null, sheetQty: '' });
 
     try {
-      const res = await fetchT('/api/returns/' + id, {
+      const res = await app.fetchT('/api/returns/' + id, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ qty: qty, disposition: disp })
@@ -272,7 +314,11 @@ export function historyActions(app) {
       confirm: {
         title: 'ยืนยันลบรายการนี้',
         detail: r.name + ' · ' + r.qty + ' ' + r.unit + ' · ' + money(Number(r.price) * r.qty),
-        note: 'รายการที่ลบแล้วกู้คืนไม่ได้ และมูลค่าสะสมปีงบจะลดลงตามไปด้วย',
+        // 🚨 ข้อความต้องตรงกับสิ่งที่ระบบทำจริง (ผลตรวจข้อ ส-5)
+        //    เดิมเขียนว่า "กู้คืนไม่ได้" ซึ่งไม่จริง — การลบที่นี่เป็นการย้ายเข้าถังขยะ
+        //    (ประทับเวลาไว้ในแถว ไม่ได้ลบออกจากฐาน) และมีปุ่มกู้คืนอยู่ในถังขยะจริง
+        //    เขียนให้กลัวเกินจริงแล้วเภสัชกรไม่กล้าลบรายการที่กรอกผิด
+        note: 'รายการจะถูกย้ายไปถังขยะ · มูลค่าสะสมปีงบลดลงทันที · กู้คืนได้ที่ปุ่มถังขยะ',
         okLabel: 'ยืนยันลบ',
         run: () => app.deleteRecord(r)
       }
@@ -297,7 +343,7 @@ export function historyActions(app) {
     });
 
     try {
-      const res = await fetchT('/api/returns/' + r.id, { method: 'DELETE' });
+      const res = await app.fetchT('/api/returns/' + r.id, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'ลบไม่สำเร็จ');
 

@@ -64,6 +64,10 @@ export default class MedReturnApp extends React.Component {
 
       // ประวัติมาจากฐานข้อมูล ไม่ได้กองอยู่ในเครื่องเหมือนมอคอัป (มอคอัปใช้ state.records)
       histQuery: '',
+      // ค้นแล้วไม่เจอเพราะลืมสลับแป้นพิมพ์ ระบบแปลงให้แล้วค้นใหม่
+      // histSwapLabel = คำที่ใช้ค้นจริง เอาไปโชว์ในป้ายข้างช่องค้นหา
+      histSwapped: false,
+      histSwapLabel: '',
       histRange: 'month',
       histRows: [],
       histTotal: 0,
@@ -96,6 +100,11 @@ export default class MedReturnApp extends React.Component {
       catBusy: false,
       catHideTarget: null,   // ยาที่กำลังจะซ่อน (รอยืนยัน)
       catLog: null,          // ประวัติการแก้ที่กำลังเปิดดู
+      // ── แก้ราคาย้อนหลัง (พี่กันสั่ง 25 ส.ค. 2569) ────────────────────────
+      // โผล่เองเมื่อแก้ราคายาแล้วพบว่ามีรายการเก่าที่ใช้ราคาอื่นอยู่
+      // 🚨 ระบบแค่ถาม ไม่แก้ให้เอง — ราคาที่แช่ไว้อาจถูกต้องแล้วก็ได้
+      //    (ยาขึ้นราคากลางปี = ของเก่าต้องคงราคาเดิม) คนต้องเป็นคนตัดสิน
+      priceFix: null,
       slipLot: null,         // ใบสรุป Lot ที่เปิดอยู่ (null = ไม่ได้เปิด)
       slipRows: [],          // รายการยาใน Lot นั้น — ดึงตอนกดเปิดใบ
       slipLoading: false,
@@ -379,12 +388,41 @@ export default class MedReturnApp extends React.Component {
     // ไม่ตั้งตัวจับเวลาถามเป็นระยะ เพราะการแก้ชื่อยาเกิดปีละไม่กี่ครั้ง
     // แต่เว็บเปิดค้างทั้งวัน — ถามทุก 30 วินาทีจะได้คำขอเปล่าวันละพันกว่าครั้ง
     this.syncDrugs();
+    this.retryFailedSave();
   };
 
   // เน็ตโรงพยาบาลหลุดแล้วกลับมา — ระหว่างที่หลุดอาจมีคนแก้ยาไปแล้ว
-  _onOnline = () => { this.syncDrugs(); };
+  _onOnline = () => { this.syncDrugs(); this.retryFailedSave(); };
+
+  // ── ส่งซ้ำอัตโนมัติเมื่อเน็ตกลับมา ─────────────────────────────────────────
+  //
+  // พี่กันสั่ง 25 ส.ค. 2569: "ทำระบบไว้ด้วย ถ้าเกิดเน็ตมันพัง มันต้องขึ้นบอกด้วย
+  // ไม่ใช่ส่งแล้วพังโดยไม่เห็น"
+  //
+  // เดิมมีกล่องแดงบอกอยู่แล้ว แต่ต้องกด "ลองส่งใหม่" เอง
+  // ถ้าเภสัชกรปิดแท็บไปก่อนโดยลืมกด ของทั้งล็อตค้างอยู่ในเครื่องเงียบ ๆ
+  //
+  // 🚨 ใช้ batchId เดิมเสมอ (app.save เก็บไว้ใน state ให้แล้ว)
+  //    ไม่งั้นระบบกันบันทึกซ้ำใช้ไม่ได้ แล้วได้ข้อมูลสองชุด
+  //    กรณีที่เจอจริงบนเน็ตโรงพยาบาลคือ "ข้อมูลเข้าฐานไปแล้วแต่คำตอบหายกลางทาง"
+  //
+  // 🚨 หน่วง 1.2 วินาทีก่อนยิง — เหตุการณ์ online มาถึงก่อนที่เน็ตจะใช้ได้จริง
+  //    ยิงทันทีมักล้มซ้ำแล้วผู้ใช้เห็นกล่องแดงกะพริบเปล่า ๆ
+  retryFailedSave = () => {
+    const st = this.state;
+    if (!st.saveFailed || !st.rows.length || this._saving || st.demo) return;
+    if (this._retryTimer) clearTimeout(this._retryTimer);
+    this._retryTimer = setTimeout(() => {
+      const cur = this.state;
+      if (!cur.saveFailed || !cur.rows.length || this._saving) return;
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+      this.toast('เน็ตกลับมาแล้ว กำลังส่งข้อมูลที่ค้างอยู่', '', false);
+      this.save();
+    }, 1200);
+  };
 
   componentWillUnmount() {
+    if (this._retryTimer) { clearTimeout(this._retryTimer); this._retryTimer = null; }
     if (this._histHeadRO) { this._histHeadRO.disconnect(); this._histHeadRO = null; }
     if (this._catHeadRO) { this._catHeadRO.disconnect(); this._catHeadRO = null; }
     if (this._mqMouse && this._onMouseKind) {

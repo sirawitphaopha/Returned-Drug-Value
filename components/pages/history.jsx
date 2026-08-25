@@ -2,6 +2,7 @@
 // เพิ่มจากต้นฉบับอย่างเดียวคือข้อความ "กำลังโหลด" เพราะของจริงต้องรอเซิร์ฟเวอร์
 import { s, sx, kb } from '../helpers';
 import { renderExportBtn } from './exportbtn';
+import { renderDrugName } from './drugname';
 
 // แถบเครื่องมือเสริม — ไม่มีในมอคอัป
 // เดิมมีแค่ 4 ปุ่มช่วงเวลาสำเร็จรูป + ตัดที่ 60 แถว แล้วบอกให้ "กรองช่วงวันที่ให้แคบลง"
@@ -51,7 +52,24 @@ export function renderHistoryWide(V) {
       <div ref={V.histHeadRef} className="hist-head">
       <div style={s('display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px')}>
         <div style={s('font:600 19px Sarabun,sans-serif')}>{V.histTitle || 'ประวัติการบันทึก'}</div>
-        <input value={V.histQuery} onChange={V.onHistQuery} placeholder="ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลข Lot" style={s('width:320px;height:42px;padding:0 13px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 14px Sarabun,sans-serif')} />
+        {/* ช่องค้นหา — ระบบเดียวกับหน้าคลังยาและหน้าบันทึก (พี่กันสั่ง 25 ส.ค. 2569)
+            รองรับลืมสลับแป้นพิมพ์ + ป้ายบอกคำที่ค้นจริง + ปุ่มล้าง
+            เว้นที่ว่างขวาตามสิ่งที่โผล่จริง ไม่งั้นตัวหนังสือที่พิมพ์จะลอดไปใต้ป้าย */}
+        <div style={s('position:relative;width:320px;flex:none')}>
+          <input value={V.histQuery} onChange={V.onHistQuery}
+            placeholder="ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลข Lot"
+            style={sx('width:100%;height:42px;box-sizing:border-box;padding:0 13px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 14px Sarabun,sans-serif',
+              { paddingRight: V.histSwapped ? '150px' : (V.histHasSearch ? '42px' : '13px') })} />
+          {V.histSwapped && (
+            <span style={s('position:absolute;right:40px;top:50%;transform:translateY(-50%);font:600 11px Sarabun,sans-serif;color:#2f7d5d;background:#e7f2ec;border-radius:6px;padding:3px 8px;white-space:nowrap;pointer-events:none')}>
+              ค้นว่า {V.histSwapLabel}
+            </span>
+          )}
+          {V.histHasSearch && (
+            <span {...kb(V.clearHistQuery)} className="tap hv-bg-eef" title="ล้างช่องค้นหา"
+              style={s('position:absolute;right:7px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b746e;font:400 13px Sarabun,sans-serif')}>✕</span>
+          )}
+        </div>
         <div style={s('display:flex;gap:6px')}>
           {V.ranges.map((g) => (
             <div key={g.key} {...kb(g.pick)} className="tap" style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
@@ -102,7 +120,13 @@ export function renderHistoryWide(V) {
             <span style={s('width:110px;color:#6b746e')}>{hr.dateLabel}</span>
             {/* ชื่อยาต้องตัดด้วยจุดไข่ปลา ไม่งั้นชื่อยาว ๆ ดันแถวสูงเป็นสิบบรรทัด
                 title = เอาเมาส์ชี้แล้วเห็นชื่อเต็ม */}
-            <span title={hr.name} style={s('flex:1;min-width:180px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px')}>{hr.name}</span>
+            {/* ชื่อยาวาดทีละส่วนพร้อมสี ตัวเดียวกับผลค้นหาในหน้าบันทึก
+                (พี่กันสั่ง 25 ส.ค. 2569 "ไหนสีแบบที่ช่องค้นหา")
+                ยังตัดด้วยจุดไข่ปลาเหมือนเดิม ไม่งั้นชื่อยาว ๆ ดันแถวสูงเป็นสิบบรรทัด
+                title = เอาเมาส์ชี้แล้วเห็นชื่อเต็ม */}
+            <span title={hr.name} style={s('flex:1;min-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px')}>
+              {renderDrugName(hr.parts, { size: '13.5px' })}
+            </span>
             <span style={s('width:80px;text-align:right')}>{hr.qtyLabel}</span>
             <span style={s('width:92px;text-align:right;color:#6b746e')}>{hr.priceLabel}</span>
             <span style={sx("width:104px;text-align:right;font:600 14.5px 'IBM Plex Sans Thai',sans-serif", { color: hr.color })}>{hr.valueLabel}</span>
@@ -158,7 +182,22 @@ export function renderHistoryNarrow(V) {
           <div {...kb(V.openAbout)} title="เกี่ยวกับ" className="hv-bg-f6" style={s('margin-left:auto;width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
           <div {...kb(V.openSettings)} title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
         </div>
-        <input value={V.histQuery} onChange={V.onHistQuery} placeholder="ชื่อยา · HN · ชื่อคนบันทึก · เลข Lot" style={s('width:100%;height:44px;padding:0 13px;border:1px solid rgba(30,36,32,.14);border-radius:10px;background:#f6f7f4;font:400 14.5px Sarabun,sans-serif;margin-bottom:9px')} />
+        {/* ฝั่งมือถือ — ระบบเดียวกับฝั่งคอมทุกอย่าง ต่างแค่ขนาดกับสีพื้น */}
+        <div style={s('position:relative;width:100%;margin-bottom:9px')}>
+          <input value={V.histQuery} onChange={V.onHistQuery}
+            placeholder="ชื่อยา · HN · ชื่อคนบันทึก · เลข Lot"
+            style={sx('width:100%;height:44px;box-sizing:border-box;padding:0 13px;border:1px solid rgba(30,36,32,.14);border-radius:10px;background:#f6f7f4;font:400 14.5px Sarabun,sans-serif',
+              { paddingRight: V.histSwapped ? '150px' : (V.histHasSearch ? '44px' : '13px') })} />
+          {V.histSwapped && (
+            <span style={s('position:absolute;right:42px;top:50%;transform:translateY(-50%);font:600 11px Sarabun,sans-serif;color:#2f7d5d;background:#e7f2ec;border-radius:6px;padding:3px 8px;white-space:nowrap;pointer-events:none')}>
+              ค้นว่า {V.histSwapLabel}
+            </span>
+          )}
+          {V.histHasSearch && (
+            <span {...kb(V.clearHistQuery)} className="tap hv-bg-eef" title="ล้างช่องค้นหา"
+              style={s('position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b746e;font:400 14px Sarabun,sans-serif')}>✕</span>
+          )}
+        </div>
         <div style={s('display:flex;gap:6px;flex-wrap:wrap')}>
           {V.ranges.map((g) => (
             <div key={g.key} {...kb(g.pick)} className="tap" style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
@@ -207,7 +246,9 @@ export function renderHistoryNarrow(V) {
                   borderLeft: '3px solid ' + (it.hasLot ? (it.lotBand ? '#2f7d5d' : '#a8d3bd') : 'transparent')
                 })}>
                   <div {...kb(it.edit)} style={s('min-width:0;cursor:pointer;margin-bottom:7px')}>
-                    <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif;overflow-wrap:anywhere')}>{it.name}</div>
+                    {/* ฝั่งมือถือวาดชื่อยาพร้อมสีเหมือนกัน แค่ตัวใหญ่ขึ้นนิดหนึ่ง
+                        ไม่ตัดด้วยจุดไข่ปลา เพราะการ์ดมือถือยอมให้สูงขึ้นได้ */}
+                    <div style={s('overflow-wrap:anywhere')}>{renderDrugName(it.parts, { size: '14.5px' })}</div>
                     <div style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums')}>{it.detail}</div>
                   </div>
                   <div style={s('display:flex;align-items:center;justify-content:space-between;gap:9px')}>

@@ -1,6 +1,9 @@
 // ค่าของหน้าประวัติ — คัดจากมอคอัป (บรรทัด 1292–1320 กับ 1368–1372)
 // การกรองย้ายไปอยู่ฝั่ง SQL แล้ว ที่เหลือในนี้คือการจัดหน้าตาล้วนๆ เหมือนต้นฉบับ
 import { SOURCES, money, thaiDate, fyOf } from '@/lib/format';
+// ใช้ตัวแยกชิ้นส่วนชื่อยาตัวเดียวกับหน้าบันทึก — ชื่อยาจะได้หน้าตาเหมือนกันทุกหน้า
+import { nameParts } from './record';
+import { pillColorOf } from '@/lib/drugPillColors';
 
 const HIST_LIMIT = 60;
 
@@ -89,12 +92,37 @@ export function historyVals(app, d) {
     dayMap[r.date].push(r);
   });
 
+  // แผนที่รหัสยา → ข้อมูลดิบในคลัง สร้างครั้งเดียวต่อการวาดจอ
+  // 🚨 ต้องมีเพื่อวาดชื่อยาแบบมีสี — ฐานส่งชื่อมาเป็นข้อความก้อนเดียว
+  //    ถ้าเอาข้อความมาเดาชิ้นส่วนจะเดาผิดเวลาสูตรชื่อเปลี่ยน (พลาดมาแล้ว 25 ส.ค. 2569)
+  const drugById = new Map((st.drugs || []).map((d) => [d.id, d]));
+
   const itemOf = (r) => {
     const reuse = r.disposition === 'reuse';
     const price = Number(r.price);
+    // ยาที่มีรหัส → ดึงข้อมูลดิบจากคลังมาวาดพร้อมสี
+    // ยานอกบัญชีที่พิมพ์ชื่อเอง (ไม่มีรหัส) → ใช้ชื่อที่แช่ไว้ ไม่มีสีให้แยก
+    const master = r.drugId != null ? drugById.get(r.drugId) : null;
+    const pill = master ? pillColorOf(master) : null;
+    // 🚨 ส่งสีเม็ดยาเข้าไปเป็นสีของ "ตัวเลขความแรง" ด้วย (พี่กันสั่ง 25 ส.ค. 2569)
+    //    Warfarin 2 ส้ม · 3 น้ำเงิน · 5 ชมพู — ตัวเลขกับป้ายสีต้องเป็นสีเดียวกัน
+    //    ตาจับได้ตั้งแต่กวาดผ่าน ไม่ต้องอ่านคำในวงเล็บ
+    //    ยาที่ไม่ได้กรอกสีเม็ดไว้ ตัวเลขคงสีเทาเหมือนเดิม
+    const np = nameParts(master || { name: r.name }, pill ? pill.color : '');
     return {
       key: r.id,
       name: r.name,
+      // ชิ้นส่วนชื่อยาสำหรับวาดทีละส่วนพร้อมทาสี (components/pages/drugname.jsx)
+      // หน้านี้ไม่มีการค้นในตัว จึงไม่มีคำไฮไลต์ — ส่งชื่อทั้งก้อนเป็น mkBefore
+      parts: {
+        ...np,
+        mkBefore: np.base, mkHit: '', mkAfter: '',
+        abBefore: np.abbrev, abHit: '', abAfter: '',
+        bdBefore: np.brand, bdHit: '', bdAfter: '',
+        pillLabel: pill ? pill.label : '',
+        pillColor: pill ? pill.color : '',
+        strengthNoWrap: true, formNoWrap: true, brandNoWrap: true, abbrevNoWrap: true
+      },
       // บนมือถือคอลัมน์แคบมาก ตัดชื่อแหล่งที่มาออกจากบรรทัดรายละเอียด
       // (ยังดูได้ในหน้าคอม) เหลือแค่ข้อมูลที่จำเป็นจริง ๆ
       //
@@ -122,6 +150,12 @@ export function historyVals(app, d) {
   return {
     histQuery: st.histQuery,
     onHistQuery: app.onHistQuery,
+    // ลืมสลับแป้นพิมพ์ — ต้องบอกผู้ใช้ว่าระบบค้นด้วยคำว่าอะไรให้
+    // ไม่งั้นพิมพ์ไทยแล้วเจอยาภาษาอังกฤษ จะงงว่าเว็บทำอะไรอยู่
+    histSwapped: !!st.histSwapped,
+    histSwapLabel: st.histSwapLabel || '',
+    histHasSearch: !!(st.histQuery || '').trim(),
+    clearHistQuery: app.clearHistQuery,
 
     // ตัววัดความสูงแถบกรอง — หัวตารางเอาไปใช้ตั้งระยะติดบน (ดู .sticky-head ใน globals.css)
     histHeadRef: app.histHeadRef,
@@ -159,10 +193,24 @@ export function historyVals(app, d) {
     histRows: rows.map((r) => {
       const reuse = r.disposition === 'reuse';
       const price = Number(r.price);
+      const master = r.drugId != null ? drugById.get(r.drugId) : null;
+      const pill = master ? pillColorOf(master) : null;
+      // สีเม็ดยาเป็นสีของตัวเลขความแรงด้วย — เหตุผลเดียวกับที่อธิบายไว้ในบล็อกด้านบน
+      const np = nameParts(master || { name: r.name }, pill ? pill.color : '');
       return {
         key: r.id,
         dateLabel: thaiDate(r.date),
         name: r.name,
+        // ชิ้นส่วนชื่อยาสำหรับวาดพร้อมสี — ตัวเดียวกับหน้าบันทึก
+        parts: {
+          ...np,
+          mkBefore: np.base, mkHit: '', mkAfter: '',
+          abBefore: np.abbrev, abHit: '', abAfter: '',
+          bdBefore: np.brand, bdHit: '', bdAfter: '',
+          pillLabel: pill ? pill.label : '',
+          pillColor: pill ? pill.color : '',
+          strengthNoWrap: true, formNoWrap: true, brandNoWrap: true, abbrevNoWrap: true
+        },
         qtyLabel: r.qty + ' ' + r.unit,
         priceLabel: price.toFixed(2),
         valueLabel: money(price * r.qty),
@@ -237,6 +285,12 @@ export function historyVals(app, d) {
     confirmDetail: st.confirm ? st.confirm.detail : '',
     confirmNote: st.confirm ? st.confirm.note : '',
     confirmOkLabel: st.confirm ? st.confirm.okLabel : '',
+    // แบบของป๊อป — 'normal' = ยืนยันการกระทำปกติ (ปุ่มเขียวอยู่ขวา)
+    // ไม่ระบุ = ป๊อปลบ (ปุ่มแดงอยู่ซ้าย ตั้งใจสลับกันเผลอกด)
+    confirmKind: st.confirm ? (st.confirm.kind || 'danger') : 'danger',
+    // รายการสรุปแบบตาราง สำหรับป๊อปที่ต้องให้เห็นหลายอย่างก่อนตัดสินใจ
+    confirmLines: st.confirm ? (st.confirm.lines || null) : null,
+    confirmCancelLabel: st.confirm ? (st.confirm.cancelLabel || 'ยกเลิก') : 'ยกเลิก',
     confirmRun: () => {
       const c = app.state.confirm;
       if (!c) return;

@@ -1,3 +1,4 @@
+import { money } from '@/lib/format';
 // หน้าคลังยา — ดู แก้ เพิ่ม ซ่อน และดูประวัติการแก้ของยาในตารางกลาง
 //
 // 🚨 ตาราง drugs ใช้ร่วมกัน 3 เว็บ แก้ที่นี่กระทบ ME-DRP กับ TB Calculator ด้วย
@@ -14,7 +15,7 @@ export function catalogActions(app) {
     if (app.state.catalog.length && !force) return;
     app.setState({ catLoading: true });
     try {
-      const res = await fetchT('/api/catalog');
+      const res = await app.fetchT('/api/catalog');
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'โหลดคลังยาไม่สำเร็จ');
       app.setState({ catalog: Array.isArray(data.drugs) ? data.drugs : [], catLoading: false });
@@ -91,18 +92,30 @@ export function catalogActions(app) {
     app.setState({ catBusy: true });
     try {
       const isNew = app.state.catEditNew;
-      const res = await fetchT('/api/catalog', {
+      const res = await app.fetchT('/api/catalog', {
         method: isNew ? 'POST' : 'PUT',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(d)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'บันทึกไม่สำเร็จ');
+      const savedId = isNew ? (data.id || null) : d.id;
+      const oldPrice = Number((app.state.catEditOrig || {}).unit_price || 0);
+      const newPrice = Number(d.unit_price || 0);
+
       app.setState({ catEdit: null, catEditOrig: null, catConfirmClose: false, catBusy: false });
       app.toast(isNew ? 'เพิ่มยาแล้ว' : 'บันทึกแล้ว', '', true);
       // โหลดใหม่ทั้งสองชุด — ตารางคลังยา และรายการยาที่ช่องค้นหาใช้
       await app.loadCatalog(true);
       await app.syncDrugs(true);
+
+      // ── ราคาเปลี่ยน → ถามว่าจะแก้รายการเก่าย้อนหลังไหม ────────────────────
+      // ไม่แก้ให้เองเงียบ ๆ เด็ดขาด เพราะราคาที่แช่ไว้อาจถูกต้องแล้วก็ได้
+      // (ยาขึ้นราคากลางปี = ของเก่าต้องคงราคาเดิมไว้)
+      // ระบบแค่บอกว่า "มีของเก่าที่ใช้ราคาอื่นอยู่ N รายการ" แล้วให้คนตัดสิน
+      if (!isNew && savedId && newPrice !== oldPrice) {
+        app.checkPriceFix(savedId, newPrice);
+      }
     } catch (e) {
       app.setState({ catBusy: false });
       app.toast(String(e.message || 'บันทึกไม่สำเร็จ'), '', false);
@@ -118,7 +131,7 @@ export function catalogActions(app) {
     if (!d || app.state.catBusy) return;
     app.setState({ catBusy: true });
     try {
-      const res = await fetchT('/api/catalog', {
+      const res = await app.fetchT('/api/catalog', {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ id: d.id, hidden: !d.hidden })
@@ -139,7 +152,7 @@ export function catalogActions(app) {
   app.openCatLog = async (drug) => {
     app.setState({ catLog: { drug: drug, rows: null } });
     try {
-      const res = await fetchT('/api/catalog/audit?id=' + drug.id);
+      const res = await app.fetchT('/api/catalog/audit?id=' + drug.id);
       const data = await res.json();
       app.setState({ catLog: { drug: drug, rows: res.ok && Array.isArray(data.rows) ? data.rows : [] } });
     } catch (e) {
@@ -147,4 +160,69 @@ export function catalogActions(app) {
     }
   };
   app.closeCatLog = () => app.setState({ catLog: null });
+
+  // ═══ แก้ราคาย้อนหลัง (พี่กันสั่ง 25 ส.ค. 2569) ═══════════════════════════
+  //
+  // ที่มา: MTV tab ถูกใส่ราคา 20 บาท (เอาราคายาน้ำทั้งขวดมาใส่เป็นราคาต่อเม็ด)
+  // บันทึกไปแล้ว 30 เม็ด = 600 บาท ทั้งที่ควรเป็น 15 บาท
+  // ยอดรวมทั้งปีเพี้ยนไป 8.8% จากแถวเดียว และเดิมไม่มีทางแก้เลย
+  //
+  // 🚨 กฎแช่ราคายังอยู่ — นี่คือประตูเดียวที่มีกุญแจและมีสมุดลงชื่อ
+  //    ใช้เฉพาะ "ราคาผิดตั้งแต่ต้น" ไม่ใช่ "ราคาที่เปลี่ยนตามเวลา"
+
+  // ถามฐานก่อนว่ากระทบกี่รายการ ยังไม่แก้อะไรทั้งสิ้น
+  app.checkPriceFix = async (drugId, newPrice) => {
+    try {
+      const res = await app.fetchT('/api/price-fix?drugId=' + drugId + '&price=' + encodeURIComponent(newPrice));
+      const data = await res.json();
+      if (!res.ok || !Number(data.rows || 0)) return;   // ไม่มีของเก่าที่ต่างราคา = จบ ไม่ต้องกวนใจ
+      const drug = (app.state.catalog || []).find((x) => x.id === drugId) || {};
+      app.setState({
+        priceFix: {
+          drugId: drugId,
+          drugName: drug.generic || ('ยา #' + drugId),
+          newPrice: Number(newPrice),
+          rows: Number(data.rows || 0),
+          qty: Number(data.qty || 0),
+          valueBefore: Number(data.valueBefore || 0),
+          valueAfter: Number(data.valueAfter || 0),
+          firstDate: data.firstDate || '',
+          lastDate: data.lastDate || '',
+          lots: Array.isArray(data.lots) ? data.lots : [],
+          who: '',
+          reason: '',
+          busy: false
+        }
+      });
+    } catch (e) {
+      // ถามไม่สำเร็จก็ไม่เป็นไร ราคาในคลังบันทึกไปแล้ว แค่ไม่ได้ถามเรื่องของเก่า
+    }
+  };
+
+  app.closePriceFix = () => app.setState({ priceFix: null });
+  app.setPriceFixWho = (v) => app.setState({ priceFix: Object.assign({}, app.state.priceFix, { who: v }) });
+  app.setPriceFixReason = (v) => app.setState({ priceFix: Object.assign({}, app.state.priceFix, { reason: String(v).slice(0, 300) }) });
+
+  app.doPriceFix = async () => {
+    const p = app.state.priceFix;
+    // 🚨 ต้องมีทั้งชื่อคนแก้และเหตุผล ไม่งั้นตอบผู้ตรวจไม่ได้ว่าใครเปลี่ยนตัวเลขและทำไม
+    if (!p || p.busy || !p.who || !String(p.reason || '').trim()) return;
+    app.setState({ priceFix: Object.assign({}, p, { busy: true }) });
+    try {
+      const res = await app.fetchT('/api/price-fix', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ drugId: p.drugId, price: p.newPrice, by: p.who, reason: p.reason })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'แก้ไม่สำเร็จ');
+      app.setState({ priceFix: null });
+      app.toast('แก้ราคาย้อนหลัง ' + Number(data.rows || 0) + ' รายการแล้ว', money(Number(data.valueAfter || 0)), true);
+      // ตัวเลขสรุปกับประวัติเปลี่ยนไปแล้ว ต้องล้างแคชไม่งั้นเห็นของเก่าค้าง 60 วินาที
+      app.invalidate();
+    } catch (e) {
+      app.setState({ priceFix: Object.assign({}, app.state.priceFix, { busy: false }) });
+      app.toast(String(e.message || 'แก้ไม่สำเร็จ'), '', false);
+    }
+  };
 }

@@ -88,8 +88,21 @@ export function renderCatalog(V) {
           <span style={s('font:400 12.5px Sarabun,sans-serif;color:#414a44')}>
             คอลัมน์ <b style={s('font-weight:600')}>ชื่อที่เห็นตอนค้นหา</b> {V.catShowFull ? 'กำลังแสดงอยู่ท้ายตาราง' : 'ซ่อนอยู่ เพราะยาวกว่าคอลัมน์อื่นมาก'}
           </span>
-          <div {...kb(V.catToggleFull)} className="tap" style={s('background:#e3f0e8;color:#2f7d5d;font:600 12px Sarabun,sans-serif;padding:6px 13px;border-radius:8px;cursor:pointer;flex:none')}>
-            {V.catFullLabel}
+          <div style={s('display:flex;gap:8px;align-items:center;flex:none')}>
+            {/* ราคากลางยาของกระทรวง — พี่กันสั่ง 25 ส.ค. 2569 "มีไว้ก่อน เดี๋ยวอนาคตเราจะพาเธอจัดการ"
+                ยังไม่มีระบบดึงราคาอัตโนมัติ ตอนนี้เป็นทางลัดให้กดไปเปิดดูเองก่อน
+                เปิดแท็บใหม่เสมอ กันคนที่กำลังแก้ยาค้างอยู่แล้วโดนพาออกจากหน้า
+                rel กัน noopener/noreferrer ไว้ เว็บปลายทางจะได้แตะหน้านี้กลับไม่ได้ */}
+            <a href="https://dmsic.moph.go.th/index/dataservice/90/0"
+               target="_blank" rel="noopener noreferrer"
+               title="เปิดหน้าดาวน์โหลดราคากลางยาของกระทรวงสาธารณสุขในแท็บใหม่"
+               className="tap hv-bd-green"
+               style={s('border:1px solid #dfe5e1;background:#fff;color:#414a44;font:600 12px Sarabun,sans-serif;padding:6px 13px;border-radius:8px;cursor:pointer;flex:none;text-decoration:none;white-space:nowrap')}>
+              ราคากลางยา กระทรวงสาธารณสุข ↗
+            </a>
+            <div {...kb(V.catToggleFull)} className="tap" style={s('background:#e3f0e8;color:#2f7d5d;font:600 12px Sarabun,sans-serif;padding:6px 13px;border-radius:8px;cursor:pointer;flex:none')}>
+              {V.catFullLabel}
+            </div>
           </div>
         </div>
         </div>
@@ -184,6 +197,7 @@ export function renderCatalog(V) {
       {V.catEdit && renderCatEdit(V)}
       {V.catHideTarget && renderCatHide(V)}
       {V.catLog && renderCatLog(V)}
+      {V.pfOpen && renderPriceFix(V)}
     </div>
   );
 }
@@ -373,5 +387,83 @@ function renderCatLog(V) {
         </div>
       </div>
     </div>
+  );
+}
+
+
+// ── ป๊อปแก้ราคาย้อนหลัง ───────────────────────────────────────────────────────
+//
+// พี่กันสั่ง 25 ส.ค. 2569 หลังเจอเคสจริง: MTV tab ใส่ราคา 20 บาท
+// (เอาราคายาน้ำทั้งขวดมาใส่เป็นราคาต่อเม็ด) บันทึกไปแล้ว 30 เม็ด = 600 บาท
+// ทั้งที่ควรเป็น 15 ยอดรวมทั้งปีเพี้ยน 8.8% จากแถวเดียว และเดิมแก้ไม่ได้เลย
+//
+// 🚨 โผล่เองเมื่อแก้ราคาแล้วพบของเก่าที่ใช้ราคาอื่น แต่ "ไม่แก้ให้เอง"
+//    เพราะราคาที่แช่ไว้อาจถูกต้องแล้ว (ยาขึ้นราคากลางปี = ของเก่าต้องคงราคาเดิม)
+//    ระบบบอกตัวเลขให้ครบแล้วให้เภสัชกรตัดสิน
+//
+// 🚨 ต้องเลือกชื่อผู้แก้ + กรอกเหตุผล ถึงจะกดยืนยันได้
+//    การเปลี่ยนตัวเลขที่รายงานผู้บริหารไปแล้ว ต้องตอบผู้ตรวจได้ว่าใครทำและทำไม
+//    (บทเรียนจากหน้าต่างแก้ไขล็อต — ครั้งนั้นผูกชื่อผิดที่ ปุ่มเลยเหมือนเสีย)
+function renderPriceFix(V) {
+  return (
+    <>
+      <div style={s('position:fixed;inset:0;background:rgba(21,26,23,.42);z-index:44')}></div>
+      <div style={s('position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:20px')}>
+        <div style={s('width:100%;max-width:470px;max-height:calc(100vh - 40px);overflow-y:auto;background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(30,36,32,.28);padding:20px')}>
+          <div style={s('font:700 17px/1.3 Sarabun,sans-serif;margin-bottom:4px')}>พบรายการเก่าที่ใช้ราคาอื่น</div>
+          <div style={s('font:400 12.5px/1.55 Sarabun,sans-serif;color:#6b746e;margin-bottom:12px')}>
+            ราคาในคลังถูกแก้แล้ว แต่รายการที่บันทึกไปก่อนหน้ายังถือราคาเดิมอยู่
+            ถ้าราคาเดิม<b style={s('font-weight:600')}>ผิดมาตั้งแต่ต้น</b> ให้แก้ย้อนหลัง
+            แต่ถ้าเป็นราคาที่ถูกต้อง ณ ตอนนั้น (เช่นยาขึ้นราคาทีหลัง) ให้กดไม่แก้
+          </div>
+
+          <div style={s('background:#f6f7f4;border-radius:10px;padding:11px 13px;margin-bottom:12px')}>
+            {V.pfLines.map((ln, i) => (
+              <div key={i} style={sx('display:flex;align-items:baseline;gap:10px;padding:3px 0',
+                ln.sep ? { borderTop: '1px dashed rgba(30,36,32,.16)', marginTop: '7px', paddingTop: '9px' } : {})}>
+                <span style={s('font:400 12.5px Sarabun,sans-serif;color:#6b746e;flex:none;width:104px')}>{ln.label}</span>
+                <span style={sx('font:600 13.5px Sarabun,sans-serif;color:#1e2420;flex:1;min-width:0;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere',
+                  ln.tone === 'green' ? { color: '#2f7d5d' } : ln.tone === 'red' ? { color: '#c2543c' } : {})}>{ln.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* ชื่อผู้แก้ — เลือกในหน้าต่างนี้เอง ไม่ผูกกับช่องผู้บันทึกในหน้าบันทึก
+              คนที่มาแก้ราคาย้อนหลังไม่จำเป็นต้องเป็นคนเดียวกับคนที่กรอกยาคืนวันนั้น */}
+          <div style={s('font:600 12px Sarabun,sans-serif;color:#414a44;margin-bottom:5px')}>ผู้ที่แก้ไข</div>
+          <select value={V.pfWho} onChange={(e) => V.setPfWho(e.target.value)}
+            style={s('width:100%;height:40px;box-sizing:border-box;border:1.5px solid #dfe5e1;border-radius:9px;padding:0 10px;font:400 13.5px Sarabun,sans-serif;color:#1e2420;background:#fff;margin-bottom:10px')}>
+            <option value="">— เลือกชื่อผู้แก้ไข —</option>
+            {V.pfStaff.map((n) => (<option key={n} value={n}>{n}</option>))}
+          </select>
+
+          <div style={s('font:600 12px Sarabun,sans-serif;color:#414a44;margin-bottom:5px')}>เหตุผลที่แก้</div>
+          <textarea value={V.pfReason} onChange={(e) => V.setPfReason(e.target.value)}
+            placeholder="เช่น ราคาเดิมกรอกผิด เอาราคาต่อขวดมาใส่เป็นราคาต่อเม็ด"
+            style={s('width:100%;box-sizing:border-box;min-height:64px;border:1.5px solid #dfe5e1;border-radius:9px;padding:9px 11px;font:400 13px/1.5 Sarabun,sans-serif;color:#1e2420;resize:vertical;margin-bottom:6px')} />
+
+          <div style={s('font:400 11.5px/1.5 Sarabun,sans-serif;color:#96650f;background:#fdf6e9;border-radius:8px;padding:8px 11px;margin-bottom:14px')}>
+            ทุกการแก้ถูกบันทึกไว้ว่าใครแก้ จากราคาเท่าไรเป็นเท่าไร กี่รายการ และเพราะอะไร
+          </div>
+
+          <div style={s('display:flex;gap:9px')}>
+            <div {...kb(V.closePriceFix)} className="hv-bg-f6 tap"
+              style={s('flex:1;height:46px;border-radius:11px;border:1px solid rgba(30,36,32,.16);display:flex;align-items:center;justify-content:center;font:600 14px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>
+              ไม่แก้ ปล่อยไว้แบบเดิม
+            </div>
+            <div {...kb(V.pfCanSave ? V.doPriceFix : null)} className={V.pfCanSave ? 'hv-teal tap' : ''}
+              style={sx('flex:1;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font:600 14px Sarabun,sans-serif',
+                V.pfCanSave ? { background: '#2f7d5d', color: '#fff', cursor: 'pointer' } : { background: '#e9ebe8', color: '#b8bdb9', cursor: 'not-allowed' })}>
+              {V.pfBusy ? 'กำลังแก้' : 'แก้ย้อนหลัง ' + V.pfRows + ' รายการ'}
+            </div>
+          </div>
+          {!V.pfCanSave && !V.pfBusy && (
+            <div style={s('font:600 11px Sarabun,sans-serif;color:#c2543c;text-align:center;margin-top:8px')}>
+              ต้องเลือกชื่อผู้แก้ไขและกรอกเหตุผลก่อน
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 }

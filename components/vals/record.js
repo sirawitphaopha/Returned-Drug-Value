@@ -68,7 +68,48 @@ const CALC_KEYS = [
 // (พี่กันสั่ง 25 ส.ค. 2569 — เดิมตารางโชว์ชื่อเป็นข้อความดำล้วน แยกยากิน/ยาฉีดไม่ออก)
 //
 // ⚠️ ไม่มีการไฮไลต์คำค้นในนี้ เพราะตารางไม่มีคำค้น ส่วนผลค้นหาเติม markMatch เองข้างนอก
+// แยกชิ้นส่วนชื่อยาเพื่อวาดทีละส่วนแล้วทาสีคนละสี
+//
+// 🚨 ใช้ข้อมูลดิบรายช่องเป็นหลัก ห้ามเดาชิ้นส่วนจากข้อความชื่อถ้าเลี่ยงได้
+//    บทเรียน 25 ส.ค. 2569: เดิมแยกด้วยการอ่านข้อความ พอสูตรชื่อเปลี่ยน
+//    (เพิ่มรูปแบบยา · ยี่ห้อ · สีเม็ด เข้าไปในชื่อ) ตัวเดาก็เดาผิดทันที
+//    ได้ "Morphine sulfate 10 mg/mL injection injection" ซ้ำสองรอบ
+//    และ (IR) หายไปเพราะไม่อยู่ในตำแหน่งที่ตัวเดาคาดไว้ พี่กันจับได้ทันที
+//
+// ยังเก็บทางเดาไว้เป็นทางสำรอง สำหรับที่ที่มีแต่ข้อความชื่อจริง ๆ
+// (ยานอกบัญชีที่พิมพ์ชื่อเอง ไม่มีต้นทางในคลังให้ดึงช่องดิบ)
 export function nameParts(drug, stColor) {
+  const gen = (drug.generic || '').trim();
+
+  // ── ทางหลัก: มีข้อมูลดิบครบ ใช้ตรง ๆ ────────────────────────────────────
+  if (gen) {
+    let sv = [(drug.strength || '').trim(), (drug.strengthUnit || '').trim()].filter(Boolean).join(' ');
+    // ยาผสมครอบวงเล็บความแรง กันสับสนกับเครื่องหมายบวกในชื่อยา
+    if (sv && (drug.strength || '').indexOf('+') >= 0) sv = '(' + sv + ')';
+    const ab = (drug.abbrev || '').trim();
+    const pct = (drug.percent || '').trim();
+    const rel = (drug.release || '').trim();
+    const br = (drug.brand || '').trim();
+    return {
+      base: gen,
+      tail: '',
+      strength: sv,
+      stNum: stColor ? numPart(sv) : '',
+      stRest: stColor ? restPart(sv) : sv,
+      stColor: stColor || '',
+      percentLabel: pct ? '(' + pct + '%)' : '',
+      hasPercent: !!pct,
+      releaseLabel: rel ? '(' + rel + ')' : '',
+      hasRelease: !!rel,
+      form: (drug.form || '').trim(),
+      brand: br,
+      hasBrand: !!br,
+      abbrev: ab,
+      hasAbbrev: !!ab
+    };
+  }
+
+  // ── ทางสำรอง: มีแต่ข้อความชื่อ ต้องเดาเอา ────────────────────────────────
   const sp = splitDrugName(drug.name || '');
   const rl = splitRelease(sp.strength);      // ER/IR/SR อยู่ท้ายสุด ต้องแยกก่อน %
   const pc = splitPercent(rl.main);
@@ -209,14 +250,15 @@ export function recordVals(app, d) {
       //    แต่สีเม็ดยาจริงคือสิ่งที่เภสัชกรถือในมือ ต้องตรงกันเป๊ะ
       const pill = pillColorOf(drug);
       const stColor = pill ? pill.color : d.stColorOf(drug);
-      // แยกชื่อกับความแรง แล้วไฮไลต์คำที่พิมพ์ค้น — ตาไล่หาง่ายขึ้นมาก
-      const sp = splitDrugName(drug.name);
+      // 🚨 แยกชิ้นส่วนจาก "ข้อมูลดิบรายช่อง" ไม่ใช่จากการอ่านข้อความชื่อ
+      //    บทเรียน 25 ส.ค. 2569: เดิมเดาจากข้อความ พอสูตรชื่อเปลี่ยนก็เดาผิดทันที
+      //    ได้ "Morphine sulfate 10 mg/mL injection injection" ซ้ำสองรอบ และ (IR) หายไป
+      //    ตอนนี้ทั้งผลค้นหา ตารางรายการ และหน้าประวัติ ใช้ nameParts ตัวเดียวกันหมด
+      const npx = nameParts(drug, '');
+      const sp = { base: npx.base, tail: npx.tail };
       const mk = markMatch(sp.base, d.qUsed);
-      // แยกรูปแบบการออกฤทธิ์ (ER/IR/SR) ออกก่อน แล้วค่อยแยก %
-      // ลำดับสำคัญ เพราะ release อยู่ท้ายสุดของชื่อ ("10 mg/1 g 1% ER")
-      const rl = splitRelease(sp.strength);
-      // แยก % ออกจากความแรง เอาไปใส่วงเล็บทาสีต่างหาก จะได้สะดุดตา (พี่กันขอ)
-      const pc = splitPercent(rl.main);
+      const rl = { release: npx.hasRelease ? npx.releaseLabel.slice(1, -1) : '' };
+      const pc = { main: npx.strength, percent: npx.hasPercent ? npx.percentLabel.slice(1, -1) : '' };
       // ชื่อการค้า — ไฮไลต์คำค้นข้างในด้วย เพราะค้นจากชื่อการค้าได้แล้ว
       const bk = markMatch(drug.brand || '', d.qUsed);
       // ตัวย่อ — ไม่วาดถ้ามีอยู่ในชื่อยาอยู่แล้ว กัน "(HCTZ)(HCTZ)"
@@ -429,7 +471,20 @@ export function recordVals(app, d) {
       // ชื่อยาในตารางต้องหน้าตาเหมือนตอนค้นหาเป๊ะ — สีความแรง · รูปแบบยา · ER · ชื่อการค้า
       // (พี่กันสั่ง 25 ส.ค. 2569: "ชื่อเต็ม เราอยากได้เหมือนตอนค้นหา พวกสีต่างๆ ควรมาด้วย")
       // 🚨 ยาที่ถูกซ่อนไปหลังจากกรอกแล้ว จะหาใน st.drugs ไม่เจอ → ตกไปใช้ชื่อที่แช่ไว้ในแถว
-      const np = nameParts(drug.name ? drug : { name: r.name }, rowStColorOf({ id: r.drugId, name: r.name }));
+      // 🚨 สีเม็ดยาจริงมาก่อนสีที่ระบบสุ่มให้เสมอ (Warfarin — พี่กันสั่ง 25 ส.ค. 2569)
+      //    สีที่ระบบสุ่มมีไว้แค่ "ทำให้ต่างกัน" แต่สีเม็ดยาคือสิ่งที่เภสัชกรถือในมือจริง
+      const pill = drug.name ? pillColorOf(drug) : null;
+      const npBase = nameParts(drug.name ? drug : { name: r.name },
+        pill ? pill.color : rowStColorOf({ id: r.drugId, name: r.name }));
+      const np = Object.assign({}, npBase, {
+        // ตัวกลางวาดชื่อยา (pages/drugname.jsx) ต้องการช่องพวกนี้ครบ
+        mkBefore: npBase.base, mkHit: '', mkAfter: '',
+        abBefore: npBase.abbrev, abHit: '', abAfter: '',
+        bdBefore: npBase.brand, bdHit: '', bdAfter: '',
+        pillLabel: pill ? pill.label : '',
+        pillColor: pill ? pill.color : '',
+        strengthNoWrap: true, formNoWrap: true, brandNoWrap: true, abbrevNoWrap: true
+      });
       return {
         rid: r.rid,
         name: r.name,
@@ -546,7 +601,10 @@ export function recordVals(app, d) {
           : 'บันทึก ' + st.rows.length + ' รายการ',
     saveBg: st.rows.length === 0 ? '#e9ebe8' : st.saveFailed ? '#1e2420' : '#2f7d5d',
     saveFg: st.rows.length === 0 ? '#9aa19c' : '#fff',
-    onSave: app.save,
+    // 🚨 กดบันทึกครั้งแรก = เปิดป๊อปยืนยันก่อน (พี่กันสั่ง 25 ส.ค. 2569)
+    //    แต่ตอน "ลองส่งใหม่" หลังเน็ตหลุด ให้ส่งเลย ไม่ต้องยืนยันซ้ำ
+    //    เพราะผู้ใช้เพิ่งยืนยันไปเมื่อกี้ ข้อมูลชุดเดิมทุกอย่าง
+    onSave: st.saveFailed ? app.save : app.askSave,
     priceAsOfLabel: 'ราคา ณ ' + (st.date ? thaiDate(st.date) : '—')
   };
 }
