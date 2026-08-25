@@ -252,4 +252,4 @@ export function qtyText(n) {
   return Number.isInteger(v) ? String(v) : String(v);
 }
 
-export const APP_VERSION = '0.7.0.0';
+export const APP_VERSION = '0.7.1.0';

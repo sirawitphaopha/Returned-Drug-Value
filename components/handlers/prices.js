@@ -94,7 +94,12 @@ export function pricesActions(app) {
       const res = await fetchT('/api/prices', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: items })
+        // ตีราคาย้อนหลังให้แถวเก่าที่มูลค่ายังเป็น 0 ของยาชุดนี้เสมอ
+        // เพราะตอนนี้บันทึกยาที่ยังไม่มีราคาได้แล้ว (ดู blockNoPrice ใน handlers/record.js)
+        // ถ้าไม่ตีย้อนหลัง แถวที่บันทึกไปตอนยังไม่มีราคาจะค้างเป็น 0 ตลอดกาล
+        // 🚨 ฝั่งเซิร์ฟเวอร์เติมเฉพาะแถวที่ราคาเป็น 0 เท่านั้น ไม่ทับแถวที่มีราคาแล้ว
+        //    กฎแช่ราคายังอยู่ครบ — แถวที่เคยคิดมูลค่าไว้แล้วไม่มีทางขยับ
+        body: JSON.stringify({ items: items, backfill: true, by: app.state.recorder || '' })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'บันทึกราคาไม่สำเร็จ');
@@ -104,7 +109,11 @@ export function pricesActions(app) {
       // ไม่งั้นหน้าบันทึกจะยังโชว์ราคาเก่าไปอีก 12 ชั่วโมง
       clearLS(LS.drugs);
       await Promise.all([app.loadPrices(true), app.boot()]);
-      app.toast('บันทึกราคา ' + items.length + ' รายการ', '');
+      const bf = Number(data.backfilled || 0);
+      app.toast(
+        'บันทึกราคา ' + items.length + ' รายการ',
+        bf ? 'ตีราคาย้อนหลังให้รายการที่บันทึกไว้ก่อนหน้า ' + bf + ' แถว' : ''
+      );
     } catch (e) {
       app.setState({ priceSaving: false });
       app.toast(e.message || 'บันทึกราคาไม่สำเร็จ', '', false);

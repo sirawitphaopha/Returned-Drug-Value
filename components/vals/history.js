@@ -237,7 +237,13 @@ export function historyVals(app, d) {
     confirmDetail: st.confirm ? st.confirm.detail : '',
     confirmNote: st.confirm ? st.confirm.note : '',
     confirmOkLabel: st.confirm ? st.confirm.okLabel : '',
-    confirmRun: () => { if (app.state.confirm) app.state.confirm.run(); },
+    confirmRun: () => {
+      const c = app.state.confirm;
+      if (!c) return;
+      // ปิดป๊อปก่อนเสมอ แล้วค่อยทำงาน — ไม่งั้นป๊อปค้างบังจอ
+      // (handler บางตัวปิดเอง บางตัวลืม ทำให้พฤติกรรมไม่เหมือนกัน)
+      app.setState({ confirm: null }, () => c.run());
+    },
     closeConfirm: app.closeConfirm
   };
 }

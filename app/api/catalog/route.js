@@ -32,13 +32,29 @@ function pick(body) {
 export async function GET() {
   try {
     const db = getAdmin();
-    const res = await db
-      .from('drugs')
-      .select('id,generic,strength,unit,percent,form,route,release,brand,abbrev,had,preg,renal,hidden')
-      .order('generic', { ascending: true })
-      .order('id', { ascending: true });
+    // ดึงราคามาด้วย เพื่อให้หน้าคลังยาโชว์คอลัมน์ราคาได้ (พี่กันสั่ง 19 ส.ค. 2569)
+    // ราคาอยู่คนละตาราง (mr_drug_price ของเว็บนี้เอง ส่วน drugs เป็นของกลาง 3 เว็บ)
+    const [res, priceRes] = await Promise.all([
+      db.from('drugs')
+        .select('id,generic,strength,unit,percent,form,route,release,brand,abbrev,had,preg,renal,hidden')
+        .order('generic', { ascending: true })
+        .order('id', { ascending: true }),
+      db.from('mr_drug_price').select('drug_id,unit_price,unit_th,needs_check')
+    ]);
     if (res.error) throw new Error(res.error.message);
-    return NextResponse.json({ drugs: res.data || [] });
+    if (priceRes.error) throw new Error(priceRes.error.message);
+
+    const priceById = new Map((priceRes.data || []).map((p) => [p.drug_id, p]));
+    const drugs = (res.data || []).map((d) => {
+      const p = priceById.get(d.id) || {};
+      return {
+        ...d,
+        price: Number(p.unit_price || 0),
+        unitTh: p.unit_th || '',
+        needsCheck: p.needs_check === true
+      };
+    });
+    return NextResponse.json({ drugs: drugs });
   } catch (e) {
     console.error('[api]', e);
     return NextResponse.json({ error: 'โหลดคลังยาไม่สำเร็จ' }, { status: 500 });

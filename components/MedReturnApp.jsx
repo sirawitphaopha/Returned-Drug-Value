@@ -169,6 +169,19 @@ export default class MedReturnApp extends React.Component {
       this._histHeadRO.observe(el);
     };
 
+    // ── วัดความสูงแถบค้นหาของหน้าคลังยา ────────────────────────────────────
+    // หัวตารางต้องตรึงพอดีใต้แถบค้นหาที่ตรึงอยู่ก่อนแล้ว
+    // ตั้งเลขตายตัวไม่ได้ เพราะชิปตัวกรองขึ้นบรรทัดใหม่เองเมื่อจอแคบ (flex-wrap)
+    this._catHeadRO = null;
+    this.catHeadRef = (el) => {
+      if (this._catHeadRO) { this._catHeadRO.disconnect(); this._catHeadRO = null; }
+      if (!el || typeof ResizeObserver === 'undefined') return;
+      const write = () => document.documentElement.style.setProperty('--cathead', el.offsetHeight + 'px');
+      write();
+      this._catHeadRO = new ResizeObserver(write);
+      this._catHeadRO.observe(el);
+    };
+
     // ── วัดความสูงของแถบล่างจอในโหมดมือถือ ──────────────────────────────────
     // ข้อความเด้ง (toast) ของมอคอัปตรึงไว้ที่ bottom:96px ตายตัว
     // แต่ในเว็บจริงหน้าบันทึกมีแถบบันทึกซ้อนอยู่เหนือแถบเมนู รวมกันสูงกว่า 200px
@@ -331,6 +344,7 @@ export default class MedReturnApp extends React.Component {
 
   componentWillUnmount() {
     if (this._histHeadRO) { this._histHeadRO.disconnect(); this._histHeadRO = null; }
+    if (this._catHeadRO) { this._catHeadRO.disconnect(); this._catHeadRO = null; }
     if (this._mqMouse && this._onMouseKind) {
       if (this._mqMouse.removeEventListener) this._mqMouse.removeEventListener('change', this._onMouseKind);
       else this._mqMouse.removeListener(this._onMouseKind);

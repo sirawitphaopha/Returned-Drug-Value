@@ -31,6 +31,13 @@ export function catalogActions(app) {
 
   app.setCatSearch = (v) => app.setState({ catSearch: v });
 
+  // กดทีเดียวขึ้นบนสุด — ตารางยาว 417 แถว เลื่อนกลับเองไกลมาก
+  // 🚨 เว็บนี้เลื่อนใน scrollRef ของ shell ไม่ใช่ทั้งหน้า (window.scrollTo ไม่ทำงาน)
+  app.catToTop = () => {
+    const el = app.scrollRef.current;
+    if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // ตัวกรอง — กดซ้ำเพื่อยกเลิก · หลายอันพร้อมกันได้
   app.toggleCatFilter = (key) => {
     const cur = app.state.catFilters;

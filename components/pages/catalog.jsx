@@ -4,7 +4,8 @@
 // 🚨 ลบยาไม่ได้โดยตั้งใจ ใช้ "ซ่อน" แทน (พี่กันสั่ง 13 ส.ค. 2569)
 import { s, sx, kb } from '../helpers';
 
-const TH = 'padding:9px 10px;text-align:left;font:600 12px Sarabun,sans-serif;color:#fff;background:#2f7d5d;white-space:nowrap;position:sticky;top:0;z-index:2';
+// หัวตารางตรึงใต้แถบค้นหาที่ตรึงอยู่ก่อนแล้ว — ระยะวัดจริงจาก ResizeObserver ผ่าน --cathead
+const TH = 'padding:9px 10px;text-align:left;font:600 12px Sarabun,sans-serif;color:#fff;background:#2f7d5d;white-space:nowrap;position:sticky;top:var(--cathead,150px);z-index:2';
 const TD = 'padding:9px 10px;font:400 12.5px Sarabun,sans-serif;color:#414a44;vertical-align:top';
 const BTN = 'border:1px solid #cfe0d6;background:#fff;color:#2f7d5d;font:600 11.5px Sarabun,sans-serif;padding:4px 9px;border-radius:7px;cursor:pointer';
 const CHIP_ON = 'border:1px solid #2f7d5d;background:#e3f0e8;color:#2f7d5d;font:600 12px Sarabun,sans-serif;padding:6px 12px;border-radius:999px;cursor:pointer';
@@ -20,8 +21,10 @@ export function renderCatalog(V) {
         <div style={s('display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px')}>
           <div>
             <div style={s('font:700 18px/1.2 Sarabun,sans-serif;color:#1e2420')}>คลังยา</div>
-            <div style={s('font:400 12px Sarabun,sans-serif;color:#6b746e;margin-top:4px')}>
-              รายการยาที่ใช้ร่วมกันทุกเว็บของห้องยา · แก้ที่นี่แล้วเว็บอื่นเห็นด้วย
+            <div style={s('font:400 12px Sarabun,sans-serif;color:#6b746e;margin-top:4px;font-variant-numeric:tabular-nums')}>
+              แสดง {V.catShown} จาก {V.catTotal} รายการ
+              {V.catHiddenCount > 0 && <span> · ซ่อนอยู่ {V.catHiddenCount} ตัว</span>}
+              {' · '}แก้ที่นี่แล้วเว็บอื่นของห้องยาเห็นด้วย
             </div>
           </div>
           <div {...kb(V.catAdd)} className="hv-bg-e3f tap" style={s('background:#2f7d5d;color:#fff;font:600 13px Sarabun,sans-serif;padding:9px 16px;border-radius:9px;cursor:pointer')}>
@@ -29,14 +32,18 @@ export function renderCatalog(V) {
           </div>
         </div>
 
+        {/* แถบค้นหา + ตัวกรอง + ปุ่มสลับคอลัมน์ — ตรึงไว้บนสุดของพื้นที่เลื่อน
+            ตารางยาว 417 แถว เลื่อนไปไกลแล้วต้องยังกดกรองหรือค้นได้ทันที (พี่กันสั่ง 19 ส.ค. 2569)
+            พื้นที่เลื่อนคือ scrollRef ของ shell ไม่ใช่ทั้งหน้า top:0 จึงหมายถึงขอบบนกรอบนั้น */}
+        <div ref={V.catHeadRef} style={s('position:sticky;top:0;z-index:6;background:#fff;padding:14px 0 10px;margin:0 -18px;padding-left:18px;padding-right:18px;border-bottom:1px solid #f2f5f3')}>
         <input
           value={V.catSearch}
           onChange={(e) => V.setCatSearch(e.target.value)}
           placeholder="ค้นหาชื่อยา ชื่อการค้า ตัวย่อ"
-          style={s('width:100%;box-sizing:border-box;border:1.5px solid #dfe5e1;border-radius:10px;padding:10px 13px;font:400 13.5px Sarabun,sans-serif;color:#1e2420;outline:none;margin:14px 0 10px')}
+          style={s('width:100%;box-sizing:border-box;border:1.5px solid #dfe5e1;border-radius:10px;padding:10px 13px;font:400 13.5px Sarabun,sans-serif;color:#1e2420;outline:none;margin-bottom:10px')}
         />
 
-        <div style={s('display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px')}>
+        <div style={s('display:flex;gap:6px;flex-wrap:wrap;align-items:center')}>
           {V.catFilters.map((f) => (
             <div key={f.key} {...kb(f.pick)} className="tap" style={s(f.on ? CHIP_ON : CHIP_OFF)}>{f.label}</div>
           ))}
@@ -49,7 +56,7 @@ export function renderCatalog(V) {
 
         {/* คอลัมน์ชื่อเต็มยาวกว่าคอลัมน์อื่นมาก จึงซ่อนไว้ตั้งต้นและกดเปิดได้
             เป็นคอลัมน์เดียวในตารางที่ทำแบบนี้ (พี่กันสั่ง 13 ส.ค. 2569) */}
-        <div style={sx('border-radius:9px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap', V.catShowFull ? { background: '#eef6f1', border: '1px solid #cfe0d6' } : { background: '#f7faf8', border: '1px dashed #cfe0d6' })}>
+        <div style={sx('border-radius:9px;padding:9px 12px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap', V.catShowFull ? { background: '#eef6f1', border: '1px solid #cfe0d6' } : { background: '#f7faf8', border: '1px dashed #cfe0d6' })}>
           <span style={s('font:400 12.5px Sarabun,sans-serif;color:#414a44')}>
             คอลัมน์ <b style={s('font-weight:600')}>ชื่อที่เห็นตอนค้นหา</b> {V.catShowFull ? 'กำลังแสดงอยู่ท้ายตาราง' : 'ซ่อนอยู่ เพราะยาวกว่าคอลัมน์อื่นมาก'}
           </span>
@@ -57,11 +64,12 @@ export function renderCatalog(V) {
             {V.catFullLabel}
           </div>
         </div>
+        </div>
 
         {V.catLoading ? (
           <div style={s('padding:40px;text-align:center;font:400 13px Sarabun,sans-serif;color:#9aa19c')}>กำลังโหลดคลังยา</div>
         ) : (
-          <div style={s('overflow:auto;max-height:calc(100vh - 340px);border:1px solid #eef1ee;border-radius:10px')}>
+          <div style={s('border:1px solid #eef1ee;border-radius:10px')}>
             <table style={s('width:100%;border-collapse:collapse')}>
               <colgroup>
                 {V.catCols.map((c) => <col key={c.key} style={c.w ? { width: c.w } : undefined} />)}
@@ -104,6 +112,13 @@ export function renderCatalog(V) {
                     <td style={s(TD)}>{r.had ? <span style={s('font:700 10.5px Sarabun,sans-serif;color:#c2543c;background:#fbe9e5;border-radius:5px;padding:2px 7px')}>HAD</span> : ''}</td>
                     <td style={s(TD)}>{r.preg || '—'}</td>
                     <td style={s(TD)}>{r.renal ? <span style={s('font:700 10.5px Sarabun,sans-serif;color:#8a5a00;background:#fbf1e0;border-radius:5px;padding:2px 7px')}>ไต</span> : '—'}</td>
+                    {/* ราคาต่อหน่วย — ของเว็บนี้เอง (mr_drug_price) ไม่ใช่ของกลางเหมือนคอลัมน์อื่น
+                        ยาที่ยังไม่ใส่ราคาโชว์ป้ายเตือน ไม่ใช่ 0.00 กันเข้าใจผิดว่าราคาศูนย์บาทจริง */}
+                    <td style={s(TD + ';text-align:right;font-variant-numeric:tabular-nums')}>
+                      {r.priceLabel
+                        ? <span style={s('color:#1e2420;font-weight:600')}>{r.priceLabel}</span>
+                        : <span style={s('font:600 10.5px Sarabun,sans-serif;color:#c2543c;background:#fbe9e5;border-radius:5px;padding:2px 7px;white-space:nowrap')}>ยังไม่ใส่ราคา</span>}
+                    </td>
                     {V.catShowFull && (
                       <td style={s(TD + ';background:#f7faf8;overflow-wrap:anywhere')}>
                         <span style={s('color:#1e2420;font-weight:600')}>{r.fullBase}</span>
@@ -130,10 +145,12 @@ export function renderCatalog(V) {
           </div>
         )}
 
-        <div style={s('font:400 12px Sarabun,sans-serif;color:#6b746e;margin-top:11px;font-variant-numeric:tabular-nums')}>
-          แสดง {V.catShown} จาก {V.catTotal} รายการ
-          {V.catHiddenCount > 0 && <span> · ซ่อนอยู่ {V.catHiddenCount} ตัว</span>}
-        </div>
+      </div>
+
+      {/* ปุ่มลอยกดทีเดียวขึ้นบนสุด — ตารางยาว 417 แถว เลื่อนกลับเองไกลมาก */}
+      <div {...kb(V.catToTop)} className="tap" title="ขึ้นบนสุด"
+        style={s('position:fixed;right:24px;bottom:24px;z-index:40;width:44px;height:44px;border-radius:50%;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(30,36,32,.25);font:700 18px Sarabun,sans-serif')}>
+        ↑
       </div>
 
       {V.catEdit && renderCatEdit(V)}

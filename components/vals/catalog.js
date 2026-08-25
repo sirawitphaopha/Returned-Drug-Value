@@ -17,7 +17,9 @@ const COLS = [
   { key: 'route', label: 'ทางให้', w: '72px', sort: true },
   { key: 'had', label: 'HAD', w: '58px', sort: true },
   { key: 'preg', label: 'Preg', w: '56px', sort: true },
-  { key: 'renal', label: 'Renal', w: '62px', sort: true }
+  { key: 'renal', label: 'Renal', w: '62px', sort: true },
+  // ราคาต่อหน่วยของเว็บนี้ (ตาราง mr_drug_price) — ไม่ใช่ของกลางเหมือนคอลัมน์อื่น
+  { key: 'price', label: 'ราคา/หน่วย', w: '104px', sort: true }
 ];
 
 // ตัวกรองรูปแบบยา — เอาเฉพาะที่มีเยอะสุด 5 อันแรกจากคลังจริง
@@ -65,7 +67,7 @@ export function catalogVals(app, d) {
     rows = rows.slice().sort((a, b) => {
       const av = a[s.key];
       const bv = b[s.key];
-      if (s.key === 'id') return ((av || 0) - (bv || 0)) * mul;
+      if (s.key === 'id' || s.key === 'price') return ((av || 0) - (bv || 0)) * mul;
       // boolean ต้องเทียบแบบ 1/0 ไม่ใช่ตัวอักษร ไม่งั้น "false" มาก่อน "true" เสมอ
       if (s.key === 'had' || s.key === 'renal') return ((av ? 1 : 0) - (bv ? 1 : 0)) * mul;
       return String(av ?? '').localeCompare(String(bv ?? ''), 'th') * mul;
@@ -100,6 +102,8 @@ export function catalogVals(app, d) {
     catSortDir: s ? s.dir : '',
     catSortBy: app.toggleCatSort,
     catAdd: app.openCatAdd,
+    catToTop: app.catToTop,
+    catHeadRef: app.catHeadRef,
 
     catRows: rows.map((x) => {
       const full = fullNames.get(x.id) || '';
@@ -122,6 +126,10 @@ export function catalogVals(app, d) {
         preg: (x.preg || '').trim(),
         renal: x.renal === true,
         hidden: x.hidden === true,
+        price: Number(x.price || 0),
+        // ยาที่ยังไม่ใส่ราคาโชว์เป็นขีด ไม่ใช่ 0.00 — กันเข้าใจผิดว่าราคาศูนย์บาทจริง
+        priceLabel: Number(x.price || 0) > 0 ? Number(x.price).toFixed(2) : '',
+        needsCheck: x.needsCheck === true,
         // ชื่อเต็มแยกเป็นส่วน ๆ พร้อมทาสี (คอลัมน์ที่กดซ่อน/ขยายได้)
         fullBase: sp.base,
         fullStrength: pc.main,

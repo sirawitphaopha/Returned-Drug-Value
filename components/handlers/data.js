@@ -45,13 +45,20 @@ export function dataActions(app) {
         orgName: data.setting.orgName,
         favIds: data.setting.favIds,
         staff: Array.isArray(data.setting.staff) ? data.setting.staff : [],
-        // ติ๊กคนที่เซ็นชื่อล่าสุดไว้ให้เลย ครั้งต่อไปกดยืนยันอย่างเดียว
-        recorder: app.state.recorder || data.setting.lastRecorder || '',
+        // 🚨 ห้ามติ๊กชื่อคนล่าสุดไว้ให้ — ต้องเลือกเองทุกครั้งที่เปิดเว็บ (พี่กันสั่ง 25 ส.ค. 2569)
+        // เดิมติ๊กคนที่เซ็นล่าสุดไว้เพื่อความเร็ว แต่คอมห้องยาเป็นเครื่องกลางที่ใช้ร่วมกัน
+        // คนถัดไปที่มานั่งจะเห็นชื่อคนก่อนติ๊กอยู่ กดบันทึกโดยไม่ทันสังเกต
+        // = ล็อตนั้นเซ็นในชื่อคนอื่น สืบกลับผิดคน
+        // (ยังจำ lastRecorder ไว้ในฐานอยู่ ใช้ที่อื่นได้ แค่ไม่เอามาติ๊กให้)
+        recorder: app.state.recorder || '',
         defaultSource: data.setting.defaultSource,
         // เดิมเขียน app.state.source || ... ซึ่งไม่มีวันหลุดไปฝั่งขวา เพราะ source
         // ตั้งต้นเป็น 'opd' ที่เป็นค่าจริงเสมอ → หอผู้ป่วยตั้งค่าเริ่มต้นไว้แล้วก็ไม่เคยได้ใช้
         source: app.state.sourceTouched ? app.state.source : data.setting.defaultSource
       });
+      // ทวนวันทันทีหลังรู้ว่าวันนี้คือวันไหน — ร่างที่กู้มาอาจค้างวันเก่าข้ามวัน
+      // ถ้ารอตัวจับเวลา 1 นาที ผู้ใช้จะเห็นวันเก่าค้างอยู่นาทีแรกแล้วบันทึกผิดวันได้
+      app.checkDayRollover();
     } catch (e) {
       // ถ้าโหลดไม่ได้ ยังใช้ของที่แคชไว้ต่อได้ แค่บอกให้รู้
       app.toast('โหลดข้อมูลจากเซิร์ฟเวอร์ไม่สำเร็จ', '', false);
@@ -119,8 +126,13 @@ export function dataActions(app) {
   app.checkDayRollover = () => {
     const now = todayISO();
     if (!app.state.today || app.state.today === now) return;
+    // เลื่อนวันในช่องให้ด้วย ถ้าเดิมยังเป็น "วันนี้" (ไม่ได้ตั้งใจย้อนวัน)
+    // หรือถ้าค้างเป็นวันในอดีต — เกิดจากร่างเก่าใน localStorage ที่กู้มาข้ามวัน
+    // 🚨 เดิมเช็คแค่ wasToday ทำให้ร่างที่ค้างข้ามวันติดวันเก่าถาวร
+    //    เปิดเว็บวันที่ 19 แต่ช่องวันที่ยังเป็น 10 (พี่กันเจอเอง 19 ส.ค. 2569)
     const wasToday = app.state.date === app.state.today;
-    app.setState({ today: now, date: wasToday ? now : app.state.date });
+    const isPast = app.state.date && app.state.date < now;
+    app.setState({ today: now, date: (wasToday || isPast) ? now : app.state.date });
     app.invalidate();
   };
 }
