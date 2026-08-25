@@ -282,9 +282,65 @@ export function renderRecordWide(V) {
             )}
           </div>
 
-          <div style={s('width:132px')}>
+          {/* ช่องจำนวนฝั่งคอม — พิมพ์สูตรได้ (25+25 · 3*(10+2)) พี่กันสั่ง 25 ส.ค. 2569
+              🚨 position:relative ต้องอยู่ที่กล่องนี้ ไม่งั้นแป้นเครื่องคิดเลขจะไปอิงกล่องนอก
+              🚨 ห้ามใส่ inputMode="numeric" แล้ว — แป้นตัวเลขไม่มีเครื่องหมายให้กด
+                 (ฝั่งมือถือไม่ได้ใช้ช่องนี้ ใช้ป๊อปอัปคนละตัว จึงไม่กระทบ) */}
+          <div style={s('width:225px;position:relative')}>
             <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:5px')}>จำนวน{V.pendingUnit}</div>
-            <input ref={V.qtyRef} value={V.qtyInput} onChange={V.onQtyInput} onKeyDown={V.onQtyKey} inputMode="numeric" placeholder="0" style={s("width:100%;height:46px;padding:0 13px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:600 16px 'IBM Plex Sans Thai',sans-serif;color:#1e2420")} />
+            {/* กด Enter ครั้งแรกเมื่อเป็นสูตร → ช่องกลายเป็น "25+25=50" โดยเลข 50 เด่น
+                กด Enter อีกครั้งถึงเพิ่มรายการ (พี่กันสั่ง 25 ส.ค. 2569)
+                🚨 ช่องกรอกทำตัวหนาเฉพาะบางส่วนไม่ได้ จึงวาดข้อความซ้อนทับแล้วซ่อนตัวอักษรจริง
+                   ต้องใช้ฟอนต์ ขนาด และระยะขอบชุดเดียวกันทั้งสองชั้น ไม่งั้นขีดกะพริบจะไม่ตรงตัวอักษร */}
+            <input ref={V.qtyRef} value={V.qtyInput} onChange={V.onQtyInput} onKeyDown={V.onQtyKey} placeholder="0" autoComplete="off"
+              style={sx("width:100%;height:46px;padding:0 40px 0 13px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:600 16px 'IBM Plex Sans Thai',sans-serif;caret-color:#1e2420",
+                { color: V.qtyResolved ? 'transparent' : '#1e2420' })} />
+            {V.qtyResolved && (
+              <div style={s("position:absolute;left:14px;right:41px;bottom:0;height:46px;display:flex;align-items:center;pointer-events:none;font:600 16px 'IBM Plex Sans Thai',sans-serif;white-space:nowrap;overflow:hidden")}>
+                <span style={s('color:#9aa19c')}>{V.qtyExprPart}</span>
+                <span style={s('color:#2f7d5d;font-weight:700')}>{V.qtyAnswerPart}</span>
+              </div>
+            )}
+
+            {/* 🚨 วาดเป็น SVG ไม่ใช่อักขระพิเศษ (พี่กันขอ 25 ส.ค. 2569)
+                อักขระอย่าง ▦ หน้าตาเป็นแค่ตาราง ไม่สื่อว่าเป็นเครื่องคิดเลข
+                และคอมโรงพยาบาลที่ฟอนต์ไม่ครบจะเห็นเป็นสี่เหลี่ยมเปล่า
+                stroke/fill ใช้ currentColor จึงเปลี่ยนสีตามสถานะเปิด-ปิดเองโดยไม่ต้องส่งสีเข้ามา */}
+            <div {...kb(V.toggleCalc)} className="tap" title="เครื่องคิดเลข"
+              style={sx('position:absolute;right:8px;bottom:8px;width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none',
+                { background: V.calcBg, color: V.calcFg })}>
+              <svg width="15" height="17" viewBox="0 0 16 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" aria-hidden="true">
+                <rect x="1" y="1" width="14" height="16" rx="2.4" />
+                <rect x="4" y="3.9" width="8" height="3.2" rx="0.9" />
+                <circle cx="4.7" cy="10.6" r="0.95" fill="currentColor" stroke="none" />
+                <circle cx="8" cy="10.6" r="0.95" fill="currentColor" stroke="none" />
+                <circle cx="11.3" cy="10.6" r="0.95" fill="currentColor" stroke="none" />
+                <circle cx="4.7" cy="13.9" r="0.95" fill="currentColor" stroke="none" />
+                <circle cx="8" cy="13.9" r="0.95" fill="currentColor" stroke="none" />
+                <circle cx="11.3" cy="13.9" r="0.95" fill="currentColor" stroke="none" />
+              </svg>
+            </div>
+
+            {V.calcOpen && (
+              <div style={s('position:absolute;top:calc(100% + 7px);right:0;width:225px;background:#fff;border:1px solid rgba(30,36,32,.12);border-radius:12px;box-shadow:0 14px 34px rgba(30,36,32,.18);padding:9px;z-index:12')}>
+                <div style={s('background:#f6f7f4;border-radius:8px;padding:7px 10px;margin-bottom:8px;text-align:right')}>
+                  <div style={s("font:400 11px 'IBM Plex Sans Thai',monospace;color:#9aa19c;min-height:14px;word-break:break-all")}>{V.calcExpr || ' '}</div>
+                  <div style={s("font:700 19px 'IBM Plex Sans Thai',sans-serif;color:#1e2420;font-variant-numeric:tabular-nums")}>{V.calcResult}</div>
+                </div>
+                <div style={s('display:grid;grid-template-columns:repeat(4,1fr);gap:5px')}>
+                  {V.calcKeys.map((b) => (
+                    <div key={b.k} {...kb(b.press)}
+                      style={sx('height:36px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none',
+                        b.kind === 'op' ? { background: '#eef3f0', color: '#2f7d5d', font: "600 15px 'IBM Plex Sans Thai',sans-serif" }
+                        : b.kind === 'eq' ? { background: '#2f7d5d', color: '#fff', font: "700 15px 'IBM Plex Sans Thai',sans-serif" }
+                        : b.kind === 'del' ? { background: '#fbe9e5', color: '#c2543c', font: '600 12.5px Sarabun,sans-serif' }
+                        : b.kind === 'fn' ? { background: '#f4f5f3', color: '#6b746e', font: "600 14px 'IBM Plex Sans Thai',sans-serif" }
+                        : { background: '#f2f4f1', color: '#1e2420', font: "600 15px 'IBM Plex Sans Thai',sans-serif" })}>{b.k}</div>
+                  ))}
+                </div>
+                <div style={s('font:400 10.5px Sarabun,sans-serif;color:#9aa19c;text-align:center;margin-top:7px')}>พิมพ์ในช่องเองก็ได้ · Enter เพิ่มรายการเลย</div>
+              </div>
+            )}
           </div>
 
           <div style={s('width:176px')}>
@@ -292,6 +348,17 @@ export function renderRecordWide(V) {
             <div style={s('height:46px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;display:flex;align-items:center;padding:3px;gap:3px')}>
               <div {...kb(V.setPendingReuse)} style={sx('flex:1;text-align:center;padding:8px 0;border-radius:7px;cursor:pointer;font:600 12.5px Sarabun,sans-serif', { background: V.pendReuseBg, color: V.pendReuseFg })}>ใช้ต่อได้</div>
               <div {...kb(V.setPendingDestroy)} style={sx('flex:1;text-align:center;padding:8px 0;border-radius:7px;cursor:pointer;font:600 12.5px Sarabun,sans-serif', { background: V.pendDestroyBg, color: V.pendDestroyFg })}>ทำลาย</div>
+            </div>
+          </div>
+
+          {/* ราคารวมของรายการที่กำลังจะเพิ่ม (แบบ ก — พี่กันเคาะ 25 ส.ค. 2569)
+              เดิมตัวเลขนี้ไปอยู่ในข้อความจาง 11.5px ใต้ช่อง ทั้งที่เป็นตัวเลขสำคัญที่สุดในแถว
+              ป้าย "รวมเป็นเงิน" อยู่บนกล่อง ระดับเดียวกับ "จำนวน" และ "สถานะ" (พี่กันสั่ง) */}
+          <div style={s('min-width:150px')}>
+            <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:5px')}>รวมเป็นเงิน</div>
+            <div style={sx('height:46px;border-radius:9px;display:flex;align-items:center;justify-content:flex-end;padding:0 14px',
+              { background: V.sumBg, border: '1px solid ' + V.sumBorder })}>
+              <div style={sx("font:700 18px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums", { color: V.sumFg })}>{V.sumLabel}</div>
             </div>
           </div>
 
@@ -336,7 +403,10 @@ export function renderRecordWide(V) {
                 style={sx('display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;border-radius:5px;margin:-3px 0;padding:3px 0', Object.assign(
                   { color: c.fg },
                   c.flex ? { flex: 1 } : { width: c.w },
-                  c.align === 'right' ? { justifyContent: 'flex-end' } : {}
+                  c.align === 'right' ? { justifyContent: 'flex-end' }
+                    : c.align === 'center' ? { justifyContent: 'center' } : {},
+                  // ถอยหัวเข้ามาให้ตรงกับตัวเลข ไม่ใช่ตรงขอบคอลัมน์ (ดูเหตุผลใน ROW_COLS)
+                  c.padRight ? { paddingRight: c.padRight } : {}
                 ))}
               >
                 {c.label}
@@ -365,9 +435,71 @@ export function renderRecordWide(V) {
 
           {V.rows.map((row) => (
             <div key={row.rid} style={sx('display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(30,36,32,.05);font:400 14px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { background: row.deskBg })}>
-              <span style={s('flex:1;font-weight:500;min-width:0')}>{row.name}</span>
-              <span style={s('width:104px;text-align:right')}>{row.qtyLabel}</span>
-              <span style={s('width:104px;text-align:right;color:#6b746e')}>{row.priceLabel}</span>
+              {/* ชื่อยาหน้าตาเหมือนตอนค้นหาเป๊ะ — สีความแรง · รูปแบบยา · ER · ชื่อการค้า
+                  (พี่กันสั่ง 25 ส.ค. 2569) ยาฉีดกับยากินจะได้แยกออกตั้งแต่กวาดตา */}
+              <span style={s('flex:1;min-width:0;line-height:1.35;overflow-wrap:anywhere')}>
+                <span style={s('font-weight:600;color:#1e2420')}>{row.np.base}</span>
+                {row.np.hasAbbrev && (
+                  <span style={s("font-weight:600;color:#6d3b9e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px;white-space:nowrap")}>({row.np.abbrev})</span>
+                )}
+                {row.np.strength && (
+                  <span style={s("font-weight:500;color:#6b746e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:6px;white-space:nowrap")}>
+                    {row.np.stColor
+                      ? <><span style={{ color: row.np.stColor, fontWeight: 700 }}>{row.np.stNum}</span>{row.np.stRest}</>
+                      : row.np.strength}
+                  </span>
+                )}
+                {row.np.hasPercent && (
+                  <span style={s("font-weight:700;color:#96650f;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px;white-space:nowrap")}>{row.np.percentLabel}</span>
+                )}
+                {row.np.form && (
+                  <span style={s('font-weight:600;color:#414a44;margin-left:6px;white-space:nowrap')}>{row.np.form}</span>
+                )}
+                {row.np.hasRelease && (
+                  <span style={s("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px;white-space:nowrap")}>{row.np.releaseLabel}</span>
+                )}
+                {row.np.hasBrand && (
+                  <span style={s('font-weight:600;color:#2f7d5d;margin-left:6px;white-space:nowrap')}>({row.np.brand})</span>
+                )}
+              </span>
+
+              {/* จำนวนแก้ได้ทั้งที่กด Enter ลงมาแล้ว — มีปุ่มดินสอบอกชัด ๆ ว่ากดแก้ได้
+                  พิมพ์สูตรได้เหมือนช่องด้านบน · ปุ่ม ✓ ตกลง · ปุ่ม ✕ ยกเลิก (พี่กันสั่ง 25 ส.ค. 2569)
+                  🚨 ความสูงแถวต้องคงที่ — ทั้งช่องกรอกและป้ายผลลัพธ์ถูกบีบไว้ในกรอบ 22px เท่าเดิม
+                     ป้ายผลลัพธ์ใช้ position:absolute จึงไม่ดันแถวให้สูงขึ้น
+                  🚨 แก้ได้เฉพาะจำนวน ราคาที่แช่ไว้ในแถวห้ามแตะ */}
+              {/* 🚨 สองสถานะต้องใช้โครงเดียวกันเป๊ะ — ช่องตัวเลขกว้าง 100px เท่ากัน
+                     แล้วต่อด้วยปุ่ม 26px สองช่องเสมอ (ตอนไม่แก้ ช่องที่สองเป็นที่ว่างเปล่า)
+                     ถ้าปล่อยให้จำนวนปุ่มไม่เท่ากัน กรอบตัวเลขจะเลื่อนซ้ายตอนกดแก้
+                     ซึ่งทำให้ตาต้องไล่หาใหม่ทุกครั้ง (พี่กันทัก 25 ส.ค. 2569) */}
+              {row.editing ? (
+                <span style={s('width:220px;height:22px;display:flex;align-items:center;justify-content:flex-end;gap:5px;position:relative')}>
+                  {/* onFocus select() = กดดินสอแล้วเลขถูกไฮไลต์ พิมพ์ทับได้เลยไม่ต้องลบก่อน */}
+                  <input autoFocus onFocus={(e) => e.target.select()}
+                    value={row.editText} onChange={row.onEditQty} onKeyDown={row.onEditQtyKey} autoComplete="off"
+                    style={s("width:150px;height:26px;padding:0 7px;border:1px solid #2f7d5d;border-radius:6px;background:#fff;text-align:right;font:600 13px 'IBM Plex Sans Thai',sans-serif;color:#1e2420;outline:none;box-shadow:0 0 0 3px rgba(47,125,93,.12)")} />
+                  <span {...(row.editCanSave ? kb(row.commitEditQty) : {})} className={row.editCanSave ? 'tap' : ''}
+                    title={row.editCanSave ? 'ตกลง' : 'ยังไม่ได้เปลี่ยนจำนวน'}
+                    style={sx('width:26px;height:26px;flex:none;border-radius:6px;display:flex;align-items:center;justify-content:center;font:700 13px Sarabun,sans-serif',
+                      { background: row.editOkBg, color: row.editOkFg, cursor: row.editCanSave ? 'pointer' : 'not-allowed' })}>✓</span>
+                  <span {...kb(row.cancelEditQty)} className="tap" title="ยกเลิก"
+                    style={s('width:26px;height:26px;flex:none;border-radius:6px;background:#f2f4f1;color:#6b746e;display:flex;align-items:center;justify-content:center;cursor:pointer;font:600 13px Sarabun,sans-serif')}>✕</span>
+                  {row.editPreview && (
+                    <span style={s('position:absolute;top:27px;right:0;white-space:nowrap;font:600 10.5px Sarabun,sans-serif;color:#2f7d5d;background:#e7f2ec;border:1px solid rgba(47,125,93,.22);border-radius:5px;padding:2px 7px;z-index:4;pointer-events:none')}>{row.editPreview}</span>
+                  )}
+                </span>
+              ) : (
+                <span style={s('width:220px;height:22px;display:flex;align-items:center;justify-content:flex-end;gap:5px')}>
+                  <span style={s('width:150px;text-align:right;font-variant-numeric:tabular-nums;padding-right:7px')}>{row.qtyLabel}</span>
+                  <span {...kb(row.startEditQty)} className="tap hv-bg-eef" title="แก้จำนวน"
+                    style={s('width:26px;height:24px;flex:none;border:1px solid rgba(30,36,32,.14);border-radius:6px;background:#fff;color:#6b746e;display:flex;align-items:center;justify-content:center;cursor:pointer;font:400 11px Sarabun,sans-serif')}>✎</span>
+                  <span style={s('width:26px;flex:none')} />
+                </span>
+              )}
+              {/* ราคาจัดกลางคอลัมน์ให้ตรงกับหัว (พี่กันสั่ง 25 ส.ค. 2569)
+                  ราคาทุกตัวมีทศนิยม 2 ตำแหน่งเสมอ หลักจุดจึงเยื้องกันน้อยมาก
+                  ต่างจากคอลัมน์มูลค่าที่ตัวเลขยาวไม่เท่ากัน (15.00 กับ 1,200.00) ต้องชิดขวา */}
+              <span style={s('width:104px;text-align:center;color:#6b746e')}>{row.priceLabel}</span>
               <span style={sx("width:124px;text-align:right;font:600 15px 'IBM Plex Sans Thai',sans-serif", { color: row.color })}>{row.valueLabel}</span>
               <span style={s('width:150px;display:flex;justify-content:flex-end')}>
                 <span style={sx('display:flex;padding:2px;border-radius:7px', { background: row.pillBg })}>
@@ -375,7 +507,8 @@ export function renderRecordWide(V) {
                   <span {...kb(row.setDestroy)} style={sx('padding:4px 9px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.destroyBg, color: row.destroyFg })}>ทำลาย</span>
                 </span>
               </span>
-              <span {...kb(row.remove)} className="hv-fg-red" style={s('width:40px;text-align:right;color:#c0c5c1;cursor:pointer')}>✕</span>
+              {/* ✕ อยู่กลางคอลัมน์ให้ตรงกับหัว "ล้าง" ซึ่งจัดกลางอยู่แล้ว (พี่กันสั่ง 25 ส.ค. 2569) */}
+              <span {...kb(row.remove)} className="hv-fg-red" style={s('width:40px;flex:none;display:flex;align-items:center;justify-content:center;color:#c0c5c1;cursor:pointer')}>✕</span>
             </div>
           ))}
           </div>

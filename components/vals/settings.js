@@ -1,7 +1,7 @@
 // ค่าของหน้าต่างตั้งค่า — คัดจากมอคอัป (บรรทัด 1322–1358)
 // orgName / settingsOpen / openSettings / closeSettings อยู่ใน shellVals แล้ว
 import { SOURCES } from '@/lib/format';
-import { APP_VERSION } from '../helpers';
+import { APP_VERSION, APP_FIRST_RELEASE, APP_LAST_UPDATE } from '../helpers';
 
 export function settingsVals(app, d) {
   const st = d.st;
@@ -58,6 +58,8 @@ export function settingsVals(app, d) {
 
     // มอคอัปนับรายการที่เก็บในเครื่อง ของจริงนับจากฐานข้อมูลของปีงบปัจจุบัน
     appVersion: APP_VERSION,
+    appFirstRelease: APP_FIRST_RELEASE,
+    appLastUpdate: APP_LAST_UPDATE,
     recordTotalLabel: st.fy.records.toLocaleString('en-US') + ' รายการ ปีงบ ' + st.fyYear,
 
     // ปุ่มไปหน้าจัดการราคา — แทนที่ปุ่มล้างเดโมกับออกจากระบบของมอคอัป

@@ -2,7 +2,8 @@
 // ต่างจากต้นฉบับ 3 จุด: ตัดเลขคงคลังปลอม · ตัดสวิตช์จำลองเน็ตหลุด
 // · ยอดสะสมปีงบมาจากฐานข้อมูล ไม่ได้นับจากรายการในเครื่อง
 import { SOURCES, money, thaiDate } from '@/lib/format';
-import { cleanQty, qtyNum, qtyText, splitDrugName, splitPercent, splitRelease, markMatch } from '../helpers';
+import { cleanQty, qtyNum, qtyText, splitDrugName, splitPercent, splitRelease, markMatch,
+  cleanQtyExpr, evalQty, isQtyExpr, exprText, isResolvedQty, splitResolved } from '../helpers';
 import { moveHi } from '@/lib/drugSearch';
 
 const sumReuse = (rows) => rows.reduce((a, x) => a + (x.disposition === 'reuse' ? x.price * x.qty : 0), 0);
@@ -49,12 +50,64 @@ export function makeStColorOf(results) {
 }
 
 // หัวตารางรายการในครั้งนี้ — กดเรียงได้เหมือนหน้าประวัติ
+// แป้นเครื่องคิดเลข 4 คอลัมน์ 5 แถว — เรียงแบบเครื่องคิดเลขจริงเพื่อให้มือจำตำแหน่งได้
+// 🚨 ต้องมีปุ่ม + ครบ — โจทย์แรกสุดที่พี่กันสั่งคือ "25+25" ถ้าไม่มีก็ใช้แป้นทำไม่ได้เลย
+// ⌫ ลบทีละตัว · ล้าง ล้างทั้งช่อง (สองปุ่มนี้ต่างกัน อย่ารวมเป็นปุ่มเดียว)
+// = คิดผลลัพธ์ใส่กลับลงช่อง แต่ยังไม่เพิ่มรายการ (เผื่ออยากคูณต่อ)
+const CALC_KEYS = [
+  { k: '(', kind: 'op' }, { k: ')', kind: 'op' }, { k: '⌫', act: 'back', kind: 'fn' }, { k: 'ล้าง', act: 'clear', kind: 'del' },
+  { k: '7' }, { k: '8' }, { k: '9' }, { k: '÷', send: '/', kind: 'op' },
+  { k: '4' }, { k: '5' }, { k: '6' }, { k: '×', send: '*', kind: 'op' },
+  { k: '1' }, { k: '2' }, { k: '3' }, { k: '−', send: '-', kind: 'op' },
+  { k: '0' }, { k: '.' }, { k: '=', act: 'eq', kind: 'eq' }, { k: '+', kind: 'op' }
+];
+
+// ── แยกชิ้นส่วนชื่อยาสำหรับวาดพร้อมสี ────────────────────────────────────────
+// ใช้ร่วมกันระหว่างผลค้นหากับตารางรายการครั้งนี้ ชื่อยาจะได้หน้าตาเหมือนกันทุกที่
+// (พี่กันสั่ง 25 ส.ค. 2569 — เดิมตารางโชว์ชื่อเป็นข้อความดำล้วน แยกยากิน/ยาฉีดไม่ออก)
+//
+// ⚠️ ไม่มีการไฮไลต์คำค้นในนี้ เพราะตารางไม่มีคำค้น ส่วนผลค้นหาเติม markMatch เองข้างนอก
+export function nameParts(drug, stColor) {
+  const sp = splitDrugName(drug.name || '');
+  const rl = splitRelease(sp.strength);      // ER/IR/SR อยู่ท้ายสุด ต้องแยกก่อน %
+  const pc = splitPercent(rl.main);
+  const abRaw = (drug.abbrev || '').trim();
+  return {
+    base: sp.base,
+    tail: sp.tail,
+    strength: pc.main,
+    stNum: stColor ? numPart(pc.main) : '',
+    stRest: stColor ? restPart(pc.main) : pc.main,
+    stColor: stColor || '',
+    percentLabel: pc.percent ? '(' + pc.percent + ')' : '',
+    hasPercent: !!pc.percent,
+    releaseLabel: rl.release ? '(' + rl.release + ')' : '',
+    hasRelease: !!rl.release,
+    form: (drug.form || '').trim(),
+    brand: (drug.brand || '').trim(),
+    hasBrand: !!(drug.brand || '').trim(),
+    // ตัวย่อ — ไม่วาดถ้ามีอยู่ในชื่อยาแล้ว กัน "(HCTZ)(HCTZ)"
+    abbrev: abRaw && (drug.name || '').toLowerCase().indexOf(abRaw.toLowerCase()) < 0 ? abRaw : '',
+    hasAbbrev: !!(abRaw && (drug.name || '').toLowerCase().indexOf(abRaw.toLowerCase()) < 0)
+  };
+}
+
 const ROW_COLS = [
   { key: 'name', label: 'ยา', w: '', align: 'left', flex: true },
-  { key: 'qty', label: 'จำนวน', w: '104px', align: 'right' },
-  { key: 'price', label: 'ราคา/หน่วย (฿)', w: '104px', align: 'right' },
+  // 🚨 align คุมเฉพาะ "หัวคอลัมน์" ไม่ใช่ข้อมูลข้างใน — ตัวเลขในตารางชิดขวาเสมอเพื่อให้หลักตรงกัน
+  //    พี่กันสั่ง 25 ส.ค. 2569 แยกกันคนละแบบ:
+  //      จำนวน   → ให้หัวอยู่ "ตรงเลข" ไม่ใช่กลางคอลัมน์
+  //      ราคา    → กลางคอลัมน์
+  //      มูลค่า  → ตามเดิม (ชิดขวา เพราะข้างในชิดขวาสุดอยู่แล้ว)
+  //      สถานะ   → กลางคอลัมน์
+  //
+  // 🚨 คอลัมน์จำนวนมีปุ่มดินสอกับที่ว่างต่อท้ายตัวเลขรวม 62px (26 + 26 + ช่องไฟ 5×2)
+  //    หัวจึงต้องถอยขวาเข้ามาเท่านั้น บวกระยะขอบของตัวเลขอีก 7px = 69px
+  //    ถ้าเปลี่ยนความกว้างปุ่มเมื่อไหร่ ต้องแก้เลขนี้ตามด้วย
+  { key: 'qty', label: 'จำนวน', w: '220px', align: 'right', padRight: '69px' },
+  { key: 'price', label: 'ราคา/หน่วย (฿)', w: '104px', align: 'center' },
   { key: 'value', label: 'มูลค่า (฿)', w: '124px', align: 'right' },
-  { key: 'disposition', label: 'สถานะ', w: '150px', align: 'right' }
+  { key: 'disposition', label: 'สถานะ', w: '150px', align: 'center' }
 ];
 
 const ROW_VAL = {
@@ -84,9 +137,19 @@ export function recordVals(app, d) {
   const st = d.st;
   const pending = st.pending;
   const pendReuse = st.pendingDisp === 'reuse';
-  const pendQty = qtyNum(st.qtyInput);
+  // 🚨 ช่องจำนวนฝั่งคอมคิดสูตรได้แล้ว ต้องใช้ evalQty ไม่ใช่ qtyNum
+  //    qtyNum ใช้ parseFloat ซึ่งอ่าน "25+25" ได้แค่ 25 แล้วทิ้งที่เหลือเงียบ ๆ
+  //    (ป๊อปอัปฝั่งมือถือใน vals/sheet.js ยังใช้ qtyNum เหมือนเดิม พี่กันสั่งไม่ให้แตะมือถือ)
+  const pendQty = evalQty(st.qtyInput);
   const canAdd = !!pending && pendQty > 0;
   const fySaved = st.fy.saved;
+  const pendValue = pending ? pending.price * pendQty : 0;
+  const showExpr = isQtyExpr(st.qtyInput) && pendQty > 0;
+
+  // สีความแรงในตารางรายการครั้งนี้ — ทายาชื่อเดียวกันคนละความแรงให้คนละสี
+  // (Morphine 10 · 20 · 30 mg อยู่ในล็อตเดียวกันแล้วหยิบสลับกันได้)
+  // 🚨 ต้องคิดจาก "แถวที่กองอยู่" ไม่ใช่จากผลค้นหา — คนละชุดข้อมูลกัน
+  const rowStColorOf = makeStColorOf(st.rows.map((r) => ({ id: r.drugId, name: r.name })));
 
   const setRowDisp = (rid, disp) => () => {
     const rows = st.rows.map((x) => (x.rid === rid ? Object.assign({}, x, { disposition: disp }) : x));
@@ -264,9 +327,55 @@ export function recordVals(app, d) {
     qtyInput: st.qtyInput,
     // รับทศนิยมได้ 2 ตำแหน่ง — ยาน้ำครึ่งขวด ยาแบ่งครึ่งเม็ด
     // (เดิมกรอง [^0-9] ทิ้ง พิมพ์ 2.5 กลายเป็น 25 ซึ่งผิดเป็นสิบเท่า)
-    onQtyInput: (e) => app.setState({ qtyInput: cleanQty(e.target.value) }),
-    onQtyKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); app.addInline(); } },
+    // และรับเครื่องหมายคิดเลขกับวงเล็บด้วย — 25+25 · 3*(10+2) (พี่กันสั่ง 25 ส.ค. 2569)
+    onQtyInput: (e) => app.setState({ qtyInput: cleanQtyExpr(e.target.value) }),
+    onQtyKey: (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // จังหวะแรก: ยังเป็นสูตรอยู่ → คิดให้ดูก่อน ยังไม่เพิ่มรายการ (พี่กันสั่ง)
+        if (isQtyExpr(st.qtyInput) && pendQty > 0) { app.resolveQty(); return; }
+        app.addInline();
+        return;
+      }
+      if (e.key === 'Escape' && st.calcOpen) { e.preventDefault(); app.closeCalc(); }
+    },
     addInline: app.addInline,
+
+    // ── ช่องเฉลยสูตรแล้ว "25+25=50" (พี่กันสั่ง 25 ส.ค. 2569) ────────────────
+    // ช่องกรอกธรรมดาทำตัวหนา/สีต่างเฉพาะบางส่วนไม่ได้ จึงวาดข้อความซ้อนทับแทน
+    // แล้วทำตัวอักษรใน input ให้โปร่งใส (เห็นแต่ขีดกะพริบ) — ตำแหน่งตรงกันเป๊ะเพราะใช้ฟอนต์เดียวกัน
+    qtyResolved: isResolvedQty(st.qtyInput) && pendQty > 0,
+    qtyExprPart: splitResolved(st.qtyInput).expr,
+    qtyAnswerPart: splitResolved(st.qtyInput).answer,
+
+    // ── เครื่องคิดเลขในช่องจำนวน (คอมเท่านั้น) ───────────────────────────────
+    calcOpen: !!st.calcOpen,
+    toggleCalc: app.toggleCalc,
+    calcBg: st.calcOpen ? '#2f7d5d' : '#f0f3ef',
+    calcFg: st.calcOpen ? '#fff' : '#6b746e',
+    // แป้นไม่ได้คิดเลขเอง — แค่พิมพ์ตัวอักษรลงช่อง แล้ว evalQty คิดให้ตอนกด Enter
+    // ทำแบบนี้เพื่อให้ "พิมพ์เอง" กับ "กดแป้น" เดินทางเดียวกัน ไม่มีทางให้ผลต่างกัน
+    calcKeys: CALC_KEYS.map((k) => ({
+      k: k.k,
+      kind: k.kind || '',
+      press: k.act === 'eq' ? app.calcEquals
+        : k.act === 'back' ? () => app.calcPress('back')
+        : k.act === 'clear' ? () => app.calcPress('C')
+        : () => app.calcPress(k.send !== undefined ? k.send : k.k)
+    })),
+    // จอเล็กบนแป้น — บอกสูตรที่พิมพ์ไว้กับผลลัพธ์สด เห็นก่อนกดว่าได้เท่าไร
+    calcExpr: st.qtyInput ? exprText(st.qtyInput) : '',
+    calcResult: String(pendQty || 0),
+
+    // ── ราคารวมของรายการที่กำลังจะเพิ่ม (แบบ ก — กล่องท้ายแถว พี่กันเคาะ) ─────
+    // เดิมราคาไปอยู่ในข้อความจาง 11.5px ใต้ช่อง ซึ่งเป็นตัวเลขที่สำคัญที่สุดในแถวนั้น
+    // แต่จางที่สุดในหน้าจอ — เภสัชกรต้องเพ่งอ่านทุกครั้งก่อนกดเพิ่ม
+    sumLabel: pendValue > 0 ? money(pendValue) : '0.00 ฿',
+    sumOn: pendValue > 0,
+    sumBg: pendValue > 0 ? '#e7f2ec' : '#f4f5f3',
+    sumBorder: pendValue > 0 ? 'rgba(47,125,93,.22)' : 'rgba(30,36,32,.10)',
+    sumKeyFg: pendValue > 0 ? '#4e8f70' : '#9aa19c',
+    sumFg: pendValue > 0 ? '#2f7d5d' : '#b8bdb9',
     // ปุ่ม "เพิ่ม" — พี่กันสั่งเปลี่ยนจากดำเป็นเขียวเทลของธีม
     addBg: canAdd ? '#2f7d5d' : '#e9ebe8',
     addFg: canAdd ? '#fff' : '#9aa19c',
@@ -279,10 +388,13 @@ export function recordVals(app, d) {
     pendDestroyFg: pendReuse ? '#9aa19c' : '#c2543c',
     setPendingReuse: () => app.setState({ pendingDisp: 'reuse' }),
     setPendingDestroy: () => app.setState({ pendingDisp: 'destroy' }),
+    // ราคารวมถูกย้ายไปกล่องท้ายแถวแล้ว บรรทัดนี้จึงไม่ต้องบอกราคาซ้ำ
+    // แต่ถ้าพิมพ์เป็นสูตร ต้องกางให้เห็นว่าคิดได้เท่าไร ก่อนกด Enter
     desktopHint: !pending
-      ? 'พิมพ์ชื่อยา → Enter เลือกผลแรก → ใส่จำนวน → Enter เพิ่มรายการ แล้วกลับไปช่องยาเอง'
+      ? 'พิมพ์ชื่อยา → Enter เลือกผลแรก → ใส่จำนวน → Enter เพิ่มรายการ แล้วกลับไปช่องยาเอง · ช่องจำนวนพิมพ์ + − × ÷ และวงเล็บได้'
       : pendQty > 0
-        ? 'Enter เพื่อเพิ่ม ' + pending.name + ' ' + pendQty + ' ' + pending.unit + ' = ' + money(pending.price * pendQty)
+        ? (showExpr ? exprText(st.qtyInput) + ' = ' + pendQty + ' ' + pending.unit + ' · ' : '')
+          + 'Enter เพื่อเพิ่ม ' + pending.name + ' ' + pendQty + ' ' + pending.unit
         : 'เลือก ' + pending.name + ' แล้ว — ใส่จำนวนเป็น ' + pending.unit + ' แล้วกด Enter',
 
     // ── รายการที่กองอยู่ในครั้งนี้ ───────────────────────────────────────────
@@ -294,6 +406,7 @@ export function recordVals(app, d) {
         label: c.label,
         w: c.w,
         flex: !!c.flex,
+        padRight: c.padRight || '',
         align: c.align,
         arrow: on ? (st.rowSortDir === 'asc' ? '▲' : '▼') : '↕',
         arrowColor: on ? '#2f7d5d' : 'rgba(30,36,32,.28)',
@@ -304,11 +417,47 @@ export function recordVals(app, d) {
     rows: sortRows(st.rows, st.rowSortKey, st.rowSortDir).map((r) => {
       const reuse = r.disposition === 'reuse';
       const drug = st.drugs.find((x) => x.id === r.drugId) || r;
+      const editing = st.editQtyRid === r.rid;
+      // ชื่อยาในตารางต้องหน้าตาเหมือนตอนค้นหาเป๊ะ — สีความแรง · รูปแบบยา · ER · ชื่อการค้า
+      // (พี่กันสั่ง 25 ส.ค. 2569: "ชื่อเต็ม เราอยากได้เหมือนตอนค้นหา พวกสีต่างๆ ควรมาด้วย")
+      // 🚨 ยาที่ถูกซ่อนไปหลังจากกรอกแล้ว จะหาใน st.drugs ไม่เจอ → ตกไปใช้ชื่อที่แช่ไว้ในแถว
+      const np = nameParts(drug.name ? drug : { name: r.name }, rowStColorOf({ id: r.drugId, name: r.name }));
       return {
         rid: r.rid,
         name: r.name,
+        np: np,
         detail: r.qty + ' ' + r.unit + ' × ' + r.price.toFixed(2),
         qtyLabel: r.qty + ' ' + r.unit,
+
+        // ── แก้จำนวนได้ทั้งที่กด Enter ลงมาแล้ว (คอมเท่านั้น) ──────────────
+        // พี่กันสั่ง 25 ส.ค. 2569 — เดิมต้องเปิดป๊อปอัปหรือลบทิ้งแล้วเพิ่มใหม่
+        // ช่องนี้พิมพ์สูตรได้เหมือนช่องด้านบน (55+10 · 12*4)
+        // 🚨 แก้ได้เฉพาะจำนวน ราคาที่แช่ไว้ในแถวห้ามแตะ
+        editing: editing,
+        editText: editing ? st.editQtyText : '',
+        editUnit: r.unit,
+        // ผลลัพธ์สดใต้ช่องตอนพิมพ์สูตร — เห็นก่อนกด Enter ว่าจะได้เท่าไร
+        editPreview: editing && isQtyExpr(st.editQtyText) && evalQty(st.editQtyText) > 0
+          ? exprText(st.editQtyText) + ' = ' + evalQty(st.editQtyText) + ' ' + r.unit
+          : '',
+        // ปุ่ม ✓ กดได้เฉพาะตอนที่ค่าเปลี่ยนจริง (พี่กันสั่ง 25 ส.ค. 2569)
+        // ค่าเท่าเดิมแล้วยังกดได้ = ผู้ใช้ไม่รู้ว่าตกลงไปแล้วมีอะไรเปลี่ยนหรือเปล่า
+        // และ 0 ก็กดไม่ได้ เพราะจำนวนศูนย์ไม่ใช่การแก้ แต่คือการลบซึ่งมีปุ่ม ✕ ของมันอยู่แล้ว
+        editCanSave: editing && evalQty(st.editQtyText) > 0 && evalQty(st.editQtyText) !== Number(r.qty),
+        editOkBg: editing && evalQty(st.editQtyText) > 0 && evalQty(st.editQtyText) !== Number(r.qty) ? '#2f7d5d' : '#e9ebe8',
+        editOkFg: editing && evalQty(st.editQtyText) > 0 && evalQty(st.editQtyText) !== Number(r.qty) ? '#fff' : '#b8bdb9',
+        startEditQty: () => app.startEditQty(r.rid, r.qty),
+        onEditQty: (e) => app.changeEditQty(e.target.value),
+        onEditQtyKey: (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // จังหวะแรก: ยังเป็นสูตร → คิดให้ดูก่อน · จังหวะสอง: ตกลง (กติกาเดียวกับช่องด้านบน)
+            if (isQtyExpr(st.editQtyText) && evalQty(st.editQtyText) > 0) { app.resolveEditQty(); return; }
+            app.commitEditQty();
+          } else if (e.key === 'Escape') { e.preventDefault(); app.cancelEditQty(); }
+        },
+        commitEditQty: app.commitEditQty,
+        cancelEditQty: app.cancelEditQty,
         priceLabel: r.price.toFixed(2),
         deskBg: reuse ? '#fff' : '#fdf7f5',
         valueLabel: money(r.price * r.qty),

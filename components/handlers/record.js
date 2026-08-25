@@ -1,7 +1,7 @@
 // หน้าบันทึก — เพิ่มยาเข้ารายการ · ป๊อปอัปใส่จำนวน · ส่งขึ้นฐานข้อมูล
 // คัดจากมอคอัป (บรรทัด 912–1051) ตัดสวิตช์จำลองเน็ตหลุดกับ resetDemo ออก
 import { money } from '@/lib/format';
-import { newUuid, fetchT, qtyNum } from '../helpers';
+import { newUuid, fetchT, qtyNum, evalQty, cleanQtyExpr } from '../helpers';
 
 const sumReuse = (rows) => rows.reduce((a, r) => a + (r.disposition === 'reuse' ? r.price * r.qty : 0), 0);
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -89,7 +89,10 @@ export function recordActions(app) {
 
   app.addInline = () => {
     const d = app.state.pending;
-    const qty = clampQty(app.state.qtyInput);
+    // 🚨 ต้องใช้ evalQty ไม่ใช่ clampQty — ช่องนี้พิมพ์สูตรได้แล้ว (25+25)
+    //    clampQty ใช้ parseFloat ซึ่งอ่าน "25+25" ได้แค่ 25 แล้วทิ้งที่เหลือเงียบ ๆ
+    //    = บันทึกไปครึ่งเดียวโดยไม่มีใครรู้ (ฝั่งป๊อปมือถือยังใช้ clampQty เหมือนเดิม)
+    const qty = evalQty(app.state.qtyInput);
     if (d && app.blockNoPrice(d)) return;
     if (!d || !qty) {
       if (!d && app.searchRef.current) app.searchRef.current.focus();
@@ -97,9 +100,103 @@ export function recordActions(app) {
       return;
     }
     app.addRow(d, qty, app.state.pendingDisp);
-    app.setState({ pending: null, qtyInput: '', query: '', pendingDisp: 'reuse' }, () => {
+    app.setState({ pending: null, qtyInput: '', query: '', pendingDisp: 'reuse', calcOpen: false }, () => {
       if (app.searchRef.current) app.searchRef.current.focus();
     });
+  };
+
+  // ── เครื่องคิดเลขในช่องจำนวน (เฉพาะคอม) ────────────────────────────────────
+  // พี่กันสั่ง 25 ส.ค. 2569: "มีจุดที่กดแล้วมีเครื่องคิดเลขขึ้นมาด้วย"
+  // แป้นนี้ไม่ได้คิดเลขเอง — มันแค่พิมพ์ตัวอักษรลงช่องจำนวนให้ แล้ว evalQty คิดให้ตอนกด Enter
+  // ทำแบบนี้เพื่อให้ "พิมพ์เอง" กับ "กดแป้น" เดินทางเดียวกันเป๊ะ ไม่มีทางให้ผลต่างกัน
+  app.toggleCalc = () => {
+    const open = !app.state.calcOpen;
+    app.setState({ calcOpen: open }, () => {
+      if (open && app.qtyRef.current) app.qtyRef.current.focus();
+    });
+  };
+
+  app.closeCalc = () => {
+    if (app.state.calcOpen) app.setState({ calcOpen: false });
+  };
+
+  app.calcPress = (k) => {
+    if (k === 'C') {
+      app.setState({ qtyInput: '' }, () => { if (app.qtyRef.current) app.qtyRef.current.focus(); });
+      return;
+    }
+    if (k === 'back') {
+      app.setState({ qtyInput: String(app.state.qtyInput || '').slice(0, -1) },
+        () => { if (app.qtyRef.current) app.qtyRef.current.focus(); });
+      return;
+    }
+    app.setState({ qtyInput: cleanQtyExpr(String(app.state.qtyInput || '') + k) },
+      () => { if (app.qtyRef.current) app.qtyRef.current.focus(); });
+  };
+
+  // ปุ่ม = ในแป้น — คิดผลลัพธ์ใส่กลับลงช่อง แต่ยังไม่เพิ่มรายการ
+  // (เผื่อคิดเสร็จแล้วอยากคูณต่อ หรืออยากดูตัวเลขก่อนตัดสินใจ)
+  app.calcEquals = () => {
+    const n = evalQty(app.state.qtyInput);
+    app.setState({ qtyInput: n > 0 ? String(n) : '' },
+      () => { if (app.qtyRef.current) app.qtyRef.current.focus(); });
+  };
+
+  // ── Enter 2 จังหวะ เมื่อช่องเป็นสูตร (พี่กันสั่ง 25 ส.ค. 2569) ─────────────
+  // "ตอนกด 25+25 ตอนเอนเทอร์แล้วจะได้ 50 ก่อน แล้วค่อยเอนเทอร์อีกครั้งเพื่อเพิ่ม"
+  //
+  // เหตุผล: การบวกกองยาเป็นจุดที่พลาดง่าย ถ้า Enter ทีเดียวเพิ่มเลย
+  // ผู้ใช้จะไม่มีจังหวะได้เห็นว่าคิดออกมาเป็นเท่าไรก่อนของเข้ารายการ
+  // จังหวะแรกจึงเป็นการ "เฉลย" ให้ดู จังหวะสองถึงยืนยัน
+  //
+  // 🚨 ใช้กติกาเดียวกันทั้งช่องเพิ่มรายการและช่องแก้จำนวนในตาราง
+  //    ถ้าทำต่างกัน มือจะจำผิดสลับกันไปมา
+  // ⚠️ เลขล้วน (ไม่มีเครื่องหมาย) ยังเป็น Enter ทีเดียวเหมือนเดิม ไม่มีอะไรให้เฉลย
+  // 🚨 เก็บสูตรไว้ในช่องด้วย ต่อ "=ผลลัพธ์" ท้าย ไม่ใช่แทนที่ด้วยตัวเลขเปล่า
+  //    "25+25=50" ตรวจย้อนได้ว่ามาจากการบวกอะไร ถ้าเหลือแค่ "50" จะไม่รู้ที่มา
+  app.resolveQty = () => {
+    const n = evalQty(app.state.qtyInput);
+    if (!n) return;
+    app.setState({ qtyInput: String(app.state.qtyInput).split('=')[0] + '=' + n }, () => {
+      if (app.qtyRef.current) app.qtyRef.current.focus();
+    });
+  };
+
+  app.resolveEditQty = () => {
+    const n = evalQty(app.state.editQtyText);
+    if (!n) return;
+    app.setState({ editQtyText: String(app.state.editQtyText).split('=')[0] + '=' + n });
+  };
+
+  // ── แก้จำนวนของแถวที่กองอยู่แล้ว (เฉพาะคอม) ───────────────────────────────
+  // พี่กันสั่ง 25 ส.ค. 2569: "อยากให้มันกดเปลี่ยนจำนวนได้ในนี้เลย แม้ว่าจะกดเอนเทอร์ลงมาแล้ว"
+  // เดิมต้องกดแถวเพื่อเปิดป๊อปอัป หรือลบทิ้งแล้วเพิ่มใหม่ ซึ่งช้าและเสี่ยงลบผิดแถว
+  //
+  // 🚨 แก้ได้เฉพาะ "จำนวน" เท่านั้น ห้ามแตะราคา — ราคาถูกแช่ไว้ในแถวตั้งแต่ตอนเลือกยา
+  //    (แถวพวกนี้ยังไม่เข้าฐาน แต่ราคาที่ติดมาคือราคา ณ วันบันทึก ต้องคงไว้)
+  app.startEditQty = (rid, qty) => {
+    app.setState({ editQtyRid: rid, editQtyText: String(qty) });
+  };
+
+  app.changeEditQty = (text) => {
+    app.setState({ editQtyText: cleanQtyExpr(text) });
+  };
+
+  // ยืนยันการแก้ — ช่องว่างหรือคิดได้ 0 ให้ถอยกลับไปใช้ค่าเดิม ไม่ลบแถวทิ้ง
+  // (ลบแถวมีปุ่ม ✕ ที่มีป๊อปอัปยืนยันอยู่แล้ว การพิมพ์ 0 ไม่ควรกลายเป็นการลบ)
+  app.commitEditQty = () => {
+    const rid = app.state.editQtyRid;
+    if (!rid) return;
+    const n = evalQty(app.state.editQtyText);
+    if (!n) { app.setState({ editQtyRid: null, editQtyText: '' }); return; }
+    const rows = app.state.rows.map((x) => (x.rid === rid ? Object.assign({}, x, { qty: n }) : x));
+    app.persist({ rows: rows });
+    app.animateTo(sumReuse(rows));
+    app.setState({ editQtyRid: null, editQtyText: '' });
+  };
+
+  app.cancelEditQty = () => {
+    app.setState({ editQtyRid: null, editQtyText: '' });
   };
 
   // ปุ่ม ✕ ในช่องค้นหา — กดทีเดียวล้างทั้งช่อง ไม่ต้องกด Backspace รัว

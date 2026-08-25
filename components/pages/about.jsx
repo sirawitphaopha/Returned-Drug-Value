@@ -61,11 +61,11 @@ export function renderAbout(V) {
         </div>
         <div style={s(KV_ROW)}>
           <span style={s(KV_L)}>เผยแพร่ครั้งแรก</span>
-          <span style={s(KV_R)}>4 สิงหาคม 2569</span>
+          <span style={s(KV_R)}>{V.appFirstRelease}</span>
         </div>
         <div style={s(KV_ROW)}>
           <span style={s(KV_L)}>อัปเดตล่าสุด</span>
-          <span style={s(KV_R)}>5 สิงหาคม 2569</span>
+          <span style={s(KV_R)}>{V.appLastUpdate}</span>
         </div>
       </div>
 

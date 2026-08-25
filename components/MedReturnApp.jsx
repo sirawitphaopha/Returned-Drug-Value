@@ -99,6 +99,18 @@ export default class MedReturnApp extends React.Component {
       slipLot: null,         // ใบสรุป Lot ที่เปิดอยู่ (null = ไม่ได้เปิด)
       slipRows: [],          // รายการยาใน Lot นั้น — ดึงตอนกดเปิดใบ
       slipLoading: false,
+      // ── หน้าต่างแก้ไขล็อต (พี่กันสั่ง 25 ส.ค. 2569) ────────────────────────
+      // เก็บทั้งค่าที่กำลังแก้และค่าเดิม (orig) ไว้ในก้อนเดียว เพื่อเทียบว่าแตะอะไรไปแล้ว
+      lotEdit: null,
+      lotEditLoading: false,
+      lotEditBusy: false,
+      lotEditConfirm: false,  // หน้าต่างยืนยันก่อนบันทึกจริง
+      lotEditQtyId: null,     // แถวที่กำลังแก้จำนวนอยู่
+      lotEditQtyText: '',
+      lotEditLog: [],         // ประวัติการแก้ของล็อตนี้ (จาก mr_lot_audit)
+      lotEditLogOpen: false,
+      // ชื่อคนที่กดแก้ — เลือกในหน้าต่างยืนยันเอง ไม่ผูกกับช่องผู้บันทึกในหน้าบันทึก
+      lotEditWho: '',
       confirm: null,
 
       // หน้าสรุป — ยอดทั้งปีงบคิดมาจากฐานข้อมูลก้อนเดียว
@@ -119,6 +131,12 @@ export default class MedReturnApp extends React.Component {
       pending: null,
       qtyInput: '',
       pendingDisp: 'reuse',
+      // เครื่องคิดเลขในช่องจำนวน (คอมเท่านั้น · พี่กันสั่ง 25 ส.ค. 2569)
+      calcOpen: false,
+      // แถวที่กำลังแก้จำนวนอยู่ในตาราง "รายการในครั้งนี้" — เก็บเป็นข้อความ
+      // เพราะระหว่างพิมพ์สูตร ("55+10") ยังไม่ใช่ตัวเลขจนกว่าจะกด Enter
+      editQtyRid: null,
+      editQtyText: '',
       // ก้อนการบันทึก 1 ครั้ง — กดลองส่งใหม่ต้องใช้ก้อนเดิม ไม่งั้นได้ข้อมูลซ้ำสองชุด
       batchId: null,
 
@@ -301,6 +319,9 @@ export default class MedReturnApp extends React.Component {
     });
     window.addEventListener('resize', this._onResize);
     window.addEventListener('keydown', this._onKey);
+    // แป้นเครื่องคิดเลขต้องปิดเมื่อกดที่อื่น — ป๊อปตัวเล็กที่ไม่มีฉากหลังคลุมจอ
+    // ถ้าไม่ปิดจะค้างบังตารางรายการอยู่ตลอด ต้องย้อนกลับมากดปุ่มเดิม
+    document.addEventListener('mousedown', this._onDocDown);
     // ทวนวันทุก 1 นาที — คอมห้องยาเปิดค้างข้ามคืนเป็นเรื่องปกติ
     this._dayTimer = setInterval(this.checkDayRollover, 60000);
     document.addEventListener('visibilitychange', this._onVisible);
@@ -319,6 +340,17 @@ export default class MedReturnApp extends React.Component {
     }
   }
 
+  // กดที่อื่นแล้วปิดแป้นเครื่องคิดเลข — เป็นป๊อปตัวเล็กที่ไม่มีฉากหลังคลุมจอ
+  // (ใส่ฉากหลังคลุมไม่ได้ เพราะจะบังช่องจำนวนที่ต้องพิมพ์ต่อได้ระหว่างแป้นเปิดอยู่)
+  // 🚨 ต้องเป็น mousedown ไม่ใช่ click — ปุ่มบนแป้นทำงานตอน click
+  //    ถ้าดักที่ click แป้นจะปิดก่อนปุ่มได้ทำงาน กดเลขแล้วไม่เข้าช่อง
+  _onDocDown = (e) => {
+    if (!this.state.calcOpen) return;
+    const box = this.qtyRef.current && this.qtyRef.current.closest('div[style]');
+    if (box && box.contains(e.target)) return;   // กดในกล่องช่องจำนวน (รวมแป้น) = ไม่ปิด
+    this.setState({ calcOpen: false });
+  };
+
   // Esc ปิดหน้าต่างที่เปิดอยู่ทีละชั้น เริ่มจากชั้นบนสุด
   // (หน้าต่างยืนยันลบกดพื้นหลังไม่ปิดโดยตั้งใจ ถ้าไม่มี Esc ก็เหลือทางเดียวคือเมาส์)
   _onKey = (e) => {
@@ -327,6 +359,16 @@ export default class MedReturnApp extends React.Component {
     if (st.confirm) { this.closeConfirm(); return; }
     if (st.recorderMenuOpen) { this.closeRecorderMenu(); return; }
     if (st.sheet) { this.closeSheet(); return; }
+    // แป้นเครื่องคิดเลขกับช่องแก้จำนวนอยู่ชั้นในสุด ปิดก่อนหน้าต่างตั้งค่า
+    if (st.calcOpen) { this.setState({ calcOpen: false }); return; }
+    if (st.editQtyRid) { this.setState({ editQtyRid: null, editQtyText: '' }); return; }
+    // หน้าต่างแก้ไขล็อตซ้อนกัน 3 ชั้น ต้องปิดจากบนลงล่าง
+    if (st.lotEditQtyId) { this.setState({ lotEditQtyId: null, lotEditQtyText: '' }); return; }
+    if (st.lotEditConfirm) { this.setState({ lotEditConfirm: false }); return; }
+    if (st.lotEdit) { this.closeLotEdit(); return; }
+    // ใบสรุปล็อตกดพื้นหลังไม่ปิดโดยตั้งใจ (กันปิดพลาดตอนกำลังจะสั่งพิมพ์)
+    // ถ้าไม่มี Esc ก็เหลือทางเดียวคือเล็งปุ่ม ✕ มุมบนขวา — เจอเองตอนเทส 25 ส.ค. 2569
+    if (st.slipLot) { this.closeLotSlip(); return; }
     if (st.settingsOpen) { this.setState({ settingsOpen: false, favQuery: '' }); }
   };
 
@@ -356,6 +398,7 @@ export default class MedReturnApp extends React.Component {
     if (this._dayTimer) clearInterval(this._dayTimer);
     window.removeEventListener('resize', this._onResize);
     window.removeEventListener('keydown', this._onKey);
+    document.removeEventListener('mousedown', this._onDocDown);
     document.removeEventListener('visibilitychange', this._onVisible);
     window.removeEventListener('online', this._onOnline);
     if (this._vv && this._onVV) {

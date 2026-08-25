@@ -1,6 +1,7 @@
 // ค่าของหน้ารายการ Lot + ใบสรุป Lot
-import { money, thaiDate } from '@/lib/format';
-import { qtyText } from '../helpers';
+import { money, thaiDate, SOURCES } from '@/lib/format';
+import { qtyText, evalQty, isQtyExpr, exprText } from '../helpers';
+import { nameParts } from './record';
 
 const RANGES = [
   { key: 'today', label: 'วันนี้' },
@@ -57,7 +58,8 @@ export function lotsVals(app, d) {
         lostLabel: lost > 0 ? money(lost) : '',
         hasLost: lost > 0,
         openHistory: () => app.openLotInHistory(l.lot),
-        openSlip: () => app.openLotSlip(l)
+        openSlip: () => app.openLotSlip(l),
+        openEdit: () => app.openLotEdit(l.lot)
       };
     }),
 
@@ -85,6 +87,204 @@ export function lotsVals(app, d) {
     slipHasLost: slipLost > 0,
     slipTotalLabel: money(slipSaved + slipLost),
     closeLotSlip: app.closeLotSlip,
-    printLotSlip: app.printLotSlip
+    printLotSlip: app.printLotSlip,
+
+    // ── หน้าต่างแก้ไขล็อต ────────────────────────────────────────────────────
+    ...lotEditVals(app, st)
   };
+}
+
+// ── ค่าของหน้าต่างแก้ไขล็อต (พี่กันสั่ง 25 ส.ค. 2569) ────────────────────────
+// แยกออกมาเป็นฟังก์ชันของตัวเองเพราะยาว และเป็นคนละเรื่องกับหน้ารายการล็อต
+//
+// 🚨 ป้าย "แก้แล้ว" ต้องเทียบกับค่าเดิมจริง ๆ ไม่ใช่ "แตะช่องนั้นหรือยัง"
+//    ผู้ใช้ที่เปลี่ยนไปแล้วเปลี่ยนกลับ ต้องไม่เห็นป้ายค้าง ไม่งั้นจะนึกว่ายังมีอะไรรออยู่
+function lotEditVals(app, st) {
+  const e = st.lotEdit;
+  if (!e || !e.rows) {
+    return {
+      lotEditOpen: !!e,
+      lotEditLoading: !!st.lotEditLoading,
+      lotEditLot: e ? e.lot : '',
+      lotEditRows: [],
+      lotEditLog: [],
+      closeLotEdit: app.closeLotEdit
+    };
+  }
+
+  const origById = new Map(e.orig.rows.map((r) => [r.id, r]));
+  let saved = 0;
+  let lost = 0;
+  let rowChanges = 0;
+  for (const r of e.rows) {
+    const v = Number(r.price || 0) * Number(r.qty || 0);
+    if (r.disposition === 'reuse') saved += v; else lost += v;
+    const o = origById.get(r.id);
+    if (o && (Number(o.qty) !== Number(r.qty) || o.disposition !== r.disposition)) rowChanges++;
+  }
+
+  const byChanged = e.recordedBy !== e.orig.recordedBy;
+  const srcChanged = e.source !== e.orig.source;
+  const dateChanged = e.date !== e.orig.date;
+  const lotChanges = (byChanged ? 1 : 0) + (srcChanged ? 1 : 0) + (dateChanged ? 1 : 0);
+  const dirty = lotChanges + rowChanges > 0;
+
+  // สรุปว่าจะเปลี่ยนอะไรบ้าง — ใช้ในหน้าต่างยืนยัน ผู้ใช้จะได้เห็นก่อนกดจริง
+  const summary = [];
+  if (byChanged) summary.push({ k: 'by', label: 'ผู้บันทึก', from: e.orig.recordedBy || 'ไม่ระบุ', to: e.recordedBy });
+  if (srcChanged) summary.push({ k: 'src', label: 'แหล่งที่มา', from: srcLabel(e.orig.source), to: srcLabel(e.source) });
+  if (dateChanged) summary.push({ k: 'date', label: 'วันที่รับคืน', from: thaiDate(e.orig.date), to: thaiDate(e.date) });
+
+  return {
+    lotEditOpen: true,
+    lotEditLoading: false,
+    lotEditLot: e.lot,
+    lotEditBusy: !!st.lotEditBusy,
+    lotEditDirty: dirty,
+    lotEditSaveBg: dirty && !st.lotEditBusy ? '#2f7d5d' : '#e9ebe8',
+    lotEditSaveFg: dirty && !st.lotEditBusy ? '#fff' : '#b8bdb9',
+    lotEditSaveLabel: st.lotEditBusy ? 'กำลังบันทึก' : 'บันทึกการแก้ไข',
+    lotEditCountLabel: e.rows.length.toLocaleString('en-US') + ' รายการ',
+    lotEditTotalLabel: money(saved + lost),
+    lotEditSavedLabel: money(saved),
+    lotEditLostLabel: money(lost),
+    lotEditHasLost: lost > 0,
+    closeLotEdit: app.closeLotEdit,
+
+    // ค่าระดับล็อต
+    lotEditBy: e.recordedBy,
+    lotEditByChanged: byChanged,
+    lotEditByWas: e.orig.recordedBy || 'ไม่ระบุ',
+    lotEditStaff: (st.staff || []).slice(),
+    onLotEditBy: (ev) => app.setLotEditField('recordedBy', ev.target.value),
+    lotEditDate: e.date,
+    lotEditDateChanged: dateChanged,
+    lotEditDateWas: thaiDate(e.orig.date),
+    lotEditDateMax: st.today,
+    onLotEditDate: (ev) => app.setLotEditField('date', ev.target.value),
+    lotEditSrcChanged: srcChanged,
+    lotEditSrcWas: srcLabel(e.orig.source),
+    lotEditSources: SOURCES.map((s) => ({
+      key: s.key,
+      label: s.label,
+      bg: e.source === s.key ? '#2f7d5d' : '#fff',
+      fg: e.source === s.key ? '#fff' : '#414a44',
+      border: e.source === s.key ? '#2f7d5d' : 'rgba(30,36,32,.14)',
+      pick: () => app.setLotEditField('source', s.key)
+    })),
+
+    // ตารางรายการ
+    lotEditRows: e.rows.map((r) => {
+      const o = origById.get(r.id) || r;
+      const qtyChanged = Number(o.qty) !== Number(r.qty);
+      const dispChanged = o.disposition !== r.disposition;
+      const editing = st.lotEditQtyId === r.id;
+      const reuse = r.disposition === 'reuse';
+      const nq = evalQty(st.lotEditQtyText);
+      const canSave = editing && nq > 0 && nq !== Number(r.qty);
+      return {
+        key: r.id,
+        np: nameParts({ name: r.name }, null),
+        qtyLabel: qtyText(r.qty) + ' ' + r.unit,
+        priceLabel: Number(r.price || 0).toFixed(2),
+        valueLabel: money(Number(r.price || 0) * Number(r.qty || 0)),
+        valueColor: reuse ? '#2f7d5d' : '#c2543c',
+        rowBg: qtyChanged || dispChanged ? '#fdfaf2' : (reuse ? '#fff' : '#fdf7f5'),
+        wasLabel: qtyChanged ? 'เดิม ' + qtyText(o.qty) + ' ' + r.unit : '',
+        // แก้จำนวน — กติกาเดียวกับหน้าบันทึกทุกอย่าง (สูตร · Enter 2 จังหวะ · ปุ่ม ✓ ปิดเมื่อค่าเดิม)
+        editing: editing,
+        editText: editing ? st.lotEditQtyText : '',
+        editPreview: editing && isQtyExpr(st.lotEditQtyText) && nq > 0
+          ? exprText(st.lotEditQtyText) + ' = ' + nq + ' ' + r.unit : '',
+        editCanSave: canSave,
+        editOkBg: canSave ? '#2f7d5d' : '#e9ebe8',
+        editOkFg: canSave ? '#fff' : '#b8bdb9',
+        startQty: () => app.startLotQty(r.id, r.qty),
+        onQty: (ev) => app.changeLotQty(ev.target.value),
+        onQtyKey: (ev) => {
+          if (ev.key === 'Enter') {
+            ev.preventDefault();
+            if (isQtyExpr(st.lotEditQtyText) && evalQty(st.lotEditQtyText) > 0) { app.resolveLotQty(); return; }
+            app.commitLotQty();
+          } else if (ev.key === 'Escape') { ev.preventDefault(); app.cancelLotQty(); }
+        },
+        commitQty: app.commitLotQty,
+        cancelQty: app.cancelLotQty,
+        // ใช้ต่อ / ทำลาย
+        pillBg: reuse ? '#f0f1ee' : '#fbe4dd',
+        reuseBg: reuse ? '#fff' : 'transparent',
+        reuseFg: reuse ? '#2f7d5d' : '#c9a096',
+        destroyBg: reuse ? 'transparent' : '#fff',
+        destroyFg: reuse ? '#9aa19c' : '#c2543c',
+        setReuse: () => app.setLotRowDisp(r.id, 'reuse'),
+        setDestroy: () => app.setLotRowDisp(r.id, 'destroy')
+      };
+    }),
+
+    // หน้าต่างยืนยัน
+    lotEditConfirm: !!st.lotEditConfirm,
+    // 🚨 ชื่อผู้แก้เลือกในหน้าต่างยืนยันเอง ไม่ผูกกับช่องผู้บันทึกในหน้าบันทึก
+    //    (เดิมผูกไว้ พอไม่ได้เลือกในหน้านั้น กดยืนยันแล้วเงียบ ดูเหมือนปุ่มเสีย)
+    lotEditWho: st.lotEditWho || '',
+    lotEditWhoOk: !!String(st.lotEditWho || '').trim(),
+    onLotEditWho: (ev) => app.setLotEditWho(ev.target.value),
+    lotEditOkBg: String(st.lotEditWho || '').trim() && !st.lotEditBusy ? '#2f7d5d' : '#e9ebe8',
+    lotEditOkFg: String(st.lotEditWho || '').trim() && !st.lotEditBusy ? '#fff' : '#b8bdb9',
+    lotEditOkLabel: st.lotEditBusy ? 'กำลังบันทึก' : 'ยืนยันการแก้ไข',
+    lotEditSummary: summary,
+    lotEditRowChangeLabel: rowChanges ? 'จำนวนหรือสถานะของยา ' + rowChanges + ' รายการ' : '',
+    lotEditHasRowChange: rowChanges > 0,
+    askSaveLotEdit: app.askSaveLotEdit,
+    cancelSaveLotEdit: app.cancelSaveLotEdit,
+    saveLotEdit: app.saveLotEdit,
+
+    // ประวัติการแก้ไข
+    lotEditLogOpen: !!st.lotEditLogOpen,
+    toggleLotEditLog: app.toggleLotEditLog,
+    lotEditLogCount: (st.lotEditLog || []).length,
+    lotEditLogLabel: (st.lotEditLog || []).length
+      ? 'ประวัติการแก้ไข ' + (st.lotEditLog || []).length + ' ครั้ง'
+      : 'ยังไม่เคยมีการแก้ไขล็อตนี้',
+    lotEditLog: (st.lotEditLog || []).map((x) => ({
+      key: x.id,
+      what: FIELD_TH[x.field] || x.field,
+      drug: x.drugName || '',
+      from: fieldText(x.field, x.oldValue),
+      to: fieldText(x.field, x.newValue),
+      by: x.by || 'ไม่ระบุ',
+      at: logTime(x.at)
+    }))
+  };
+}
+
+// ชื่อไทยของช่องที่ถูกแก้ — ใช้ทั้งในประวัติและหน้าต่างยืนยัน
+const FIELD_TH = {
+  recorded_by: 'ผู้บันทึก',
+  source: 'แหล่งที่มา',
+  return_date: 'วันที่รับคืน',
+  hn: 'HN',
+  qty: 'จำนวน',
+  disposition: 'สถานะ'
+};
+
+const srcLabel = (key) => (SOURCES.find((s) => s.key === key) || {}).label || key || 'ไม่ระบุ';
+
+// แปลงค่าดิบในประวัติให้อ่านออก — เก็บเป็นข้อความดิบในฐานเพื่อให้รองรับทุกช่อง
+function fieldText(field, raw) {
+  const v = String(raw == null ? '' : raw);
+  if (!v) return 'ว่าง';
+  if (field === 'source') return srcLabel(v);
+  if (field === 'return_date') return thaiDate(v);
+  if (field === 'disposition') return v === 'reuse' ? 'ใช้ต่อได้' : 'ทำลาย';
+  return v;
+}
+
+// เวลาที่แก้ — วันที่ไทยพร้อมเวลา (ประวัติต้องตอบได้ว่าแก้เมื่อไร ไม่ใช่แค่วันไหน)
+function logTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return thaiDate(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')) + ' ' + hh + ':' + mm;
 }

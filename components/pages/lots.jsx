@@ -34,12 +34,17 @@ export function renderLots(V) {
       <div style={s('display:flex;flex-direction:column;gap:8px')}>
         {V.lotRows.map((l) => (
           <div key={l.key} style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:11px;padding:13px 15px;display:flex;align-items:center;gap:14px;flex-wrap:wrap')}>
-            <div style={s('min-width:150px')}>
+            {/* 🚨 ต้องเป็นความกว้างคงที่ ไม่ใช่ min-width — ไม่งั้นกล่องนี้ยืดตามความยาวชื่อคน
+                   แล้วคอลัมน์ "X รายการ" ของแต่ละแถวจะไม่ตรงกัน (วัดจริงเหลื่อมกัน 23px)
+                   ชื่อยาวสุดที่วัดได้คือ "24 ส.ค. 2569 · ภญ. วลัยพรรณ ชิณวงษ์" = 180px
+                   ตั้ง 208px เผื่อชื่อยาวกว่านี้ · ยาวเกินก็ขึ้นบรรทัดใหม่ ไม่ตัดทิ้ง
+                   เพราะชื่อผู้บันทึกเป็นข้อมูลสืบกลับ ซ่อนไม่ได้ (พี่กันทัก 25 ส.ค. 2569) */}
+            <div style={s('width:208px;flex:none;min-width:0')}>
               <div style={s("font:700 15px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d")}>{l.lot}</div>
-              <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e;margin-top:1px')}>{l.dateLabel} · {l.by}</div>
+              <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e;margin-top:1px;overflow-wrap:anywhere')}>{l.dateLabel} · {l.by}</div>
             </div>
 
-            <div style={s('font:500 12.5px Sarabun,sans-serif;color:#414a44;flex:none')}>{l.itemsLabel}</div>
+            <div style={s('width:82px;flex:none;font:500 12.5px Sarabun,sans-serif;color:#414a44;text-align:right')}>{l.itemsLabel}</div>
 
             <div style={s('display:flex;align-items:baseline;gap:10px;margin-left:auto;flex-wrap:wrap')}>
               <div style={s('text-align:right')}>
@@ -55,6 +60,15 @@ export function renderLots(V) {
             </div>
 
             <div style={s('display:flex;gap:7px;flex:none')}>
+              {/* ปุ่มแก้ไข — สีอำพันต่างจากอีกสองปุ่มโดยตั้งใจ เพราะเป็นปุ่มเดียวที่เปลี่ยนข้อมูลจริง
+                  อีกสองปุ่มเป็นแค่การเปิดดู กดผิดแล้วไม่มีอะไรเสียหาย (พี่กันเคาะ 25 ส.ค. 2569) */}
+              <div {...kb(l.openEdit)} className="tap" title="แก้ไขล็อตนี้"
+                style={s('height:36px;padding:0 12px;border-radius:9px;border:1px solid rgba(150,101,15,.30);background:#fdf6e9;color:#96650f;display:flex;align-items:center;gap:6px;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
+                  <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+                </svg>
+                แก้ไข
+              </div>
               <div {...kb(l.openHistory)} className="hv-bg-f6" style={s('height:36px;padding:0 13px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;font:600 12.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>ดูรายการ</div>
               <div {...kb(l.openSlip)} className="hv-teal tap" style={s('height:36px;padding:0 14px;border-radius:9px;background:#2f7d5d;color:#fff;display:flex;align-items:center;gap:6px;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>

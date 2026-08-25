@@ -22,7 +22,11 @@ function renderHistTools(V) {
         รายการ Lot
       </div>
 
-      <div {...kb(V.toggleTrash)} className="hv-bg-f6 tap" style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>
+      {/* 🚨 คลาส hover ต้องสลับตามสถานะปุ่ม ไม่ใช่ตั้งตายตัว
+             ตอนอยู่ในถังขยะปุ่มเป็นพื้นเขียวตัวหนังสือขาว ถ้าใช้ hv-bg-f6 (พื้นขาวนวล)
+             ชี้เมาส์แล้วตัวหนังสือขาวจะกลืนไปกับพื้นขาว อ่านไม่ออกเลย
+             (พี่กันเจอเอง 25 ส.ค. 2569 — ตระกูลเดียวกับบั๊ก border-color ใน ME-DRP) */}
+      <div {...kb(V.toggleTrash)} className={(V.histTrash ? 'hv-teal' : 'hv-bg-f6') + ' tap'} style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>
         {V.trashLabel}
       </div>
 

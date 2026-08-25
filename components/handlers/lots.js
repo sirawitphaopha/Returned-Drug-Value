@@ -6,7 +6,7 @@
 //
 // ใบสรุปพิมพ์: แปะหน้าถุงยาที่รอตรวจ ให้เวรถัดไปรู้ว่าถุงนี้คือ Lot ไหน
 //              หรือเก็บเข้าแฟ้มเป็นหลักฐานว่าวันนั้นรับคืนอะไรมาบ้าง
-import { fetchT } from '../helpers';
+import { fetchT, cleanQtyExpr, evalQty } from '../helpers';
 
 const LOTS_TTL = 60000;
 
@@ -107,6 +107,141 @@ export function lotsActions(app) {
   };
 
   app.closeLotSlip = () => app.setState({ slipLot: null, slipRows: [] });
+
+  // ── แก้ไขล็อตทั้งก้อน (พี่กันสั่ง 25 ส.ค. 2569) ─────────────────────────────
+  // ล็อตที่บันทึกไปแล้วมีโอกาสกรอกผิด — เลือกชื่อผู้บันทึกผิดคน ติ๊กแหล่งที่มาผิด นับจำนวนพลาด
+  // เดิมต้องลบทีละแถวแล้วกรอกใหม่ทั้งล็อต ซึ่งเสี่ยงกว่าการแก้มาก
+  //
+  // 🚨 ทุกการแก้ถูกบันทึกลง mr_lot_audit — ดูเหตุผลใน app/api/lots/[lot]/route.js
+  // 🚨 ราคาต่อหน่วยแก้ไม่ได้ ไม่มีช่องให้แก้ในหน้าจอและฝั่งเซิร์ฟเวอร์ก็ไม่รับ
+  app.openLotEdit = async (lot) => {
+    if (app.state.demo) { app.toast('โหมดดูตัวอย่างแก้ข้อมูลไม่ได้', '', false); return; }
+    app.setState({ lotEdit: { lot: lot }, lotEditLoading: true, lotEditBusy: false, lotEditConfirm: false, lotEditLogOpen: false });
+    try {
+      const res = await fetchT('/api/lots/' + encodeURIComponent(lot));
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'อ่านข้อมูลล็อตไม่สำเร็จ');
+      app.setState({
+        lotEdit: {
+          lot: data.lot,
+          // ค่าตั้งต้น = ค่าปัจจุบันในฐาน · orig เก็บไว้เทียบว่าแก้อะไรไปแล้วบ้าง
+          recordedBy: data.recordedBy,
+          source: data.source,
+          date: data.date,
+          rows: data.rows,
+          orig: { recordedBy: data.recordedBy, source: data.source, date: data.date, rows: data.rows }
+        },
+        lotEditLog: data.log || [],
+        lotEditLoading: false
+      });
+    } catch (e) {
+      app.setState({ lotEdit: null, lotEditLoading: false });
+      app.toast(e.message || 'อ่านข้อมูลล็อตไม่สำเร็จ', '', false);
+    }
+  };
+
+  app.closeLotEdit = () => app.setState({
+    lotEdit: null, lotEditLog: [], lotEditConfirm: false, lotEditQtyId: null, lotEditQtyText: '', lotEditLogOpen: false, lotEditWho: ''
+  });
+
+  // แก้ค่าระดับล็อต (ผู้บันทึก · แหล่งที่มา · วันที่)
+  app.setLotEditField = (key, value) => {
+    const e = app.state.lotEdit;
+    if (!e) return;
+    app.setState({ lotEdit: Object.assign({}, e, { [key]: value }) });
+  };
+
+  // แก้จำนวนรายแถว — ใช้กติกาเดียวกับหน้าบันทึก (พิมพ์สูตรได้ · Enter 2 จังหวะ)
+  app.startLotQty = (id, qty) => app.setState({ lotEditQtyId: id, lotEditQtyText: String(qty) });
+  app.changeLotQty = (text) => app.setState({ lotEditQtyText: cleanQtyExpr(text) });
+  app.cancelLotQty = () => app.setState({ lotEditQtyId: null, lotEditQtyText: '' });
+
+  app.resolveLotQty = () => {
+    const n = evalQty(app.state.lotEditQtyText);
+    if (!n) return;
+    app.setState({ lotEditQtyText: String(app.state.lotEditQtyText).split('=')[0] + '=' + n });
+  };
+
+  app.commitLotQty = () => {
+    const e = app.state.lotEdit;
+    const id = app.state.lotEditQtyId;
+    if (!e || !id) return;
+    const n = evalQty(app.state.lotEditQtyText);
+    if (!n) { app.setState({ lotEditQtyId: null, lotEditQtyText: '' }); return; }
+    app.setState({
+      lotEdit: Object.assign({}, e, { rows: e.rows.map((r) => (r.id === id ? Object.assign({}, r, { qty: n }) : r)) }),
+      lotEditQtyId: null,
+      lotEditQtyText: ''
+    });
+  };
+
+  app.setLotRowDisp = (id, disp) => {
+    const e = app.state.lotEdit;
+    if (!e) return;
+    app.setState({ lotEdit: Object.assign({}, e, { rows: e.rows.map((r) => (r.id === id ? Object.assign({}, r, { disposition: disp }) : r)) }) });
+  };
+
+  app.toggleLotEditLog = () => app.setState({ lotEditLogOpen: !app.state.lotEditLogOpen });
+
+  // 🚨 ต้องผ่านหน้าต่างยืนยันก่อนเสมอ — แก้ล็อตกระทบตัวเลขที่รายงานไปแล้ว
+  //    และการเปลี่ยนชื่อผู้บันทึกคือการเปลี่ยนหลักฐานว่าใครเซ็น (กฎเหล็กข้อ 7)
+  // เปิดหน้าต่างยืนยัน — ถ้าหน้าบันทึกเลือกชื่อไว้แล้วก็หยิบมาใส่ให้ เป็นการช่วย ไม่ใช่การบังคับ
+  app.askSaveLotEdit = () => app.setState({
+    lotEditConfirm: true,
+    lotEditWho: app.state.lotEditWho || app.state.recorder || ''
+  });
+  app.setLotEditWho = (v) => app.setState({ lotEditWho: v });
+  app.cancelSaveLotEdit = () => app.setState({ lotEditConfirm: false });
+
+  app.saveLotEdit = async () => {
+    const e = app.state.lotEdit;
+    if (!e || app.state.lotEditBusy) return;
+    // 🚨 ชื่อผู้แก้มาจากช่องในหน้าต่างยืนยันเอง ไม่ใช่ช่องผู้บันทึกในหน้าบันทึก
+    //    เดิมผูกกับ app.state.recorder ซึ่งผิด — คนที่มาแก้ล็อตย้อนหลังไม่จำเป็น
+    //    ต้องเปิดหน้าบันทึกแล้วเลือกชื่อตัวเองก่อน มันคนละงานกัน
+    //    ผลคือกดยืนยันแล้วโดนตีกลับเงียบ ๆ (ข้อความเตือนหายใน 2 วินาที)
+    //    ดูเหมือนปุ่มเสีย — พี่กันเจอเอง 25 ส.ค. 2569
+    const by = String(app.state.lotEditWho || '').trim();
+    if (!by) return;      // ปุ่มยืนยันถูกปิดอยู่แล้วเมื่อยังไม่เลือก ตรงนี้แค่กันเหนียว
+
+    app.setState({ lotEditBusy: true });
+    try {
+      // ส่งเฉพาะแถวที่เปลี่ยนจริง — ฝั่งเซิร์ฟเวอร์เทียบซ้ำอีกชั้นอยู่แล้ว
+      // แต่ส่งน้อยกว่าดีกว่า เน็ตโรงพยาบาลช้าและล็อตใหญ่มีได้ถึง 500 แถว
+      const origById = new Map(e.orig.rows.map((r) => [r.id, r]));
+      const items = e.rows
+        .filter((r) => {
+          const o = origById.get(r.id);
+          return o && (Number(o.qty) !== Number(r.qty) || o.disposition !== r.disposition);
+        })
+        .map((r) => ({ id: r.id, qty: r.qty, disposition: r.disposition }));
+
+      const body = { by: by, items: items };
+      if (e.recordedBy !== e.orig.recordedBy) body.recordedBy = e.recordedBy;
+      if (e.source !== e.orig.source) body.source = e.source;
+      if (e.date !== e.orig.date) body.date = e.date;
+
+      const res = await fetchT('/api/lots/' + encodeURIComponent(e.lot), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      }, 20000);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'แก้ไขล็อตไม่สำเร็จ');
+
+      // 🚨 ต้องล้างแคชทุกก้อนที่เกี่ยวกับตัวเลข ไม่งั้นหน้าประวัติกับหน้าสรุปยังโชว์ของเก่า
+      app._lotsCache = {};
+      app.invalidate();
+      app.setState({ lotEdit: null, lotEditLog: [], lotEditConfirm: false, lotEditBusy: false });
+      app.loadLots(true);
+      app.refreshFy();
+      const n = Number(data.changed || 0);
+      app.toast('แก้ไขล็อต ' + e.lot + ' แล้ว', n ? 'เปลี่ยนไป ' + n + ' จุด บันทึกไว้ในประวัติการแก้ไขแล้ว' : '');
+    } catch (err) {
+      app.setState({ lotEditBusy: false, lotEditConfirm: false });
+      app.toast(err.message || 'แก้ไขล็อตไม่สำเร็จ', '', false);
+    }
+  };
 
   // 🚨 ต้องรอให้เบราว์เซอร์วาดใบเสร็จก่อนสั่งพิมพ์ ไม่งั้นได้กระดาษเปล่า
   //    (กดปุ่มพิมพ์ทันทีหลังโหลดข้อมูลเสร็จ React ยังไม่ทันวาดลงจอ)

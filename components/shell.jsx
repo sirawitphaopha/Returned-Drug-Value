@@ -10,6 +10,7 @@ import { renderSheet } from './pages/sheet';
 import { renderSettings } from './pages/settings';
 import { renderPrices, renderPriceBar } from './pages/prices';
 import { renderLots, renderLotSlip } from './pages/lots';
+import { renderLotEdit } from './pages/lotedit';
 import { renderCatalog } from './pages/catalog';
 import { renderToast } from './pages/toast';
 import { renderConfirm } from './pages/confirm';
@@ -77,6 +78,7 @@ export function renderShell(app) {
       {renderSettings(V)}
       {renderHisImport(V)}
       {renderLotSlip(V)}
+      {renderLotEdit(V)}
       {renderToast(V)}
       {renderConfirm(V)}
     </div>
