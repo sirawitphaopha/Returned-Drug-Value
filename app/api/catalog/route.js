@@ -14,7 +14,21 @@ export const dynamic = 'force-dynamic';
 
 // ช่องที่แก้ได้ — ระบุไว้ตายตัว ไม่รับอะไรก็ได้ที่ส่งมา
 // `id` ไม่อยู่ในนี้เพราะฐานออกให้เอง และห้ามเปลี่ยน (รายการยาคืนเก่าอ้างถึงเลขนี้)
-const FIELDS = ['generic', 'strength', 'unit', 'percent', 'form', 'route', 'release', 'brand', 'abbrev', 'had', 'preg', 'renal', 'hidden'];
+// 🚨 เพิ่มช่องใหม่ในตาราง drugs ต้องใส่ที่นี่ด้วย ไม่งั้นแก้จากหน้าคลังยาแล้วค่าไม่ถูกบันทึก
+//    ราคากับสีเม็ดยาเป็นของกลาง ย้ายเข้ามาอยู่ในคลังยาแล้ว (พี่กันสั่ง 25 ส.ค. 2569)
+const FIELDS = ['generic', 'strength', 'unit', 'percent', 'form', 'route', 'release', 'brand', 'abbrev',
+  'had', 'preg', 'renal', 'pill_color', 'pill_color_hex', 'unit_th', 'hidden'];
+
+// ช่องตัวเลข — แยกออกมาเพราะต้องแปลงเป็นตัวเลขจริง ไม่ใช่เก็บเป็นข้อความ
+const NUM_FIELDS = ['unit_price'];
+
+// ความยาวสูงสุดของแต่ละช่อง — ตาราง drugs ใช้ร่วม 3 เว็บ
+// ถ้าไม่จำกัด คำขอเดียวที่ส่งชื่อยา 5 MB มาจะทำให้ทุกเว็บลากแถวบวมมหาศาลมาแสดงทุกครั้งที่เปิด
+const MAXLEN = {
+  generic: 160, strength: 60, unit: 40, percent: 20, form: 40, route: 40,
+  release: 40, brand: 90, abbrev: 60, preg: 20,
+  pill_color: 24, pill_color_hex: 9, unit_th: 24
+};
 
 function pick(body) {
   const row = {};
@@ -22,7 +36,16 @@ function pick(body) {
     if (body[f] === undefined) continue;
     const v = body[f];
     if (f === 'had' || f === 'renal' || f === 'hidden') row[f] = v === true;
-    else row[f] = v === null || String(v).trim() === '' ? null : String(v).trim();
+    else row[f] = v === null || String(v).trim() === '' ? null : String(v).trim().slice(0, MAXLEN[f] || 80);
+  }
+  for (const f of NUM_FIELDS) {
+    if (body[f] === undefined) continue;
+    const n = Number(body[f]);
+    // ราคาติดลบหรือเกินเพดานที่คอลัมน์รับได้ = ไม่รับ ปล่อยค่าเดิมไว้
+    if (Number.isFinite(n) && n >= 0 && n <= 999999.99) {
+      row[f] = Math.round(n * 10000) / 10000;   // เก็บ 4 ตำแหน่ง ยาถูก ๆ จาก HIS มาแบบ 0.4567
+      row.price_updated_at = new Date().toISOString();
+    }
   }
   return row;
 }
@@ -32,28 +55,20 @@ function pick(body) {
 export async function GET() {
   try {
     const db = getAdmin();
-    // ดึงราคามาด้วย เพื่อให้หน้าคลังยาโชว์คอลัมน์ราคาได้ (พี่กันสั่ง 19 ส.ค. 2569)
-    // ราคาอยู่คนละตาราง (mr_drug_price ของเว็บนี้เอง ส่วน drugs เป็นของกลาง 3 เว็บ)
-    const [res, priceRes] = await Promise.all([
-      db.from('drugs')
-        .select('id,generic,strength,unit,percent,form,route,release,brand,abbrev,had,preg,renal,hidden')
-        .order('generic', { ascending: true })
-        .order('id', { ascending: true }),
-      db.from('mr_drug_price').select('drug_id,unit_price,unit_th,needs_check')
-    ]);
+    // 🚨 ราคาอยู่ในตาราง drugs แล้ว ไม่ต้อง join ตารางอื่น (ย้ายมา 25 ส.ค. 2569)
+    //    พี่กันสั่ง: "คลังยาทั้งหมดคือส่วนกลางที่ทุกเว็บใช้ด้วยกัน ทุกอย่าง"
+    const res = await db.from('drugs')
+      .select('id,generic,strength,unit,percent,form,route,release,brand,abbrev,had,preg,renal,pill_color,pill_color_hex,unit_price,unit_th,price_needs_check,hidden')
+      .order('generic', { ascending: true })
+      .order('id', { ascending: true });
     if (res.error) throw new Error(res.error.message);
-    if (priceRes.error) throw new Error(priceRes.error.message);
 
-    const priceById = new Map((priceRes.data || []).map((p) => [p.drug_id, p]));
-    const drugs = (res.data || []).map((d) => {
-      const p = priceById.get(d.id) || {};
-      return {
-        ...d,
-        price: Number(p.unit_price || 0),
-        unitTh: p.unit_th || '',
-        needsCheck: p.needs_check === true
-      };
-    });
+    const drugs = (res.data || []).map((d) => ({
+      ...d,
+      price: Number(d.unit_price || 0),
+      unitTh: d.unit_th || '',
+      needsCheck: d.price_needs_check === true
+    }));
     return NextResponse.json({ drugs: drugs });
   } catch (e) {
     console.error('[api]', e);

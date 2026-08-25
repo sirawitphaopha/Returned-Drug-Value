@@ -5,6 +5,7 @@ import { SOURCES, money, thaiDate } from '@/lib/format';
 import { cleanQty, qtyNum, qtyText, splitDrugName, splitPercent, splitRelease, markMatch,
   cleanQtyExpr, evalQty, isQtyExpr, exprText, isResolvedQty, splitResolved } from '../helpers';
 import { moveHi } from '@/lib/drugSearch';
+import { pillColorOf } from '@/lib/drugPillColors';
 
 const sumReuse = (rows) => rows.reduce((a, x) => a + (x.disposition === 'reuse' ? x.price * x.qty : 0), 0);
 
@@ -203,7 +204,11 @@ export function recordVals(app, d) {
       // สีความแรง — ทายาที่ชื่อเดียวกันแต่ความแรงต่างกันให้คนละสี (พี่กันเคาะชุด 2)
       // ทำงานเฉพาะตอนผลค้นหามียาชื่อเดียวกันหลายรายการ · เจอตัวเดียวคงสีเทาเหมือนเดิม
       // เหตุผล: Morphine 10 · 20 · 30 mg หยิบสลับกันแล้วอันตราย ต้องแยกออกตั้งแต่ตอนกวาดตา
-      const stColor = d.stColorOf(drug);
+      // 🚨 สีเม็ดยาจริงมาก่อนสีที่ระบบสุ่มให้เสมอ (Warfarin — พี่กันสั่ง 25 ส.ค. 2569)
+      //    สีที่ระบบสุ่ม (makeStColorOf) มีไว้แค่ "ทำให้ต่างกัน" ไม่ได้สื่อความหมายอะไร
+      //    แต่สีเม็ดยาจริงคือสิ่งที่เภสัชกรถือในมือ ต้องตรงกันเป๊ะ
+      const pill = pillColorOf(drug);
+      const stColor = pill ? pill.color : d.stColorOf(drug);
       // แยกชื่อกับความแรง แล้วไฮไลต์คำที่พิมพ์ค้น — ตาไล่หาง่ายขึ้นมาก
       const sp = splitDrugName(drug.name);
       const mk = markMatch(sp.base, d.qUsed);
@@ -232,6 +237,9 @@ export function recordVals(app, d) {
         stNum: stColor ? numPart(pc.main) : '',
         stRest: stColor ? restPart(pc.main) : pc.main,
         stColor: stColor,
+        // ป้ายสีเม็ดยาจริง — วงเล็บหลังชื่อ เช่น Warfarin (ส้ม) 2 mg
+        pillLabel: pill ? pill.label : '',
+        pillColor: pill ? pill.color : '',
         percentLabel: pc.percent ? '(' + pc.percent + ')' : '',
         hasPercent: !!pc.percent,
         // รูปแบบการออกฤทธิ์ — เอียง หนา วงเล็บ สีแดงอมชมพู (พี่กันเลือกแบบ ง)

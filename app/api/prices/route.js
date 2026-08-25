@@ -12,25 +12,19 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const db = getAdmin();
-    const [drugsRes, priceRes] = await Promise.all([
-      db.from('drugs').select('id,generic,strength,unit,percent,form,route,release,brand,abbrev,hidden').order('id'),
-      db.from('mr_drug_price').select('drug_id,unit_price,unit_th,display_name,note,needs_check,suggestions')
-    ]);
+    // 🚨 ราคาอยู่ในตาราง drugs แล้ว ตารางเดียวจบ (ย้ายมา 25 ส.ค. 2569)
+    const drugsRes = await db.from('drugs')
+      .select('id,generic,strength,unit,percent,form,route,release,brand,abbrev,pill_color,pill_color_hex,unit_price,unit_th,display_name,price_note,price_needs_check,price_suggestions,hidden')
+      .order('id');
     if (drugsRes.error) throw new Error(drugsRes.error.message);
-    if (priceRes.error) throw new Error(priceRes.error.message);
 
-    const priceById = new Map((priceRes.data || []).map((p) => [p.drug_id, p]));
-    const all = (drugsRes.data || []).map((d) => ({
-      ...d,
-      display_name: (priceById.get(d.id) || {}).display_name
-    }));
+    const all = drugsRes.data || [];
     const names = buildDrugNames(all);
 
     const items = all
       .filter((d) => d.hidden !== true)
       .map((d) => {
-        const p = priceById.get(d.id) || {};
-        const price = Number(p.unit_price || 0);
+        const price = Number(d.unit_price || 0);
         return {
           id: d.id,
           name: names.get(d.id),
@@ -41,17 +35,17 @@ export async function GET() {
           route: (d.route || '').trim(),
           // ตัวย่อที่เภสัชกรใช้เรียกกันจริง — ค้นหาได้ + โชว์ในวงเล็บสีม่วง
           abbrev: (d.abbrev || '').trim(),
-          unit: resolveUnit(d.form, p.unit_th),
+          unit: resolveUnit(d.form, d.unit_th),
           // ว่าง = ยังใช้หน่วยเริ่มต้นของกลุ่มอยู่ ไม่ได้แก้รายตัว
-          unitTh: (p.unit_th || '').trim(),
+          unitTh: (d.unit_th || '').trim(),
           defaultUnit: FORM_UNIT[(d.form || '').trim()] || UNIT_FALLBACK,
           price,
           hasPrice: price > 0,
-          note: (p.note || '').trim(),
+          note: (d.price_note || '').trim(),
           // จับคู่กับ HIS ไม่ชัวร์ รอเภสัชกรกดเลือก · ราคายังเป็น 0 อยู่
-          needsCheck: p.needs_check === true,
+          needsCheck: d.price_needs_check === true,
           // ตัวเลือกราคาที่ระบบเสนอ ให้กดเลือกในหน้าจัดการราคา
-          suggestions: Array.isArray(p.suggestions) ? p.suggestions : []
+          suggestions: Array.isArray(d.price_suggestions) ? d.price_suggestions : []
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name, 'en'));
@@ -92,12 +86,12 @@ export async function PUT(req) {
       }
       const unitTh = String(it.unitTh == null ? '' : it.unitTh).trim().slice(0, 24);
       const row = {
-        drug_id: id,
+        id: id,
         // เก็บ 4 ตำแหน่ง — ไฟล์จาก HIS ให้ราคามาแบบ 0.4567 บาท/เม็ด
         // ถ้าปัดเหลือ 2 ตำแหน่ง ยาที่ถูกกว่า 0.005 จะกลายเป็น 0 = ระบบถือว่ายังไม่ใส่ราคา
         unit_price: Math.round(price * 10000) / 10000,
         unit_th: unitTh || null,
-        updated_at: now
+        price_updated_at: now
       };
 
       // ── ช่องเสริมสำหรับการนำเข้าราคาจาก HIS ────────────────────────────────
@@ -105,11 +99,11 @@ export async function PUT(req) {
       // note        = ที่มาของราคา เช่น "HIS 5 ส.ค. 69 · CefTRI-axone 1 g/vial"
       // needsCheck  = จับคู่ไม่ชัวร์ รอเภสัชกรกดเลือก
       // suggestions = ตัวเลือกราคาที่ระบบเสนอ ให้กดเลือกในหน้าจัดการราคา
-      if (it.note !== undefined) row.note = String(it.note || '').trim().slice(0, 400) || null;
-      if (it.needsCheck !== undefined) row.needs_check = !!it.needsCheck;
+      if (it.note !== undefined) row.price_note = String(it.note || '').trim().slice(0, 400) || null;
+      if (it.needsCheck !== undefined) row.price_needs_check = !!it.needsCheck;
       if (it.suggestions !== undefined) {
         const list = Array.isArray(it.suggestions) ? it.suggestions : [];
-        row.suggestions = list.slice(0, 6).map((sg) => ({
+        row.price_suggestions = list.slice(0, 6).map((sg) => ({
           name: String(sg.name || '').slice(0, 90),
           price: Number(sg.price) || 0,
           unit: String(sg.unit || '').slice(0, 24)
@@ -121,32 +115,30 @@ export async function PUT(req) {
 
     const db = getAdmin();
 
-    // ── 🚨 ต้องแยกส่งเป็นกลุ่มตาม "ชุดช่องที่เหมือนกัน" ห้ามส่งรวมทีเดียว ─────────
+    // ── 🚨 ต้องใช้ update ทีละแถว ห้ามใช้ upsert กับตาราง drugs ───────────────
     //
-    // บั๊กที่เคยเจอ (10 ส.ค. 2569): กดบันทึกทีละตัวได้ แต่กดหลายตัวพร้อมกันแล้วพัง
-    //   null value in column "needs_check" violates not-null constraint
+    // ราคาย้ายมาอยู่ในตาราง drugs แล้ว (25 ส.ค. 2569) ซึ่งเป็นตารางของกลาง 3 เว็บ
+    // ที่มีช่องบังคับกรอกอย่าง generic อยู่ด้วย
     //
-    // สาเหตุ: ตอนส่งหลายแถวพร้อมกัน ฐานข้อมูลจะรวมรายชื่อช่องจากทุกแถวเป็นชุดเดียว
-    //         แถวไหนไม่มีช่องนั้นจะถูกเติมค่าว่างลงไป
-    //         แถวยาปกติไม่ได้ส่ง needs_check/suggestions มาด้วย เลยโดนเติมค่าว่าง
-    //         แต่สองช่องนี้ห้ามเป็นค่าว่าง → ตีกลับทั้งก้อน ทั้งที่ข้อมูลถูกต้องหมด
+    // upsert จะพยายาม "แทรกแถวใหม่" ถ้าหารหัสนั้นไม่เจอ แล้วจะพังเพราะไม่มีชื่อยา
+    // ที่แย่กว่าคือถ้าวันหน้ามีคนส่งรหัสยาผิดมา จะกลายเป็นสร้างยาผีขึ้นในคลังกลาง
+    // update จึงปลอดภัยกว่า — หารหัสไม่เจอก็แค่ไม่มีอะไรเปลี่ยน ไม่สร้างขยะทิ้งไว้
     //
-    // ทางแก้ที่ไม่เลือก: เติมค่าเริ่มต้นให้ทุกแถว
-    //   เพราะจะไปล้าง note กับ suggestions ของยาที่ผู้ใช้ไม่ได้ตั้งใจแตะ = ข้อมูลหาย
+    // ⚠️ ส่งเป็นชุดละ 20 แถวพร้อมกัน ไม่ยิงทีละตัวเรียงกัน
+    //    นำเข้าราคาจาก HIS ทีหนึ่งมีได้ถึง 400 ตัว ถ้ายิงทีละตัวจะรอนานมาก
     //
-    // จัดกลุ่มตามรายชื่อช่องแล้วส่งทีละกลุ่ม → แถวไหนไม่ได้ส่งช่องไหนมา ช่องนั้นไม่ถูกแตะเลย
-    // วิธีนี้รองรับช่องที่จะเพิ่มในอนาคตเองโดยไม่ต้องมาแก้ซ้ำ
-    const groups = new Map();
-    for (const r of rows) {
-      const sig = Object.keys(r).sort().join(',');
-      if (!groups.has(sig)) groups.set(sig, []);
-      groups.get(sig).push(r);
-    }
-
-    // ยาทั้ง 417 ตัวมีแถวราคาอยู่แล้วจาก 003_seed_prices.sql · upsert ไว้กันยาที่เพิ่มใหม่ทีหลัง
-    for (const chunk of groups.values()) {
-      const { error } = await db.from('mr_drug_price').upsert(chunk, { onConflict: 'drug_id' });
-      if (error) throw new Error(error.message);
+    // (บั๊กเดิมเรื่อง "ส่งหลายแถวแล้วช่องที่ไม่ได้ส่งโดนเติมค่าว่าง" หมดไปเอง
+    //  เพราะ update แตะเฉพาะช่องที่ส่งมาจริงอยู่แล้ว ไม่ต้องจัดกลุ่มตามชุดช่องอีก)
+    const CHUNK = 20;
+    for (let i = 0; i < rows.length; i += CHUNK) {
+      const chunk = rows.slice(i, i + CHUNK);
+      const results = await Promise.all(chunk.map((r) => {
+        const { id: drugId, ...patch } = r;
+        return db.from('drugs').update(patch).eq('id', drugId);
+      }));
+      for (const res of results) {
+        if (res.error) throw new Error(res.error.message);
+      }
     }
 
     // ── ตีราคาย้อนหลัง ────────────────────────────────────────────────────────
@@ -156,7 +148,7 @@ export async function PUT(req) {
     if (body.backfill) {
       const items = rows
         .filter((r) => r.unit_price > 0)
-        .map((r) => ({ drugId: r.drug_id, price: r.unit_price }));
+        .map((r) => ({ drugId: r.id, price: r.unit_price }));
       if (items.length) {
         const bf = await db.rpc('mr_backfill_price', {
           p_items: items,

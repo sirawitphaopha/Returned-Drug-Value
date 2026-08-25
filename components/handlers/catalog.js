@@ -44,6 +44,8 @@ export function catalogActions(app) {
     app.setState({ catFilters: cur.includes(key) ? cur.filter((x) => x !== key) : cur.concat(key) });
   };
   app.clearCatFilters = () => app.setState({ catFilters: [] });
+  // ล้างทั้งคำค้นและตัวกรองในทีเดียว — คนที่ทั้งค้นทั้งกรองไม่ต้องไล่กดสองที่
+  app.clearCatAll = () => app.setState({ catFilters: [], catSearch: '' });
 
   // กดหัวคอลัมน์เพื่อเรียง · กดซ้ำสลับขึ้น/ลง
   app.toggleCatSort = (key) => {

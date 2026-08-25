@@ -39,6 +39,13 @@ function renderDrugOption(r, big) {
               ({r.abBefore}<span style={s('background:#ece3f6;border-radius:3px;padding:0 1px')}>{r.abHit}</span>{r.abAfter})
             </span>
           )}
+          {/* 🚨 สีเม็ดยาจริง — Warfarin แยกความแรงด้วยสีเม็ดตามที่ผู้ผลิตตั้งใจทำมา
+              เภสัชกรกับคนไข้จำยาตัวนี้ด้วยสีมากกว่าตัวเลข หน้าจอต้องพูดภาษาเดียวกับของในมือ
+              วางไว้ติดชื่อยาทันที เพราะเป็น "ลักษณะของยาตัวนี้" ไม่ใช่ข้อมูลประกอบ
+              (พี่กันสั่ง 25 ส.ค. 2569 · ตารางสีอยู่ lib/drugPillColors.js) */}
+          {r.pillLabel && (
+            <span style={sx('font-weight:700;margin-left:5px;white-space:nowrap', { color: r.pillColor })}>({r.pillLabel})</span>
+          )}
           {/* ความแรง — ถ้าผลค้นหามียาชื่อเดียวกันหลายตัว ตัวเลขจะถูกทาสีคนละสีเพื่อไม่ให้หยิบสลับ
               (Morphine 10 · 20 · 30 mg) · หน่วยคงสีเทาเดิม บรรทัดจะได้ไม่รก */}
           {r.strength && (

@@ -1,6 +1,10 @@
 // ค่าที่หน้าคลังยาใช้วาด — ไม่แตะ DOM ไม่ยิง API
 import { splitDrugName, splitPercent, splitRelease } from '../helpers';
 import { buildDrugNames } from '@/lib/drugName';
+// ตัวแปลงแป้นพิมพ์ไทย→อังกฤษ ใช้ตัวเดียวกับช่องค้นหายาหน้าบันทึก จะได้ไม่เพี้ยนกัน
+import { thaiToEnglish } from '@/lib/drugSearch';
+import { pillColorOf, COLOR_HEX } from '@/lib/drugPillColors';
+import { FORM_UNIT, UNIT_FALLBACK } from '@/lib/units';
 
 // คอลัมน์ในตาราง — ต้องครบทุกช่องที่มีจริงในตาราง drugs ของ Supabase
 // (`hidden` ไม่อยู่ในนี้ เพราะทำผ่านปุ่มท้ายแถวและมีตัวกรองแยกให้แล้ว)
@@ -51,14 +55,31 @@ export function catalogVals(app, d) {
   // (ตัวแยกชื่อซ้ำต้องเห็นยาครบถึงจะรู้ว่าต้องต่อท้ายด้วยรูปแบบยาไหม)
   const fullNames = buildDrugNames(list);
 
-  const q = (st.catSearch || '').trim().toLowerCase();
+  // ── ค้นหา — รองรับลืมสลับแป้นพิมพ์ (พี่กันสั่ง 25 ส.ค. 2569) ────────────────
+  // ตั้งใจพิมพ์ warfarin แต่แป้นค้างที่ไทย จะได้ ้ฟก๘ยรfeatures ซึ่งไม่เจออะไรเลย
+  // ใช้ตัวแปลงตัวเดียวกับช่องค้นหายาหน้าบันทึก (lib/drugSearch.js) จะได้ไม่เพี้ยนกัน
+  //
+  // 🚨 ต้องบอกผู้ใช้ด้วยว่าระบบค้นด้วยคำว่าอะไร ไม่งั้นงงว่าพิมพ์ไทยแล้วทำไมเจอยาอังกฤษ
+  const raw = (st.catSearch || '').trim();
+  let q = raw.toLowerCase();
+  let swapped = false;
+  const hit = (x, k) =>
+    (x.generic || '').toLowerCase().includes(k) ||
+    (x.brand || '').toLowerCase().includes(k) ||
+    (x.abbrev || '').toLowerCase().includes(k);
+
   let rows = list.filter((x) => matchFilters(x, st.catFilters));
   if (q) {
-    rows = rows.filter((x) =>
-      (x.generic || '').toLowerCase().includes(q) ||
-      (x.brand || '').toLowerCase().includes(q) ||
-      (x.abbrev || '').toLowerCase().includes(q)
-    );
+    let found = rows.filter((x) => hit(x, q));
+    // ไม่เจอเลยและมีตัวอักษรไทยปน — ลองแปลงแป้นแล้วค้นใหม่
+    if (!found.length && /[฀-๿]/.test(raw)) {
+      const alt = thaiToEnglish(raw).trim().toLowerCase();
+      if (alt && alt !== q) {
+        const found2 = rows.filter((x) => hit(x, alt));
+        if (found2.length) { found = found2; q = alt; swapped = true; }
+      }
+    }
+    rows = found;
   }
 
   const s = st.catSort;
@@ -86,6 +107,12 @@ export function catalogVals(app, d) {
     catLoading: st.catLoading,
     catSearch: st.catSearch,
     setCatSearch: app.setCatSearch,
+    // ปุ่ม ✕ ล้างช่องค้นหา — ตารางมี 417 แถว กด Backspace รัวเสียเวลา (พี่กันสั่ง)
+    catHasSearch: !!raw,
+    clearCatSearch: () => app.setCatSearch(''),
+    // ป้ายบอกว่าระบบค้นด้วยคำว่าอะไร ตอนแปลงแป้นพิมพ์ให้
+    catSwapped: swapped,
+    catSwapLabel: swapped ? q : '',
     catTotal: list.length,
     catShown: rows.length,
     catHiddenCount: hiddenCount,
@@ -98,6 +125,8 @@ export function catalogVals(app, d) {
     ].map((f) => ({ ...f, on: st.catFilters.includes(f.key), pick: () => app.toggleCatFilter(f.key) })),
     catHasFilter: st.catFilters.length > 0,
     catClearFilters: app.clearCatFilters,
+    // ล้างทั้งคำค้นและตัวกรองในปุ่มเดียว — คนที่ทั้งค้นทั้งกรองไม่ต้องกดสองที่
+    catClearAll: app.clearCatAll,
     catSortKey: s ? s.key : '',
     catSortDir: s ? s.dir : '',
     catSortBy: app.toggleCatSort,
@@ -154,6 +183,10 @@ export function catalogVals(app, d) {
     closeCatEdit: app.closeCatEdit,
     keepCatEdit: app.keepCatEdit,
     // ตัวเลือกในช่องแบบเลื่อนลง — เอาจากค่าที่มีจริงในคลัง กันพิมพ์ไม่ตรงกัน
+    // ตัวอย่างสีที่จะเห็นจริง + หน่วยเริ่มต้นของกลุ่ม ไว้โชว์เป็น placeholder
+    catPillPreview: st.catEdit ? (pillColorOf({ pill_color: st.catEdit.pill_color, pill_color_hex: st.catEdit.pill_color_hex }) || {}).color || '' : '',
+    catPillHint: st.catEdit && st.catEdit.pill_color && COLOR_HEX[String(st.catEdit.pill_color).trim()] ? COLOR_HEX[String(st.catEdit.pill_color).trim()] : 'เว้นว่างได้',
+    catDefaultUnit: st.catEdit ? (FORM_UNIT[String(st.catEdit.form || '').trim()] || UNIT_FALLBACK) : '',
     catUnitOpts: distinct(list, 'unit', st.catEdit),
     catFormOpts: distinct(list, 'form', st.catEdit),
     catRouteOpts: distinct(list, 'route', st.catEdit),
