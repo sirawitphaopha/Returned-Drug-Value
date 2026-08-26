@@ -52,6 +52,8 @@ export function lotsVals(app, d) {
         lot: l.lot,
         dateLabel: thaiDate(l.date),
         by: l.by || 'ไม่ระบุผู้บันทึก',
+        // ป้ายเล็กบอกว่าล็อตนี้มาจาก รพ.สต. ไหน — ว่างเมื่อไม่ได้มาจาก รพ.สต.
+        siteLabel: l.src === 'pcu' ? String(l.pcuSite || '').trim() : '',
         itemsLabel: Number(l.items || 0).toLocaleString('en-US') + ' รายการ',
         // 🚨 ไม่รวมจำนวนข้ามหน่วยนับตรงนี้ (เม็ด+ขวด+หลอด บวกกันไม่มีความหมาย)
         //    ฐานข้อมูลส่ง qty รวมมาก็จริง แต่หน้านี้ไม่เอามาโชว์ ให้ดูมูลค่าแทน
@@ -70,6 +72,9 @@ export function lotsVals(app, d) {
     slipLot: slip ? slip.lot : '',
     slipDate: slip ? thaiDate(slip.date) : '',
     slipBy: slip ? (slip.by || 'ไม่ระบุผู้บันทึก') : '',
+    // ใบที่พิมพ์ออกมาต้องบอกได้ว่ายาชุดนี้มาจาก รพ.สต. ไหน
+    // ไม่งั้นส่งใบกลับไปให้ต้นทางแล้วเขาไม่รู้ว่าเป็นของตัวเองหรือเปล่า
+    slipSite: slip && slip.src === 'pcu' ? String(slip.pcuSite || '').trim() : '',
     slipOrg: st.orgName,
     slipRows: slipRows.map((r, i) => ({
       key: r.id != null ? r.id : i,
@@ -126,14 +131,19 @@ function lotEditVals(app, st) {
 
   const byChanged = e.recordedBy !== e.orig.recordedBy;
   const srcChanged = e.source !== e.orig.source;
+  // ย้ายออกจาก รพ.สต. ถือว่าชื่อถูกล้าง จึงนับเป็นการเปลี่ยนด้วย
+  const siteNow = e.source === 'pcu' ? (e.pcuSite || '') : '';
+  const siteWas = e.orig.source === 'pcu' ? (e.orig.pcuSite || '') : '';
+  const siteChanged = siteNow !== siteWas;
   const dateChanged = e.date !== e.orig.date;
-  const lotChanges = (byChanged ? 1 : 0) + (srcChanged ? 1 : 0) + (dateChanged ? 1 : 0);
+  const lotChanges = (byChanged ? 1 : 0) + (srcChanged ? 1 : 0) + (dateChanged ? 1 : 0) + (siteChanged ? 1 : 0);
   const dirty = lotChanges + rowChanges > 0;
 
   // สรุปว่าจะเปลี่ยนอะไรบ้าง — ใช้ในหน้าต่างยืนยัน ผู้ใช้จะได้เห็นก่อนกดจริง
   const summary = [];
   if (byChanged) summary.push({ k: 'by', label: 'ผู้บันทึก', from: e.orig.recordedBy || 'ไม่ระบุ', to: e.recordedBy });
   if (srcChanged) summary.push({ k: 'src', label: 'แหล่งที่มา', from: srcLabel(e.orig.source), to: srcLabel(e.source) });
+  if (siteChanged) summary.push({ k: 'site', label: 'รพ.สต. ต้นทาง', from: siteWas || 'ไม่ระบุ', to: siteNow || 'ไม่ระบุ' });
   if (dateChanged) summary.push({ k: 'date', label: 'วันที่รับคืน', from: thaiDate(e.orig.date), to: thaiDate(e.date) });
 
   return {
@@ -173,6 +183,17 @@ function lotEditVals(app, st) {
       border: e.source === s.key ? '#2f7d5d' : 'rgba(30,36,32,.14)',
       pick: () => app.setLotEditField('source', s.key)
     })),
+
+    // 🚨 ก้อนนี้มีรูปร่างเหมือนกับที่หน้าบันทึกส่งให้ renderPcuField เป๊ะ ๆ
+    //    ตัววาดจึงใช้ตัวเดียวกันได้ทั้งสองที่ โดยไม่ต้องรู้ว่าถูกเรียกจากหน้าไหน
+    lotEditPcu: {
+      pcuOn: e.source === 'pcu',
+      pcuSite: e.pcuSite || '',
+      pcuSites: Array.isArray(st.pcuSites) ? st.pcuSites : [],
+      onPcuSite: (ev) => app.setLotEditField('pcuSite', ev.target.value)
+    },
+    lotEditSiteChanged: siteChanged,
+    lotEditSiteWas: siteWas || 'ไม่ระบุ',
 
     // ตารางรายการ
     lotEditRows: e.rows.map((r) => {
@@ -276,6 +297,7 @@ function lotEditVals(app, st) {
 const FIELD_TH = {
   recorded_by: 'ผู้บันทึก',
   source: 'แหล่งที่มา',
+  pcu_site: 'รพ.สต. ต้นทาง',
   return_date: 'วันที่รับคืน',
   hn: 'HN',
   qty: 'จำนวน',

@@ -6,7 +6,7 @@ export function renderLots(V) {
   return (
     <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:20px 26px 26px;display:flex;flex-direction:column;min-height:100%')}>
       <div style={s('display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px')}>
-        <div {...kb(V.closeLots)} className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>←</div>
+        <div {...kb(V.closeLots)} aria-label="กลับไปหน้าประวัติ" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>←</div>
         <div style={s('min-width:0')}>
           <div style={s('font:700 19px/1.2 Sarabun,sans-serif')}>รายการ Lot</div>
           <div style={s('font:400 12px/1.3 Sarabun,sans-serif;color:#6b746e')}>หนึ่งรอบกดบันทึก = หนึ่ง Lot · กดที่ Lot เพื่อดูรายการยาข้างใน</div>
@@ -18,7 +18,7 @@ export function renderLots(V) {
         </div>
       </div>
 
-      <div style={s('font:600 11px \'IBM Plex Sans Thai\',sans-serif;letter-spacing:.08em;color:rgba(30,36,32,.45);margin-bottom:8px')}>{V.lotsCountLabel}</div>
+      <div style={s('font:600 11px Sarabun,sans-serif;letter-spacing:.08em;color:rgba(30,36,32,.45);margin-bottom:8px')}>{V.lotsCountLabel}</div>
 
       {V.lotsLoading && (
         <div style={s('text-align:center;padding:40px 12px;font:400 13px Sarabun,sans-serif;color:#6b746e')}>กำลังโหลดรายการ Lot</div>
@@ -40,20 +40,20 @@ export function renderLots(V) {
                    ตั้ง 208px เผื่อชื่อยาวกว่านี้ · ยาวเกินก็ขึ้นบรรทัดใหม่ ไม่ตัดทิ้ง
                    เพราะชื่อผู้บันทึกเป็นข้อมูลสืบกลับ ซ่อนไม่ได้ (พี่กันทัก 25 ส.ค. 2569) */}
             <div style={s('width:208px;flex:none;min-width:0')}>
-              <div style={s("font:700 15px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d")}>{l.lot}</div>
-              <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e;margin-top:1px;overflow-wrap:anywhere')}>{l.dateLabel} · {l.by}</div>
+              <div style={s("font:700 15px Sarabun,sans-serif;color:#2f7d5d")}>{l.lot}</div>
+              <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e;margin-top:1px;overflow-wrap:anywhere')}>{l.dateLabel} · {l.by}{l.siteLabel ? ' · รพ.สต.' + l.siteLabel : ''}</div>
             </div>
 
             <div style={s('width:82px;flex:none;font:500 12.5px Sarabun,sans-serif;color:#414a44;text-align:right')}>{l.itemsLabel}</div>
 
             <div style={s('display:flex;align-items:baseline;gap:10px;margin-left:auto;flex-wrap:wrap')}>
               <div style={s('text-align:right')}>
-                <div style={s("font:600 15px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{l.savedLabel}</div>
+                <div style={s("font:600 15px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{l.savedLabel}</div>
                 <div style={s('font:400 10.5px Sarabun,sans-serif;color:#9aa19c')}>ใช้ต่อได้</div>
               </div>
               {l.hasLost && (
                 <div style={s('text-align:right')}>
-                  <div style={s("font:600 13px 'IBM Plex Sans Thai',sans-serif;color:#c2543c;font-variant-numeric:tabular-nums")}>{l.lostLabel}</div>
+                  <div style={s("font:600 13px Sarabun,sans-serif;color:#c2543c;font-variant-numeric:tabular-nums")}>{l.lostLabel}</div>
                   <div style={s('font:400 10.5px Sarabun,sans-serif;color:#9aa19c')}>ทำลาย</div>
                 </div>
               )}
@@ -94,7 +94,7 @@ export function renderLots(V) {
 export function renderLotSlip(V) {
   if (!V.slipOpen) return null;
   return (
-    <div className="slip-backdrop" style={s('position:fixed;inset:0;z-index:60;background:rgba(30,36,32,.45);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto')}>
+    <div className="slip-backdrop" role="dialog" aria-modal="true" style={s('position:fixed;inset:0;z-index:60;background:rgba(30,36,32,.45);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto')}>
       <div className="slip-sheet" style={s('width:100%;max-width:720px;background:#fff;border-radius:14px;overflow:hidden')}>
 
         <div className="slip-hide" style={s('display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid rgba(30,36,32,.1);background:#f6f7f4')}>
@@ -105,23 +105,24 @@ export function renderLotSlip(V) {
             </svg>
             พิมพ์
           </div>
-          <div {...kb(V.closeLotSlip)} className="hv-bg-f6" style={s('width:36px;height:36px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>✕</div>
+          <div {...kb(V.closeLotSlip)} aria-label="ปิดใบสรุป" className="hv-bg-f6" style={s('width:36px;height:36px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>✕</div>
         </div>
 
         <div style={s('padding:22px 26px 26px')}>
           <div style={s('display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:12px;border-bottom:2px solid #2f7d5d')}>
             <div>
-              <div style={s('font:700 18px Sarabun,sans-serif')}>ใบสรุปยาคืน</div>
+              <div role="heading" aria-level="1" style={s('font:700 18px Sarabun,sans-serif')}>ใบสรุปยาคืน</div>
               <div style={s('font:400 12px Sarabun,sans-serif;color:#6b746e;margin-top:2px')}>{V.slipOrg}</div>
             </div>
             <div style={s('text-align:right')}>
-              <div style={s("font:700 17px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d")}>{V.slipLot}</div>
+              <div style={s("font:700 17px Sarabun,sans-serif;color:#2f7d5d")}>{V.slipLot}</div>
               <div style={s('font:400 12px Sarabun,sans-serif;color:#6b746e;margin-top:2px')}>{V.slipDate}</div>
             </div>
           </div>
 
           <div style={s('display:flex;gap:22px;flex-wrap:wrap;padding:10px 0 12px;font:400 12px Sarabun,sans-serif;color:#414a44')}>
             <span>ผู้บันทึก: <b>{V.slipBy}</b></span>
+            {V.slipSite && <span>รพ.สต.: <b>{V.slipSite}</b></span>}
             <span>จำนวน: <b>{V.slipCountLabel}</b></span>
           </div>
 
@@ -148,9 +149,9 @@ export function renderLotSlip(V) {
                     <td style={s('padding:6px;border-bottom:1px solid rgba(30,36,32,.07);color:#9aa19c')}>{r.no}</td>
                     <td style={s('padding:6px;border-bottom:1px solid rgba(30,36,32,.07);overflow-wrap:anywhere')}>{r.name}</td>
                     <td style={s('padding:6px;border-bottom:1px solid rgba(30,36,32,.07);color:#6b746e')}>{r.hn}</td>
-                    <td style={s("padding:6px;border-bottom:1px solid rgba(30,36,32,.07);text-align:right;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums")}>{r.qtyLabel}</td>
-                    <td style={s("padding:6px;border-bottom:1px solid rgba(30,36,32,.07);text-align:right;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;color:#6b746e")}>{r.priceLabel}</td>
-                    <td style={s("padding:6px;border-bottom:1px solid rgba(30,36,32,.07);text-align:right;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums;font-weight:600")}>{r.valueLabel}</td>
+                    <td style={s("padding:6px;border-bottom:1px solid rgba(30,36,32,.07);text-align:right;font-family:var(--font-plex),Sarabun,sans-serif;font-variant-numeric:tabular-nums")}>{r.qtyLabel}</td>
+                    <td style={s("padding:6px;border-bottom:1px solid rgba(30,36,32,.07);text-align:right;font-family:var(--font-plex),Sarabun,sans-serif;font-variant-numeric:tabular-nums;color:#6b746e")}>{r.priceLabel}</td>
+                    <td style={s("padding:6px;border-bottom:1px solid rgba(30,36,32,.07);text-align:right;font-family:var(--font-plex),Sarabun,sans-serif;font-variant-numeric:tabular-nums;font-weight:600")}>{r.valueLabel}</td>
                     <td style={sx('padding:6px;border-bottom:1px solid rgba(30,36,32,.07);text-align:right;font-weight:600', { color: r.dispColor })}>{r.dispLabel}</td>
                   </tr>
                 ))}
@@ -161,17 +162,17 @@ export function renderLotSlip(V) {
           <div style={s('display:flex;justify-content:flex-end;gap:26px;padding-top:12px;margin-top:4px;border-top:2px solid #2f7d5d;font:400 12.5px Sarabun,sans-serif')}>
             <div style={s('text-align:right')}>
               <div style={s('color:#6b746e')}>ใช้ต่อได้</div>
-              <div style={s("font:700 15px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d")}>{V.slipSavedLabel}</div>
+              <div style={s("font:700 15px Sarabun,sans-serif;color:#2f7d5d")}>{V.slipSavedLabel}</div>
             </div>
             {V.slipHasLost && (
               <div style={s('text-align:right')}>
                 <div style={s('color:#6b746e')}>ทำลาย</div>
-                <div style={s("font:700 15px 'IBM Plex Sans Thai',sans-serif;color:#c2543c")}>{V.slipLostLabel}</div>
+                <div style={s("font:700 15px Sarabun,sans-serif;color:#c2543c")}>{V.slipLostLabel}</div>
               </div>
             )}
             <div style={s('text-align:right')}>
               <div style={s('color:#6b746e')}>รวมทั้งหมด</div>
-              <div style={s("font:700 15px 'IBM Plex Sans Thai',sans-serif")}>{V.slipTotalLabel}</div>
+              <div style={s("font:700 15px Sarabun,sans-serif")}>{V.slipTotalLabel}</div>
             </div>
           </div>
 

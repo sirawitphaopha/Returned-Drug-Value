@@ -31,7 +31,8 @@ export function demoActions(app) {
     const st0 = app.state;
     app._realDraft = {
       rows: st0.rows, batchId: st0.batchId, hn: st0.hn,
-      source: st0.source, sourceTouched: st0.sourceTouched, date: st0.date
+      source: st0.source, sourceTouched: st0.sourceTouched, date: st0.date,
+      pcuSite: st0.pcuSite
     };
 
     // ยาที่ถูกคืนบ่อยในชุดตัวอย่าง — ให้ช่องค้นหาดันขึ้นก่อนเหมือนของจริง
@@ -88,6 +89,7 @@ export function demoActions(app) {
       hn: typeof real.hn === 'string' ? real.hn : '',
       source: typeof real.source === 'string' ? real.source : 'opd',
       sourceTouched: !!real.sourceTouched,
+      pcuSite: typeof real.pcuSite === "string" ? real.pcuSite : "",
       date: real.date || app.state.today
     };
 

@@ -12,13 +12,13 @@ export function renderHisImport(V) {
       {/* กดพื้นหลังไม่ปิด — ตรวจทานมาตั้งเยอะ เผลอกดแล้วหายหมดคงเสียใจ */}
       <div style={s('position:fixed;inset:0;background:rgba(21,26,23,.46);z-index:34')}></div>
 
-      <div style={s('position:fixed;inset:0;z-index:35;display:flex;align-items:center;justify-content:center;padding:16px')}>
+      <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;z-index:35;display:flex;align-items:center;justify-content:center;padding:16px')}>
         <div style={s('width:100%;max-width:900px;max-height:100%;background:#f6f7f4;border-radius:16px;box-shadow:0 24px 60px -18px rgba(30,36,32,.5);display:flex;flex-direction:column;overflow:hidden')}>
 
           {/* ── หัวหน้าต่าง ─────────────────────────────────────────────── */}
           <div style={s('flex:none;display:flex;align-items:center;gap:12px;padding:16px 20px;background:#fff;border-bottom:1px solid rgba(30,36,32,.08)')}>
             <div style={s('font:600 17px Sarabun,sans-serif;flex:1;min-width:0')}>นำเข้าราคาจาก HIS</div>
-            <div {...kb(V.closeHisImport)} className="hv-bg-f6 tap" style={s('width:34px;height:34px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>✕</div>
+            <div {...kb(V.closeHisImport)} aria-label="ปิดหน้าต่างนำเข้าราคา" className="hv-bg-f6 tap" style={s('width:34px;height:34px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>✕</div>
           </div>
 
           {/* ── เลือกไฟล์ ──────────────────────────────────────────────── */}
@@ -102,7 +102,7 @@ export function renderHisImport(V) {
 
                       <div style={s('flex:none;text-align:right')}>
                         <div style={s('font:400 10.5px Sarabun,sans-serif;color:#9aa19c')}>เดิม {r.oldLabel}</div>
-                        <div style={sx("font:600 15px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums", { color: r.newColor })}>{r.newLabel}</div>
+                        <div style={sx("font:600 15px Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: r.newColor })}>{r.newLabel}</div>
                         {r.changed && (
                           <div style={s('font:600 10px Sarabun,sans-serif;color:#c2543c')}>ราคาเปลี่ยน</div>
                         )}
@@ -122,7 +122,7 @@ export function renderHisImport(V) {
                               background: a.on ? '#2f7d5d' : '#fff'
                             })}></span>
                             <span style={s('flex:1;min-width:0;font:400 12px Sarabun,sans-serif;overflow-wrap:anywhere')}>{a.label}</span>
-                            <span style={s("flex:none;font:600 12px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{a.priceLabel}</span>
+                            <span style={s("flex:none;font:600 12px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{a.priceLabel}</span>
                           </div>
                         ))}
                       </div>
@@ -137,7 +137,7 @@ export function renderHisImport(V) {
                           onChange={r.onManual}
                           inputMode="decimal"
                           placeholder="0.00"
-                          style={s("width:120px;height:34px;padding:0 10px;border:1px solid rgba(30,36,32,.16);border-radius:8px;background:#fff;font:600 13px 'IBM Plex Sans Thai',sans-serif;text-align:right")}
+                          style={s("width:120px;height:34px;padding:0 10px;border:1px solid rgba(30,36,32,.16);border-radius:8px;background:#fff;font:600 13px Sarabun,sans-serif;text-align:right")}
                         />
                         <span style={s('font:400 11.5px Sarabun,sans-serif;color:#9aa19c')}>บาท ต่อ {r.unit}</span>
                       </div>

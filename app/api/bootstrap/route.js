@@ -17,7 +17,7 @@ export async function GET() {
 
     const [catalog, settingRes, summaryRes, hotRes, revRes] = await Promise.all([
       loadCatalog(),
-      db.from('mr_setting').select('org_name,default_source,fav_ids,staff,last_recorder').eq('id', 1).maybeSingle(),
+      db.from('mr_setting').select('org_name,default_source,fav_ids,staff,pcu_sites,last_recorder').eq('id', 1).maybeSingle(),
       db.rpc('mr_summary', { p_from: range.from, p_to: range.to }),
       // รหัสยาที่ถูกคืนบ่อยที่สุดในปีงบนี้ — ให้ช่องค้นหาดันตัวที่ใช้บ่อยขึ้นก่อน
       // ต้องมาตั้งแต่เปิดเว็บ เพราะช่องค้นหาใช้ทันที (หน้าสรุปโหลดทีหลัง)
@@ -50,6 +50,7 @@ export async function GET() {
         defaultSource: st.default_source || 'opd',
         favIds: Array.isArray(st.fav_ids) ? st.fav_ids : [],
         staff: Array.isArray(st.staff) ? st.staff : [],
+        pcuSites: Array.isArray(st.pcu_sites) ? st.pcu_sites : [],
         lastRecorder: st.last_recorder || ''
       },
       // ยอดสะสมปีงบ — เอาไปโชว์ตัวเลขใหญ่ทันทีตอนเปิดเว็บ ไม่ต้องรอหน้าสรุป

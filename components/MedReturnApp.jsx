@@ -37,6 +37,12 @@ export default class MedReturnApp extends React.Component {
       hn: '',
       source: 'opd',
       sourceTouched: false,
+      // ผู้ใช้แตะช่องวันที่เองในรอบการใช้งานนี้แล้วหรือยัง
+      // อยู่ใน state เฉย ๆ ไม่ถูกเก็บลงเครื่อง จึงเป็นเท็จเสมอตอนเปิดเว็บใหม่
+      dateTouched: false,
+      // ชื่อ รพ.สต. ต้นทาง — ใช้เฉพาะตอน source เป็น 'pcu'
+      pcuSite: '',
+      pcuSites: [],           // รายชื่อที่เลือกได้ มาจากการตั้งค่า (ฐานข้อมูล)
       orgName: 'ห้องยาผู้ป่วยนอก · รพ.ปรางค์กู่',
       favIds: [],
 
@@ -313,6 +319,7 @@ export default class MedReturnApp extends React.Component {
       if (typeof box.hn === 'string') patch.hn = box.hn;
       if (typeof box.source === 'string') patch.source = box.source;
       if (box.sourceTouched) patch.sourceTouched = true;
+      if (typeof box.pcuSite === 'string') patch.pcuSite = box.pcuSite;
       if (typeof box.date === 'string' && box.date) patch.date = box.date;
     }
 

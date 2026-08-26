@@ -24,7 +24,7 @@ export function renderCatalog(V) {
 
         <div style={s('display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px')}>
           <div>
-            <div style={s('font:700 18px/1.2 Sarabun,sans-serif;color:#1e2420')}>คลังยา</div>
+            <div role="heading" aria-level="1" style={s('font:700 18px/1.2 Sarabun,sans-serif;color:#1e2420')}>คลังยา</div>
             <div style={s('font:400 12px Sarabun,sans-serif;color:#6b746e;margin-top:4px;font-variant-numeric:tabular-nums')}>
               แสดง {V.catShown} จาก {V.catTotal} รายการ
               {V.catHiddenCount > 0 && <span> · ซ่อนอยู่ {V.catHiddenCount} ตัว</span>}
@@ -62,7 +62,7 @@ export function renderCatalog(V) {
               </span>
             )}
             {V.catHasSearch && (
-              <span {...kb(V.clearCatSearch)} className="tap hv-bg-eef" title="ล้างช่องค้นหา"
+              <span {...kb(V.clearCatSearch)} aria-label="ล้างช่องค้นหา" className="tap hv-bg-eef" title="ล้างช่องค้นหา"
                 style={s('position:absolute;right:8px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b746e;font:400 13px Sarabun,sans-serif')}>✕</span>
             )}
           </div>
@@ -408,7 +408,7 @@ function renderPriceFix(V) {
   return (
     <>
       <div style={s('position:fixed;inset:0;background:rgba(21,26,23,.42);z-index:44')}></div>
-      <div style={s('position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:20px')}>
+      <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:20px')}>
         <div style={s('width:100%;max-width:470px;max-height:calc(100vh - 40px);overflow-y:auto;background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(30,36,32,.28);padding:20px')}>
           <div style={s('font:700 17px/1.3 Sarabun,sans-serif;margin-bottom:4px')}>พบรายการเก่าที่ใช้ราคาอื่น</div>
           <div style={s('font:400 12.5px/1.55 Sarabun,sans-serif;color:#6b746e;margin-bottom:12px')}>

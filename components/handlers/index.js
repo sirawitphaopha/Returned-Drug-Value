@@ -31,24 +31,47 @@ import { catalogActions } from './catalog';
 //
 // ⚠️ ห้ามเปลี่ยนให้ปล่อยผ่านเด็ดขาด — โหมดตัวอย่างมีไว้ให้กดเล่นได้ทุกปุ่ม
 //    ความปลอดภัยของมันอยู่ที่ "ไม่มีอะไรออกไปถึงฐานจริง" ข้อเดียว
-function installDemoGuard(app) {
-  app.fetchT = (url, opts, ms) => {
+//
+// ── หน้าที่ที่สอง: บัตรผ่านหมดอายุแล้วต้องพากลับไปกรอกรหัส (ผลตรวจข้อ ก-15) ──
+//
+// ประตูตรวจรหัสตอบ 401 พร้อมธง needAuth มาตั้งแต่แรก แต่ไม่เคยมีใครอ่านธงนั้นเลย
+// ผลคือพอบัตรหมดอายุ (30 วัน) หรือผู้ดูแลเปลี่ยนรหัส เภสัชกรจะเห็นแค่
+// "โหลดข้อมูลไม่สำเร็จ" ซ้ำ ๆ ทุกปุ่มที่กด โดยไม่มีอะไรบอกว่าต้องเข้าสู่ระบบใหม่
+// เป็นอาการที่ดูเหมือนเว็บพัง ทั้งที่จริงแค่ต้องกรอกรหัสอีกครั้งเดียว
+//
+// 🚨 ดักที่ทางออกทางเดียวเหมือนกัน เพิ่มเส้นทาง API ใหม่ทีหลังก็ได้รับการดูแลเอง
+function installFetchGuard(app) {
+  app.fetchT = async (url, opts, ms) => {
     const method = String((opts && opts.method) || 'GET').toUpperCase();
     if (app.state && app.state.demo && method !== 'GET') {
       app.toast('อยู่ในโหมดดูตัวอย่าง ข้อมูลจริงไม่ถูกแตะต้อง', 'ปิดโหมดก่อนถึงจะบันทึกได้', false);
       // คืนคำตอบปลอมหน้าตาเหมือนของจริง ฝั่งที่เรียกจะได้ไม่พังตอนอ่าน .json()
-      return Promise.resolve({
+      return {
         ok: false,
         status: 403,
         json: async () => ({ error: 'อยู่ในโหมดดูตัวอย่าง' })
-      });
+      };
     }
-    return fetchT(url, opts, ms);
+
+    const res = await fetchT(url, opts, ms);
+
+    // ⚠️ ต้องอ่าน "สำเนา" ของคำตอบ ไม่ใช่ตัวจริง เพราะเนื้อหาอ่านได้ครั้งเดียว
+    //    ถ้าอ่านตัวจริงตรงนี้ ฝั่งที่เรียกจะได้กล่องเปล่าไปแทน
+    if (res && res.status === 401 && typeof res.clone === 'function') {
+      let needAuth = false;
+      try { needAuth = !!(await res.clone().json()).needAuth; } catch (e) { needAuth = false; }
+      if (needAuth && typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        app.toast('หมดเวลาเข้าสู่ระบบแล้ว', 'กำลังพาไปกรอกรหัสผ่านใหม่', false);
+        // หน่วงให้ข้อความขึ้นทันเห็นก่อนเปลี่ยนหน้า
+        setTimeout(() => { window.location.href = '/login'; }, 900);
+      }
+    }
+    return res;
   };
 }
 
 export function installHandlers(app) {
-  installDemoGuard(app);   // ต้องมาก่อนตัวอื่น ฟังก์ชันอื่นเรียก app.fetchT ได้ทันที
+  installFetchGuard(app);   // ต้องมาก่อนตัวอื่น ฟังก์ชันอื่นเรียก app.fetchT ได้ทันที
   uiActions(app);
   dataActions(app);
   recordActions(app);

@@ -35,7 +35,7 @@ export function renderConfirm(V) {
   return (
     <>
       <div style={s('position:fixed;inset:0;background:rgba(21,26,23,.42);z-index:40')}></div>
-      <div style={s('position:fixed;inset:0;z-index:41;display:flex;align-items:center;justify-content:center;padding:20px')}>
+      <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;z-index:41;display:flex;align-items:center;justify-content:center;padding:20px')}>
         <div style={s('width:100%;max-width:430px;max-height:calc(100vh - 40px);overflow-y:auto;background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(30,36,32,.28);padding:20px 20px 16px')}>
           <div style={s('font:700 17px/1.3 Sarabun,sans-serif;margin-bottom:10px')}>{V.confirmTitle}</div>
 

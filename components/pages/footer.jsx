@@ -22,7 +22,7 @@ export function renderFooter(V) {
 
         <div style={sx('display:flex;align-items:center;gap:8px;min-width:0', wide ? {} : { justifyContent: 'center' })}>
           <span style={s('width:18px;height:18px;border-radius:5px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;flex:none')}>
-            <span style={s("font:700 9px 'IBM Plex Sans Thai',sans-serif;color:#fff;line-height:1")}>฿</span>
+            <span style={s("font:700 9px Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
           </span>
           <span style={sx('font:500 11.5px Sarabun,sans-serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', { color: muted })}>
             มูลค่ายาคืน v{V.appVersion} · {V.orgName}

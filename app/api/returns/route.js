@@ -136,6 +136,11 @@ export async function POST(req) {
     // ถ้าปล่อยให้เป็น null ระบบกันบันทึกซ้ำจะไม่ทำงานเลย ส่งซ้ำได้ข้อมูลสองชุด
     if (!UUID.test(String(body.batchId || ''))) return bad('รหัสก้อนการบันทึกไม่ถูกต้อง');
 
+    // ชื่อ รพ.สต. ต้นทาง — เก็บเฉพาะตอนแหล่งที่มาเป็น รพ.สต. เท่านั้น
+    // 🚨 เก็บเป็นชื่อ ไม่ใช่รหัส เพราะเป็น snapshot ณ วันบันทึก (กฎแช่ข้อมูล)
+    //    รพ.สต. เปลี่ยนชื่อวันหน้า รายการเก่ายังต้องอ่านออกว่าตอนนั้นเขียนว่าอะไร
+    const pcuSite = String(body.pcuSite == null ? '' : body.pcuSite).trim().slice(0, 120);
+
     const hnRaw = String(body.hn || '').replace(/[^0-9]/g, '');
     if (hnRaw.length > 20) return bad('HN ยาวเกินไป');
     const hn = hnRaw || null;
@@ -193,6 +198,10 @@ export async function POST(req) {
       // แก้ปัญหาคนไข้ 2 คนในล็อตเดียวแล้ว HN ปนกัน
       const rowHnRaw = String(it.hn == null ? '' : it.hn).replace(/[^0-9]/g, '').slice(0, 20);
       const rowSrc = SOURCES.some((s) => s.key === it.source) ? it.source : body.source;
+      // แถวที่ไม่ได้มาจาก รพ.สต. ต้องเป็นค่าว่างเสมอ ไม่ใช่ค้างชื่อไว้จากที่เลือกก่อนหน้า
+      const rowSite = rowSrc === 'pcu'
+        ? (String(it.pcuSite == null ? '' : it.pcuSite).trim().slice(0, 120) || pcuSite || null)
+        : null;
 
       rows.push({
         return_date: body.date,
@@ -207,6 +216,7 @@ export async function POST(req) {
           ? (String(it.reason || '').trim().slice(0, 60) || null)
           : null,
         source: rowSrc,
+        pcu_site: rowSite,
         hn: rowHnRaw || hn,
         recorded_by: recordedBy,
         lot_no: lotNo,

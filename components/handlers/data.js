@@ -49,6 +49,7 @@ export function dataActions(app) {
         orgName: data.setting.orgName,
         favIds: data.setting.favIds,
         staff: Array.isArray(data.setting.staff) ? data.setting.staff : [],
+        pcuSites: Array.isArray(data.setting.pcuSites) ? data.setting.pcuSites : [],
         // 🚨 ห้ามติ๊กชื่อคนล่าสุดไว้ให้ — ต้องเลือกเองทุกครั้งที่เปิดเว็บ (พี่กันสั่ง 25 ส.ค. 2569)
         // เดิมติ๊กคนที่เซ็นล่าสุดไว้เพื่อความเร็ว แต่คอมห้องยาเป็นเครื่องกลางที่ใช้ร่วมกัน
         // คนถัดไปที่มานั่งจะเห็นชื่อคนก่อนติ๊กอยู่ กดบันทึกโดยไม่ทันสังเกต
@@ -154,14 +155,32 @@ export function dataActions(app) {
   // จะลงวันเมื่อวานทั้งวัน และถ้าเป็นคืน 30 ก.ย. ต่อ 1 ต.ค. จะตกผิดปีงบด้วย
   app.checkDayRollover = () => {
     const now = todayISO();
-    if (!app.state.today || app.state.today === now) return;
+    if (!app.state.today) return;
+
+    // 🚨🚨 ด่านนี้เคยปิดตายจนโค้ดข้างล่างไม่เคยได้ทำงานเลย (เจอ 26 ส.ค. 2569)
+    //
+    // ตอนกู้ร่างจาก localStorage มีบรรทัด patch.today = todayISO() อยู่แล้ว
+    // แปลว่า state.today เท่ากับวันนี้ "เสมอ" ตั้งแต่วินาทีแรกที่เปิดเว็บ
+    // เงื่อนไขเดิม (today === now → return) จึงตีกลับทุกครั้งที่ถูกเรียก
+    // การแก้เรื่องร่างค้างข้ามวันเมื่อ 19 ส.ค. 2569 เลยไม่เคยมีผลอะไรจริง ๆ
+    //
+    // อาการที่พี่กันเจอ: เปิดเว็บวันที่ 26 แต่ช่องวันที่ยังเป็น 25
+    // = ยาที่รับคืนวันนี้ถูกบันทึกเป็นเมื่อวานทั้งล็อต โดยไม่มีอะไรเตือนเลย
+    //
+    // ตอนนี้ต้องเช็คสองอย่าง: วันเปลี่ยนหรือยัง "และ" ร่างค้างวันเก่าอยู่หรือเปล่า
+    //
+    // 🚨 dateTouched กันไม่ให้ไปทับวันที่ผู้ใช้ "ตั้งใจ" เลือกย้อนหลัง
+    //    (เช่นบันทึกยาที่รับคืนเมื่อวานให้ครบ) ตัวจับเวลาเรียกฟังก์ชันนี้ทุก 1 นาที
+    //    ถ้าไม่มีธงนี้ เลือกวันย้อนหลังแล้วอีกนาทีเดียวจะถูกดึงกลับเป็นวันนี้เงียบ ๆ
+    //    ซึ่งแย่กว่าบั๊กเดิมอีก เพราะเกิดหลังจากผู้ใช้ตั้งใจทำอะไรบางอย่างไปแล้ว
+    const stale = !app.state.dateTouched && !!app.state.date && app.state.date < now;
+    if (app.state.today === now && !stale) return;
     // เลื่อนวันในช่องให้ด้วย ถ้าเดิมยังเป็น "วันนี้" (ไม่ได้ตั้งใจย้อนวัน)
     // หรือถ้าค้างเป็นวันในอดีต — เกิดจากร่างเก่าใน localStorage ที่กู้มาข้ามวัน
     // 🚨 เดิมเช็คแค่ wasToday ทำให้ร่างที่ค้างข้ามวันติดวันเก่าถาวร
     //    เปิดเว็บวันที่ 19 แต่ช่องวันที่ยังเป็น 10 (พี่กันเจอเอง 19 ส.ค. 2569)
     const wasToday = app.state.date === app.state.today;
-    const isPast = app.state.date && app.state.date < now;
-    app.setState({ today: now, date: (wasToday || isPast) ? now : app.state.date });
+    app.setState({ today: now, date: (wasToday || stale) ? now : app.state.date });
     app.invalidate();
   };
 }

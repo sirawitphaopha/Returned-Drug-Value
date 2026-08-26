@@ -42,7 +42,7 @@ export function renderDrugName(r, opts) {
           วางถัดจากชื่อยาทันที เพราะเป็น "ชื่อเรียกอีกแบบ" ของยาตัวเดียวกัน
           คนละสีกับชื่อการค้า (เทล) เพื่อให้แยกออกว่าอันไหนตัวย่อ อันไหนยี่ห้อ */}
       {r.hasAbbrev && (
-        <span style={sx("font-weight:600;color:#6d3b9e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px", nw(r.abbrevNoWrap))}>
+        <span style={sx("font-weight:600;color:#6d3b9e;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:5px", nw(r.abbrevNoWrap))}>
           ({r.abBefore}{r.abHit ? <span style={s('background:#ece3f6;border-radius:3px;padding:0 1px')}>{r.abHit}</span> : null}{r.abAfter})
         </span>
       )}
@@ -57,7 +57,7 @@ export function renderDrugName(r, opts) {
       {/* ความแรง — ถ้ามียาชื่อเดียวกันหลายความแรงในรายการเดียว ตัวเลขจะถูกทาสีคนละสี
           กันหยิบสลับ (Morphine 10 · 20 · 30 mg) · หน่วยคงสีเทาเดิม บรรทัดจะได้ไม่รก */}
       {r.strength && (
-        <span style={sx("font-weight:500;color:#6b746e;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:6px", nw(r.strengthNoWrap))}>
+        <span style={sx("font-weight:500;color:#6b746e;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:6px", nw(r.strengthNoWrap))}>
           {r.stColor
             ? <><span style={{ color: r.stColor, fontWeight: 700 }}>{r.stNum}</span>{r.stRest}</>
             : r.strength}
@@ -66,7 +66,7 @@ export function renderDrugName(r, opts) {
 
       {/* ความเข้มข้นเป็นเปอร์เซ็นต์ สีส้มอำพัน — ไม่ชนกับเทล (ชื่อการค้า) และไม่ชนกับแดง (ทำลาย) */}
       {r.hasPercent && (
-        <span style={sx("font-weight:700;color:#96650f;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px", nw(true))}>{r.percentLabel}</span>
+        <span style={sx("font-weight:700;color:#96650f;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:5px", nw(true))}>{r.percentLabel}</span>
       )}
 
       {/* รูปแบบยา (tab · cap · injection) — บอกได้ทันทีว่ายากินหรือยาฉีด */}
@@ -78,7 +78,7 @@ export function renderDrugName(r, opts) {
           ตั้งใจให้สะดุดตากว่าทุกตัวในบรรทัด เพราะ Morphine 10 mg ER กับ IR เป็นคนละยากัน
           ในคลังมี Sodium valproate 200 mg ทั้ง ER และ IR ชื่อเหมือนกันเป๊ะทุกตัวอักษร */}
       {r.hasRelease && (
-        <span style={sx("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-plex),'IBM Plex Sans Thai',sans-serif;margin-left:5px", nw(true))}>{r.releaseLabel}</span>
+        <span style={sx("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:5px", nw(true))}>{r.releaseLabel}</span>
       )}
 
       {/* ชื่อการค้าในวงเล็บ สีเทลตัวหนา — เภสัชกรจำ Kapanol ได้ก่อนชื่อสามัญ */}

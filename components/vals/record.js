@@ -361,12 +361,25 @@ export function recordVals(app, d) {
       bg: st.source === s.key ? '#2f7d5d' : '#f0f1ee',
       fg: st.source === s.key ? '#fff' : '#414a44',
       // sourceTouched = ผู้ใช้แตะเองแล้ว · ใช้แยกจาก "ยังเป็นค่าเริ่มต้น"
-      pick: () => app.persist({ source: s.key, sourceTouched: true })
+      // 🚨 ย้ายออกจาก รพ.สต. ต้องล้างชื่อ รพ.สต. ทิ้งทันที ไม่ปล่อยให้ค้าง
+      //    ไม่งั้นกลับมาเลือก รพ.สต. อีกครั้งจะเจอชื่อเก่าติ๊กไว้แล้วโดยไม่ได้ตั้งใจ
+      pick: () => app.persist({
+        source: s.key,
+        sourceTouched: true,
+        pcuSite: s.key === 'pcu' ? st.pcuSite : ''
+      })
     })),
+
+    // ── รพ.สต. ต้นทาง — โผล่เฉพาะตอนแหล่งที่มาเป็น รพ.สต. ──
+    pcuOn: st.source === 'pcu',
+    pcuSite: st.pcuSite || '',
+    pcuSites: Array.isArray(st.pcuSites) ? st.pcuSites : [],
+    onPcuSite: (e) => app.persist({ pcuSite: e.target.value || '' }),
     dateIso: st.date,
     dateMax: st.today,
     isBackdated: !!st.today && !!st.date && st.date !== st.today,
-    onDate: (e) => app.persist({ date: e.target.value || st.today }),
+    // ติดธงว่าผู้ใช้เลือกวันเอง ตัวทวนวันจะได้ไม่ไปดึงกลับเป็นวันนี้ภายใน 1 นาที
+    onDate: (e) => app.persist({ date: e.target.value || st.today, dateTouched: true }),
     hn: st.hn,
     onHn: (e) => app.setState({ hn: e.target.value.replace(/[^0-9]/g, '') }),
     showMore: st.showMore,

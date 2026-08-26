@@ -73,6 +73,7 @@ export async function GET(req, ctx) {
       // ค่าระดับล็อต — อ่านจากแถวแรก เพราะทุกแถวในล็อตต้องเหมือนกันอยู่แล้ว
       recordedBy: rows[0].recorded_by || '',
       source: rows[0].source || '',
+      pcuSite: rows[0].pcu_site || '',
       date: rows[0].return_date,
       hn: rows[0].hn || '',
       log: (logRes.data || []).map((x) => ({
@@ -131,6 +132,24 @@ export async function PATCH(req, ctx) {
         audit.push({ field: 'source', old_value: rows[0].source || '', new_value: v });
       }
     }
+    // 🚨 ต้องมาหลังการแก้ source เสมอ — ถ้าย้ายล็อตออกจาก รพ.สต. ไปเป็น OPD
+    //    ชื่อ รพ.สต. ต้องถูกล้างทิ้งด้วย ไม่งั้นจะค้างอยู่ในแถวที่ไม่ใช่ รพ.สต. แล้ว
+    //    กลายเป็นข้อมูลที่ขัดกันเองซึ่งไม่มีอะไรจับได้เลย
+    {
+      const srcNow = lotPatch.source !== undefined ? lotPatch.source : (rows[0].source || '');
+      const was = rows[0].pcu_site || '';
+      let want = was;
+      if (srcNow !== 'pcu') {
+        want = '';
+      } else if (body.pcuSite !== undefined) {
+        want = String(body.pcuSite || '').trim().slice(0, 120);
+      }
+      if (want !== was) {
+        lotPatch.pcu_site = want || null;
+        audit.push({ field: 'pcu_site', old_value: was, new_value: want });
+      }
+    }
+
     if (body.date !== undefined) {
       const v = String(body.date || '').trim();
       if (!validDate(v)) return bad('วันที่ไม่ถูกต้อง หรืออยู่นอกช่วงที่บันทึกได้');

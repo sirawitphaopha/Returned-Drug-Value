@@ -3,7 +3,9 @@ import './globals.css';
 // เว็บเสิร์ฟฟอนต์เอง ไม่พึ่ง Google ตอนใช้งาน (ขึ้นชัวร์ทุกเครื่อง ไม่กระพริบ เน็ตโรงพยาบาลก็ไม่สะดุด)
 // 📌 กฎโปรเจกต์: ฟอนต์ใหม่ทุกตัวต้องฝังแบบนี้ ห้ามใช้ <link> ไป CDN
 //    มอคอัปโหลด 2 ตัวนี้ (บรรทัด 12): Sarabun 300–700 + IBM Plex Sans Thai 400–700
-import { IBM_Plex_Sans_Thai, Sarabun } from 'next/font/google';
+// ฟอนต์ของ "ชื่อเว็บ" อย่างเดียว — พี่กันเลือกเอง 26 ส.ค. 2569 (ลอง Charm → Charmonman → Charmonman)
+// 🚨 ฝังมากับเว็บผ่าน next/font/google ไม่ได้ลิงก์ CDN — เน็ตโรงพยาบาลบล็อก Google Fonts ได้
+import { IBM_Plex_Sans_Thai, Sarabun, Charmonman } from 'next/font/google';
 
 const sarabun = Sarabun({
   subsets: ['thai', 'latin'],
@@ -13,6 +15,15 @@ const sarabun = Sarabun({
 });
 
 // ใช้กับตัวเลขเงิน — มี tabular-nums ทำให้หลักไม่ขยับตอนตัวเลขวิ่ง
+// Charmonman มีแค่ 2 น้ำหนัก (400 กับ 700) — ต่างจาก Sarabun ที่มี 5 ระดับ
+// 🚨 ใช้กับชื่อเว็บเท่านั้น ห้ามลามไปที่อื่น — ตัวเลขกับชื่อยาต้องอ่านง่ายที่สุด
+const charm = Charmonman({
+  subsets: ['thai', 'latin'],
+  weight: ['400', '700'],
+  variable: '--font-charmonman',
+  display: 'swap'
+});
+
 const plex = IBM_Plex_Sans_Thai({
   subsets: ['thai', 'latin'],
   weight: ['400', '500', '600', '700'],
@@ -43,7 +54,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="th" className={`${sarabun.variable} ${plex.variable}`}>
+    <html lang="th" className={`${sarabun.variable} ${plex.variable} ${charm.variable}`}>
       <body>{children}</body>
     </html>
   );

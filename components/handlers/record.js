@@ -30,7 +30,8 @@ export function recordActions(app) {
       price: drug.price, qty: qty, disposition: disp,
       // แปะ HN กับแหล่งที่มา ณ ตอนกดเพิ่มลงในแถวเลย
       // ถ้าใช้ค่าของทั้งหน้าจอตอนกดบันทึก คนไข้คนที่ 2 จะทับ HN ของคนแรกทั้งล็อต
-      hn: app.state.hn || '', source: app.state.source
+      hn: app.state.hn || '', source: app.state.source,
+      pcuSite: app.state.source === 'pcu' ? (app.state.pcuSite || '') : ''
     };
     const rows = app.state.rows.concat([row]);
     app.persist({ rows: rows, saveFailed: false });
@@ -279,7 +280,8 @@ export function recordActions(app) {
         drugId: s.drug.id, name: s.drug.name, unit: s.drug.unit,
         price: s.drug.price, qty: qty, disposition: app.state.sheetDisp,
         reason: app.state.sheetDisp === 'destroy' ? app.state.sheetReason : '',
-        hn: app.state.hn || '', source: app.state.source
+        hn: app.state.hn || '', source: app.state.source,
+        pcuSite: app.state.source === 'pcu' ? (app.state.pcuSite || '') : ''
       };
       const rows = app.state.rows.concat([row]);
       app.persist({ rows: rows, sheet: null, sheetQty: '', sheetReason: '', sheetOff: null, saveFailed: false });
@@ -401,6 +403,13 @@ export function recordActions(app) {
     const lines = [
       { label: 'วันที่รับคืน', value: thaiDate(st.date) },
       { label: 'แหล่งที่มา', value: src },
+      // โผล่เฉพาะตอนเป็น รพ.สต. · ยังไม่เลือกให้ขึ้นสีแดงเตือน จะได้ทันสังเกตก่อนกดส่ง
+      ...(st.source === 'pcu' ? [{
+        label: 'รพ.สต. ต้นทาง',
+        value: (st.pcuSite || '').trim() || 'ยังไม่ได้เลือก',
+        tone: (st.pcuSite || '').trim() ? '' : 'red',
+        indent: true
+      }] : []),
       { label: 'ผู้บันทึก', value: st.recorder },
       { label: 'HN', value: (st.hn || '').trim() || 'ไม่ระบุ', tone: (st.hn || '').trim() ? '' : 'soft' },
       { label: 'รายการยา', value: st.rows.length + ' รายการ', sep: true },
@@ -462,6 +471,7 @@ export function recordActions(app) {
           batchId: batchId,
           date: st.date,
           source: st.source,
+          pcuSite: st.pcuSite,
           hn: st.hn,
           recordedBy: st.recorder,
           items: sending.map((r) => ({
@@ -476,7 +486,8 @@ export function recordActions(app) {
             reason: r.reason || '',
             // HN กับแหล่งที่มาติดไปกับแถวตอนกดเพิ่ม — คนไข้ 2 คนในล็อตเดียวจะได้ไม่ปนกัน
             hn: r.hn || '',
-            source: r.source || st.source
+            source: r.source || st.source,
+            pcuSite: r.pcuSite || ''
           }))
         })
       }, 20000);

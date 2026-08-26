@@ -23,6 +23,7 @@ export function uiActions(app) {
         hn: st.hn,
         source: st.source,
         sourceTouched: st.sourceTouched,
+        pcuSite: st.pcuSite,
         date: st.date
       });
       writeLS(LS.dark, st.dark ? 1 : 0);

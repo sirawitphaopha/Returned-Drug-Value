@@ -22,7 +22,8 @@ export function settingsActions(app) {
         orgName: data.setting.orgName,
         favIds: data.setting.favIds,
         defaultSource: data.setting.defaultSource,
-        staff: Array.isArray(data.setting.staff) ? data.setting.staff : []
+        staff: Array.isArray(data.setting.staff) ? data.setting.staff : [],
+        pcuSites: Array.isArray(data.setting.pcuSites) ? data.setting.pcuSites : []
       });
       writeCache(LS.setting, data.setting);
     } catch (e) {

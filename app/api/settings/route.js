@@ -16,6 +16,9 @@ function shape(row) {
     favIds: Array.isArray(st.fav_ids) ? st.fav_ids : [],
     // รายชื่อคนในห้องยา — ใช้ในหน้าต่างเซ็นชื่อก่อนส่งล็อต
     staff: Array.isArray(st.staff) ? st.staff : [],
+    // รายชื่อ รพ.สต. ในเครือข่ายอำเภอ — โผล่เป็นดรอปดาวน์เมื่อเลือกแหล่งที่มาเป็น รพ.สต.
+    // 🚨 เก็บในฐาน ไม่ฝังในโค้ด · เปิดแห่งใหม่หรือเปลี่ยนชื่อ แก้ในหน้าตั้งค่าได้เลย
+    pcuSites: Array.isArray(st.pcu_sites) ? st.pcu_sites : [],
     lastRecorder: st.last_recorder || ''
   };
 }
@@ -25,7 +28,7 @@ export async function GET() {
     const db = getAdmin();
     const { data, error } = await db
       .from('mr_setting')
-      .select('org_name,default_source,fav_ids,staff,last_recorder')
+      .select('org_name,default_source,fav_ids,staff,pcu_sites,last_recorder')
       .eq('id', 1)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -78,6 +81,18 @@ export async function PUT(req) {
       patch.staff = names.slice(0, 60);
     }
 
+    if (body.pcuSites !== undefined) {
+      if (!Array.isArray(body.pcuSites)) {
+        return NextResponse.json({ error: 'รายชื่อ รพ.สต. ไม่ถูกต้อง' }, { status: 400 });
+      }
+      const sites = [];
+      for (const raw of body.pcuSites) {
+        const n = String(raw == null ? '' : raw).trim().slice(0, 120);
+        if (n && sites.indexOf(n) < 0) sites.push(n);
+      }
+      patch.pcu_sites = sites.slice(0, 80);
+    }
+
     // จำคนที่เซ็นชื่อล่าสุด ครั้งหน้าจะได้ติ๊กไว้ให้แล้ว กดยืนยันอย่างเดียว
     if (body.lastRecorder !== undefined) {
       patch.last_recorder = String(body.lastRecorder || '').trim().slice(0, 80) || null;
@@ -88,7 +103,7 @@ export async function PUT(req) {
       .from('mr_setting')
       .update(patch)
       .eq('id', 1)
-      .select('org_name,default_source,fav_ids,staff,last_recorder')
+      .select('org_name,default_source,fav_ids,staff,pcu_sites,last_recorder')
       .maybeSingle();
     if (error) throw new Error(error.message);
 

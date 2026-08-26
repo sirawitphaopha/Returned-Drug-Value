@@ -12,7 +12,13 @@ const cache = new Map();
 
 function fontify(css) {
   return css
-    .replace(/'IBM Plex Sans Thai'/g, "var(--font-plex),'IBM Plex Sans Thai'")
+    // 🚨 พี่กันสั่ง 26 ส.ค. 2569: "ในเว็บ ฟอนต์ไม่มีหัว เปลี่ยนเป็นมีหัวให้หมดนะ"
+    //    IBM Plex Sans Thai เป็นฟอนต์ไม่มีหัว (loopless) อ่านภาษาไทยยากกว่าแบบมีหัว
+    //    ไล่เปลี่ยนในไฟล์หน้าจอครบ 115 จุดแล้ว บรรทัดนี้เหลือไว้เป็นตาข่ายกันตกหล่น
+    //    ถ้ามีจุดไหนหลุดรอด หรือมีคนเผลอเขียนกลับมาใหม่ ก็ยังได้ฟอนต์มีหัวอยู่ดี
+    .replace(/'IBM Plex Sans Thai'/g, "Sarabun")
+    // ฟอนต์ของ "ชื่อเว็บ" ต้องแปลงก่อน Sarabun เพราะเป็นคนละตัวกัน
+    .replace(/\bCharmonman\b/g, 'var(--font-charmonman),Charmonman')
     .replace(/\bSarabun\b/g, 'var(--font-sarabun),Sarabun');
 }
 
@@ -385,6 +391,6 @@ export function exprText(raw) {
 //
 // ⚠️ เขียนเป็นข้อความไทยตรง ๆ ไม่คำนวณจากนาฬิกาเครื่อง
 //    เพราะนี่คือ "วันที่ปล่อยรุ่นนี้" ไม่ใช่ "วันนี้" — คอมที่นาฬิกาเพี้ยนจะโชว์มั่ว
-export const APP_VERSION = '0.10.0.3';
+export const APP_VERSION = '0.10.1.0';
 export const APP_FIRST_RELEASE = '4 สิงหาคม 2569';
 export const APP_LAST_UPDATE = '26 สิงหาคม 2569';

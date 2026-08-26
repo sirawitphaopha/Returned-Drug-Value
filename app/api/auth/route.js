@@ -1,6 +1,6 @@
 // ตรวจรหัสผ่านร่วมของห้องยา แล้วฝังคุกกี้ไว้ 30 วัน
 import { NextResponse } from 'next/server';
-import { AUTH_COOKIE, AUTH_DAYS, authConfigured, authEnabled, tokenOf, expectedToken, safeEqual } from '@/lib/auth';
+import { AUTH_COOKIE, AUTH_DAYS, authConfigured, authEnabled, tokenOf, expectedToken, safeEqual, issueAuthCookie } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,8 @@ export async function POST(req) {
     }
 
     const res = NextResponse.json({ ok: true });
-    res.cookies.set(AUTH_COOKIE, want, {
+    // ค่าในคุกกี้ไม่ใช่ตัว token ตรง ๆ แล้ว แต่เป็นบัตรที่เซ็นพร้อมวันออกบัตร (ผลตรวจข้อ ก-15)
+    res.cookies.set(AUTH_COOKIE, await issueAuthCookie(), {
       httpOnly: true,          // จาวาสคริปต์ในหน้าเว็บอ่านค่านี้ไม่ได้
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',

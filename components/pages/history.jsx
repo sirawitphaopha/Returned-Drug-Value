@@ -12,9 +12,9 @@ function renderHistTools(V) {
     <div style={s('display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px')}>
       <div style={s('display:flex;align-items:center;gap:6px')}>
         <span style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e')}>ตั้งแต่</span>
-        <input type="date" value={V.histFrom} onChange={V.onHistFrom} style={sx("height:38px;padding:0 9px;border-radius:8px;background:#fff;font:400 12.5px 'IBM Plex Sans Thai',sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
+        <input type="date" value={V.histFrom} onChange={V.onHistFrom} style={sx("height:38px;padding:0 9px;border-radius:8px;background:#fff;font:400 12.5px Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
         <span style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e')}>ถึง</span>
-        <input type="date" value={V.histTo} onChange={V.onHistTo} style={sx("height:38px;padding:0 9px;border-radius:8px;background:#fff;font:400 12.5px 'IBM Plex Sans Thai',sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
+        <input type="date" value={V.histTo} onChange={V.onHistTo} style={sx("height:38px;padding:0 9px;border-radius:8px;background:#fff;font:400 12.5px Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
       </div>
 
       {/* หน้ารายการ Lot — ประวัติเป็นรายแถวยา มองไม่ออกว่ารอบไหนรับคืนไปเท่าไหร่
@@ -32,8 +32,8 @@ function renderHistTools(V) {
       </div>
 
       {V.histLot && (
-        <div {...kb(V.clearLot)} className="tap" style={s('display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>
-          Lot {V.histLot} <span style={s('font:400 13px Sarabun,sans-serif')}>✕</span>
+        <div {...kb(V.clearLot)} aria-label="เลิกกรองเฉพาะ Lot นี้" className="tap" style={s('display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>
+          Lot {V.histLot} <span aria-hidden="true" style={s('font:400 13px Sarabun,sans-serif')}>✕</span>
         </div>
       )}
 
@@ -51,7 +51,7 @@ export function renderHistoryWide(V) {
           ref = ตัววัดความสูง ส่งให้หัวตารางไปตั้งระยะติดบน (ดู .hist-head ใน globals.css) */}
       <div ref={V.histHeadRef} className="hist-head">
       <div style={s('display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px')}>
-        <div style={s('font:600 19px Sarabun,sans-serif')}>{V.histTitle || 'ประวัติการบันทึก'}</div>
+        <div role="heading" aria-level="1" style={s('font:600 19px Sarabun,sans-serif')}>{V.histTitle || 'ประวัติการบันทึก'}</div>
         {/* ช่องค้นหา — ระบบเดียวกับหน้าคลังยาและหน้าบันทึก (พี่กันสั่ง 25 ส.ค. 2569)
             รองรับลืมสลับแป้นพิมพ์ + ป้ายบอกคำที่ค้นจริง + ปุ่มล้าง
             เว้นที่ว่างขวาตามสิ่งที่โผล่จริง ไม่งั้นตัวหนังสือที่พิมพ์จะลอดไปใต้ป้าย */}
@@ -66,7 +66,7 @@ export function renderHistoryWide(V) {
             </span>
           )}
           {V.histHasSearch && (
-            <span {...kb(V.clearHistQuery)} className="tap hv-bg-eef" title="ล้างช่องค้นหา"
+            <span {...kb(V.clearHistQuery)} aria-label="ล้างช่องค้นหา" className="tap hv-bg-eef" title="ล้างช่องค้นหา"
               style={s('position:absolute;right:7px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b746e;font:400 13px Sarabun,sans-serif')}>✕</span>
           )}
         </div>
@@ -77,7 +77,7 @@ export function renderHistoryWide(V) {
         </div>
         <div style={s('margin-left:auto;display:flex;align-items:baseline;gap:14px;font:400 13px Sarabun,sans-serif;color:#6b746e')}>
           <span>{V.histCountLabel}</span>
-          <span style={s("font:600 17px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{V.histTotalLabel}</span>
+          <span style={s("font:600 17px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{V.histTotalLabel}</span>
         </div>
       </div>
 
@@ -89,7 +89,7 @@ export function renderHistoryWide(V) {
       <div style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px')}>
         {/* หัวตาราง — กดเรียงได้ทุกคอลัมน์ · สีเข้มกว่าเดิม
             (เดิมพื้น #f6f7f4 ตัวหนังสือ rgba(.5) จางมากจนแทบมองไม่เห็น) */}
-        <div className="sticky-head" style={s("display:flex;padding:11px 16px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);border-radius:10px 10px 0 0;font:600 11.5px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.04em")}>
+        <div className="sticky-head" style={s("display:flex;padding:11px 16px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);border-radius:10px 10px 0 0;font:600 11.5px Sarabun,sans-serif;letter-spacing:.04em")}>
           {V.histCols.map((c) => (
             <span
               key={c.key}
@@ -129,7 +129,7 @@ export function renderHistoryWide(V) {
             </span>
             <span style={s('width:80px;text-align:right')}>{hr.qtyLabel}</span>
             <span style={s('width:92px;text-align:right;color:#6b746e')}>{hr.priceLabel}</span>
-            <span style={sx("width:104px;text-align:right;font:600 14.5px 'IBM Plex Sans Thai',sans-serif", { color: hr.color })}>{hr.valueLabel}</span>
+            <span style={sx("width:104px;text-align:right;font:600 14.5px Sarabun,sans-serif", { color: hr.color })}>{hr.valueLabel}</span>
             <span style={s('width:90px;display:flex;justify-content:center')}>
               <span style={sx('padding:3px 9px;border-radius:6px;font:600 11px Sarabun,sans-serif;white-space:nowrap', { background: hr.dispBg, color: hr.dispFg })}>{hr.dispLabel}</span>
             </span>
@@ -140,7 +140,7 @@ export function renderHistoryWide(V) {
             <span style={s('width:96px;padding-right:8px;overflow:hidden')}>
               {hr.hasLot ? (
                 <span {...kb(hr.openLot)} className="hv-lot" title={'ดูเฉพาะ ' + hr.lotLabel}
-                  style={s("font:500 11.5px 'IBM Plex Sans Thai',sans-serif;color:#6b746e;cursor:pointer;border-bottom:1px dashed rgba(30,36,32,.28);white-space:nowrap")}>{hr.lotLabel}</span>
+                  style={s("font:500 11.5px Sarabun,sans-serif;color:#6b746e;cursor:pointer;border-bottom:1px dashed rgba(30,36,32,.28);white-space:nowrap")}>{hr.lotLabel}</span>
               ) : (
                 <span style={s('font:400 12px Sarabun,sans-serif;color:#c0c5c1')}>{hr.lotLabel}</span>
               )}
@@ -176,11 +176,11 @@ export function renderHistoryNarrow(V) {
         <div style={s('display:flex;align-items:center;gap:10px;margin-bottom:10px')}>
           <div style={s('width:30px;height:30px;border-radius:8px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;position:relative;flex:none')}>
             <div style={s('position:absolute;inset:4px;border:1.6px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
-            <span style={s("font:700 13px 'IBM Plex Sans Thai',sans-serif;color:#fff;line-height:1")}>฿</span>
+            <span style={s("font:700 13px Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
           </div>
-          <div style={s('font:600 18px Sarabun,sans-serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{V.histTitle || 'ประวัติการบันทึก'}</div>
-          <div {...kb(V.openAbout)} title="เกี่ยวกับ" className="hv-bg-f6" style={s('margin-left:auto;width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
-          <div {...kb(V.openSettings)} title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
+          <div role="heading" aria-level="1" style={s('font:600 18px Sarabun,sans-serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{V.histTitle || 'ประวัติการบันทึก'}</div>
+          <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-bg-f6" style={s('margin-left:auto;width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
+          <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
         </div>
         {/* ฝั่งมือถือ — ระบบเดียวกับฝั่งคอมทุกอย่าง ต่างแค่ขนาดกับสีพื้น */}
         <div style={s('position:relative;width:100%;margin-bottom:9px')}>
@@ -194,7 +194,7 @@ export function renderHistoryNarrow(V) {
             </span>
           )}
           {V.histHasSearch && (
-            <span {...kb(V.clearHistQuery)} className="tap hv-bg-eef" title="ล้างช่องค้นหา"
+            <span {...kb(V.clearHistQuery)} aria-label="ล้างช่องค้นหา" className="tap hv-bg-eef" title="ล้างช่องค้นหา"
               style={s('position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b746e;font:400 14px Sarabun,sans-serif')}>✕</span>
           )}
         </div>
@@ -211,16 +211,16 @@ export function renderHistoryNarrow(V) {
           )}
         </div>
         <div style={s('display:flex;align-items:center;gap:6px;margin-top:9px')}>
-          <input type="date" value={V.histFrom} onChange={V.onHistFrom} style={sx("flex:1;min-width:0;height:38px;padding:0 9px;border-radius:8px;background:#f6f7f4;font:400 12.5px 'IBM Plex Sans Thai',sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.14)') })} />
+          <input type="date" value={V.histFrom} onChange={V.onHistFrom} style={sx("flex:1;min-width:0;height:38px;padding:0 9px;border-radius:8px;background:#f6f7f4;font:400 12.5px Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.14)') })} />
           <span style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;flex:none')}>ถึง</span>
-          <input type="date" value={V.histTo} onChange={V.onHistTo} style={sx("flex:1;min-width:0;height:38px;padding:0 9px;border-radius:8px;background:#f6f7f4;font:400 12.5px 'IBM Plex Sans Thai',sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.14)') })} />
+          <input type="date" value={V.histTo} onChange={V.onHistTo} style={sx("flex:1;min-width:0;height:38px;padding:0 9px;border-radius:8px;background:#f6f7f4;font:400 12.5px Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.14)') })} />
         </div>
       </div>
 
       <div style={s('padding:14px 20px 20px')}>
         <div style={s('display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;font:400 12px Sarabun,sans-serif;color:#6b746e')}>
           <span>{V.histCountLabel}</span>
-          <span style={s("font:600 12.5px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{V.histTotalLabel}</span>
+          <span style={s("font:600 12.5px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{V.histTotalLabel}</span>
         </div>
 
         {V.histLoading && (
@@ -234,7 +234,7 @@ export function renderHistoryNarrow(V) {
           <div key={d.key} style={s('margin-bottom:18px')}>
             <div style={s('display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px')}>
               <span style={s('font:600 13.5px Sarabun,sans-serif')}>{d.label}</span>
-              <span style={s("font:600 13px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{d.total}</span>
+              <span style={s("font:600 13px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{d.total}</span>
             </div>
             <div style={s('display:flex;flex-direction:column;gap:7px')}>
               {/* แถบซ้ายบอกกลุ่ม Lot — ใช้เส้นขอบซ้ายแทนพื้นสีเหมือนฝั่งคอม
@@ -253,13 +253,13 @@ export function renderHistoryNarrow(V) {
                   </div>
                   <div style={s('display:flex;align-items:center;justify-content:space-between;gap:9px')}>
                     <div style={s('min-width:0')}>
-                      <div style={sx("font:600 15px 'IBM Plex Sans Thai',sans-serif;font-variant-numeric:tabular-nums", { color: it.color })}>{it.valueLabel}</div>
+                      <div style={sx("font:600 15px Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: it.color })}>{it.valueLabel}</div>
                       <div style={s('display:flex;align-items:center;gap:7px;flex-wrap:wrap')}>
                         <span style={sx('font:400 10.5px Sarabun,sans-serif', { color: it.dispColor })}>{it.dispLabel}</span>
                         {/* ป้าย Lot กดได้ → กรองดูเฉพาะ Lot นั้น
                             ดึงออกมาจากบรรทัดรายละเอียดที่เดิมยัดรวมกันจนอ่านยาก */}
                         {it.hasLot && (
-                          <span {...kb(it.openLot)} className="tap" style={s("font:500 10px 'IBM Plex Sans Thai',sans-serif;color:#2f7d5d;background:#e3f0e8;border-radius:5px;padding:2px 7px;cursor:pointer;white-space:nowrap")}>{it.lotLabel}</span>
+                          <span {...kb(it.openLot)} className="tap" style={s("font:500 10px Sarabun,sans-serif;color:#2f7d5d;background:#e3f0e8;border-radius:5px;padding:2px 7px;cursor:pointer;white-space:nowrap")}>{it.lotLabel}</span>
                         )}
                       </div>
                     </div>

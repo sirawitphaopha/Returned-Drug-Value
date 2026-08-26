@@ -3,12 +3,12 @@ import { s, sx, kb } from '../helpers';
 
 export function renderNavNarrow(V) {
   return (
-    <div ref={V.navBarRef} style={s('flex:none;background:#fff;border-top:1px solid rgba(30,36,32,.08);padding:8px 0 max(14px,env(safe-area-inset-bottom));order:2')}>
+    <div role="navigation" aria-label="เมนูหลัก" ref={V.navBarRef} style={s('flex:none;background:#fff;border-top:1px solid rgba(30,36,32,.08);padding:8px 0 max(14px,env(safe-area-inset-bottom));order:2')}>
       {/* 🚨 ต้องมีสวิตช์มุมมองในแถบล่างด้วย เฉพาะตอนที่จอกว้างจริงแต่ถูกบังคับดูแบบมือถือ
           ไม่งั้นกดสลับเป็น "มือถือ" แล้วสวิตช์หายไปกับแถบบน = ติดอยู่ในโหมดมือถือถาวร */}
       {V.showLayoutSwitch && (
         <div style={s('max-width:520px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;gap:7px')}>
-          <span style={s("font:500 10.5px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.06em;color:#9aa19c")}>มุมมอง</span>
+          <span style={s("font:500 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:#9aa19c")}>มุมมอง</span>
           <div style={s('display:flex;padding:2px;border-radius:8px;background:#f0f1ee;gap:2px')}>
             <div {...kb(V.useDesktop)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutDeskBg, color: V.layoutDeskFg })}>คอม</div>
             <div {...kb(V.useMobile)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutMobBg, color: V.layoutMobFg })}>มือถือ</div>
@@ -33,15 +33,15 @@ export function renderNavNarrow(V) {
 //    จึงแยกเป็นสองชั้น: ชั้นนอกพื้นขาวเต็มจอ · ชั้นในจำกัดความกว้างแล้วจัดกึ่งกลาง
 export function renderNavWide(V) {
   return (
-    <div style={s('flex:none;order:-1;background:#fff;border-bottom:1px solid rgba(30,36,32,.08);position:relative;z-index:6')}>
+    <div role="navigation" aria-label="เมนูหลัก" style={s('flex:none;order:-1;background:#fff;border-bottom:1px solid rgba(30,36,32,.08);position:relative;z-index:6')}>
     <div style={s('width:100%;max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 26px')}>
       <div style={s('display:flex;align-items:center;gap:24px')}>
         <div style={s('display:flex;align-items:center;gap:9px')}>
           <div style={s('width:30px;height:30px;border-radius:8px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;position:relative;flex:none')}>
             <div style={s('position:absolute;inset:4px;border:1.6px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
-            <span style={s("font:700 13px 'IBM Plex Sans Thai',sans-serif;color:#fff;line-height:1")}>฿</span>
+            <span style={s("font:700 13px Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
           </div>
-          <div style={s('font:700 16px Sarabun,sans-serif')}>มูลค่ายาคืน</div>
+          <div style={s('font:700 20px Charmonman,cursive')}>มูลค่ายาคืน</div>
         </div>
         {/* กรอบจาง ๆ ให้เห็นว่าเป็นปุ่ม + เข้มขึ้นตอนเอาเมาส์ชี้ (พี่กันสั่ง)
             สีตอนชี้อยู่ใน .tab-btn ที่ globals.css ไม่ใช่ที่นี่ เพราะ React ทำ :hover ในสไตล์ไม่ได้ */}
@@ -52,13 +52,13 @@ export function renderNavWide(V) {
         </div>
       </div>
       <div style={s('display:flex;align-items:center;gap:12px')}>
-        <span style={s("font:500 13px 'IBM Plex Sans Thai',sans-serif;color:#6b746e;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{V.dateLabel} · {V.orgName}</span>
+        <span style={s("font:500 13px Sarabun,sans-serif;color:#6b746e;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{V.dateLabel} · {V.orgName}</span>
 
         {/* สวิตช์มุมมอง คอม/มือถือ — ย้ายจากกล่องลอยมุมล่างซ้ายมาอยู่แถบบน (พี่กันสั่ง)
             ของเดิมลอยทับปุ่มในตาราง กดไม่ได้ */}
         {V.showLayoutSwitch && (
           <div style={s('display:flex;align-items:center;gap:7px')}>
-            <span style={s("font:500 10.5px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.06em;color:#9aa19c")}>มุมมอง</span>
+            <span style={s("font:500 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:#9aa19c")}>มุมมอง</span>
             <div style={s('display:flex;padding:2px;border-radius:8px;background:#f0f1ee;gap:2px')}>
               <div {...kb(V.useDesktop)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutDeskBg, color: V.layoutDeskFg })}>คอม</div>
               <div {...kb(V.useMobile)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutMobBg, color: V.layoutMobFg })}>มือถือ</div>
@@ -66,8 +66,8 @@ export function renderNavWide(V) {
           </div>
         )}
 
-        <div {...kb(V.openAbout)} title="เกี่ยวกับ" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>ℹ</div>
-        <div {...kb(V.openSettings)} title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>⚙</div>
+        <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>ℹ</div>
+        <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>⚙</div>
       </div>
     </div>
     </div>

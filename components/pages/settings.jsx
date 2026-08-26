@@ -3,7 +3,7 @@
 // ช่องที่ว่างตรงนั้นใส่ปุ่มไปหน้าจัดการราคายาแทน โครงกล่องกับความสูงปุ่มเท่าเดิม
 import { s, sx, kb } from '../helpers';
 
-const LABEL = "font:600 11px 'IBM Plex Sans Thai',sans-serif;letter-spacing:.08em;color:rgba(30,36,32,.45)";
+const LABEL = "font:600 11px Sarabun,sans-serif;letter-spacing:.08em;color:rgba(30,36,32,.45)";
 const HINT = 'font:400 11.5px/1.5 Sarabun,sans-serif;color:#6b746e;margin-bottom:20px';
 const FIELD = 'width:100%;height:46px;padding:0 13px;border:1px solid rgba(30,36,32,.16);border-radius:10px;background:#f6f7f4;font:400 14.5px Sarabun,sans-serif;margin-bottom:6px';
 
@@ -12,12 +12,12 @@ export function renderSettings(V) {
   return (
     <>
       <div {...kb(V.closeSettings)} style={s('position:fixed;inset:0;background:rgba(21,26,23,.42);z-index:24')}></div>
-      <div style={sx('position:fixed;inset:0;z-index:25;display:flex;justify-content:center;pointer-events:none', { alignItems: V.settingsAlign })}>
+      <div role="dialog" aria-modal="true" style={sx('position:fixed;inset:0;z-index:25;display:flex;justify-content:center;pointer-events:none', { alignItems: V.settingsAlign })}>
         <div style={sx('pointer-events:auto;width:100%;overflow-y:auto;background:#fff;box-shadow:0 -14px 44px rgba(30,36,32,.28);padding:14px 20px max(22px,env(safe-area-inset-bottom))', { maxWidth: V.settingsMaxW, maxHeight: V.settingsMaxH, borderRadius: V.settingsRadius })}>
 
           <div style={s('display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px')}>
-            <div style={s('font:700 18px Sarabun,sans-serif')}>ตั้งค่า และเกี่ยวกับ</div>
-            <div {...kb(V.closeSettings)} className="hv-bg-e6e" style={s('width:32px;height:32px;border-radius:8px;background:#f0f1ee;display:flex;align-items:center;justify-content:center;font:400 14px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>✕</div>
+            <div role="heading" aria-level="1" style={s('font:700 18px Sarabun,sans-serif')}>ตั้งค่า และเกี่ยวกับ</div>
+            <div {...kb(V.closeSettings)} aria-label="ปิดหน้าต่างตั้งค่า" className="hv-bg-e6e" style={s('width:32px;height:32px;border-radius:8px;background:#f0f1ee;display:flex;align-items:center;justify-content:center;font:400 14px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>✕</div>
           </div>
 
           <div style={s(LABEL + ';margin-bottom:7px')}>หน่วยงาน</div>
@@ -34,7 +34,7 @@ export function renderSettings(V) {
 
           <div style={s('display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px')}>
             <span style={s(LABEL)}>ยาที่คืนบ่อย</span>
-            <span style={s("font:600 11.5px 'IBM Plex Sans Thai',sans-serif;color:#6b746e;font-variant-numeric:tabular-nums")}>{V.favCountLabel}</span>
+            <span style={s("font:600 11.5px Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums")}>{V.favCountLabel}</span>
           </div>
           <div style={s('display:flex;flex-direction:column;gap:6px;margin-bottom:9px')}>
             {V.favList.map((fv) => (
@@ -43,7 +43,7 @@ export function renderSettings(V) {
                   <div style={s('font:600 13.5px/1.3 Sarabun,sans-serif')}>{fv.name}</div>
                   <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums')}>{fv.priceLabel}</div>
                 </div>
-                <div {...kb(fv.remove)} className="hv-del" style={s('width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#c0c5c1;cursor:pointer;font:400 13px Sarabun,sans-serif;flex:none')}>✕</div>
+                <div {...kb(fv.remove)} aria-label="เอาออกจากยาที่คืนบ่อย" className="hv-del" style={s('width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#c0c5c1;cursor:pointer;font:400 13px Sarabun,sans-serif;flex:none')}>✕</div>
               </div>
             ))}
           </div>
@@ -115,7 +115,7 @@ export function renderSettings(V) {
 
           <div style={s('border-top:1px solid rgba(30,36,32,.08);padding-top:16px;display:flex;flex-direction:column;gap:8px')}>
             <div {...kb(V.openPrices)} className="hv-bg-e3f" style={s('height:46px;border-radius:10px;background:#eef6f1;display:flex;align-items:center;justify-content:center;gap:9px;font:600 14px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>
-              ตั้งราคายา <span style={s("font:500 12px 'IBM Plex Sans Thai',sans-serif;color:#6b746e;font-variant-numeric:tabular-nums")}>{V.priceProgressLabel}</span>
+              ตั้งราคายา <span style={s("font:500 12px Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums")}>{V.priceProgressLabel}</span>
             </div>
 
             {/* ออกจากระบบ — โผล่เฉพาะตอนเว็บล็อกด้วยรหัสผ่านห้องยาอยู่ (พี่กันขอ)

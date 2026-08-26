@@ -9,6 +9,14 @@ const HIST_LIMIT = 60;
 
 const srcLabel = (key) => (SOURCES.find((s) => s.key === key) || {}).label || '';
 
+// ป้ายแหล่งที่มาแบบเต็ม — ยาที่คืนจาก รพ.สต. ต้องบอกได้ว่าแห่งไหน ไม่ใช่แค่ "รพ.สต."
+// เขียนติดกันด้วยช่องว่างธรรมดา ไม่ใช้จุดคั่น เพราะคอลัมน์แคบและขึ้นบรรทัดใหม่เองได้อยู่แล้ว
+const srcFull = (r) => {
+  const base = srcLabel(r.source);
+  const site = String(r.pcuSite || '').trim();
+  return site ? base + ' ' + site : base;
+};
+
 export function historyVals(app, d) {
   const st = d.st;
 
@@ -32,7 +40,7 @@ export function historyVals(app, d) {
     price: (r) => Number(r.price) || 0,
     value: (r) => (Number(r.price) || 0) * (Number(r.qty) || 0),
     disposition: (r) => (r.disposition === 'reuse' ? 0 : 1),
-    source: (r) => srcLabel(r.source),
+    source: (r) => srcFull(r),
     hn: (r) => r.hn || '',
     by: (r) => r.by || '',
     lot: (r) => r.lot || ''
@@ -221,7 +229,7 @@ export function historyVals(app, d) {
         dispLabel: reuse ? 'ใช้ต่อได้' : 'ทำลาย',
         dispBg: reuse ? '#e3f0e8' : '#fbe4dd',
         dispFg: reuse ? '#2f7d5d' : '#c2543c',
-        sourceLabel: srcLabel(r.source),
+        sourceLabel: srcFull(r),
         hnLabel: r.hn || '—',
         byLabel: r.by || '—',
         lotLabel: r.lot || '—',

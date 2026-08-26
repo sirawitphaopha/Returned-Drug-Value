@@ -35,7 +35,7 @@ export default function LoginPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 18 }}>
           <div style={{ width: 38, height: 38, borderRadius: 10, background: '#2f7d5d', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flex: 'none' }}>
             <div style={{ position: 'absolute', inset: 5, border: '1.8px solid rgba(255,255,255,.45)', borderRadius: '50%', borderTopColor: 'transparent', transform: 'rotate(-38deg)' }}></div>
-            <span style={{ font: "700 16px 'IBM Plex Sans Thai',sans-serif", color: '#fff', lineHeight: 1 }}>฿</span>
+            <span style={{ font: "700 16px Sarabun,sans-serif", color: '#fff', lineHeight: 1 }}>฿</span>
           </div>
           <div>
             <div style={{ font: '700 17px/1.2 Sarabun,sans-serif', color: '#1e2420' }}>มูลค่ายาคืน</div>

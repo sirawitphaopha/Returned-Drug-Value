@@ -47,7 +47,10 @@ export function renderShell(app) {
       {/* overflow-anchor:none = ปิดระบบ "ยึดตำแหน่งเลื่อน" ของเบราว์เซอร์
           ปกติมันช่วยไม่ให้จอกระตุกตอนเนื้อหาข้างบนโตขึ้น แต่ที่นี่มันกลับดึงตำแหน่งเดิมกลับมา
           หลังสลับแท็บแล้วข้อมูลโหลดเสร็จ ทำให้เปิดหน้าสรุปมาแล้วอยู่กลางหน้า (พี่กันแจ้งบั๊ก) */}
-      <div ref={app.scrollRef} style={s('flex:1;overflow-y:auto;overflow-anchor:none;min-height:0;position:relative;display:flex;flex-direction:column')}>
+      {/* role="main" = บอกโปรแกรมอ่านหน้าจอว่าตรงนี้คือเนื้อหาหลักของหน้า (ผลตรวจข้อ ต-14)
+          🚨 เติม role บน div เดิม ไม่เปลี่ยนเป็นแท็ก <main> เพราะ <main> มีสไตล์ตั้งต้นของเบราว์เซอร์
+             เปลี่ยนแท็กเมื่อไหร่หน้าตาขยับทันที · เติม role อย่างเดียวไม่แตะ CSS เลยสักพิกเซล */}
+      <div ref={app.scrollRef} role="main" style={s('flex:1;overflow-y:auto;overflow-anchor:none;min-height:0;position:relative;display:flex;flex-direction:column')}>
         {/* กล่องครอบเนื้อหา — ยืดเต็มพื้นที่ที่เหลือ ท้ายเว็บเลยถูกดันลงล่างสุดเอง
             ไม่ต้องพึ่ง margin-top:auto
 

@@ -130,9 +130,13 @@ export function lotsActions(app) {
           // ค่าตั้งต้น = ค่าปัจจุบันในฐาน · orig เก็บไว้เทียบว่าแก้อะไรไปแล้วบ้าง
           recordedBy: data.recordedBy,
           source: data.source,
+          pcuSite: data.pcuSite || '',
           date: data.date,
           rows: data.rows,
-          orig: { recordedBy: data.recordedBy, source: data.source, date: data.date, rows: data.rows }
+          orig: {
+            recordedBy: data.recordedBy, source: data.source,
+            pcuSite: data.pcuSite || '', date: data.date, rows: data.rows
+          }
         },
         lotEditLog: data.log || [],
         lotEditLoading: false
@@ -222,6 +226,11 @@ export function lotsActions(app) {
       const body = { by: by, items: items };
       if (e.recordedBy !== e.orig.recordedBy) body.recordedBy = e.recordedBy;
       if (e.source !== e.orig.source) body.source = e.source;
+      // ส่งชื่อ รพ.สต. ไปเมื่อชื่อเปลี่ยน หรือเมื่อเพิ่งย้ายเข้ามาเป็น รพ.สต.
+      // (หลังบ้านล้างค่าให้เองตอนย้ายออก จึงไม่ต้องส่งกรณีนั้น)
+      if (e.pcuSite !== e.orig.pcuSite || (e.source === 'pcu' && e.source !== e.orig.source)) {
+        body.pcuSite = e.source === 'pcu' ? e.pcuSite : '';
+      }
       if (e.date !== e.orig.date) body.date = e.date;
 
       const res = await app.fetchT('/api/lots/' + encodeURIComponent(e.lot), {

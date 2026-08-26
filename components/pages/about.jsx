@@ -28,12 +28,12 @@ export function renderAbout(V) {
     <div style={s('max-width:640px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column;gap:15px')}>
 
       <div {...kb(V.closeAbout)} className="hv-bg-f6 tap" style={s('align-self:flex-start;display:flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid rgba(30,36,32,.14);border-radius:9px;background:#fff;font:500 13px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>
-        <span>←</span> กลับ
+        <span aria-hidden="true">←</span> กลับ
       </div>
 
       {/* หัวเรื่อง */}
       <div style={s('text-align:center;padding:6px 0 2px')}>
-        <div style={s('font:800 25px Sarabun,sans-serif;color:#24614a;letter-spacing:-.3px')}>มูลค่ายาคืน</div>
+        <div style={s('font:700 31px Charmonman,cursive;color:#24614a')}>มูลค่ายาคืน</div>
         <div style={s('font:400 12.5px/1.55 Sarabun,sans-serif;color:#6b746e;margin-top:5px')}>
           ระบบแปลงยาที่ผู้ป่วยคืนมาให้เป็นตัวเลขมูลค่า พร้อมสรุปเป็นตัวชี้วัดรายปีงบประมาณ · {V.orgName}
         </div>
