@@ -15,30 +15,32 @@ import { catalogVals } from './catalog';
 
 export function renderVals(app) {
   const d = derive(app);
-  const box = Object.assign(
-    {},
-    shellVals(app, d),
-    recordVals(app, d),
-    historyVals(app, d),
-    summaryVals(app, d),
-    sheetVals(app, d),
-    settingsVals(app, d),
-    pricesVals(app, d),
-    signVals(app, d),
-    himportVals(app, d),
-    lotsVals(app, d),
-    catalogVals(app, d)
-  );
+
+  // 🚨 คำนวณทีละไฟล์ "ครั้งเดียว" แล้วใช้ทั้งการรวมร่างและการตรวจคีย์ซ้ำ (ผลตรวจข้อ ต-9)
+  //    ของเดิมเรียก vals ทุกตัวซ้ำอีกรอบเพื่อตรวจ = ทำงานสองเท่าตอน dev โดยไม่จำเป็น
+  //    และรายชื่อที่เอามาตรวจมีแค่ 8 ไฟล์ ขาด himport · lots · catalog ไป 3 ไฟล์
+  //    ตัวตรวจที่ตรวจไม่ครบแย่กว่าไม่มีตัวตรวจ เพราะให้ความมั่นใจแบบผิด ๆ
+  const parts = [
+    ['shell', shellVals(app, d)],
+    ['record', recordVals(app, d)],
+    ['history', historyVals(app, d)],
+    ['summary', summaryVals(app, d)],
+    ['sheet', sheetVals(app, d)],
+    ['settings', settingsVals(app, d)],
+    ['prices', pricesVals(app, d)],
+    ['sign', signVals(app, d)],
+    ['himport', himportVals(app, d)],
+    ['lots', lotsVals(app, d)],
+    ['catalog', catalogVals(app, d)]
+  ];
+
+  const box = Object.assign({}, ...parts.map((p) => p[1]));
 
   // เตือนตอน dev ถ้ามีคีย์ซ้ำข้ามไฟล์ — เคยพลาดมาแล้ว (fyLabel ของหน้าบันทึกโดน summary ทับ
   // จนค่าจากเซิร์ฟเวอร์ไม่เคยถูกใช้เลย และ setLight/setDark ซ้ำจนกลายเป็นโค้ดตาย)
+  // 🚨 เพิ่มไฟล์ใหม่ใน parts ข้างบน = ได้รับการตรวจอัตโนมัติ ไม่ต้องมาเติมรายชื่อสองที่
   if (process.env.NODE_ENV !== 'production') {
     const seen = {};
-    const parts = [
-      ['shell', shellVals(app, d)], ['record', recordVals(app, d)], ['history', historyVals(app, d)],
-      ['summary', summaryVals(app, d)], ['sheet', sheetVals(app, d)], ['settings', settingsVals(app, d)],
-      ['prices', pricesVals(app, d)], ['sign', signVals(app, d)]
-    ];
     for (const [file, obj] of parts) {
       for (const k of Object.keys(obj)) {
         if (seen[k]) console.warn('[vals] คีย์ซ้ำ:', k, '→', seen[k], 'ถูกทับด้วย', file);

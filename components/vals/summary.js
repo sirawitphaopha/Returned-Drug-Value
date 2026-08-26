@@ -147,7 +147,14 @@ export function summaryVals(app, d) {
     // 🚨 ป้ายปีต้องเป็นปีที่กำลังดูอยู่ (ผลตรวจข้อ ส-4)
     //    เดิมเขียน "ปีงบประมาณ 2569" ทับตัวเลขของ 2568 ที่กำลังเปิดดู
     fyLabel: fyViewing ? String(fyViewing) : (hasToday ? String(fyOf(st.today)) : '—'),
-    fySavedBig: Math.floor(fySaved).toLocaleString('en-US') + '.' + (fySaved.toFixed(2).split('.')[1] || '00'),
+    // 🚨 ต้องปัดเศษก่อนแล้วค่อยแยกส่วน (ผลตรวจข้อ ต-5)
+    //    ของเดิมใช้ Math.floor กับ toFixed คู่กัน ซึ่งปัดคนละทาง
+    //    1234.995 → floor ได้ 1234 แต่ toFixed(2) ได้ "1235.00" → โชว์ 1,234.00 ผิดไป 1 บาท
+    fySavedBig: (function () {
+      const fixed = fySaved.toFixed(2);
+      const dot = fixed.indexOf('.');
+      return Number(fixed.slice(0, dot)).toLocaleString('en-US') + '.' + fixed.slice(dot + 1);
+    })(),
     fyLostLabel: money(fyLost),
     fyLostShort: Math.round(fyLost).toLocaleString('en-US') + ' ฿',
     fyGrossLabel: money(fyGross),

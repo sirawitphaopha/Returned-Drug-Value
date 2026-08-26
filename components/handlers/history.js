@@ -44,7 +44,7 @@ export function historyActions(app) {
       // ทั้งที่ผลลัพธ์บนจอยังเป็นของคำที่แปลงแล้ว
       app.setState({
         histRows: c.rows, histTotal: c.total, histSaved: c.saved,
-        histMore: [], histOffset: 0, histLoading: false,
+        histMore: [], histLoading: false,
         histSwapped: !!c.swapped, histSwapLabel: c.swapLabel || ''
       });
       return;
@@ -95,7 +95,6 @@ export function historyActions(app) {
         histTotal: Number(data.total || 0),
         histSaved: Number(data.saved || 0),
         histMore: [],
-        histOffset: 0,
         histLoading: false
       });
     } catch (e) {
@@ -110,8 +109,11 @@ export function historyActions(app) {
   app.loadMoreHistory = async () => {
     if (app.state.demo) { app.demoLoadMore(); return; }
     if (app.state.histLoading) return;
-    const next = app.state.histOffset + 60 + (app.state.histOffset ? 0 : 0);
     const offset = app.state.histRows.length + app.state.histMore.length;
+    // 🚨 ต้องมีเลขลำดับกันคำตอบเก่าเหมือน loadHistory (ผลตรวจข้อ ต-4)
+    //    กด "ดูเพิ่ม" แล้วรีบพิมพ์ค้นทันที คำตอบของชุดเก่าจะกลับมาทีหลัง
+    //    แล้วต่อแถวที่ไม่ตรงเงื่อนไขปนเข้าไปในผลลัพธ์ชุดใหม่
+    const seq = ++app._histSeq;
     app.setState({ histLoading: true });
     try {
       // 🚨 ต้องใช้คำที่แปลงแล้วด้วย ไม่งั้นกด "ดูเพิ่ม" ตอนค้นแบบลืมสลับแป้น
@@ -119,12 +121,13 @@ export function historyActions(app) {
       const res = await app.fetchT(urlOf(offset, app.state.histSwapped ? app.state.histSwapLabel : undefined));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านประวัติไม่สำเร็จ');
+      if (seq !== app._histSeq) return;      // มีคำขอใหม่แซงไปแล้ว ทิ้งคำตอบนี้
       app.setState({
         histMore: app.state.histMore.concat(data.rows || []),
-        histOffset: next,
         histLoading: false
       });
     } catch (e) {
+      if (seq !== app._histSeq) return;
       app.setState({ histLoading: false });
       app.toast('โหลดเพิ่มไม่สำเร็จ', '', false);
     }
@@ -248,20 +251,11 @@ export function historyActions(app) {
     }
   };
 
-  // รายการล็อต — 1 รอบกดบันทึก = 1 ล็อต เหมือนล็อตสินค้าที่รับเข้าคลัง
-  app.loadLots = async () => {
-    if (app.state.demo) return;      // โหมดตัวอย่างเตรียมรายการล็อตไว้แล้ว
-    app.setState({ lotsLoading: true });
-    try {
-      const res = await app.fetchT('/api/lots?range=' + encodeURIComponent(app.state.histRange === 'custom' ? 'month' : app.state.histRange));
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'อ่านรายการล็อตไม่สำเร็จ');
-      app.setState({ lots: data.lots || [], lotsLoading: false });
-    } catch (e) {
-      app.setState({ lotsLoading: false });
-      app.toast('อ่านรายการล็อตไม่สำเร็จ', '', false);
-    }
-  };
+  // 🗑 เคยมี app.loadLots ตัวหนึ่งอยู่ตรงนี้ — ลบทิ้งแล้ว (ผลตรวจข้อ ต-8)
+  //    เป็นโค้ดตาย เพราะ handlers/index.js ติดตั้ง historyActions ก่อน lotsActions
+  //    ตัวใน handlers/lots.js จึงเขียนทับตัวนี้เสมอ ไม่มีทางถูกเรียกเลยสักครั้ง
+  //    อันตรายตรงที่คนมาแก้ทีหลังอาจแก้ผิดตัวแล้วงงว่าทำไมไม่มีอะไรเปลี่ยน
+  //    ตัวจริงอยู่ที่ handlers/lots.js (มีแคช · รองรับ force · กรองช่วงเวลาของตัวเอง)
 
   // ราคาที่โชว์ในป๊อปอัปต้องเป็นราคาที่แช่ไว้ในแถว ไม่ใช่ราคาปัจจุบันของยาตัวนั้น
   app.editRecord = (r) => {

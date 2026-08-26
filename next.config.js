@@ -37,11 +37,19 @@ const securityHeaders = [
   // ไปเว็บอื่นแล้วไม่ส่งที่อยู่หน้าเต็มไปด้วย — ที่อยู่มีเลข Lot กับคำค้นติดไปได้
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // เว็บนี้ไม่ต้องใช้กล้อง ไมค์ ตำแหน่ง — ปิดทิ้งให้หมด
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' }
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()' },
+  // บังคับให้เบราว์เซอร์จำว่าเว็บนี้ต้องต่อแบบเข้ารหัสเท่านั้น 2 ปี (ผลตรวจข้อ ต-15)
+  // ถ้าไม่มี ครั้งแรกที่พิมพ์ที่อยู่โดยไม่ใส่ https คำขอแรกจะวิ่งแบบไม่เข้ารหัส
+  // ซึ่งดักอ่านได้ระหว่างทาง — ในเว็บนี้คำขอนั้นพ่วงคุกกี้เข้าสู่ระบบไปด้วย
+  // ⚠️ ใส่ได้เพราะเว็บนี้อยู่บน Cloudflare ที่เป็น https อยู่แล้วทั้งเส้น ไม่มีเส้นทางที่ต้องใช้ http
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' }
 ];
 
 const nextConfig = {
   reactStrictMode: true,
+  // ไม่ต้องประกาศให้โลกรู้ว่าเว็บนี้สร้างด้วยอะไร (ผลตรวจข้อ ต-15)
+  // คนสแกนหาเว็บที่ใช้รุ่นที่มีช่องโหว่จะได้ไม่เจอจากส่วนหัวนี้
+  poweredByHeader: false,
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   }

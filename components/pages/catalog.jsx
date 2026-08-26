@@ -190,7 +190,7 @@ export function renderCatalog(V) {
 
       {/* ปุ่มลอยกดทีเดียวขึ้นบนสุด — ตารางยาว 417 แถว เลื่อนกลับเองไกลมาก */}
       <div {...kb(V.catToTop)} className="tap" title="ขึ้นบนสุด"
-        style={s('position:fixed;right:24px;bottom:24px;z-index:40;width:44px;height:44px;border-radius:50%;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(30,36,32,.25);font:700 18px Sarabun,sans-serif')}>
+        style={s('position:fixed;right:24px;bottom:24px;z-index:15;width:44px;height:44px;border-radius:50%;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(30,36,32,.25);font:700 18px Sarabun,sans-serif')}>
         ↑
       </div>
 

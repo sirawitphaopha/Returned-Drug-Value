@@ -248,8 +248,9 @@ export function qtyNum(raw) {
 
 // แสดงจำนวนบนจอ — จำนวนเต็มไม่ต้องโชว์ .00 (30 เม็ด ไม่ใช่ 30.00 เม็ด)
 export function qtyText(n) {
-  const v = Number(n) || 0;
-  return Number.isInteger(v) ? String(v) : String(v);
+  // String() ตัด .00 ให้เองอยู่แล้ว — 30 ได้ "30" · 30.5 ได้ "30.5"
+  // เดิมเขียนเป็นเงื่อนไขที่สองข้างเหมือนกันเป๊ะ ไม่มีผลอะไร (ผลตรวจข้อ ต-18)
+  return String(Number(n) || 0);
 }
 
 // ── ช่องจำนวนที่คิดเลขได้ (เฉพาะฝั่งคอม) ────────────────────────────────────
@@ -384,6 +385,6 @@ export function exprText(raw) {
 //
 // ⚠️ เขียนเป็นข้อความไทยตรง ๆ ไม่คำนวณจากนาฬิกาเครื่อง
 //    เพราะนี่คือ "วันที่ปล่อยรุ่นนี้" ไม่ใช่ "วันนี้" — คอมที่นาฬิกาเพี้ยนจะโชว์มั่ว
-export const APP_VERSION = '0.10.0.1';
+export const APP_VERSION = '0.10.0.2';
 export const APP_FIRST_RELEASE = '4 สิงหาคม 2569';
 export const APP_LAST_UPDATE = '26 สิงหาคม 2569';

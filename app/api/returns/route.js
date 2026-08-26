@@ -71,7 +71,8 @@ export async function GET(req) {
     const fy = fyRaw >= 2500 && fyRaw <= 2700 ? fyRaw : 0;
     const range = rangeOf(key, today, fy);
     const q = (url.searchParams.get('q') || '').slice(0, 80);
-    const limit = url.searchParams.get('limit') === 'all' ? EXPORT_LIMIT : HIST_LIMIT;
+    const wantAll = url.searchParams.get('limit') === 'all';
+    const limit = wantAll ? EXPORT_LIMIT : HIST_LIMIT;
     const trash = url.searchParams.get('trash') === '1';
     const lot = (url.searchParams.get('lot') || '').slice(0, 24);
     const offset = Math.max(0, Math.min(100000, Number(url.searchParams.get('offset') || 0) || 0));
@@ -99,6 +100,17 @@ export async function GET(req) {
     if (res.error) throw new Error(res.error.message);
 
     const h = res.data || {};
+
+    // 🚨 การดึงทั้งปีงบลากข้อมูลผู้ป่วยออกไปทีเดียวหลายพันแถวพร้อม HN (ผลตรวจข้อ ต-19)
+    //    เดิมไม่มีร่องรอยเลยว่าเคยมีการดึงชุดใหญ่ออกไปเมื่อไหร่ ตอบผู้ตรวจไม่ได้
+    //    บันทึกไว้ฝั่งเซิร์ฟเวอร์อย่างเดียว ไม่ส่งอะไรเพิ่มกลับไปที่เบราว์เซอร์
+    if (wantAll) {
+      console.warn('[returns.GET] ดึงข้อมูลชุดใหญ่', JSON.stringify({
+        rows: (h.rows || []).length, total: Number(h.total || 0),
+        from: from, to: to, lot: lot || null, trash: trash
+      }));
+    }
+
     return NextResponse.json({
       rows: h.rows || [],
       total: Number(h.total || 0),

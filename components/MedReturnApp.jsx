@@ -77,7 +77,9 @@ export default class MedReturnApp extends React.Component {
       histLot: '',           // ดูเฉพาะล็อตเดียว (เว้นว่าง = ทุกล็อต)
       histFrom: '',          // ช่วงวันที่เลือกเอง
       histTo: '',
-      histOffset: 0,         // ดูเพิ่มทีละ 60 แถว
+      // 🗑 เคยมี histOffset อยู่ตรงนี้ — ลบแล้ว (ผลตรวจข้อ ต-18)
+      //    ถูกตั้งค่าอยู่ 4 จุดแต่ไม่มีใครอ่านเลย ตัวที่ใช้จริงคือ
+      //    histRows.length + histMore.length ซึ่งนับจากของที่มีอยู่จริงในมือ
       histSortKey: '',       // คอลัมน์ที่กดเรียง (ว่าง = เรียงวันใหม่→เก่าตามที่เซิร์ฟเวอร์ส่งมา)
       histSortDir: 'desc',
       histMore: [],          // แถวที่โหลดเพิ่มมาแล้ว

@@ -137,7 +137,10 @@ export function himportActions(app) {
       let saved = 0, backfilled = 0;
       for (let i = 0; i < items.length; i += 400) {
         const chunk = items.slice(i, i + 400);
-        const res = await fetch('/api/prices', {
+        // 🚨 ต้องเป็น app.fetchT ไม่ใช่ fetch ดิบ (ผลตรวจข้อ ต-3)
+        //    fetch ดิบไม่มีตัวจับเวลา เน็ตค้างแล้วปุ่มล็อกที่ "กำลังบันทึก" ตลอดกาล
+        //    ต้องเลือกไฟล์ใหม่ทั้งชุด · และ fetchT ยังเป็นตัวกันโหมดดูตัวอย่างด้วย (ข้อ 3.37)
+        const res = await app.fetchT('/api/prices', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

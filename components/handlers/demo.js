@@ -171,7 +171,7 @@ export function demoActions(app) {
       histRows: st.histTrash ? [] : h.rows,
       histTotal: st.histTrash ? 0 : h.total,
       histSaved: st.histTrash ? 0 : h.saved,
-      histMore: [], histOffset: 0, histLoading: false
+      histMore: [], histLoading: false
     });
   };
 
