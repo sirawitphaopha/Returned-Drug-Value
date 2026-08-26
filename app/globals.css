@@ -145,76 +145,154 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
 
    ทำไมไม่เปิดหน้าต่างใหม่แล้วพิมพ์: หน้าต่างใหม่ต้องโหลดฟอนต์ไทยซ้ำ
    และเบราว์เซอร์บางตัวบล็อกหน้าต่างที่เปิดเอง = พิมพ์ไม่ออกโดยไม่มีอะไรเตือน */
+/* ═══════════════════════════════════════════════════════════════════════════
+   ใบสรุป Lot — กระดาษ A4 จริงตั้งแต่บนหน้าจอ
+   ═══════════════════════════════════════════════════════════════════════════
+
+   🚨🚨 บทเรียนใหญ่ 26 ส.ค. 2569 — เปิดไฟล์ PDF จริงดูแล้วตัวหนังสือเล็กจิ๋ว
+      เนื้อหากินแค่ครึ่งบนของหน้า ตารางแคบไม่เต็มกระดาษ
+
+      ต้นเหตุ: เดิมวาดใบเป็น "หน้าเว็บ" (ขนาดเป็น px) แล้วค่อยแปลงเป็นกระดาษ
+      ด้วยกฎ @media print ซึ่งต้องไล่ทับขนาดทุกจุดด้วย !important
+      และสไตล์ที่เขียนฝังในแท็กชนะกฎในไฟล์ CSS เสมอ จึงทับไม่ได้จริง
+
+      วิธีที่ถูก (ยกมาจากโปรเจกต์ listless ที่พี่กันบอกว่า "อันนั้นทำมาดีแล้ว"):
+      ทำใบให้เป็นกระดาษ A4 จริงตั้งแต่บนหน้าจอเลย — กว้าง 210mm สูง 287mm
+      ขอบ 16mm ฟอนต์ราชการ 16 พอยต์ · ตอนพิมพ์แค่ซ่อนของอื่นแล้วเอาขอบออก
+      สิ่งที่เห็นบนจอจึงเท่ากับสิ่งที่ออกมาบนกระดาษเป๊ะ ไม่ต้องเดา
+
+   🚨 ทุกขนาดในใบนี้ใช้หน่วย pt ไม่ใช่ px — pt ผูกกับขนาดกระดาษจริง
+      ส่วน px ผูกกับหน้าจอ ซึ่งไม่มีความหมายบนกระดาษ
+
+   🚨 ฟอนต์ TH Sarabun New ใช้ที่ใบนี้ที่เดียวในทั้งเว็บ (พี่กันสั่ง)
+      หน้าเว็บส่วนอื่นใช้ Sarabun ตามเดิม */
+
+.slip-paper {
+  background: #fff;
+  width: 210mm;
+  max-width: 100%;
+  min-height: 287mm;
+  padding: 16mm;
+  box-sizing: border-box;
+  color: #000;
+  font-family: "TH Sarabun New", "TH SarabunPSK", Sarabun, sans-serif;
+  font-size: 16pt;
+  line-height: 1.45;
+}
+
+/* ── หัวเอกสาร ─────────────────────────────────────────────────────────── */
+.slip-paper .sp-org { text-align: center; font-size: 17pt; font-weight: 700; line-height: 1.4; }
+.slip-paper .sp-title { text-align: center; font-size: 22pt; font-weight: 700; line-height: 1.35; margin-top: 2mm; }
+
+/* ── ข้อมูลหัวเรื่อง ────────────────────────────────────────────────────── */
+.slip-paper .sp-meta { display: flex; gap: 10mm; flex-wrap: wrap; margin: 6mm 0 4mm; font-size: 16pt; line-height: 1.75; }
+.slip-paper .sp-meta > div { flex: 1 1 70mm; min-width: 0; }
+.slip-paper .sp-meta b { font-weight: 700; }
+
+/* หน่วยบริการต้นทาง — บรรทัดเต็มความกว้าง ชื่อเต็มตามทะเบียนยาวมาก */
+.slip-paper .sp-site { font-size: 16pt; line-height: 1.75; margin: 0 0 4mm; }
+
+/* ── ตารางรายการยา ─────────────────────────────────────────────────────
+   🚨 table-layout:fixed ล็อกความกว้างคอลัมน์ไว้ ไม่ให้ชื่อยายาว ๆ ดันคอลัมน์อื่นจนบี้
+      (ยกมาจาก listless ซึ่งเจอปัญหาเดียวกันมาก่อน) */
+.slip-paper .sp-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 14pt; }
+.slip-paper .sp-table th,
+.slip-paper .sp-table td {
+  border: 1px solid #000;
+  padding: 1.4mm 1.6mm;
+  text-align: center;
+  vertical-align: middle;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+}
+/* 🚨 พื้นเทาในเอกสารมีโทนเดียว #f2f4f2 ใช้แค่ 2 ที่ หัวคอลัมน์กับรวมทั้งสิ้น
+   พี่กันเคาะ 26 ส.ค. 2569 · เดิมมี 3 โทนไล่เข้มขึ้นเรื่อย ๆ ดูเลอะและไม่รู้ว่าอันไหนสำคัญกว่า
+   แถวยอดย่อยไม่มีพื้นสี ใช้ตัวหนาพอ */
+.slip-paper .sp-table thead th { background: #f2f4f2; font-weight: 700; font-size: 13pt; line-height: 1.3; }
+.slip-paper .sp-table td.tl { text-align: left; }
+.slip-paper .sp-table td.tr { text-align: right; }
+/* 🚨 แถวยอดย่อยไม่มีพื้นสี พี่กันสั่ง 26 ส.ค. 2569 ให้ไฮไลต์แค่หัวตารางกับรวมทั้งสิ้น
+   เอกสารราชการเน้นน้อยที่สุดเท่าที่จำเป็น ทาสีหลายชั้นแล้วตาไม่รู้ว่าบรรทัดไหนคือยอดจริง */
+.slip-paper .sp-table tr.sp-sum td { font-weight: 700; }
+.slip-paper .sp-table tr.sp-total td { font-weight: 700; background: #f2f4f2; }
+
+/* ── บรรทัดวันเวลาที่พิมพ์ ──────────────────────────────────────────────── */
+.slip-paper .sp-stamp { text-align: right; font-size: 13pt; margin-top: 3mm; }
+
+/* ── ช่องลงนาม ─────────────────────────────────────────────────────────── */
+.slip-paper .sp-sign { display: flex; gap: 8mm; margin-top: 16mm; font-size: 15pt; }
+.slip-paper .sp-sign > div { flex: 1; text-align: center; line-height: 1.9; }
+.slip-paper .sp-sign .line { border-bottom: 1px dotted #000; height: 10mm; }
+.slip-paper .sp-sign .role { font-weight: 700; }
+
+/* ปุ่มกลับของหน้ารายการ Lot — พี่กันสั่ง 26 ส.ค. 2569 ว่าต้องเปลี่ยนสีตอนเอาเมาส์ชี้
+   🚨 เขียน border ทั้งประโยค ไม่ใช่ border-color เดี่ยว ๆ
+      เขียนครึ่งเดียวแล้วความหนากับชนิดเส้นค้างของเดิม กลายเป็นขอบดำหนา
+      (บทเรียนจาก ME-DRP v0.9.15.0) */
+.btn-back:hover {
+  background: #e3f0e8 !important;
+  border: 1px solid rgba(47, 125, 93, .34) !important;
+  color: #2f7d5d !important;
+}
+
+/* ชื่อเว็บที่กดกลับหน้าแรกได้ — ต้องมีสัญญาณว่ากดได้ ไม่งั้นไม่มีใครรู้ */
+.hv-home:hover { background: rgba(47, 125, 93, .09) !important; color: #2f7d5d !important; }
+
 @media print {
-  /* ═══════════════════════════════════════════════════════════════════════
-     ใบสรุป Lot ตอนพิมพ์ — เอกสารราชการไทย ขาวดำ ฟอนต์ TH Sarabun New
-     ═══════════════════════════════════════════════════════════════════════
+  /* ซ่อนทุกอย่างยกเว้นกระดาษ
+     ใช้ display:none ไม่ใช่ visibility:hidden เพราะของที่ซ่อนด้วย visibility
+     ยังกินที่อยู่ จะได้กระดาษเปล่านำหน้าหลายแผ่นก่อนถึงใบจริง
 
-     🚨 พี่กันทัก 26 ส.ค. 2569: "ทางการแล้วเหรอ ทางการเขามีสีเหรอ
-        และต้องใช้ th sarabun new ไม่ใช่ของ google"
-
-     ถูกต้องทั้งสองข้อ — หนังสือราชการไทยกำหนดให้ใช้ฟอนต์ TH Sarabun New
-     (หรือ TH SarabunPSK ซึ่งเป็นตัวเดียวกัน) และเป็นเอกสารขาวดำ
-     ตรวจในเครื่องแล้วมีฟอนต์นี้อยู่ จึงไม่ต้องฝังไฟล์เพิ่ม
-
-     ⚠️ ขัดกับกฎเดิมของโปรเจกต์ที่เขียนไว้ว่า "บังคับพิมพ์สี ไม่งั้นแยกไม่ออกว่า
-        อันไหนใช้ต่อ อันไหนทำลาย" — แก้โดยไม่พึ่งสีเลย ใช้ข้อความกับตัวหนาแทน
-        คอลัมน์สถานะเขียนว่า "ใช้ต่อได้" หรือ "ทำลาย" ตรง ๆ อยู่แล้ว อ่านออกโดยไม่ต้องมีสี
-        (สีบนหน้าจอยังอยู่ครบเหมือนเดิม ตัดเฉพาะตอนพิมพ์) */
-
-  body * { visibility: hidden !important; }
-  .slip-sheet, .slip-sheet * { visibility: visible !important; }
+     🚨 ใบสรุปถูกแขวนไว้ที่ body โดยตรงด้วย createPortal (ดู pages/lots.jsx)
+        กฎนี้จึงชี้ไปที่ .slip-backdrop ตรง ๆ ได้
+        ห้ามกลับไปใช้ body > div:has(.slip-paper) เด็ดขาด
+        เพราะ Next.js ห่อทั้งเว็บไว้ในกล่องเดียว ตัวเลือกนั้นจะไปตรงกับ
+        กล่องที่ครอบทั้งเว็บ แล้วเปิดหน้าเว็บทั้งหน้ากลับมาในกระดาษ
+        (เจอจริง 26 ส.ค. 2569 สั่งพิมพ์แล้วได้หน้ารายการ Lot ออกมาทั้งหน้า) */
+  /* 🚨 พื้นหลังของหน้าเว็บต้องกลายเป็นสีขาวตอนพิมพ์
+     กระดาษสูงเท่าเนื้อหา ส่วนที่เหลือใต้ใบจึงเห็นพื้นเว็บโผล่ออกมา
+     กลายเป็นแถบเทาก้นกระดาษที่ไม่มีใครสั่งให้พิมพ์
+     (เจอจริง 26 ส.ค. 2569 ตอนเปิดไฟล์ PDF ที่สร้างออกมาดู) */
+  html, body { background: #fff !important; }
+  body > * { display: none !important; }
+  body > .slip-backdrop { display: block !important; }
 
   .slip-backdrop {
     position: static !important;
+    display: block !important;
     background: none !important;
     padding: 0 !important;
     overflow: visible !important;
-    display: block !important;
   }
 
   .slip-sheet {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    position: static !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+
+  /* กระดาษบนจอมีขอบ 16mm ไว้ให้เห็นภาพ · ตอนพิมพ์เอาออกเพราะ @page คุมขอบจริงแล้ว */
+  .slip-paper {
     width: 100% !important;
     max-width: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    min-height: 0 !important;
+    padding: 0 !important;
   }
 
-  /* 🚨 ฟอนต์ราชการ + ขาวดำล้วน — ทับสีทุกจุดที่เขียนไว้ในแท็ก
-     ตัวเลขในตารางต้องเรียงหลักตรงกัน จึงคง tabular-nums ไว้ */
-  .slip-sheet, .slip-sheet * {
-    font-family: "TH Sarabun New", "TH SarabunPSK", Sarabun, sans-serif !important;
-    color: #000 !important;
-    background: transparent !important;
-  }
-
-  /* หนังสือราชการใช้ตัวขนาด 16 พอยต์เป็นมาตรฐาน
-     TH Sarabun New ตัวเล็กกว่าฟอนต์อื่นที่ขนาดเท่ากัน จึงต้องตั้งใหญ่กว่าบนจอ */
-  .slip-sheet { font-size: 16pt !important; line-height: 1.35 !important; }
-  .slip-sheet table { font-size: 15pt !important; }
-
-  /* เส้นตารางกับเส้นคั่นเป็นสีดำบาง ๆ ทั้งหมด */
-  .slip-sheet table th,
-  .slip-sheet table td { border-bottom: 1px solid #000 !important; }
-  .slip-sheet [style*="border-bottom"] { border-bottom-color: #000 !important; }
-  .slip-sheet [style*="border-top"] { border-top-color: #000 !important; }
-
-  /* แถบหัวที่มีปุ่มพิมพ์ ปุ่มบันทึก PDF และปุ่มปิด ไม่ต้องติดไปในกระดาษ */
+  /* แถบปุ่มพิมพ์ ปุ่มบันทึก PDF ปุ่มปิด ไม่ต้องติดไปในกระดาษ */
   .slip-hide { display: none !important; }
 
-  /* ห้ามตัดแถวกลางคัน — ครึ่งบรรทัดอยู่หน้าหนึ่ง อีกครึ่งอยู่อีกหน้า อ่านไม่รู้เรื่อง */
-  tr, td, th { break-inside: avoid; }
+  /* บังคับพิมพ์พื้นเทาของหัวตารางกับแถวยอดรวม ไม่งั้นเบราว์เซอร์ตัดทิ้ง */
+  .slip-paper, .slip-paper * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-  /* 🚨 หัวตารางต้องซ้ำทุกหน้า — ใบที่มี 80 รายการกินกระดาษ 2-3 แผ่น
-     หน้าที่สองเป็นต้นไปจะเห็นแต่ตัวเลขลอย ๆ ไม่รู้ว่าคอลัมน์ไหนคืออะไร */
-  thead { display: table-header-group; }
+  /* ตารางยาว ๆ ให้ไหลข้ามหน้าได้ · ไม่ตัดกลางแถว · หัวตารางซ้ำทุกหน้า */
+  .sp-table { page-break-inside: auto; }
+  .sp-table thead { display: table-header-group; }
+  .sp-table tr { page-break-inside: avoid; }
+  .sp-sign { break-inside: avoid; }
 
-  /* ช่องลงนามห้ามตกไปอยู่หน้าใหม่ลำพัง — ต้องอยู่กับยอดรวมเสมอ */
-  .slip-sign { break-inside: avoid; }
-
-  /* ระยะขอบกระดาษตามระเบียบงานสารบรรณ — บน 2.5 ซม. ที่เหลือ 2 ซม. */
-  @page { margin: 25mm 20mm 20mm; }
+  @page { size: A4 portrait; margin: 16mm; }
 }

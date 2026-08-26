@@ -1,5 +1,5 @@
 // ค่าของหน้ารายการ Lot + ใบสรุป Lot
-import { money, thaiDate, SOURCES } from '@/lib/format';
+import { money, thaiDate, SOURCES, thaiDateFull } from '@/lib/format';
 import { qtyText, evalQty, isQtyExpr, exprText } from '../helpers';
 import { nameParts } from './record';
 import { pillColorOf } from '@/lib/drugPillColors';
@@ -11,11 +11,80 @@ const RANGES = [
   { key: 'fy', label: 'ปีงบ' }
 ];
 
+// ── คอลัมน์ของตารางรายการ Lot ────────────────────────────────────────────
+// พี่กันสั่ง 26 ส.ค. 2569: "อยากให้มันมีหัวคอลัมน์ กดเรียงได้ มีช่องให้ค้นหาได้
+//  และแบ่งคอลัมน์วันที่ คอลัมน์ชื่อคนที่ลง คอลัมน์แหล่งที่มา เพราะจะได้กรองได้"
+// เดิมเป็นการ์ดที่ยัดสามอย่างรวมในบรรทัดเดียว จึงกรองไม่ได้และช่องไฟเหลือเยอะ
+const COLS = [
+  { key: 'date',  label: 'วันที่',      w: '92px'  },
+  { key: 'lot',   label: 'เลข Lot',     w: '108px' },
+  { key: 'by',    label: 'ผู้บันทึก',    flex: true },
+  { key: 'src',   label: 'แหล่งที่มา',   w: '108px' },
+  // 🚨 รพ.สต. เป็นคอลัมน์ของตัวเอง ไม่ใช่บรรทัดล่างของแหล่งที่มา (พี่กันสั่ง 26 ส.ค. 2569)
+  //    แยกแล้วจึงกดเรียงเพื่อจับกลุ่มยาที่คืนจากแห่งเดียวกันมาอยู่ติดกันได้
+  { key: 'site',  label: 'รพ.สต.',      w: '120px' },
+  { key: 'items', label: 'รายการ',      w: '72px',  align: 'center' },
+  { key: 'saved', label: 'ใช้ต่อได้',    w: '100px', align: 'right' },
+  { key: 'lost',  label: 'ทำลาย',       w: '90px',  align: 'right' },
+  { key: 'act',   label: 'จัดการ',      w: '262px', align: 'right', noSort: true }
+];
+
+// ค่าที่ใช้เทียบตอนเรียง — คอลัมน์ตัวเลขต้องเทียบแบบตัวเลข ไม่ใช่ตัวอักษร
+// (ไม่งั้น 1,402.50 จะมาก่อน 550.00 เพราะเทียบทีละตัวอักษร)
+const SORT_VAL = {
+  date:  (l) => String(l.date || ''),
+  lot:   (l) => String(l.lot || ''),
+  by:    (l) => String(l.by || ''),
+  src:   (l) => String(l.src || ''),
+  // แถวที่ไม่มี รพ.สต. ให้ไปกองท้ายสุดเสมอ ไม่ปนกับแห่งที่มีชื่อ
+  site:  (l) => String(l.pcuSite || '') || 'ๅๅๅ',
+  items: (l) => Number(l.items || 0),
+  saved: (l) => Number(l.saved || 0),
+  lost:  (l) => Number(l.lost || 0)
+};
+
 export function lotsVals(app, d) {
   const st = d.st;
   const lots = st.lots || [];
   const slip = st.slipLot;
   const slipRows = st.slipRows || [];
+  const pcuFull = st.pcuFull || {};
+
+  // ── ช่องค้น ───────────────────────────────────────────────────────────
+  // ค้นได้ทั้งเลข Lot · ชื่อผู้บันทึก · ชื่อ รพ.สต. ในช่องเดียว
+  // พิมพ์หลายคำได้ ต้องเจอครบทุกคำถึงนับว่าใช่ (ท่าเดียวกับช่องค้นยา)
+  const lq = String(st.lotsQuery || '').trim().toLowerCase();
+  const words = lq ? lq.split(/s+/) : [];
+
+  // ── ตัวกรองแหล่งที่มา — เลือกสองชั้น ─────────────────────────────────
+  // ชั้นแรกเลือกว่ามาจากไหน · ถ้าเลือก รพ.สต. ค่อยมีช่องที่สองให้เจาะว่าแห่งไหน
+  // 🚨 เคยยัดทั้ง 13 แห่งลงดรอปดาวน์เดียวกับแหล่งที่มา รายการยาวเป็นหางว่าว
+  //    พี่กันสั่งแก้ทันที 26 ส.ค. 2569 — เลือกสองรอบชัดกว่าและสั้นกว่ามาก
+  const sfSrc = String(st.lotsSrcFilter || '');
+  const sfSite = sfSrc === 'pcu' ? String(st.lotsSiteFilter || '') : '';
+
+  const filtered = lots.filter((l) => {
+    if (sfSrc && String(l.src || '') !== sfSrc) return false;
+    if (sfSite && String(l.pcuSite || '') !== sfSite) return false;
+    if (!words.length) return true;
+    const hay = (String(l.lot || '') + ' ' + String(l.by || '') + ' ' + String(l.pcuSite || '')).toLowerCase();
+    for (const w of words) if (hay.indexOf(w) < 0) return false;
+    return true;
+  });
+
+  // ── การเรียง ─────────────────────────────────────────────────────────
+  // ยังไม่กดหัวคอลัมน์ = เรียงตามที่ฐานส่งมา (วันที่ใหม่สุดก่อน) ซึ่งถูกอยู่แล้ว
+  const sk = st.lotsSortKey;
+  const sorted = sk && SORT_VAL[sk]
+    ? filtered.slice().sort((a, b2) => {
+        const va = SORT_VAL[sk](a);
+        const vb = SORT_VAL[sk](b2);
+        let c = typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb), 'th');
+        // ค่าเท่ากันให้เรียงตามเลข Lot กันแถวสลับไปมาทุกครั้งที่วาดจอใหม่
+        if (c === 0) c = String(a.lot || '').localeCompare(String(b2.lot || ''));
+        return st.lotsSortDir === 'asc' ? c : -c;
+      })
+    : filtered;
 
   // ยอดรวมของใบสรุป — คิดจากแถวจริงที่ดึงมา ไม่ใช้ยอดจากหน้ารายการ
   // (ถ้ามีคนลบแถวไปหลังเปิดหน้ารายการ ตัวเลขบนใบต้องตรงกับรายการที่พิมพ์ออกมา)
@@ -28,13 +97,118 @@ export function lotsVals(app, d) {
 
   return {
     isLots: st.screen === 'lots',
+    // จอกว้างวาดเป็นตาราง จอแคบวาดเป็นการ์ด — ตาราง 8 คอลัมน์ยัดลงมือถือไม่ได้
+    lotsWide: !!d.wide,
     closeLots: app.closeLots,
     lotsLoading: !!st.lotsLoading && !lots.length,
-    lotsEmpty: !st.lotsLoading && !lots.length,
-    lotsCountLabel: lots.length.toLocaleString('en-US') + ' Lot',
-    lotsHasMore: lots.length > st.lotsShown,
-    lotsMoreLabel: 'ดูเพิ่มอีก ' + Math.min(40, lots.length - st.lotsShown).toLocaleString('en-US') + ' Lot',
+    lotsEmpty: !st.lotsLoading && !sorted.length,
+    // แยกสองกรณีออกจากกัน — ไม่มี Lot เลย กับ มี Lot แต่ตัวกรองคัดออกหมด
+    // ข้อความแนะนำต้องคนละแบบ ไม่งั้นผู้ใช้ไปเปลี่ยนช่วงเวลาทั้งที่ปัญหาอยู่ที่ช่องค้น
+    lotsFilteredOut: !st.lotsLoading && !!lots.length && !sorted.length,
+    lotsCountLabel: sorted.length.toLocaleString('en-US') + ' Lot'
+      + (sorted.length !== lots.length ? ' จากทั้งหมด ' + lots.length.toLocaleString('en-US') : ''),
+    // ยอดรวมของที่เห็นอยู่ตอนนี้ — กรองแล้วต้องรู้ว่าเหลือเงินเท่าไร
+    lotsSumLabel: money(sorted.reduce((t, l) => t + Number(l.saved || 0) + Number(l.lost || 0), 0)),
+    lotsHasMore: sorted.length > st.lotsShown,
+    lotsMoreLabel: 'ดูเพิ่มอีก ' + Math.min(40, sorted.length - st.lotsShown).toLocaleString('en-US') + ' Lot',
     moreLots: app.moreLots,
+
+    // ── แถบเครื่องมือของตาราง ─────────────────────────────────────────
+    lotsQuery: st.lotsQuery || '',
+    onLotsQuery: app.onLotsQuery,
+    clearLotsQuery: app.clearLotsQuery,
+    lotsHasSearch: !!String(st.lotsQuery || '').trim(),
+
+    // ดรอปดาวน์กรองแหล่งที่มา — รวมทั้งแบบเหมากลุ่มและเจาะ รพ.สต. รายแห่งไว้ตัวเดียว
+    // ทำเป็นสองดรอปดาวน์แยกจะกินที่และต้องคิดว่าอันไหนคุมอันไหน
+    lotsSrcFilter: st.lotsSrcFilter || '',
+    setLotsSrc: app.setLotsSrc,
+    lotsSrcOptions: SOURCES.map((o) => ({ value: o.key, label: o.label })),
+    lotsSiteFilter: st.lotsSiteFilter || '',
+    setLotsSite: app.setLotsSite,
+    // ช่องที่สองโผล่เฉพาะตอนเลือกแหล่งที่มาเป็น รพ.สต. เท่านั้น
+    lotsSiteOn: String(st.lotsSrcFilter || '') === 'pcu',
+
+    // ปุ่มล้างค่าโผล่เฉพาะตอนมีเงื่อนไขอยู่จริง ไม่งั้นเป็นปุ่มที่กดแล้วไม่เกิดอะไร
+    lotsHasFilter: !!(String(st.lotsQuery || '').trim() || st.lotsSrcFilter || st.lotsSiteFilter),
+    clearLotsFilters: app.clearLotsFilters,
+
+    // ── ช่วงวันที่ที่เลือกเอง ─────────────────────────────────────────
+    lotsFrom: st.lotsFrom || '',
+    lotsTo: st.lotsTo || '',
+    onLotsFrom: app.onLotsFrom,
+    onLotsTo: app.onLotsTo,
+    // ขอบช่องเป็นสีเขียวตอนกำลังใช้ช่วงที่กรอกเอง ให้รู้ว่าปุ่มด้านขวาไม่ได้คุมอยู่
+    lotsCustomRange: st.lotsRange === 'custom',
+
+    // ── ส่งออกไฟล์ CSV ───────────────────────────────────────────────
+    // 🚨 ส่งออกเฉพาะแถวที่กรองอยู่ (sorted) ไม่ใช่ทั้งหมดที่โหลดมา
+    //    และไม่ใช่แค่ 40 แถวแรกที่วาดอยู่ ต้องได้ครบทุกแถวที่ตรงเงื่อนไข
+    doExportLots: () => app.exportLotsCsv(
+      sorted.map((l) => ({
+        date: l.date,
+        lot: l.lot,
+        by: l.by || '',
+        srcLabel: srcLabel(l.src) || '',
+        site: l.src === 'pcu' ? String(l.pcuSite || '') : '',
+        items: l.items,
+        saved: l.saved,
+        lost: l.lost
+      })),
+      {
+        orgName: st.orgName,
+        rangeLabel: st.lotsRange === 'custom'
+          ? (st.lotsFrom || '?') + ' ถึง ' + (st.lotsTo || '?')
+          : (RANGES.find((r) => r.key === st.lotsRange) || {}).label || '',
+        filterLabel: [
+          String(st.lotsQuery || '').trim() ? 'ค้นว่า ' + st.lotsQuery.trim() : '',
+          st.lotsSrcFilter ? 'แหล่งที่มา ' + (srcLabel(st.lotsSrcFilter) || st.lotsSrcFilter) : '',
+          st.lotsSiteFilter ? 'รพ.สต. ' + st.lotsSiteFilter : ''
+        ].filter(Boolean).join(' · '),
+        printedOn: st.today,
+        fileName: 'รายการ-Lot-ยาคืน-' + (st.today || '') + '.csv'
+      }
+    ),
+    // 🚨 รายชื่อ รพ.สต. ต้องมาจากการตั้งค่า (ทั้ง 13 แห่ง) ไม่ใช่จากที่โผล่ในข้อมูล
+    //    เคยทำแบบเอาเฉพาะแห่งที่เคยคืนยาจริง แล้วพี่กันเปิดมาเจอรายการว่างเปล่า
+    //    เพราะยังไม่มีล็อตไหนกรอกชื่อแห่งไว้เลย (26 ส.ค. 2569 "ทำไมเลือก รพ.สต. ไม่ได้")
+    //    ตัวกรองที่เลือกอะไรไม่ได้เลย แย่กว่าตัวกรองที่มีตัวเลือกซึ่งยังไม่มีข้อมูล
+    //    ต่อท้ายด้วยจำนวน Lot ให้เห็นว่าแห่งไหนมีของ แห่งไหนยังว่าง
+    lotsSiteOptions: (() => {
+      const counts = {};
+      for (const l of lots) {
+        if (l.src !== 'pcu') continue;
+        const n = String(l.pcuSite || '').trim();
+        if (n) counts[n] = (counts[n] || 0) + 1;
+      }
+      // รายชื่อจากการตั้งค่าก่อน แล้วเติมชื่อที่โผล่ในข้อมูลแต่ไม่อยู่ในรายชื่อ
+      // (เผื่อมีแห่งที่ถูกลบออกจากการตั้งค่าไปแล้ว แต่ข้อมูลเก่ายังอ้างถึงอยู่)
+      const names = [...new Set([...(st.pcuSites || []), ...Object.keys(counts)])]
+        .map((n) => String(n).trim()).filter(Boolean)
+        .sort((x, y) => x.localeCompare(y, 'th'));
+      return names.map((n) => ({
+        value: n,
+        label: n + (counts[n] ? ' (' + counts[n] + ')' : '')
+      }));
+    })(),
+
+    // หัวคอลัมน์กดเรียงได้ · ▲ น้อยไปมาก ▼ มากไปน้อย ↕ ยังไม่ได้เรียง
+    // (ลูกศรชุดเดียวกับหน้าประวัติ ห้ามใช้คนละแบบ)
+    lotCols: COLS.map((c) => {
+      const on = sk === c.key;
+      return {
+        key: c.key,
+        label: c.label,
+        w: c.w,
+        flex: !!c.flex,
+        align: c.align,
+        noSort: !!c.noSort,
+        arrow: c.noSort ? '' : (on ? (st.lotsSortDir === 'asc' ? '▲' : '▼') : '↕'),
+        arrowColor: on ? '#2f7d5d' : 'rgba(30,36,32,.28)',
+        fg: on ? '#2f7d5d' : '#414a44',
+        pick: c.noSort ? null : (() => app.setLotsSort(c.key))
+      };
+    }),
 
     lotsRanges: RANGES.map((r) => ({
       key: r.key,
@@ -44,7 +218,7 @@ export function lotsVals(app, d) {
       pick: () => app.setLotsRange(r.key)
     })),
 
-    lotRows: lots.slice(0, st.lotsShown).map((l) => {
+    lotRows: sorted.slice(0, st.lotsShown).map((l) => {
       const saved = Number(l.saved || 0);
       const lost = Number(l.lost || 0);
       return {
@@ -54,7 +228,13 @@ export function lotsVals(app, d) {
         by: l.by || 'ไม่ระบุผู้บันทึก',
         // ป้ายเล็กบอกว่าล็อตนี้มาจาก รพ.สต. ไหน — ว่างเมื่อไม่ได้มาจาก รพ.สต.
         siteLabel: l.src === 'pcu' ? String(l.pcuSite || '').trim() : '',
+        // แหล่งที่มาเป็นคอลัมน์ของตัวเองแล้ว ไม่ใช่ข้อความห้อยท้ายชื่อคนเหมือนเดิม
+        srcText: srcLabel(l.src) || '—',
+        // ยาที่คืนจาก รพ.สต. แต่ไม่ได้เลือกว่าแห่งไหน — ต้องเห็นว่าข้อมูลไม่ครบ
+        siteMissing: l.src === 'pcu' && !String(l.pcuSite || '').trim(),
         itemsLabel: Number(l.items || 0).toLocaleString('en-US') + ' รายการ',
+        // ในตารางใช้เลขเปล่า เพราะหัวคอลัมน์บอกอยู่แล้วว่าเป็นจำนวนรายการ
+        itemsCount: Number(l.items || 0).toLocaleString('en-US'),
         // 🚨 ไม่รวมจำนวนข้ามหน่วยนับตรงนี้ (เม็ด+ขวด+หลอด บวกกันไม่มีความหมาย)
         //    ฐานข้อมูลส่ง qty รวมมาก็จริง แต่หน้านี้ไม่เอามาโชว์ ให้ดูมูลค่าแทน
         savedLabel: money(saved),
@@ -70,11 +250,19 @@ export function lotsVals(app, d) {
     slipOpen: !!slip,
     slipLoading: !!st.slipLoading,
     slipLot: slip ? slip.lot : '',
-    slipDate: slip ? thaiDate(slip.date) : '',
+    // 🚨 เอกสารราชการเขียนเดือนเต็ม ไม่ใช้ตัวย่อแบบที่ใช้บนหน้าจอ (พี่กันสั่ง 26 ส.ค. 2569)
+    slipDate: slip ? thaiDateFull(slip.date) : '',
     slipBy: slip ? (slip.by || 'ไม่ระบุผู้บันทึก') : '',
     // ใบที่พิมพ์ออกมาต้องบอกได้ว่ายาชุดนี้มาจาก รพ.สต. ไหน
     // ไม่งั้นส่งใบกลับไปให้ต้นทางแล้วเขาไม่รู้ว่าเป็นของตัวเองหรือเปล่า
     slipSite: slip && slip.src === 'pcu' ? String(slip.pcuSite || '').trim() : '',
+    // 🚨 ในใบที่พิมพ์ใช้ชื่อเต็มตามทะเบียน ไม่ใช่ชื่อสั้นแบบที่ใช้บนหน้าจอ
+    //    เพราะใบนี้ถูกส่งกลับไปให้ รพ.สต. ต้นทางเก็บเป็นหลักฐาน
+    //    เอกสารที่ส่งออกนอกห้องยาต้องเรียกชื่อหน่วยงานให้ถูกต้องตามทะเบียน
+    //    map มาจากฐาน (mr_setting.pcu_full) · ไม่มีใน map ค่อยเติมคำนำหน้าให้
+    slipSiteFull: slip && slip.src === 'pcu' && slip.pcuSite
+      ? (pcuFull[slip.pcuSite] || ('โรงพยาบาลส่งเสริมสุขภาพตำบลบ้าน' + slip.pcuSite))
+      : '',
     slipOrg: st.orgName,
 
     // ── ของที่เอกสารทางการต้องมี (พี่กันสั่ง 26 ส.ค. 2569) ────────────────────
@@ -100,7 +288,8 @@ export function lotsVals(app, d) {
     })),
     slipCountLabel: slipRows.length.toLocaleString('en-US') + ' รายการ',
     // แหล่งที่มาแบบเต็มสำหรับหัวเอกสาร — รวมชื่อ รพ.สต. ไว้ในบรรทัดเดียว
-    slipSrcLabel: slip ? (srcLabel(slip.src) + (slip.src === 'pcu' && slip.pcuSite ? ' (' + slip.pcuSite + ')' : '')) : '',
+    // แหล่งที่มาบรรทัดเดียวโดด ๆ ชื่อ รพ.สต. แยกไปอยู่บรรทัดหน่วยบริการต้นทาง
+    slipSrcLabel: slip ? srcLabel(slip.src) : '',
     slipSavedLabel: money(slipSaved),
     slipLostLabel: money(slipLost),
     slipHasLost: slipLost > 0,

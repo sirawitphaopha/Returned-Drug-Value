@@ -31,3 +31,5 @@ yarn-error.log*
 
 # editor
 .vscode/
+
+# ไฟล์ PDF ที่สร้างจาก scripts/print-check.mjs ไว้ตรวจด้วยตา ไม่ต้องขึ้น git

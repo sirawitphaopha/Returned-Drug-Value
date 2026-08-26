@@ -36,7 +36,9 @@ export function renderNavWide(V) {
     <div role="navigation" aria-label="เมนูหลัก" style={s('flex:none;order:-1;background:#fff;border-bottom:1px solid rgba(30,36,32,.08);position:relative;z-index:6')}>
     <div style={s('width:100%;max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 26px')}>
       <div style={s('display:flex;align-items:center;gap:24px')}>
-        <div style={s('display:flex;align-items:center;gap:9px')}>
+        {/* กดชื่อเว็บแล้วกลับหน้าแรก · สีตอนชี้อยู่ในคลาส .hv-home ของ globals.css */}
+        <div {...kb(V.goHome)} aria-label="กลับไปหน้าบันทึก" className="hv-home"
+          style={s('display:flex;align-items:center;gap:9px;cursor:pointer;border-radius:9px;margin:-4px -7px;padding:4px 7px')}>
           <div style={s('width:30px;height:30px;border-radius:8px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;position:relative;flex:none')}>
             <div style={s('position:absolute;inset:4px;border:1.6px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
             <span style={s("font:700 13px Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>

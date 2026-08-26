@@ -7,6 +7,7 @@
 // ใบสรุปพิมพ์: แปะหน้าถุงยาที่รอตรวจ ให้เวรถัดไปรู้ว่าถุงนี้คือ Lot ไหน
 //              หรือเก็บเข้าแฟ้มเป็นหลักฐานว่าวันนั้นรับคืนอะไรมาบ้าง
 import { fetchT, cleanQtyExpr, evalQty } from '../helpers';
+import { downloadCsv, lotsToCsv } from '@/lib/csv';
 
 // วันเวลาที่พิมพ์ใบ — ใช้ พ.ศ. ตามที่ห้องยาอ่านกันจริง
 // 🚨 อ่านนาฬิกาของเครื่อง ไม่ใช่ของฐานข้อมูล เพราะฐานเป็นเวลา UTC จะเพี้ยนไป 7 ชั่วโมง
@@ -48,12 +49,61 @@ export function lotsActions(app) {
 
   app.setLotsRange = (range) => {
     // เปลี่ยนช่วงเวลา = เริ่มนับใหม่ 40 Lot แรกเสมอ ไม่งั้นกดช่วงแคบลงแล้วยังค้างที่ 200
-    app.setState({ lotsRange: range, lotsShown: 40 });
+    // กดปุ่มช่วงเวลาสำเร็จรูป = ทิ้งช่วงวันที่ที่กรอกเองไป
+    // ไม่งั้นเหลือวันค้างในช่องทั้งที่ไม่ได้ใช้แล้ว ชวนให้เข้าใจผิด
+    app.setState({ lotsRange: range, lotsFrom: '', lotsTo: '', lotsShown: 40 });
     // ตั้งค่าใหม่แล้วโหลดทันที ไม่ต้องรอ (ปุ่มช่วงเวลามีแค่ 4 ปุ่ม กดไม่รัวเหมือนพิมพ์ค้น)
     setTimeout(() => app.loadLots(), 0);
   };
 
   app.moreLots = () => app.setState({ lotsShown: app.state.lotsShown + 40 });
+
+  // ── ช่องค้น · ตัวกรอง · การเรียง ของหน้ารายการ Lot ─────────────────────
+  // 🚨 ทั้งสามอย่างทำงานในเครื่องล้วน ไม่ยิงเซิร์ฟเวอร์
+  //    เพราะรายการ Lot ทั้งช่วงเวลาถูกโหลดมาแล้วตั้งแต่แรก (ไม่กี่ร้อยแถว)
+  //    ยิงใหม่ทุกตัวอักษรจะช้าลงโดยไม่ได้อะไรเพิ่ม และเน็ตโรงพยาบาลก็ไม่ไหว
+  app.onLotsQuery = (e) => app.setState({ lotsQuery: e.target.value, lotsShown: 40 });
+  app.clearLotsQuery = () => app.setState({ lotsQuery: '', lotsShown: 40 });
+  // 🚨 เปลี่ยนแหล่งที่มาไปเป็นอย่างอื่นที่ไม่ใช่ รพ.สต. ต้องล้างตัวกรองรายแห่งทิ้งด้วย
+  //    ไม่งั้นจะเหลือเงื่อนไขซ่อนอยู่ที่มองไม่เห็นบนจอ แล้วผลลัพธ์ว่างโดยไม่รู้สาเหตุ
+  app.setLotsSrc = (e) => {
+    const v = e.target.value;
+    app.setState({ lotsSrcFilter: v, lotsSiteFilter: v === 'pcu' ? app.state.lotsSiteFilter : '', lotsShown: 40 });
+  };
+  app.setLotsSite = (e) => app.setState({ lotsSiteFilter: e.target.value, lotsShown: 40 });
+
+  // ล้างทุกเงื่อนไขในคราวเดียว — คำค้น แหล่งที่มา และ รพ.สต.
+  // 🚨 ต้องล้างครบทุกตัว ไม่ใช่เฉพาะที่เห็นบนจอ
+  //    เหลือตัวใดตัวหนึ่งไว้แล้วผู้ใช้จะงงว่าทำไมล้างแล้วรายการยังไม่ครบ
+  // ── ช่วงวันที่ที่เลือกเอง ───────────────────────────────────────────────
+  // 🚨 กรอกวันแล้วต้องสลับปุ่มช่วงเวลาเป็น "เลือกเอง" ทันที
+  //    ไม่งั้นปุ่มเดือนนี้ยังเขียวอยู่ทั้งที่ข้อมูลไม่ใช่เดือนนี้แล้ว = จอโกหก
+  // 🚨 ยิงเซิร์ฟเวอร์ต่อเมื่อกรอกครบทั้งสองช่อง
+  //    กรอกช่องเดียวแล้วยิงเลยจะได้ช่วงวันที่ไม่มีความหมาย
+  app.onLotsFrom = (e) => {
+    const v = e.target.value;
+    app.setState({ lotsFrom: v, lotsRange: 'custom', lotsShown: 40 }, () => {
+      if (app.state.lotsFrom && app.state.lotsTo) app.loadLots();
+    });
+  };
+  app.onLotsTo = (e) => {
+    const v = e.target.value;
+    app.setState({ lotsTo: v, lotsRange: 'custom', lotsShown: 40 }, () => {
+      if (app.state.lotsFrom && app.state.lotsTo) app.loadLots();
+    });
+  };
+
+  app.clearLotsFilters = () => app.setState({ lotsQuery: '', lotsSrcFilter: '', lotsSiteFilter: '', lotsShown: 40 });
+
+  // กดหัวคอลัมน์เดิมซ้ำ = สลับทิศ · กดคอลัมน์ใหม่ = เริ่มจากมากไปน้อย
+  // (ทำเหมือนหน้าประวัติเป๊ะ ๆ มือจะได้จำท่าเดียวใช้ได้ทั้งเว็บ)
+  app.setLotsSort = (key) => {
+    if (app.state.lotsSortKey === key) {
+      app.setState({ lotsSortDir: app.state.lotsSortDir === 'asc' ? 'desc' : 'asc' });
+    } else {
+      app.setState({ lotsSortKey: key, lotsSortDir: 'desc' });
+    }
+  };
 
   app.loadLots = async (force) => {
     // โหมดดูตัวอย่างสร้างรายการ Lot มาให้พร้อมแล้วในเครื่อง ไม่ต้องแตะเซิร์ฟเวอร์
@@ -66,7 +116,12 @@ export function lotsActions(app) {
       return;
     }
 
-    const key = app.state.lotsRange;
+    // 🚨 กุญแจแคชต้องรวมช่วงวันที่ที่เลือกเองด้วย
+    //    ไม่งั้นเปลี่ยนวันแล้วได้รายการชุดเดิมกลับมา โดยไม่มีอะไรบอก
+    const st0 = app.state;
+    const key = st0.lotsRange === 'custom'
+      ? 'custom|' + st0.lotsFrom + '|' + st0.lotsTo
+      : st0.lotsRange;
     const c = app._lotsCache[key];
     if (!force && c && Date.now() - c.ts < LOTS_TTL) {
       app.setState({ lots: c.lots, lotsLoading: false });
@@ -75,7 +130,11 @@ export function lotsActions(app) {
 
     app.setState({ lotsLoading: true });
     try {
-      const res = await app.fetchT('/api/lots?range=' + encodeURIComponent(key));
+      let u = '/api/lots?range=' + encodeURIComponent(st0.lotsRange);
+      if (st0.lotsRange === 'custom') {
+        u += '&from=' + encodeURIComponent(st0.lotsFrom) + '&to=' + encodeURIComponent(st0.lotsTo);
+      }
+      const res = await app.fetchT(u);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านรายการ Lot ไม่สำเร็จ');
       app._lotsCache[key] = { ts: Date.now(), lots: data.lots || [] };
@@ -84,6 +143,19 @@ export function lotsActions(app) {
       app.setState({ lotsLoading: false });
       app.toast(e.message || 'อ่านรายการ Lot ไม่สำเร็จ', '', false);
     }
+  };
+
+  // ── ส่งออกไฟล์ CSV ของรายการ Lot ──────────────────────────────────────
+  // 🚨 สร้างจากข้อมูลที่อยู่ในเครื่องแล้ว ไม่ยิงเซิร์ฟเวอร์ซ้ำ
+  //    และส่งออก "เฉพาะแถวที่กรองอยู่บนจอ" ไม่ใช่ทั้งหมด
+  //    (ค่าที่หน้าจอกรองไว้ถูกส่งมาทาง V.lotsExportRows แล้ว)
+  app.exportLotsCsv = (rows, meta) => {
+    if (!rows || !rows.length) {
+      app.toast('ยังไม่มี Lot ให้ส่งออก', '', false);
+      return;
+    }
+    downloadCsv(lotsToCsv(rows, meta), meta.fileName);
+    app.toast('ส่งออกไฟล์แล้ว', rows.length.toLocaleString('en-US') + ' Lot');
   };
 
   // กดที่ Lot แล้วเด้งไปหน้าประวัติที่กรองไว้ให้เฉพาะ Lot นั้น (ใช้ตัวกรองที่มีอยู่แล้ว)
@@ -266,8 +338,33 @@ export function lotsActions(app) {
 
   // 🚨 ต้องรอให้เบราว์เซอร์วาดใบเสร็จก่อนสั่งพิมพ์ ไม่งั้นได้กระดาษเปล่า
   //    (กดปุ่มพิมพ์ทันทีหลังโหลดข้อมูลเสร็จ React ยังไม่ทันวาดลงจอ)
+  // ── โหลดฟอนต์ราชการก่อนสั่งพิมพ์ ────────────────────────────────────────────
+  //
+  // 🚨🚨 บั๊กที่พี่กันจับได้ 26 ส.ค. 2569: "เราบอกว่าไง ใน pdf ใช้ sarabun new"
+  //
+  // กฎ @media print สั่งให้ใช้ TH Sarabun New ไว้ถูกแล้ว แต่ไฟล์ PDF กลับไม่ได้ฟอนต์นั้น
+  //
+  // เหตุผล: เบราว์เซอร์โหลดไฟล์ฟอนต์เฉพาะตอนที่ "มีอะไรบนจอกำลังใช้มัน" เท่านั้น
+  // หน้าเว็บใช้ Sarabun ทั้งหมด (พี่กันสั่งให้กลับไปใช้) จึงไม่มีอะไรเรียก TH Sarabun New เลย
+  // ไฟล์ฟอนต์เลยไม่เคยถูกโหลด · พอกดพิมพ์ เบราว์เซอร์หาไม่เจอก็ตกกลับไปใช้ฟอนต์ถัดไปในรายการ
+  //
+  // ต้องสั่งโหลดเองก่อนเสมอ และต้องโหลดทั้งตัวธรรมดากับตัวหนา
+  // เพราะเป็นคนละไฟล์กัน (หัวตารางกับยอดรวมเป็นตัวหนา)
+  //
+  // 🚨 ห้ามข้ามขั้นนี้ ไม่ว่าจะเพิ่มปุ่มพิมพ์ที่ไหนใหม่ก็ตาม
+  const loadPrintFont = async () => {
+    if (!document.fonts || !document.fonts.load) return;
+    try {
+      await Promise.all([
+        document.fonts.load('16pt "TH Sarabun New"'),
+        document.fonts.load('700 16pt "TH Sarabun New"')
+      ]);
+    } catch (e) { /* โหลดไม่ได้ก็ยังพิมพ์ได้ แค่ได้ฟอนต์สำรองแทน */ }
+  };
+
   app.printLotSlip = () => {
-    app.setState({ slipPrintedAt: stampNow() }, () => {
+    app.setState({ slipPrintedAt: stampNow() }, async () => {
+      await loadPrintFont();
       requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
     });
   };
@@ -291,7 +388,8 @@ export function lotsActions(app) {
     const name = slip ? 'ใบสรุปยาคืน-' + slip.lot : 'ใบสรุปยาคืน';
     const was = document.title;
     document.title = name;
-    app.setState({ slipPrintedAt: stampNow() }, () => {
+    app.setState({ slipPrintedAt: stampNow() }, async () => {
+      await loadPrintFont();
       requestAnimationFrame(() => requestAnimationFrame(() => {
         window.print();
         // คืนชื่อเดิมหลังกล่องพิมพ์ปิด — บางเบราว์เซอร์ยังอ่านชื่ออยู่ตอน print() คืนค่า

@@ -7,6 +7,10 @@ export function shellVals(app, d) {
   // goScreen เปลี่ยนหน้าแล้วสั่งโหลดข้อมูลของหน้านั้นให้ด้วย (มอคอัปไม่ต้อง เพราะข้อมูลอยู่ในเครื่องหมดแล้ว)
   const pickScreen = (name) => () => app.goScreen(name);
 
+  // กดชื่อเว็บแล้วกลับหน้าแรก — ท่ามาตรฐานของเว็บทุกเว็บ
+  // (พี่กันสั่ง 26 ส.ค. 2569 "ชื่อเว็บ เราอยากให้กดแล้วกลับไปที่หน้าแรก")
+  const goHome = () => app.goScreen('record');
+
   return {
     shellBg: st.screen === 'summary' ? (d.dark ? '#151a17' : '#f6f7f4') : '#f6f7f4',
     wide: d.wide,
@@ -22,6 +26,7 @@ export function shellVals(app, d) {
     isSummary: st.screen === 'summary',
     // cls = คลาสของแท็บฝั่งคอม · .tab-btn ให้กรอบจาง ๆ · .on บอกว่าแท็บนี้เปิดอยู่
     //       (ตัวที่เปิดอยู่ห้ามเปลี่ยนสีตอนเอาเมาส์ชี้ ดู globals.css)
+    goHome: goHome,
     tabs: [
       { label: 'บันทึก', radius: '5px', on: st.screen === 'record', cls: st.screen === 'record' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'record' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'record' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'record' ? '#2f7d5d' : '#6b746e', pick: pickScreen('record') },
       { label: 'ประวัติ', radius: '50%', on: st.screen === 'history', cls: st.screen === 'history' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'history' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'history' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'history' ? '#2f7d5d' : '#6b746e', pick: pickScreen('history') },

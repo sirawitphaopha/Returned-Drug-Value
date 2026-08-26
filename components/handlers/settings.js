@@ -41,7 +41,8 @@ export function settingsActions(app) {
           favIds: data.setting.favIds,
           defaultSource: data.setting.defaultSource,
           staff: Array.isArray(data.setting.staff) ? data.setting.staff : [],
-          pcuSites: Array.isArray(data.setting.pcuSites) ? data.setting.pcuSites : []
+          pcuSites: Array.isArray(data.setting.pcuSites) ? data.setting.pcuSites : [],
+          pcuFull: data.setting.pcuFull || {}
         };
       });
       writeCache(LS.setting, data.setting);

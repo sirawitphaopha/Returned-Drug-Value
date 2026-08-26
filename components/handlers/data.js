@@ -50,6 +50,7 @@ export function dataActions(app) {
         favIds: data.setting.favIds,
         staff: Array.isArray(data.setting.staff) ? data.setting.staff : [],
         pcuSites: Array.isArray(data.setting.pcuSites) ? data.setting.pcuSites : [],
+        pcuFull: data.setting.pcuFull || {},
         // 🚨 ห้ามติ๊กชื่อคนล่าสุดไว้ให้ — ต้องเลือกเองทุกครั้งที่เปิดเว็บ (พี่กันสั่ง 25 ส.ค. 2569)
         // เดิมติ๊กคนที่เซ็นล่าสุดไว้เพื่อความเร็ว แต่คอมห้องยาเป็นเครื่องกลางที่ใช้ร่วมกัน
         // คนถัดไปที่มานั่งจะเห็นชื่อคนก่อนติ๊กอยู่ กดบันทึกโดยไม่ทันสังเกต

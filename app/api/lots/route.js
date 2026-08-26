@@ -23,7 +23,16 @@ export async function GET(req) {
   try {
     const url = new URL(req.url);
     const today = todayISO();
-    const range = rangeOf(url.searchParams.get('range') || 'month', today);
+    const key = url.searchParams.get('range') || 'month';
+
+    // ช่วงวันที่ที่ผู้ใช้เลือกเอง — ต้องตรวจรูปแบบก่อนส่งต่อให้ฐาน
+    // 🚨 รับเฉพาะรูปแบบ ปปปป-ดด-วว เท่านั้น ค่าอื่นตกไปใช้ช่วงสำเร็จรูปแทน
+    const okDate = (v) => /^d{4}-d{2}-d{2}$/.test(String(v || ''));
+    const qFrom = url.searchParams.get('from');
+    const qTo = url.searchParams.get('to');
+    const range = (key === 'custom' && okDate(qFrom) && okDate(qTo))
+      ? { from: qFrom, to: qTo }
+      : rangeOf(key, today);
 
     const db = getAdmin();
     const res = await db.rpc('mr_lots', {

@@ -20,6 +20,7 @@ function shape(row) {
     // รายชื่อ รพ.สต. ในเครือข่ายอำเภอ — โผล่เป็นดรอปดาวน์เมื่อเลือกแหล่งที่มาเป็น รพ.สต.
     // 🚨 เก็บในฐาน ไม่ฝังในโค้ด · เปิดแห่งใหม่หรือเปลี่ยนชื่อ แก้ในหน้าตั้งค่าได้เลย
     pcuSites: Array.isArray(st.pcu_sites) ? st.pcu_sites : [],
+    pcuFull: st.pcu_full && typeof st.pcu_full === 'object' ? st.pcu_full : {},
     lastRecorder: st.last_recorder || ''
   };
 }
@@ -29,7 +30,7 @@ export async function GET() {
     const db = getAdmin();
     const { data, error } = await db
       .from('mr_setting')
-      .select('org_name,default_source,fav_ids,staff,pcu_sites,last_recorder')
+      .select('org_name,default_source,fav_ids,staff,pcu_sites,pcu_full,last_recorder')
       .eq('id', 1)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -106,7 +107,7 @@ export async function PUT(req) {
       .from('mr_setting')
       .update(patch)
       .eq('id', 1)
-      .select('org_name,default_source,fav_ids,staff,pcu_sites,last_recorder')
+      .select('org_name,default_source,fav_ids,staff,pcu_sites,pcu_full,last_recorder')
       .maybeSingle();
     if (error) throw new Error(error.message);
 

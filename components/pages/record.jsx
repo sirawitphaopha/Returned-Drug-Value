@@ -122,7 +122,11 @@ export function renderRecordNarrow(V) {
                   ระยะบรรทัด 1.5 ยังไม่พอ (พี่กันเจอทับ 2 รอบ) ต้องกันที่ใต้ตัวอักษรเพิ่ม
                   ใช้ padding-bottom แทนการเพิ่มระยะบรรทัด เพราะระยะบรรทัดดันตัวอักษรลงด้วย
                   ทำให้ชื่อไม่อยู่กลางแถบ ส่วน padding ดันเฉพาะของที่อยู่ข้างล่าง */}
-              <div style={s('font:700 18px/1.95 Charmonman,cursive')}>มูลค่ายาคืน</div>
+              {/* กดชื่อเว็บแล้วกลับหน้าแรก (พี่กันสั่ง 26 ส.ค. 2569)
+                  ที่นี่ให้กดเฉพาะบรรทัดชื่อ ไม่รวมชื่อหน่วยงานข้างล่าง
+                  เพราะชื่อหน่วยงานเป็นข้อความอ่านอย่างเดียว ไม่ใช่ปุ่ม */}
+              <div {...kb(V.goHome)} aria-label="กลับไปหน้าบันทึก" className="hv-home"
+                style={s('font:700 18px/1.95 Charmonman,cursive;cursor:pointer;display:inline-block;border-radius:8px;margin:0 -7px;padding:0 7px')}>มูลค่ายาคืน</div>
               <div title={V.orgName} style={s('font:400 11.5px/1.2 Sarabun,sans-serif;color:#6b746e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px')}>{V.orgName}</div>
             </div>
           </div>
