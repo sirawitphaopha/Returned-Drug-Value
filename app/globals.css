@@ -75,15 +75,35 @@ input{font-family:inherit}input:focus{outline:none}::placeholder{color:#6b746e;o
 /* สีตอนเอาเมาส์ไปวาง — มอคอัปเขียนไว้ในแอตทริบิวต์ style-hover ของแท็ก
    React ทำแบบนั้นไม่ได้ เลยย้ายมาเป็นคลาส ค่าสีคัดมาตรงตัวทุกชุด
    ต้องมี !important เพราะสไตล์ที่ฝังในแท็กชนะกฎใน CSS เสมอ */
-.hv-bg-f6:hover{background:#f6f7f4!important}
+/* ═══ สีตอนเอาเมาส์ชี้ ต้องเข้ากับสีปุ่มนั้นและโทนสีของเว็บ ═══════════════
+
+   พี่กันสั่ง 26 ส.ค. 2569:
+   "สีควรเข้ากับปุ่มนั้น ไม่ใช่ใส่แค่สีเทาเข้ม ต้องเข้ากับธีม กับสีปุ่ม
+    และอันไหนมีอยู่แล้ว ก็ไม่ต้องใส่สีเทาเพิ่ม"
+   "อันไหนมันเปลี่ยนสีอยู่แล้วก็อย่าไปแก้ให้มันห่วยขึ้น"
+
+   🚨🔴 บั๊กที่เคยเกิด — ตั้งสีตอนชี้เป็นสีเดียวกับพื้นปุ่มเอง
+      .hv-bg-e3f เคยตั้งเป็น #e3f0e8 ซึ่งเป็นพื้นของปุ่มรายการ Lot
+      และพื้นหัวคอลัมน์ทุกตารางอยู่แล้ว → ชี้แล้วไม่มีอะไรเปลี่ยนเลย
+      พี่กันจับได้ทันที "ทำไมปุ่มนี้ยังไม่เปลี่ยนสี"
+
+   🚨 ตั้งสีใหม่ทุกครั้งต้องเทียบกับพื้นเดิมของปุ่มก่อน
+      ปุ่มพื้นสี  → ชี้แล้วเข้มขึ้นในโทนเดียวกัน
+      ปุ่มพื้นขาว → ชี้แล้วเป็นเขียวจางของเว็บ ห้ามใช้เทากลาง
+                    (เทาบนขาวดูเหมือนปุ่มจางลง ไม่ใช่ถูกชี้)
+
+   🚨 พิสูจน์ด้วย `node scripts/hover-check.mjs` ทุกครั้ง
+      สคริปต์นั้นถ่ายภาพปุ่มก่อนชี้กับหลังชี้มาเทียบกันจริง
+      ไม่ใช่ดูแค่ว่ามีกฎเขียนไว้ */
+.hv-bg-f6:hover{background:#e8f2ec!important;border-color:rgba(47,125,93,.30)!important;color:#2f7d5d!important}
 .hv-bg-fbe:hover{background:#fbe4dd!important}
-.hv-bg-e6e:hover{background:#e6e9e5!important}
-.hv-bg-eef:hover{background:#eef6f1!important}
+.hv-bg-e6e:hover{background:#dfe9e3!important}
+.hv-bg-eef:hover{background:#dcece3!important}
 /* แถวเหตุผลที่ต้องทำลาย — ชี้แล้วพื้นเป็นแดงจางพร้อมขอบแดง (พี่กันสั่ง 26 ส.ค. 2569)
    🚨 ต้องเขียน border เต็มประโยค ห้ามเขียนแค่ border-color
       เขียนครึ่งเดียวแล้วอีกครึ่งค้างของเก่า จะได้ขอบดำ (บทเรียนจาก ME-DRP) */
 .hv-reason:hover{background:#fdf2ef!important;border:1px solid rgba(194,84,60,.4)!important}
-.hv-bg-e3f:hover{background:#e3f0e8!important}
+.hv-bg-e3f:hover{background:#cfe6da!important}
 .hv-del:hover{background:#fdf1ed!important;color:#c2543c!important}
 .hv-fg-red:hover{color:#c2543c!important}
 /* ปุ่มยืนยันลบในป๊อปอัป — ไม่มีในมอคอัป ใช้แดงเดิมหยดลงมาหนึ่งขั้น */

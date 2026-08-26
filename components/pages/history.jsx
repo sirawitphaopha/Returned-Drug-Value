@@ -19,7 +19,15 @@ function renderHistTools(V) {
 
       {/* หน้ารายการ Lot — ประวัติเป็นรายแถวยา มองไม่ออกว่ารอบไหนรับคืนไปเท่าไหร่
           ต้องไล่บวกเอง · หน้านั้นตอบได้ในบรรทัดเดียวต่อ Lot และพิมพ์ใบสรุปได้ */}
-      <div {...kb(V.openLots)} className="hv-bg-f6 tap" style={s('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer;background:#f0f1ee;color:#414a44')}>
+      {/* 🚨 ปุ่มนี้เด่นกว่าชิปช่วงเวลาโดยตั้งใจ (พี่กันสั่ง 26 ส.ค. 2569)
+          ชิปช่วงเวลาเป็นแค่ตัวกรองของหน้าเดิม แต่ปุ่มนี้พาไปอีกหน้าหนึ่ง
+          ของสองอย่างที่ทำคนละเรื่องกันไม่ควรหน้าตาเหมือนกัน
+          ใช้พื้นเขียวอ่อนกับขอบเขียว ไม่ใช่เขียวทึบ เพราะเขียวทึบจองไว้ให้
+          "ช่วงเวลาที่กำลังเลือกอยู่" แล้ว ถ้าใช้ซ้ำจะอ่านผิดว่าปุ่มนี้ถูกเลือกอยู่ */}
+      <div {...kb(V.openLots)} className="hv-bg-e3f tap" style={s('display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:999px;border:1px solid rgba(47,125,93,.34);font:600 12.5px Sarabun,sans-serif;cursor:pointer;background:#e3f0e8;color:#2f7d5d')}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
+          <path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M3 6h.01" /><path d="M3 12h.01" /><path d="M3 18h.01" />
+        </svg>
         รายการ Lot
       </div>
 
@@ -208,7 +216,14 @@ export function renderHistoryNarrow(V) {
           {V.ranges.map((g) => (
             <div key={g.key} {...kb(g.pick)} style={sx('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
           ))}
-          <div {...kb(V.openLots)} style={s('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px Sarabun,sans-serif;cursor:pointer;background:#f0f1ee;color:#414a44')}>รายการ Lot</div>
+          {/* เด่นกว่าชิปช่วงเวลาแบบเดียวกับฝั่งคอม — ของสองอย่างที่ทำคนละเรื่องกัน
+              ไม่ควรหน้าตาเหมือนกัน (กฎ "อะไรที่คล้ายกันทำให้เหมือนกัน" ใช้กับของที่คล้ายกันจริง) */}
+          <div {...kb(V.openLots)} style={s('min-height:44px;padding:0 16px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(47,125,93,.34);font:600 13px Sarabun,sans-serif;cursor:pointer;background:#e3f0e8;color:#2f7d5d')}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
+            <path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M3 6h.01" /><path d="M3 12h.01" /><path d="M3 18h.01" />
+          </svg>
+            รายการ Lot
+          </div>
           <div {...kb(V.toggleTrash)} style={sx('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>{V.trashLabel}</div>
           {/* 🚨 เขียน "Lot" เป็นภาษาอังกฤษเสมอ ห้ามแปลว่า "ชุด" (พี่กันสั่ง — แคลร์เคยแปลผิดมาแล้ว)
               ตรงนี้หลุดมาจากรอบก่อน เพิ่งเจอตอนไล่ทำหน้ารายการ Lot */}

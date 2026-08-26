@@ -73,8 +73,11 @@ export function renderNavWide(V) {
           </div>
         )}
 
-        <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>ℹ</div>
-        <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>⚙</div>
+        {/* 🚨 ใช้ตัวอักษร ไม่ใช่ไอคอนเปล่า (พี่กันสั่ง 26 ส.ค. 2569 "ทำเป็นตัวอักษรหน่อย")
+            ℹ กับ ⚙ ต้องเดาความหมายเอง และคนที่ไม่ได้ใช้ทุกวันจะไม่กล้ากด
+            เป็นเรื่องเดียวกับที่พี่กันสั่งเรื่องปุ่มในตารางว่า "ไม่ย่อ เอากลับเหมือนเดิม" */}
+        <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" className="hv-bg-f6" style={s('min-height:38px;padding:0 13px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:inline-flex;align-items:center;font:600 12.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>เกี่ยวกับ</div>
+        <div {...kb(V.openSettings)} aria-label="ตั้งค่า" className="hv-bg-f6" style={s('min-height:38px;padding:0 13px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:inline-flex;align-items:center;font:600 12.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>ตั้งค่า</div>
       </div>
     </div>
     </div>
