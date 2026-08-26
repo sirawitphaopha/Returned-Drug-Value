@@ -384,6 +384,6 @@ export function exprText(raw) {
 //
 // ⚠️ เขียนเป็นข้อความไทยตรง ๆ ไม่คำนวณจากนาฬิกาเครื่อง
 //    เพราะนี่คือ "วันที่ปล่อยรุ่นนี้" ไม่ใช่ "วันนี้" — คอมที่นาฬิกาเพี้ยนจะโชว์มั่ว
-export const APP_VERSION = '0.10.0.0';
+export const APP_VERSION = '0.10.0.1';
 export const APP_FIRST_RELEASE = '4 สิงหาคม 2569';
-export const APP_LAST_UPDATE = '25 สิงหาคม 2569';
+export const APP_LAST_UPDATE = '26 สิงหาคม 2569';

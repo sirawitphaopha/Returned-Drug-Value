@@ -36,6 +36,9 @@ export async function GET() {
 
     return NextResponse.json({ rev: rev, count: count });
   } catch (e) {
-    return NextResponse.json({ error: String(e.message || e) }, { status: 500 });
+    // 🚨 ห้ามส่งข้อความผิดพลาดดิบกลับเบราว์เซอร์ อาจเผยชื่อตัวแปรลับหรือโครงสร้างฐาน
+    //    (ผลตรวจข้อ ต-16 — เส้นนี้เป็นเส้นเดียวใน 13 เส้นที่ยังทำอยู่)
+    console.error('[api]', e);
+    return NextResponse.json({ error: 'อ่านลายเซ็นคลังยาไม่สำเร็จ' }, { status: 500 });
   }
 }

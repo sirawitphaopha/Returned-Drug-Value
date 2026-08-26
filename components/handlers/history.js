@@ -343,7 +343,15 @@ export function historyActions(app) {
     });
 
     try {
-      const res = await app.fetchT('/api/returns/' + r.id, { method: 'DELETE' });
+      // ส่งชื่อผู้ลบไปด้วย (ผลตรวจข้อ ต-6) — หลังบ้านรับ `by` มาตั้งแต่แรกแต่ไม่เคยมีใครส่ง
+      // `deleted_by` เลยเป็นค่าว่างทุกแถว ตอบผู้ตรวจไม่ได้ว่าใครลบ
+      // ⚠️ ยังไม่บังคับกรอก — ถ้ายังไม่ได้เลือกชื่อในหน้าบันทึกจะได้ค่าว่างเหมือนเดิม
+      //    การบังคับเลือกต้องเพิ่มช่องในหน้าต่างยืนยัน = แตะหน้าตา รอพี่กันเคาะ
+      const res = await app.fetchT('/api/returns/' + r.id, {
+        method: 'DELETE',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ by: app.state.recorder || '' })
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'ลบไม่สำเร็จ');
 

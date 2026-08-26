@@ -15,6 +15,10 @@ export function dataActions(app) {
   app.invalidate = () => {
     app._histCache = {};
     app._sumCache = null;
+    // 🚨 แคชรายการ Lot ต้องล้างด้วย (ผลตรวจข้อ ต-7) — เดิมลืมไว้ก้อนเดียว
+    //    บันทึก Lot ใหม่แล้วเข้าหน้ารายการ Lot จะไม่เห็นของที่เพิ่งบันทึกไปอีก 60 วินาที
+    //    นึกว่าบันทึกไม่ติด แล้วกดบันทึกซ้ำ
+    if (app._lotsCache) app._lotsCache = {};
     app._histSeq++;
     app._sumSeq++;
   };

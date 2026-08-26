@@ -96,7 +96,10 @@ export function lotsActions(app) {
     }
 
     try {
-      const res = await app.fetchT('/api/returns?range=fy&q=&lot=' + encodeURIComponent(lot.lot));
+      // 🚨 ต้องมี limit=all — ไม่งั้นเซิร์ฟเวอร์ตัดที่ 60 แถวเงียบ ๆ (ผลตรวจข้อ ก-4)
+      //    ยอดท้ายใบสรุปคิดจากแถวที่ดึงมาเท่านั้น รับคืนรอบใหญ่ 80 รายการแล้วสั่งพิมพ์
+      //    จะได้กระดาษ 60 แถว ยอดไม่ตรงกับที่โชว์บนหน้ารายการ Lot — เอกสารเข้าแฟ้มขัดกันเอง
+      const res = await app.fetchT('/api/returns?range=fy&limit=all&q=&lot=' + encodeURIComponent(lot.lot));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านรายการใน Lot ไม่สำเร็จ');
       app.setState({ slipRows: data.rows || [], slipLoading: false });
