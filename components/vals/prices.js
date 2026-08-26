@@ -113,7 +113,7 @@ export function pricesVals(app, d) {
     priceDirtyCount: dirty.length,
     priceBarOpen: dirty.length > 0,
     priceSaveLabel: st.priceSaving ? 'กำลังบันทึก' : 'บันทึกราคา ' + dirty.length + ' รายการ',
-    priceSaveBg: st.priceSaving ? '#9aa19c' : '#2f7d5d',
+    priceSaveBg: st.priceSaving ? '#6f7873' : '#2f7d5d',
     savePrices: app.savePrices,
     resetPriceEdits: app.resetPriceEdits
   };

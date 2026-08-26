@@ -27,7 +27,7 @@ export function renderLotEdit(V) {
         </div>
 
         {V.lotEditLoading ? (
-          <div style={s('padding:44px;text-align:center;font:400 13px Sarabun,sans-serif;color:#9aa19c')}>กำลังโหลดข้อมูลล็อต</div>
+          <div style={s('padding:44px;text-align:center;font:400 13px Sarabun,sans-serif;color:#6f7873')}>กำลังโหลดข้อมูลล็อต</div>
         ) : (
           <>
             {/* ── ค่าระดับล็อต ── */}
@@ -142,7 +142,7 @@ export function renderLotEdit(V) {
             <div style={s('border-bottom:1px solid #eef1ee')}>
               <div {...kb(V.toggleLotEditLog)} className="hv-bg-f6"
                 style={s('padding:11px 20px;display:flex;align-items:center;gap:8px;cursor:pointer;font:600 12px Sarabun,sans-serif;color:#414a44')}>
-                <span style={s('font-size:11px;color:#9aa19c')}>{V.lotEditLogOpen ? '▾' : '▸'}</span>
+                <span style={s('font-size:11px;color:#6f7873')}>{V.lotEditLogOpen ? '▾' : '▸'}</span>
                 {V.lotEditLogLabel}
               </div>
               {V.lotEditLogOpen && V.lotEditLogCount > 0 && (
@@ -151,10 +151,10 @@ export function renderLotEdit(V) {
                     <div key={x.key} style={s('display:flex;align-items:baseline;gap:9px;padding:7px 0;border-top:1px solid rgba(30,36,32,.05);font:400 12px Sarabun,sans-serif;flex-wrap:wrap')}>
                       <span style={s('font:600 11.5px Sarabun,sans-serif;color:#414a44')}>{x.what}</span>
                       {x.drug && <span style={s('font:500 11px Sarabun,sans-serif;color:#6b746e')}>{x.drug}</span>}
-                      <span style={s('color:#9aa19c;text-decoration:line-through')}>{x.from}</span>
-                      <span aria-hidden="true" style={s('color:#9aa19c')}>→</span>
+                      <span style={s('color:#6f7873;text-decoration:line-through')}>{x.from}</span>
+                      <span aria-hidden="true" style={s('color:#6f7873')}>→</span>
                       <span style={s('font-weight:600;color:#2f7d5d')}>{x.to}</span>
-                      <span style={s('margin-left:auto;font:400 11px Sarabun,sans-serif;color:#9aa19c;white-space:nowrap')}>{x.by} · {x.at}</span>
+                      <span style={s('margin-left:auto;font:400 11px Sarabun,sans-serif;color:#6f7873;white-space:nowrap')}>{x.by} · {x.at}</span>
                     </div>
                   ))}
                 </div>
@@ -167,7 +167,7 @@ export function renderLotEdit(V) {
                 ยอดรวมหลังแก้ <span style={s("font:700 15px Sarabun,sans-serif;color:#2f7d5d;margin-left:5px")}>{V.lotEditTotalLabel}</span>
               </div>
               {V.lotEditHasLost && (
-                <div style={s('font:400 11.5px Sarabun,sans-serif;color:#9aa19c')}>
+                <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6f7873')}>
                   ใช้ต่อ {V.lotEditSavedLabel} · ทำลาย <span style={s('color:#c2543c;font-weight:600')}>{V.lotEditLostLabel}</span>
                 </div>
               )}
@@ -197,8 +197,8 @@ export function renderLotEdit(V) {
               {V.lotEditSummary.map((x) => (
                 <div key={x.k} style={s('display:flex;align-items:baseline;gap:8px;padding:4px 0;font:400 12.5px Sarabun,sans-serif;flex-wrap:wrap')}>
                   <span style={s('font-weight:600;color:#414a44;min-width:74px')}>{x.label}</span>
-                  <span style={s('color:#9aa19c;text-decoration:line-through')}>{x.from}</span>
-                  <span aria-hidden="true" style={s('color:#9aa19c')}>→</span>
+                  <span style={s('color:#6f7873;text-decoration:line-through')}>{x.from}</span>
+                  <span aria-hidden="true" style={s('color:#6f7873')}>→</span>
                   <span style={s('font-weight:600;color:#2f7d5d')}>{x.to}</span>
                 </div>
               ))}

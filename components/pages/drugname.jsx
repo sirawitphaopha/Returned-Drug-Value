@@ -20,23 +20,42 @@ import { s, sx } from '../helpers';
 // อ่านแล้วสับสนว่าความแรงเท่าไหร่ · ก้อนที่ยาวจริง ๆ ต้องยอมให้ตัด ไม่งั้นล้นจอมือถือ
 const nw = (on) => (on ? { whiteSpace: 'nowrap' } : {});
 
+// ── สีในโหมดมืด ────────────────────────────────────────────────────────────
+// 🔴 บั๊กที่พี่กันเจอ 26 ส.ค. 2569: "ชื่อยาหายในโหมดมืด"
+//    ชื่อสามัญใช้ #1e2420 (เกือบดำ) ตายตัว พอพื้นการ์ดเป็นสีมืดก็กลืนหายไปทั้งชื่อ
+//    เหลือแต่ความแรงกับรูปแบบยา = อ่านไม่ออกว่ายาอะไร ซึ่งเป็นข้อมูลความปลอดภัย
+//
+// 🚨 สีที่เปลี่ยนมีแค่สองตัวที่เข้มจนกลืนพื้นมืด (ชื่อสามัญ กับ รูปแบบยา)
+//    ที่เหลือ (ม่วง เทล ส้ม แดงอมชมพู) เป็นสีกลางที่อ่านออกทั้งสองพื้น ห้ามเปลี่ยน
+//    เพราะสีพวกนั้นมีความหมายเฉพาะตัว (ดู CLAUDE.md ข้อ 3.4.3)
+const C = (dark) => ({
+  name: dark ? '#e8ece9' : '#1e2420',
+  form: dark ? '#b9c2bc' : '#414a44',
+  strength: dark ? '#9aa5a0' : '#6b746e',
+  hitBg: dark ? 'rgba(47,125,93,.32)' : '#dcefe4',
+  hitFg: dark ? '#7fd6ab' : '#2f7d5d',
+  brand: dark ? '#7fd6ab' : '#2f7d5d'
+});
+
 // r = ผลจาก vals/record.js → nameParts() ผสมกับข้อมูลไฮไลต์คำค้น
 // opts.size = ขนาดตัวอักษร (หน้าค้นหาย่อลงเมื่อชื่อยาว) · ไม่ส่งมาใช้ 13.5px
+// opts.dark = โหมดมืด (หน้าสรุปเป็นหน้าเดียวที่มี)
 export function renderDrugName(r, opts) {
   const o = opts || {};
+  const c = C(!!o.dark);
   // 🚨 กันหน้าขาวทั้งจอ — ถ้าที่เรียกลืมส่งชิ้นส่วนมา ให้วาดชื่อเป็นข้อความธรรมดาแทน
   //    เคยพลาด 25 ส.ค. 2569: การ์ดหนึ่งในหน้าสรุปยังไม่ได้ต่อสาย แล้วทั้งหน้าล่มทันที
   if (!r) return null;
   if (!r.mkBefore && !r.mkHit && !r.mkAfter && !r.strength) {
-    return <span style={s('font-weight:500;color:#1e2420')}>{r.name || ''}</span>;
+    return <span style={sx('font-weight:500', { color: c.name })}>{r.name || ''}</span>;
   }
   return (
     <span style={sx('font-family:var(--font-sarabun),Sarabun,sans-serif;line-height:1.35;overflow-wrap:anywhere',
       o.size ? { fontSize: o.size } : {})}>
       {/* ชื่อสามัญ — ส่วนที่ตรงกับคำค้นจะถูกไฮไลต์พื้นเขียวอ่อน */}
-      <span style={s('font-weight:600;color:#1e2420')}>{r.mkBefore}</span>
-      {r.mkHit ? <span style={s('font-weight:700;color:#2f7d5d;background:#dcefe4;border-radius:3px;padding:0 1px')}>{r.mkHit}</span> : null}
-      <span style={s('font-weight:600;color:#1e2420')}>{r.mkAfter}</span>
+      <span style={sx('font-weight:600', { color: c.name })}>{r.mkBefore}</span>
+      {r.mkHit ? <span style={sx('font-weight:700;border-radius:3px;padding:0 1px', { color: c.hitFg, background: c.hitBg })}>{r.mkHit}</span> : null}
+      <span style={sx('font-weight:600', { color: c.name })}>{r.mkAfter}</span>
 
       {/* ตัวย่อที่เภสัชกรเรียกกันจริง (CPM · HCTZ · MST) — วงเล็บสีม่วง
           วางถัดจากชื่อยาทันที เพราะเป็น "ชื่อเรียกอีกแบบ" ของยาตัวเดียวกัน
@@ -57,7 +76,7 @@ export function renderDrugName(r, opts) {
       {/* ความแรง — ถ้ามียาชื่อเดียวกันหลายความแรงในรายการเดียว ตัวเลขจะถูกทาสีคนละสี
           กันหยิบสลับ (Morphine 10 · 20 · 30 mg) · หน่วยคงสีเทาเดิม บรรทัดจะได้ไม่รก */}
       {r.strength && (
-        <span style={sx("font-weight:500;color:#6b746e;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:6px", nw(r.strengthNoWrap))}>
+        <span style={sx("font-weight:500;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:6px", Object.assign({ color: c.strength }, nw(r.strengthNoWrap)))}>
           {r.stColor
             ? <><span style={{ color: r.stColor, fontWeight: 700 }}>{r.stNum}</span>{r.stRest}</>
             : r.strength}
@@ -71,7 +90,7 @@ export function renderDrugName(r, opts) {
 
       {/* รูปแบบยา (tab · cap · injection) — บอกได้ทันทีว่ายากินหรือยาฉีด */}
       {r.form && (
-        <span style={sx('font-weight:600;color:#414a44;margin-left:6px', nw(r.formNoWrap))}>{r.form}</span>
+        <span style={sx('font-weight:600;margin-left:6px', Object.assign({ color: c.form }, nw(r.formNoWrap)))}>{r.form}</span>
       )}
 
       {/* 🚨 รูปแบบการออกฤทธิ์ (ER · IR · SR) — เอียง หนา วงเล็บ แดงอมชมพู
@@ -83,7 +102,7 @@ export function renderDrugName(r, opts) {
 
       {/* ชื่อการค้าในวงเล็บ สีเทลตัวหนา — เภสัชกรจำ Kapanol ได้ก่อนชื่อสามัญ */}
       {r.hasBrand && (
-        <span style={sx('font-weight:600;color:#2f7d5d;margin-left:6px', nw(r.brandNoWrap))}>
+        <span style={sx('font-weight:600;margin-left:6px', Object.assign({ color: c.brand }, nw(r.brandNoWrap)))}>
           ({r.bdBefore}{r.bdHit ? <span style={s('background:#dcefe4;border-radius:3px;padding:0 1px')}>{r.bdHit}</span> : null}{r.bdAfter})
         </span>
       )}

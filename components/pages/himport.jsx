@@ -32,7 +32,7 @@ export function renderHisImport(V) {
                 {V.hisFileName && (
                   <div style={s('font:500 12.5px Sarabun,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{V.hisFileName}</div>
                 )}
-                <div style={s('font:400 11.5px Sarabun,sans-serif;color:#9aa19c')}>
+                <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6f7873')}>
                   ไฟล์ถูกอ่านในเครื่องนี้เท่านั้น ไม่ถูกส่งขึ้นเซิร์ฟเวอร์
                 </div>
               </div>
@@ -101,7 +101,7 @@ export function renderHisImport(V) {
                       </div>
 
                       <div style={s('flex:none;text-align:right')}>
-                        <div style={s('font:400 10.5px Sarabun,sans-serif;color:#9aa19c')}>เดิม {r.oldLabel}</div>
+                        <div style={s('font:400 10.5px Sarabun,sans-serif;color:#6f7873')}>เดิม {r.oldLabel}</div>
                         <div style={sx("font:600 15px Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: r.newColor })}>{r.newLabel}</div>
                         {r.changed && (
                           <div style={s('font:600 10px Sarabun,sans-serif;color:#c2543c')}>ราคาเปลี่ยน</div>
@@ -139,7 +139,7 @@ export function renderHisImport(V) {
                           placeholder="0.00"
                           style={s("width:120px;height:34px;padding:0 10px;border:1px solid rgba(30,36,32,.16);border-radius:8px;background:#fff;font:600 13px Sarabun,sans-serif;text-align:right")}
                         />
-                        <span style={s('font:400 11.5px Sarabun,sans-serif;color:#9aa19c')}>บาท ต่อ {r.unit}</span>
+                        <span style={s('font:400 11.5px Sarabun,sans-serif;color:#6f7873')}>บาท ต่อ {r.unit}</span>
                       </div>
                     )}
                   </div>
@@ -165,7 +165,7 @@ export function renderHisImport(V) {
                     className={V.hisCanSave ? 'hv-teal tap' : ''}
                     style={sx('height:42px;padding:0 20px;border-radius:10px;display:flex;align-items:center;font:600 13.5px Sarabun,sans-serif', {
                       background: V.hisCanSave ? '#2f7d5d' : '#e6e8e4',
-                      color: V.hisCanSave ? '#fff' : '#9aa19c',
+                      color: V.hisCanSave ? '#fff' : '#6f7873',
                       cursor: V.hisCanSave ? 'pointer' : 'not-allowed'
                     })}
                   >{V.hisSaveLabel}</div>

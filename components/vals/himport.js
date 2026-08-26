@@ -76,7 +76,7 @@ export function himportVals(app) {
         oldLabel: r.oldPrice > 0 ? money(r.oldPrice) : '—',
         newLabel: p != null ? money(p) : '—',
         // ราคาเดิมไม่เท่าราคาใหม่ ต้องเห็นชัดว่าของเดิมกำลังจะถูกทับ
-        newColor: p == null ? '#9aa19c' : changed ? '#c2543c' : '#2f7d5d',
+        newColor: p == null ? '#6f7873' : changed ? '#c2543c' : '#2f7d5d',
         changed: changed,
         checked: r.checked,
         canCheck: p != null,

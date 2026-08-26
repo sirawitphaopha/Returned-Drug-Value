@@ -27,7 +27,7 @@ export function renderRecorderField(V) {
         {...kb(V.toggleRecorderMenu)}
         style={sx('width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;border-radius:11px;padding:12px 14px;background:#fff;cursor:pointer', {
           border: '1.5px solid ' + (!has ? 'rgba(194,84,60,.55)' : open ? '#2f7d5d' : 'rgba(30,36,32,.14)'),
-          color: has ? '#1e2420' : '#9aa19c'
+          color: has ? '#1e2420' : '#6f7873'
         })}
       >
         <span style={s('font:500 15px Sarabun,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>
@@ -104,7 +104,7 @@ export function renderRecorderField(V) {
                   {...kb(V.addRecorder)}
                   style={sx('height:38px;padding:0 14px;border-radius:9px;display:flex;align-items:center;font:600 13px Sarabun,sans-serif;flex:none', {
                     background: V.canAddRecorder ? '#2f7d5d' : '#e9ebe8',
-                    color: V.canAddRecorder ? '#fff' : '#9aa19c',
+                    color: V.canAddRecorder ? '#fff' : '#6f7873',
                     cursor: V.canAddRecorder ? 'pointer' : 'default'
                   })}
                 >เพิ่ม</div>

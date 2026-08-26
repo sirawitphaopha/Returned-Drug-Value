@@ -108,7 +108,7 @@ export function renderSettings(V) {
                 <div style={s('font:400 12px/1.6 Sarabun,sans-serif;color:#6b746e')}>ระบบสถานะงาน/การอนุมัติ · สิทธิ์ผู้ใช้แยกบทบาท · ทะเบียนทำลายยาและใบสำคัญทำลาย</div>
               </div>
             </div>
-            <div style={s('display:flex;justify-content:space-between;font:400 11.5px Sarabun,sans-serif;color:#9aa19c;margin-top:14px;font-variant-numeric:tabular-nums')}>
+            <div style={s('display:flex;justify-content:space-between;font:400 11.5px Sarabun,sans-serif;color:#6f7873;margin-top:14px;font-variant-numeric:tabular-nums')}>
               <span>เวอร์ชัน {V.appVersion}</span><span>{V.recordTotalLabel}</span>
             </div>
           </div>

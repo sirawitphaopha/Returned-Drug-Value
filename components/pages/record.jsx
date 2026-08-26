@@ -91,7 +91,7 @@ function renderDrugOption(r, big) {
               <span style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#cfd4d0')}>·</span>
             </>
           )}
-          <span style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#9aa19c')}>{r.unitLabel}</span>
+          <span style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#6f7873')}>{r.unitLabel}</span>
           {r.noPrice && (
             <span style={s('font:600 10px Sarabun,sans-serif;color:#c2543c;background:#fbe4dd;border-radius:4px;padding:1px 6px;flex:none')}>ยังไม่ใส่ราคา</span>
           )}
@@ -100,7 +100,7 @@ function renderDrugOption(r, big) {
 
       <div style={s('text-align:right;flex:none')}>
         <div style={sx("font:600 14px Sarabun,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap", { color: r.priceColor })}>{r.priceLabel}</div>
-        {r.priceSub && <div style={s('font:400 10.5px Sarabun,sans-serif;color:#9aa19c;white-space:nowrap')}>{r.priceSub}</div>}
+        {r.priceSub && <div style={s('font:400 10.5px Sarabun,sans-serif;color:#6f7873;white-space:nowrap')}>{r.priceSub}</div>}
       </div>
     </div>
   );
@@ -131,7 +131,7 @@ export function renderRecordNarrow(V) {
             </div>
           </div>
           <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
-            <div {...kb(V.toggleMore)} style={s("display:flex;align-items:center;gap:6px;min-height:44px;padding:6px 13px;border:1px solid rgba(30,36,32,.14);border-radius:9px;font:500 12.5px Sarabun,sans-serif;cursor:pointer")}>{V.dateLabel} <span style={s('color:#9aa19c')}>▾</span></div>
+            <div {...kb(V.toggleMore)} style={s("display:flex;align-items:center;gap:6px;min-height:44px;padding:6px 13px;border:1px solid rgba(30,36,32,.14);border-radius:9px;font:500 12.5px Sarabun,sans-serif;cursor:pointer")}>{V.dateLabel} <span style={s('color:#6f7873')}>▾</span></div>
             {/* ปุ่มเกี่ยวกับ แยกออกมาเป็นปุ่มของตัวเองข้างเฟือง — พี่กันสั่ง
                 เดิมซ่อนอยู่ในหน้าตั้งค่า ต้องเลื่อนลงไปหา ไม่มีใครเจอ */}
             <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-bg-f6" style={s('width:44px;height:44px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
@@ -324,7 +324,7 @@ export function renderRecordWide(V) {
                 { color: V.qtyResolved ? 'transparent' : '#1e2420' })} />
             {V.qtyResolved && (
               <div style={s("position:absolute;left:14px;right:41px;bottom:0;height:46px;display:flex;align-items:center;pointer-events:none;font:600 16px Sarabun,sans-serif;white-space:nowrap;overflow:hidden")}>
-                <span style={s('color:#9aa19c')}>{V.qtyExprPart}</span>
+                <span style={s('color:#6f7873')}>{V.qtyExprPart}</span>
                 <span style={s('color:#2f7d5d;font-weight:700')}>{V.qtyAnswerPart}</span>
               </div>
             )}
@@ -351,7 +351,7 @@ export function renderRecordWide(V) {
             {V.calcOpen && (
               <div style={s('position:absolute;top:calc(100% + 7px);right:0;width:225px;background:#fff;border:1px solid rgba(30,36,32,.12);border-radius:12px;box-shadow:0 14px 34px rgba(30,36,32,.18);padding:9px;z-index:12')}>
                 <div style={s('background:#f6f7f4;border-radius:8px;padding:7px 10px;margin-bottom:8px;text-align:right')}>
-                  <div style={s("font:400 11px Sarabun,monospace;color:#9aa19c;min-height:14px;word-break:break-all")}>{V.calcExpr || ' '}</div>
+                  <div style={s("font:400 11px Sarabun,monospace;color:#6f7873;min-height:14px;word-break:break-all")}>{V.calcExpr || ' '}</div>
                   <div style={s("font:700 19px Sarabun,sans-serif;color:#1e2420;font-variant-numeric:tabular-nums")}>{V.calcResult}</div>
                 </div>
                 <div style={s('display:grid;grid-template-columns:repeat(4,1fr);gap:5px')}>
@@ -365,7 +365,7 @@ export function renderRecordWide(V) {
                         : { background: '#f2f4f1', color: '#1e2420', font: "600 15px Sarabun,sans-serif" })}>{b.k}</div>
                   ))}
                 </div>
-                <div style={s('font:400 10.5px Sarabun,sans-serif;color:#9aa19c;text-align:center;margin-top:7px')}>พิมพ์ในช่องเองก็ได้ · Enter เพิ่มรายการเลย</div>
+                <div style={s('font:400 10.5px Sarabun,sans-serif;color:#6f7873;text-align:center;margin-top:7px')}>พิมพ์ในช่องเองก็ได้ · Enter เพิ่มรายการเลย</div>
               </div>
             )}
           </div>
@@ -575,7 +575,7 @@ export function renderRecordWide(V) {
               ซึ่งปลอดภัยแล้วเพราะปุ่มบันทึกถูกตรึงไว้ก้นแผง */}
           <div>
           {V.noRows ? (
-            <div style={s('min-height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font:400 11.5px/1.6 Sarabun,sans-serif;color:#9aa19c;padding:6px 4px')}>
+            <div style={s('min-height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font:400 11.5px/1.6 Sarabun,sans-serif;color:#6f7873;padding:6px 4px')}>
               ยังไม่มียาใน Lot นี้<br />เพิ่มยาจากช่องด้านซ้าย
             </div>
           ) : (
@@ -607,7 +607,7 @@ export function renderRecordWide(V) {
             <span style={s('color:#6b746e;flex:none')}>เลข Lot</span>
             <span style={sx('text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', V.lotNoIsReal
               ? { font: "600 11.5px var(--font-plex),Sarabun,sans-serif", color: '#2f7d5d' }
-              : { color: '#9aa19c' })}>{V.lotNoLabel}</span>
+              : { color: '#6f7873' })}>{V.lotNoLabel}</span>
           </div>
         </div>
 

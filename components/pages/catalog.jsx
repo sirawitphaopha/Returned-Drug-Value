@@ -108,7 +108,7 @@ export function renderCatalog(V) {
         </div>
 
         {V.catLoading ? (
-          <div style={s('padding:40px;text-align:center;font:400 13px Sarabun,sans-serif;color:#9aa19c')}>กำลังโหลดคลังยา</div>
+          <div style={s('padding:40px;text-align:center;font:400 13px Sarabun,sans-serif;color:#6f7873')}>กำลังโหลดคลังยา</div>
         ) : (
           <div style={s('border:1px solid #eef1ee;border-radius:10px')}>
             <table style={s('width:100%;border-collapse:collapse')}>
@@ -136,7 +136,7 @@ export function renderCatalog(V) {
               <tbody>
                 {V.catRows.map((r) => (
                   <tr key={r.id} style={sx('border-bottom:1px solid #f2f5f3', { background: r.rowBg })}>
-                    <td style={s(TD + ';color:#9aa19c;font-size:11.5px')}>{r.id}</td>
+                    <td style={s(TD + ';color:#6f7873;font-size:11.5px')}>{r.id}</td>
                     {/* สีตรงกับที่ใช้ในผลค้นหา — ม่วง ตัวย่อ · ส้ม เปอร์เซ็นต์ · แดงอมชมพู ออกฤทธิ์ · เทล ชื่อการค้า */}
                     <td style={s(TD + ';color:#6d3b9e;font-weight:600')}>{r.abbrev || '—'}</td>
                     <td style={s(TD + ';color:#1e2420;font-weight:600')}>
@@ -181,7 +181,7 @@ export function renderCatalog(V) {
               </tbody>
             </table>
             {V.catRows.length === 0 && (
-              <div style={s('padding:34px;text-align:center;font:400 13px Sarabun,sans-serif;color:#9aa19c')}>ไม่พบยาตามเงื่อนไข</div>
+              <div style={s('padding:34px;text-align:center;font:400 13px Sarabun,sans-serif;color:#6f7873')}>ไม่พบยาตามเงื่อนไข</div>
             )}
           </div>
         )}
@@ -222,7 +222,7 @@ function renderCatEdit(V) {
     </div>
   );
   const flag = (label, key) => (
-    <div {...kb(() => V.setCatField(key, !d[key]))} className="tap" style={sx('flex:1;min-width:120px;border-radius:9px;padding:10px 12px;font:600 13px Sarabun,sans-serif;cursor:pointer;text-align:center', d[key] ? { border: '1.5px solid #2f7d5d', background: '#e3f0e8', color: '#2f7d5d' } : { border: '1.5px solid #dfe5e1', background: '#fff', color: '#9aa19c' })}>
+    <div {...kb(() => V.setCatField(key, !d[key]))} className="tap" style={sx('flex:1;min-width:120px;border-radius:9px;padding:10px 12px;font:600 13px Sarabun,sans-serif;cursor:pointer;text-align:center', d[key] ? { border: '1.5px solid #2f7d5d', background: '#e3f0e8', color: '#2f7d5d' } : { border: '1.5px solid #dfe5e1', background: '#fff', color: '#6f7873' })}>
       {label}
     </div>
   );
@@ -296,14 +296,14 @@ function renderCatEdit(V) {
                 </div>
               </div>
             </div>
-            <div style={s('font:400 11px/1.6 Sarabun,sans-serif;color:#9aa19c')}>
+            <div style={s('font:400 11px/1.6 Sarabun,sans-serif;color:#6f7873')}>
               สีเม็ดยาใส่เฉพาะยาที่ผู้ผลิตแยกความแรงด้วยสีเม็ด เช่น Warfarin · พิมพ์แค่ชื่อสีไทย ระบบเติมรหัสสีให้เอง
             </div>
           </div>
         </div>
         <div style={s('border-top:1px solid #eef1ee;padding:13px 18px;display:flex;gap:9px;justify-content:flex-end')}>
           <div {...kb(V.askCloseCatEdit)} className="tap" style={s('border:1px solid #dfe5e1;background:#fff;color:#6b746e;font:600 13px Sarabun,sans-serif;padding:9px 18px;border-radius:9px;cursor:pointer')}>ยกเลิก</div>
-          <div {...kb(V.saveCatEdit)} className="tap" style={sx('color:#fff;font:600 13px Sarabun,sans-serif;padding:9px 20px;border-radius:9px;cursor:pointer', { background: V.catBusy ? '#9aa19c' : '#2f7d5d' })}>
+          <div {...kb(V.saveCatEdit)} className="tap" style={sx('color:#fff;font:600 13px Sarabun,sans-serif;padding:9px 20px;border-radius:9px;cursor:pointer', { background: V.catBusy ? '#6f7873' : '#2f7d5d' })}>
             {V.catBusy ? 'กำลังบันทึก' : 'บันทึก'}
           </div>
         </div>
@@ -361,15 +361,15 @@ function renderCatLog(V) {
         </div>
         <div style={s('padding:16px 18px')}>
           {V.catLogRows === null ? (
-            <div style={s('padding:24px;text-align:center;font:400 13px Sarabun,sans-serif;color:#9aa19c')}>กำลังโหลด</div>
+            <div style={s('padding:24px;text-align:center;font:400 13px Sarabun,sans-serif;color:#6f7873')}>กำลังโหลด</div>
           ) : V.catLogRows.length === 0 ? (
-            <div style={s('padding:24px;text-align:center;font:400 13px Sarabun,sans-serif;color:#9aa19c')}>ยังไม่มีการแก้ไข</div>
+            <div style={s('padding:24px;text-align:center;font:400 13px Sarabun,sans-serif;color:#6f7873')}>ยังไม่มีการแก้ไข</div>
           ) : (
             <div style={s('display:flex;flex-direction:column;gap:11px')}>
               {V.catLogRows.map((row) => (
                 <div key={row.id} style={s('border-left:3px solid #cfe0d6;padding-left:12px')}>
                   <div style={s('font:600 12.5px Sarabun,sans-serif;color:#2f7d5d')}>{row.action}</div>
-                  <div style={s('font:400 11.5px Sarabun,sans-serif;color:#9aa19c;margin:2px 0 6px')}>{row.at}</div>
+                  <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6f7873;margin:2px 0 6px')}>{row.at}</div>
                   {row.changes.length === 0 ? (
                     <div style={s('font:400 12.5px Sarabun,sans-serif;color:#6b746e')}>ไม่มีช่องไหนเปลี่ยนค่า</div>
                   ) : row.changes.map((c, i) => (

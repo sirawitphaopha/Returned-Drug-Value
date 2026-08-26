@@ -77,7 +77,7 @@ export function renderPrices(V) {
                   {/* ที่มาของราคา — บอกว่าไปหยิบมาจากบรรทัดไหนในไฟล์ HIS
                       สำคัญมาก เพราะเภสัชกรต้องดูออกว่าจับคู่ถูกตัวหรือเปล่า */}
                   {p.note && (
-                    <div style={s('font:400 11px/1.4 Sarabun,sans-serif;color:#9aa19c;margin-top:2px;overflow-wrap:anywhere')}>{p.note}</div>
+                    <div style={s('font:400 11px/1.4 Sarabun,sans-serif;color:#6f7873;margin-top:2px;overflow-wrap:anywhere')}>{p.note}</div>
                   )}
                 </div>
                 <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>

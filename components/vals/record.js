@@ -462,18 +462,18 @@ export function recordVals(app, d) {
     sumOn: pendValue > 0,
     sumBg: pendValue > 0 ? '#e7f2ec' : '#f4f5f3',
     sumBorder: pendValue > 0 ? 'rgba(47,125,93,.22)' : 'rgba(30,36,32,.10)',
-    sumKeyFg: pendValue > 0 ? '#4e8f70' : '#9aa19c',
+    sumKeyFg: pendValue > 0 ? '#4e8f70' : '#6f7873',
     sumFg: pendValue > 0 ? '#2f7d5d' : '#b8bdb9',
     // ปุ่ม "เพิ่ม" — พี่กันสั่งเปลี่ยนจากดำเป็นเขียวเทลของธีม
     addBg: canAdd ? '#2f7d5d' : '#e9ebe8',
-    addFg: canAdd ? '#fff' : '#9aa19c',
+    addFg: canAdd ? '#fff' : '#6f7873',
     addHintFg: canAdd ? 'rgba(255,255,255,.5)' : '#b8bdb9',
     searchBorder: pending ? '#2f7d5d' : 'rgba(30,36,32,.16)',
     pendingUnit: pending ? ' (' + pending.unit + ')' : '',
     pendReuseBg: pendReuse ? '#e3f0e8' : 'transparent',
-    pendReuseFg: pendReuse ? '#2f7d5d' : '#9aa19c',
+    pendReuseFg: pendReuse ? '#2f7d5d' : '#6f7873',
     pendDestroyBg: pendReuse ? 'transparent' : '#fbe4dd',
-    pendDestroyFg: pendReuse ? '#9aa19c' : '#c2543c',
+    pendDestroyFg: pendReuse ? '#6f7873' : '#c2543c',
     setPendingReuse: () => app.setState({ pendingDisp: 'reuse', pendingReason: '' }),
     // ยังไม่ได้กดเพิ่มเข้ารายการ แต่ถามเหตุผลตั้งแต่ตอนนี้เลย
     // จะได้ติดไปกับแถวทันทีที่กดเพิ่ม ไม่ต้องกลับมาไล่กรอกทีหลัง
@@ -573,7 +573,7 @@ export function recordVals(app, d) {
         reuseBg: reuse ? '#fff' : 'transparent',
         reuseFg: reuse ? '#2f7d5d' : '#c9a096',
         destroyBg: reuse ? 'transparent' : '#fff',
-        destroyFg: reuse ? '#9aa19c' : '#c2543c',
+        destroyFg: reuse ? '#6f7873' : '#c2543c',
         // เหตุผลที่ทำลาย — โผล่ใต้ชื่อยาเฉพาะแถวที่ทำลาย (พี่กันถาม 26 ส.ค. 2569
         // ว่า "เหตุผลจะขึ้นที่ไหน มันควรแสดงไหม แต่แสดงยังไงดี")
         // 🚨 ไม่เพิ่มคอลัมน์ใหม่ — ตารางมี 7 คอลัมน์แล้วและพี่กันสั่งห้ามตัด HN ออก
@@ -648,7 +648,7 @@ export function recordVals(app, d) {
         : st.saveFailed ? 'ลองส่งใหม่'
           : 'บันทึก ' + st.rows.length + ' รายการ',
     saveBg: st.rows.length === 0 ? '#e9ebe8' : st.saveFailed ? '#1e2420' : '#2f7d5d',
-    saveFg: st.rows.length === 0 ? '#9aa19c' : '#fff',
+    saveFg: st.rows.length === 0 ? '#6f7873' : '#fff',
     // 🚨 กดบันทึกครั้งแรก = เปิดป๊อปยืนยันก่อน (พี่กันสั่ง 25 ส.ค. 2569)
     //    แต่ตอน "ลองส่งใหม่" หลังเน็ตหลุด ให้ส่งเลย ไม่ต้องยืนยันซ้ำ
     //    เพราะผู้ใช้เพิ่งยืนยันไปเมื่อกี้ ข้อมูลชุดเดิมทุกอย่าง

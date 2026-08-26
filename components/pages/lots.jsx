@@ -82,7 +82,7 @@ export function renderLots(V) {
       {/* ── แถบค้นหาและตัวกรอง ───────────────────────────────────────────── */}
       <div style={s('display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:11px')}>
         <div style={s('position:relative;flex:0 1 340px;min-width:200px')}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa19c" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6f7873" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"
             style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
             <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
           </svg>
@@ -216,7 +216,7 @@ export function renderLots(V) {
               <div style={s('display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:3px')}>
                 <div style={s('font:500 12px Sarabun,sans-serif;color:#414a44;overflow-wrap:anywhere')}>{l.by}</div>
                 <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e')}>· {l.srcText}{l.siteLabel ? ' ' + l.siteLabel : ''}</div>
-                <div style={s('margin-left:auto;font:400 11.5px Sarabun,sans-serif;color:#9aa19c')}>{l.itemsLabel}</div>
+                <div style={s('margin-left:auto;font:400 11.5px Sarabun,sans-serif;color:#6f7873')}>{l.itemsLabel}</div>
               </div>
               {l.hasLost && (
                 <div style={s('font:600 12px Sarabun,sans-serif;color:#c2543c;margin-top:3px')}>ทำลาย {l.lostLabel}</div>

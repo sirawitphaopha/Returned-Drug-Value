@@ -146,7 +146,7 @@ export function historyVals(app, d) {
       valueLabel: money(price * r.qty),
       color: reuse ? '#2f7d5d' : '#c2543c',
       dispLabel: reuse ? 'ใช้ต่อได้' : 'ทำลาย',
-      dispColor: reuse ? '#9aa19c' : '#c2543c',
+      dispColor: reuse ? '#6f7873' : '#c2543c',
       border: reuse ? 'rgba(30,36,32,.08)' : 'rgba(194,84,60,.22)',
       inTrash: !!r.deletedAt,
       edit: () => app.editRecord(r),

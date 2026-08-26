@@ -161,7 +161,7 @@ export function renderHistoryWide(V) {
 
       {V.histTruncated && (
         <div style={s('text-align:center;padding:14px 0 0')}>
-          <div style={s('font:400 12px Sarabun,sans-serif;color:#9aa19c;margin-bottom:8px')}>{V.histTruncLabel}</div>
+          <div style={s('font:400 12px Sarabun,sans-serif;color:#6f7873;margin-bottom:8px')}>{V.histTruncLabel}</div>
           <div {...kb(V.loadMoreHistory)} className="hv-bg-f6 tap" style={s('display:inline-flex;align-items:center;padding:10px 20px;border:1px solid rgba(30,36,32,.16);border-radius:999px;background:#fff;font:600 13px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>{V.loadMoreLabel}</div>
         </div>
       )}
@@ -198,12 +198,18 @@ export function renderHistoryNarrow(V) {
               style={s('position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b746e;font:400 14px Sarabun,sans-serif')}>✕</span>
           )}
         </div>
-        <div style={s('display:flex;gap:6px;flex-wrap:wrap')}>
+        {/* ชิปช่วงเวลาฝั่งมือถือ — สูง 44px เต็มเกณฑ์นิ้ว (ผลตรวจข้อ ต-12)
+            🚨 ถอดคลาส .tap ออกจากชิปที่วางเรียงติดกัน
+               .tap ขยายพื้นที่กดออกด้านละ 11px ชิปที่ห่างกัน 6px จึงทับกันหมดแถว
+               กดชิปหนึ่งแล้วโดนชิปข้าง ๆ · ขยายตัวชิปเองแทนแล้วไม่ต้องพึ่ง .tap
+            🚨 ฝั่งเดสก์ท็อป (renderHistoryWide) ห้ามแตะ พี่กันสั่ง "อย่าไปหลงแก้ในเดสก์ท็อป"
+               เมาส์ชี้แม่นกว่านิ้วมาก ปุ่มเล็กบนคอมไม่ใช่ปัญหา */}
+        <div style={s('display:flex;gap:8px;flex-wrap:wrap')}>
           {V.ranges.map((g) => (
-            <div key={g.key} {...kb(g.pick)} className="tap" style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
+            <div key={g.key} {...kb(g.pick)} style={sx('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
           ))}
-          <div {...kb(V.openLots)} className="tap" style={s('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer;background:#f0f1ee;color:#414a44')}>รายการ Lot</div>
-          <div {...kb(V.toggleTrash)} className="tap" style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>{V.trashLabel}</div>
+          <div {...kb(V.openLots)} style={s('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px Sarabun,sans-serif;cursor:pointer;background:#f0f1ee;color:#414a44')}>รายการ Lot</div>
+          <div {...kb(V.toggleTrash)} style={sx('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>{V.trashLabel}</div>
           {/* 🚨 เขียน "Lot" เป็นภาษาอังกฤษเสมอ ห้ามแปลว่า "ชุด" (พี่กันสั่ง — แคลร์เคยแปลผิดมาแล้ว)
               ตรงนี้หลุดมาจากรอบก่อน เพิ่งเจอตอนไล่ทำหน้ารายการ Lot */}
           {V.histLot && (
@@ -263,13 +269,24 @@ export function renderHistoryNarrow(V) {
                         )}
                       </div>
                     </div>
-                    <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
+                    {/* ── ปุ่มแก้กับลบ (ผลตรวจข้อ ต-12) ──────────────────────────
+                        🔴 จุดอันตรายที่สุดของทั้งเว็บบนจอสัมผัส
+                           วัดจริงที่จอ 390px ได้ 36×29 พิกเซล วางห่างกัน 7px
+                           คลาส .tap ขยายพื้นที่กดออกอีกด้านละ 11px
+                           พื้นที่กดของสองปุ่มจึงทับกัน = เล็งกด "แก้" แต่โดน "ลบ"
+                           ผิดพลาดแล้วข้อมูลหายไปถังขยะโดยไม่ตั้งใจ
+
+                        แก้เป็นสูง 44px เต็มเกณฑ์นิ้ว และถ่างระยะห่างเป็น 12px
+                        🚨 ห้ามใช้ .tap กับปุ่มคู่ที่วางติดกันแบบนี้
+                           .tap ทำให้พื้นที่กดล้นออกไปทับปุ่มข้าง ๆ
+                           ต้องขยายตัวปุ่มเองให้ถึงเกณฑ์แทน ─────────────────── */}
+                    <div style={s('display:flex;align-items:center;gap:12px;flex:none')}>
                       {it.inTrash ? (
-                        <div {...kb(it.restore)} className="hv-bg-e3f tap" style={s('padding:7px 11px;border-radius:7px;background:#e3f0e8;font:500 11.5px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>กู้คืน</div>
+                        <div {...kb(it.restore)} className="hv-bg-e3f" style={s('min-height:44px;min-width:56px;padding:0 13px;border-radius:9px;background:#e3f0e8;display:flex;align-items:center;justify-content:center;font:500 12.5px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>กู้คืน</div>
                       ) : (
                         <>
-                          <div {...kb(it.edit)} className="hv-bg-e6e tap" style={s('padding:7px 11px;border-radius:7px;background:#f0f1ee;font:500 11.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>แก้</div>
-                          <div {...kb(it.remove)} className="hv-bg-fbe tap" style={s('padding:7px 11px;border-radius:7px;background:#fdf1ed;font:500 11.5px Sarabun,sans-serif;color:#c2543c;cursor:pointer')}>ลบ</div>
+                          <div {...kb(it.edit)} className="hv-bg-e6e" style={s('min-height:44px;min-width:48px;padding:0 13px;border-radius:9px;background:#f0f1ee;display:flex;align-items:center;justify-content:center;font:500 12.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>แก้</div>
+                          <div {...kb(it.remove)} className="hv-bg-fbe" style={s('min-height:44px;min-width:48px;padding:0 13px;border-radius:9px;background:#fdf1ed;display:flex;align-items:center;justify-content:center;font:500 12.5px Sarabun,sans-serif;color:#c2543c;cursor:pointer')}>ลบ</div>
                         </>
                       )}
                     </div>

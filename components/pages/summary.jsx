@@ -52,7 +52,7 @@ function renderTopReturned(V) {
         {V.topReturned.map((t) => (
           <div key={t.key}>
             <div style={s('display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:4px')}>
-              <span style={s('min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}><span style={s('font:500 12.5px Sarabun,sans-serif')}>{t.rank}. </span>{renderDrugName(t.parts, { size: '12.5px' })}</span>
+              <span style={s('min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}><span style={s('font:500 12.5px Sarabun,sans-serif')}>{t.rank}. </span>{renderDrugName(t.parts, { size: '12.5px', dark: V.sumDark })}</span>
               <span style={sx("font:600 12.5px Sarabun,sans-serif;flex:none;font-variant-numeric:tabular-nums", { color: V.sumMuted })}>{t.timesLabel}</span>
             </div>
             <div style={sx('height:7px;border-radius:99px;overflow:hidden', { background: V.sumTrack })}>
@@ -173,7 +173,7 @@ export function renderSummaryWide(V) {
               {V.topDrugs.map((t) => (
                 <div key={t.key}>
                   <div style={s('display:flex;justify-content:space-between;gap:12px;font:400 13.5px Sarabun,sans-serif;margin-bottom:3px')}>
-                    <span style={s('overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{renderDrugName(t.parts)}</span>
+                    <span style={s('overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{renderDrugName(t.parts, { dark: V.sumDark })}</span>
                     <span style={s('font-weight:600;font-variant-numeric:tabular-nums;flex:none')}>{t.value}</span>
                   </div>
                   <div style={sx('height:6px;border-radius:99px', { background: V.sumTrack })}>
@@ -274,7 +274,7 @@ export function renderSummaryNarrow(V) {
                 <span style={sx("width:16px;flex:none;font:600 10.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: V.sumMuted })}>{t.rank}</span>
                 <div style={s('flex:1;min-width:0')}>
                   <div style={s('display:flex;justify-content:space-between;gap:8px;font:400 12.5px Sarabun,sans-serif;margin-bottom:3px')}>
-                    <span style={s('overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{renderDrugName(t.parts)}</span>
+                    <span style={s('overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{renderDrugName(t.parts, { dark: V.sumDark })}</span>
                     <span style={s('font-weight:600;font-variant-numeric:tabular-nums;flex:none')}>{t.value}</span>
                   </div>
                   <div style={sx('height:5px;border-radius:99px', { background: V.sumTrack })}>

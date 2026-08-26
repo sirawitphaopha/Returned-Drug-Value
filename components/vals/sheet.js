@@ -40,7 +40,7 @@ export function sheetVals(app, d) {
     sheetReuseBg: reuse ? '#fff' : 'transparent',
     sheetReuseFg: reuse ? '#2f7d5d' : '#c9a096',
     sheetDestroyBg: reuse ? 'transparent' : '#fff',
-    sheetDestroyFg: reuse ? '#9aa19c' : '#c2543c',
+    sheetDestroyFg: reuse ? '#6f7873' : '#c2543c',
     sheetSetReuse: () => app.setState({ sheetDisp: 'reuse', sheetReason: '' }),
     sheetSetDestroy: () => app.setState({ sheetDisp: 'destroy' }),
 

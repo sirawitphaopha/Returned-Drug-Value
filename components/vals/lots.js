@@ -453,7 +453,7 @@ function lotEditVals(app, st) {
         reuseBg: reuse ? '#fff' : 'transparent',
         reuseFg: reuse ? '#2f7d5d' : '#c9a096',
         destroyBg: reuse ? 'transparent' : '#fff',
-        destroyFg: reuse ? '#9aa19c' : '#c2543c',
+        destroyFg: reuse ? '#6f7873' : '#c2543c',
         setReuse: () => app.setLotRowDisp(r.id, 'reuse'),
         setDestroy: () => app.setLotRowDisp(r.id, 'destroy')
       };

@@ -71,6 +71,8 @@ export function summaryVals(app, d) {
   const srcTotal = Object.keys(bySrc).reduce((a, k) => a + Number(bySrc[k] || 0), 0) || 1;
 
   return {
+    // ส่งต่อให้ตัววาดชื่อยาเลือกสีที่อ่านออกบนพื้นมืด (บั๊ก 26 ส.ค. 2569 ชื่อยาหาย)
+    sumDark: dark,
     sumBg: dark ? '#151a17' : '#f6f7f4',
     sumFg: dark ? '#ffffff' : '#1e2420',
     sumMuted: dark ? 'rgba(255,255,255,.6)' : '#6b746e',

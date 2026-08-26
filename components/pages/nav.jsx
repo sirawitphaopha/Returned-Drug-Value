@@ -8,7 +8,7 @@ export function renderNavNarrow(V) {
           ไม่งั้นกดสลับเป็น "มือถือ" แล้วสวิตช์หายไปกับแถบบน = ติดอยู่ในโหมดมือถือถาวร */}
       {V.showLayoutSwitch && (
         <div style={s('max-width:520px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;gap:7px')}>
-          <span style={s("font:500 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:#9aa19c")}>มุมมอง</span>
+          <span style={s("font:500 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:#6f7873")}>มุมมอง</span>
           <div style={s('display:flex;padding:2px;border-radius:8px;background:#f0f1ee;gap:2px')}>
             <div {...kb(V.useDesktop)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutDeskBg, color: V.layoutDeskFg })}>คอม</div>
             <div {...kb(V.useMobile)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutMobBg, color: V.layoutMobFg })}>มือถือ</div>
@@ -65,7 +65,7 @@ export function renderNavWide(V) {
             ของเดิมลอยทับปุ่มในตาราง กดไม่ได้ */}
         {V.showLayoutSwitch && (
           <div style={s('display:flex;align-items:center;gap:7px')}>
-            <span style={s("font:500 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:#9aa19c")}>มุมมอง</span>
+            <span style={s("font:500 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:#6f7873")}>มุมมอง</span>
             <div style={s('display:flex;padding:2px;border-radius:8px;background:#f0f1ee;gap:2px')}>
               <div {...kb(V.useDesktop)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutDeskBg, color: V.layoutDeskFg })}>คอม</div>
               <div {...kb(V.useMobile)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutMobBg, color: V.layoutMobFg })}>มือถือ</div>

@@ -51,7 +51,7 @@ export function renderReasonPick(V) {
             ))}
           </div>
 
-          <div style={s('font:400 11.5px/1.6 Sarabun,sans-serif;color:#9aa19c;margin-top:12px;text-align:center')}>
+          <div style={s('font:400 11.5px/1.6 Sarabun,sans-serif;color:#6f7873;margin-top:12px;text-align:center')}>
             เลือกแล้วรายการจะถูกตั้งเป็นทำลายทันที · ปิดหน้าต่างนี้เพื่อยกเลิก
           </div>
         </div>

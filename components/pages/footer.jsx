@@ -9,7 +9,7 @@ export function renderFooter(V) {
   if (V.isAbout) return null;      // หน้าเกี่ยวกับมีเนื้อหาพวกนี้อยู่แล้ว ไม่ต้องซ้ำ
 
   const wide = V.wide;
-  const muted = V.isSummary ? V.sumMuted : '#9aa19c';
+  const muted = V.isSummary ? V.sumMuted : '#6f7873';
   const line = V.isSummary ? V.sumBorder : 'rgba(30,36,32,.08)';
 
   return (
