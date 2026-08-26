@@ -44,7 +44,7 @@ export function renderPcuField(V, o) {
           value={V.pcuSite || ''}
           onChange={V.onPcuSite}
           aria-label="เลือก รพ.สต. ต้นทาง"
-          style={sx('width:100%;box-sizing:border-box;height:42px;padding:0 10px;border-radius:9px;background:#fff;font:600 14.5px Sarabun,sans-serif;cursor:pointer', {
+          style={sx('width:100%;box-sizing:border-box;height:42px;padding:0 10px;border-radius:9px;background-color:#fff;font:600 14.5px Sarabun,sans-serif;cursor:pointer', {
             border: '1px solid ' + (has ? 'rgba(30,36,32,.16)' : 'rgba(194,84,60,.55)'),
             color: has ? '#1e2420' : '#6b746e',
             height: opt.tall ? '44px' : '42px'

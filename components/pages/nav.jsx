@@ -52,7 +52,12 @@ export function renderNavWide(V) {
         </div>
       </div>
       <div style={s('display:flex;align-items:center;gap:12px')}>
-        <span style={s("font:500 13px Sarabun,sans-serif;color:#6b746e;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{V.dateLabel} · {V.orgName}</span>
+        {/* 🚨 ชื่อหน่วยงานเต็มยศยาว 72 ตัวอักษร แถบบนเดิมกว้าง 420px จึงตัดด้วย ...
+            พี่กันทัก 26 ส.ค. 2569 ว่า "ทำไมมี ..." — ขยายเป็น 620px แล้วลดขนาดลงนิด
+            ยังตัดอยู่บนจอแคบ แต่บนจอห้องยา 1360px ขึ้นไปจะเห็นครบทั้งชื่อ
+            เอาเมาส์ชี้เห็นชื่อเต็มได้ทุกกรณี */}
+        <span title={V.dateLabel + ' · ' + V.orgName}
+          style={s("font:500 12px Sarabun,sans-serif;color:#6b746e;max-width:620px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap")}>{V.dateLabel} · {V.orgName}</span>
 
         {/* สวิตช์มุมมอง คอม/มือถือ — ย้ายจากกล่องลอยมุมล่างซ้ายมาอยู่แถบบน (พี่กันสั่ง)
             ของเดิมลอยทับปุ่มในตาราง กดไม่ได้ */}

@@ -1,8 +1,72 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ฟอนต์ TH Sarabun New — ฟอนต์มาตรฐานหนังสือราชการไทย
+   ═══════════════════════════════════════════════════════════════════════════
+
+   พี่กันส่งไฟล์ฟอนต์มาให้เอง 26 ส.ค. 2569 แล้วสั่ง
+   "เธอแปลงฟอนต์ให้ขนาดลดลง แล้วฝังได้นี่นา แล้วใช้ทั้งเว็บเป็นฟอนต์นี้ได้นี่นา"
+
+   แปลงจาก .ttf เป็น .woff2 แล้ว — 1,033 KB เหลือ 296 KB (เล็กลง 71%)
+   ไฟล์อยู่ที่ public/fonts/ เสิร์ฟจากเว็บเราเอง ไม่ได้ลิงก์จากที่อื่น
+
+   🚨 TH Sarabun New มีแค่ 2 น้ำหนักจริง คือธรรมดา (400) กับหนา (700)
+      แต่เว็บนี้ใช้ตั้งแต่ 300 ถึง 700 · ถ้าไม่บอกช่วงน้ำหนักให้เบราว์เซอร์
+      มันจะ "ปลอม" ตัวหนาขึ้นมาเองด้วยการถมเส้นให้อ้วน ซึ่งดูเละกับฟอนต์ไทย
+      จึงบอกช่วงไว้ว่า 100-550 ใช้ตัวธรรมดา · 551-900 ใช้ตัวหนา
+      เบราว์เซอร์จะได้เลือกไฟล์จริงเสมอ ไม่ต้องปลอมสักน้ำหนัก
+
+   🚨 size-adjust สำคัญมาก — TH Sarabun New ตัวเล็กกว่าฟอนต์อื่นที่ขนาดเท่ากัน
+      (เป็นเหตุผลที่หนังสือราชการกำหนดขนาด 16 พอยต์ ทั้งที่เอกสารทั่วไปใช้ 11-12)
+      ถ้าไม่ชดเชย ตัวหนังสือทั้งเว็บจะเล็กลงทันทีทุกจุดโดยไม่ได้ตั้งใจ
+      ค่านี้วัดเทียบในเบราว์เซอร์จริงแล้ว ห้ามเดา — วัดความกว้างข้อความเดียวกัน
+      ระหว่าง TH Sarabun New กับ Sarabun เดิม แล้วปรับจนได้เท่ากัน (151%) */
+
+@font-face {
+  font-family: "TH Sarabun New";
+  src: url("/fonts/THSarabunNew-Regular.woff2") format("woff2");
+  font-weight: 100 550;
+  font-style: normal;
+  font-display: swap;
+  size-adjust: 151%;
+}
+@font-face {
+  font-family: "TH Sarabun New";
+  src: url("/fonts/THSarabunNew-Bold.woff2") format("woff2");
+  font-weight: 551 900;
+  font-style: normal;
+  font-display: swap;
+  size-adjust: 151%;
+}
+@font-face {
+  font-family: "TH Sarabun New";
+  src: url("/fonts/THSarabunNew-Italic.woff2") format("woff2");
+  font-weight: 100 550;
+  font-style: italic;
+  font-display: swap;
+  size-adjust: 151%;
+}
+@font-face {
+  font-family: "TH Sarabun New";
+  src: url("/fonts/THSarabunNew-BoldItalic.woff2") format("woff2");
+  font-weight: 551 900;
+  font-style: italic;
+  font-display: swap;
+  size-adjust: 151%;
+}
+
 /* คัดจากมอคอัปต้นฉบับ (Med Return App.dc.html บรรทัด 15–19) ตัวต่อตัว
    เปลี่ยนแค่ชื่อฟอนต์ให้ชี้ไปฟอนต์ที่ฝังไว้ตอน build (next/font) แทนการโหลดจาก Google ตอนใช้งาน */
 *{-webkit-tap-highlight-color:transparent;box-sizing:border-box}
-body{margin:0;background:#f6f7f4;font-family:var(--font-sarabun),Sarabun,system-ui,sans-serif;color:#1e2420}
+body{margin:0;background:#f6f7f4;font-family:"TH Sarabun New",var(--font-sarabun),Sarabun,system-ui,sans-serif;color:#1e2420}
 a{color:#2f7d5d}a:hover{color:#24614a}
+/* ── ลูกศรของช่องเลือกต้องเหมือนกันทุกช่องในเว็บ (พี่กันทัก 2 รอบ 26 ส.ค. 2569) ──
+   เบราว์เซอร์วาดลูกศรของ <select> เองด้วยรูปแบบของระบบ ซึ่งต่างกันระหว่าง
+   วินโดวส์ แมค และมือถือ · และไม่มีวันเหมือนลูกศรที่เราวาดเองในเมนูทำเอง
+   จึงปิดของระบบทิ้ง แล้ววาดเองด้วยรูปเดียวกันทุกที่ — ฝังเป็นรูปในสไตล์ ไม่ต้องโหลดไฟล์เพิ่ม
+   🚨 ต้องใช้ background-color แยกจาก background-image ในที่ที่กำหนดสีพื้นเอง
+      ถ้าเขียน background ย่อ จะไปล้างรูปลูกศรทิ้ง */
+select{-webkit-appearance:none;-moz-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2715%27 height=%2715%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23414a44%27 stroke-width=%272.2%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M6 9.5 12 15.5 18 9.5%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:34px}
+
 input{font-family:inherit}input:focus{outline:none}::placeholder{color:#6b746e;opacity:1}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(30,36,32,.18);border-radius:9px}
 
@@ -84,23 +148,20 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
    และเบราว์เซอร์บางตัวบล็อกหน้าต่างที่เปิดเอง = พิมพ์ไม่ออกโดยไม่มีอะไรเตือน */
 @media print {
   /* ═══════════════════════════════════════════════════════════════════════
-     พิมพ์เฉพาะใบสรุป Lot เท่านั้น
+     ใบสรุป Lot ตอนพิมพ์ — เอกสารราชการไทย ขาวดำ ฟอนต์ TH Sarabun New
      ═══════════════════════════════════════════════════════════════════════
 
-     🚨 เขียนใหม่ 26 ส.ค. 2569 — พี่กันกด Ctrl+P แล้วได้หน้าเว็บทั้งหน้าออกมา
-        แทนที่จะได้ใบสรุป (มีปุ่ม "แก้ไข" "ดูรายการ" "ใบสรุป" ติดไปในกระดาษด้วย)
+     🚨 พี่กันทัก 26 ส.ค. 2569: "ทางการแล้วเหรอ ทางการเขามีสีเหรอ
+        และต้องใช้ th sarabun new ไม่ใช่ของ google"
 
-     ของเดิมใช้ท่า  body > * { display:none }  แล้วเปิดเฉพาะสายที่มี .slip-sheet
-     ด้วยตัวเลือก :has() ซึ่งพึ่งพาสองอย่าง — เบราว์เซอร์ต้องรองรับ :has()
-     และเนื้อหาต้องเป็นลูกชั้นแรกของ body พอดี ถ้าเครื่องมือสร้างเว็บห่อชั้นเพิ่ม
-     หรือมีสคริปต์แทรก div เข้ามา ตัวเลือกจะไม่ตรงแล้วทุกอย่างโผล่ออกมาหมด
+     ถูกต้องทั้งสองข้อ — หนังสือราชการไทยกำหนดให้ใช้ฟอนต์ TH Sarabun New
+     (หรือ TH SarabunPSK ซึ่งเป็นตัวเดียวกัน) และเป็นเอกสารขาวดำ
+     ตรวจในเครื่องแล้วมีฟอนต์นี้อยู่ จึงไม่ต้องฝังไฟล์เพิ่ม
 
-     ท่าใหม่ใช้ visibility แทน — ซ่อนทั้งหน้าก่อน แล้วเปิดเฉพาะใบกับลูกหลานของมัน
-     ไม่พึ่ง :has() ไม่สนใจว่าใบถูกห่ออยู่ลึกกี่ชั้น ทำงานเหมือนกันทุกเบราว์เซอร์
-
-     ⚠️ visibility ต่างจาก display ตรงที่ของที่ถูกซ่อนยัง "กินที่" อยู่
-        จึงต้องดึงใบออกมาวางมุมบนซ้ายด้วย position:absolute ไม่งั้นจะได้
-        กระดาษเปล่านำหน้าหลายหน้าตามความสูงของเนื้อหาที่ซ่อนไว้ */
+     ⚠️ ขัดกับกฎเดิมของโปรเจกต์ที่เขียนไว้ว่า "บังคับพิมพ์สี ไม่งั้นแยกไม่ออกว่า
+        อันไหนใช้ต่อ อันไหนทำลาย" — แก้โดยไม่พึ่งสีเลย ใช้ข้อความกับตัวหนาแทน
+        คอลัมน์สถานะเขียนว่า "ใช้ต่อได้" หรือ "ทำลาย" ตรง ๆ อยู่แล้ว อ่านออกโดยไม่ต้องมีสี
+        (สีบนหน้าจอยังอยู่ครบเหมือนเดิม ตัดเฉพาะตอนพิมพ์) */
 
   body * { visibility: hidden !important; }
   .slip-sheet, .slip-sheet * { visibility: visible !important; }
@@ -123,12 +184,27 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
     box-shadow: none !important;
   }
 
+  /* 🚨 ฟอนต์ราชการ + ขาวดำล้วน — ทับสีทุกจุดที่เขียนไว้ในแท็ก
+     ตัวเลขในตารางต้องเรียงหลักตรงกัน จึงคง tabular-nums ไว้ */
+  .slip-sheet, .slip-sheet * {
+    font-family: "TH Sarabun New", "TH SarabunPSK", Sarabun, sans-serif !important;
+    color: #000 !important;
+    background: transparent !important;
+  }
+
+  /* หนังสือราชการใช้ตัวขนาด 16 พอยต์เป็นมาตรฐาน
+     TH Sarabun New ตัวเล็กกว่าฟอนต์อื่นที่ขนาดเท่ากัน จึงต้องตั้งใหญ่กว่าบนจอ */
+  .slip-sheet { font-size: 16pt !important; line-height: 1.35 !important; }
+  .slip-sheet table { font-size: 15pt !important; }
+
+  /* เส้นตารางกับเส้นคั่นเป็นสีดำบาง ๆ ทั้งหมด */
+  .slip-sheet table th,
+  .slip-sheet table td { border-bottom: 1px solid #000 !important; }
+  .slip-sheet [style*="border-bottom"] { border-bottom-color: #000 !important; }
+  .slip-sheet [style*="border-top"] { border-top-color: #000 !important; }
+
   /* แถบหัวที่มีปุ่มพิมพ์ ปุ่มบันทึก PDF และปุ่มปิด ไม่ต้องติดไปในกระดาษ */
   .slip-hide { display: none !important; }
-
-  /* บังคับให้พิมพ์สีตามที่เห็นบนจอ — ไม่งั้นเส้นเขียวกับตัวเลขแดงหายหมด
-     กลายเป็นใบขาวดำที่แยกไม่ออกว่าอันไหนใช้ต่อ อันไหนทำลาย */
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
   /* ห้ามตัดแถวกลางคัน — ครึ่งบรรทัดอยู่หน้าหนึ่ง อีกครึ่งอยู่อีกหน้า อ่านไม่รู้เรื่อง */
   tr, td, th { break-inside: avoid; }
@@ -140,5 +216,6 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
   /* ช่องลงนามห้ามตกไปอยู่หน้าใหม่ลำพัง — ต้องอยู่กับยอดรวมเสมอ */
   .slip-sign { break-inside: avoid; }
 
-  @page { margin: 14mm 12mm; }
+  /* ระยะขอบกระดาษตามระเบียบงานสารบรรณ — บน 2.5 ซม. ที่เหลือ 2 ซม. */
+  @page { margin: 25mm 20mm 20mm; }
 }

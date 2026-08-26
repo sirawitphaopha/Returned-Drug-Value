@@ -123,7 +123,7 @@ export function renderRecordNarrow(V) {
                   ใช้ padding-bottom แทนการเพิ่มระยะบรรทัด เพราะระยะบรรทัดดันตัวอักษรลงด้วย
                   ทำให้ชื่อไม่อยู่กลางแถบ ส่วน padding ดันเฉพาะของที่อยู่ข้างล่าง */}
               <div style={s('font:700 18px/1.95 Charmonman,cursive')}>มูลค่ายาคืน</div>
-              <div style={s('font:400 11.5px/1.2 Sarabun,sans-serif;color:#6b746e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px')}>{V.orgName}</div>
+              <div title={V.orgName} style={s('font:400 11.5px/1.2 Sarabun,sans-serif;color:#6b746e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px')}>{V.orgName}</div>
             </div>
           </div>
           <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
@@ -242,6 +242,12 @@ export function renderRecordNarrow(V) {
               <div {...kb(row.edit)} style={s('min-width:0;cursor:pointer;margin-bottom:7px')}>
                 <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif;overflow-wrap:anywhere')}>{row.name}</div>
                 <div style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums')}>{row.detail}</div>
+                {/* เหตุผลที่ทำลาย — ที่เดียวกับฝั่งคอม ใต้ชื่อยา (พี่กันถาม 26 ส.ค. 2569) */}
+                {row.reasonLabel && (
+                  <div style={s('font:500 11px/1.45 Sarabun,sans-serif;color:#c2543c;margin-top:3px')}>
+                    เหตุผล: {row.reasonLabel}
+                  </div>
+                )}
               </div>
               <div style={s('display:flex;align-items:center;justify-content:space-between;gap:8px')}>
                 <div style={sx('display:flex;padding:2px;border-radius:7px;flex:none', { background: row.pillBg })}>
@@ -456,6 +462,13 @@ export function renderRecordWide(V) {
                   (พี่กันสั่ง 25 ส.ค. 2569) ยาฉีดกับยากินจะได้แยกออกตั้งแต่กวาดตา */}
               <span style={s('flex:1;min-width:0')}>
                 {renderDrugName(row.np, { size: '14px' })}
+                {/* เหตุผลที่ทำลาย — ตัวเล็กสีแดงอิฐใต้ชื่อยา เห็นได้โดยไม่ต้องเปิดอะไรเพิ่ม
+                    ไม่มีเหตุผลก็ไม่มีบรรทัดนี้ แถวที่ใช้ต่อได้จึงหน้าตาเหมือนเดิมทุกประการ */}
+                {row.reasonLabel && (
+                  <div style={s('font:500 11.5px/1.5 Sarabun,sans-serif;color:#c2543c;margin-top:2px')}>
+                    เหตุผล: {row.reasonLabel}
+                  </div>
+                )}
               </span>
 
               {/* จำนวนแก้ได้ทั้งที่กด Enter ลงมาแล้ว — มีปุ่มดินสอบอกชัด ๆ ว่ากดแก้ได้

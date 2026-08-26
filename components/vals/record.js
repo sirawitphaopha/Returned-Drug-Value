@@ -574,6 +574,11 @@ export function recordVals(app, d) {
         reuseFg: reuse ? '#2f7d5d' : '#c9a096',
         destroyBg: reuse ? 'transparent' : '#fff',
         destroyFg: reuse ? '#9aa19c' : '#c2543c',
+        // เหตุผลที่ทำลาย — โผล่ใต้ชื่อยาเฉพาะแถวที่ทำลาย (พี่กันถาม 26 ส.ค. 2569
+        // ว่า "เหตุผลจะขึ้นที่ไหน มันควรแสดงไหม แต่แสดงยังไงดี")
+        // 🚨 ไม่เพิ่มคอลัมน์ใหม่ — ตารางมี 7 คอลัมน์แล้วและพี่กันสั่งห้ามตัด HN ออก
+        //    วางเป็นบรรทัดที่สองใต้ชื่อยาแทน ซึ่งเป็นที่เดียวที่ยังมีที่เหลือจริง
+        reasonLabel: r.disposition === 'destroy' ? (r.reason || '') : '',
         setReuse: setRowDisp(r.rid, 'reuse'),
         setDestroy: setRowDisp(r.rid, 'destroy'),
         // ราคาที่โชว์ในป๊อปอัปต้องเป็นราคาของแถวนั้น ไม่ใช่ราคาปัจจุบันของยา
