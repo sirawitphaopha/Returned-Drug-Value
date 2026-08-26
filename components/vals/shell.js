@@ -84,6 +84,8 @@ export function shellVals(app, d) {
 
     toastOpen: !!st.toast,
     closeToast: app.closeToast,
+    // ปุ่มปิดโผล่เฉพาะข้อความผิดพลาด — ข้อความสำเร็จหายเองไม่ต้องมีปุ่ม
+    toastClosable: !!(st.toast && st.toast.ok === false),
     toastText: st.toast ? st.toast.text : '',
     toastValue: st.toast ? st.toast.value : '',
     toastIcon: st.toast && st.toast.ok ? '✓' : '!',

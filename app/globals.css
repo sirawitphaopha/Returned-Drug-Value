@@ -14,11 +14,14 @@
       จึงบอกช่วงไว้ว่า 100-550 ใช้ตัวธรรมดา · 551-900 ใช้ตัวหนา
       เบราว์เซอร์จะได้เลือกไฟล์จริงเสมอ ไม่ต้องปลอมสักน้ำหนัก
 
-   🚨 size-adjust สำคัญมาก — TH Sarabun New ตัวเล็กกว่าฟอนต์อื่นที่ขนาดเท่ากัน
-      (เป็นเหตุผลที่หนังสือราชการกำหนดขนาด 16 พอยต์ ทั้งที่เอกสารทั่วไปใช้ 11-12)
-      ถ้าไม่ชดเชย ตัวหนังสือทั้งเว็บจะเล็กลงทันทีทุกจุดโดยไม่ได้ตั้งใจ
-      ค่านี้วัดเทียบในเบราว์เซอร์จริงแล้ว ห้ามเดา — วัดความกว้างข้อความเดียวกัน
-      ระหว่าง TH Sarabun New กับ Sarabun เดิม แล้วปรับจนได้เท่ากัน (151%) */
+   🚨 ฟอนต์นี้ใช้เฉพาะตอนพิมพ์เอกสารเท่านั้น ไม่ได้ใช้บนหน้าจอ
+      พี่กันเคาะ 26 ส.ค. 2569 หลังลองใช้ทั้งเว็บแล้วถอยกลับ
+      "หน้าเว็บทั้งหมด เอากลับเป็น Sarabun ส่วน Sarabun New จะฝังใน PDF แค่จุดเดียว"
+
+   🚨 ห้ามใส่ size-adjust — เคยใส่ 151% ไว้ตอนใช้ทั้งเว็บเพื่อชดเชยว่าฟอนต์นี้ตัวเล็ก
+      (เป็นเหตุผลที่หนังสือราชการกำหนด 16 พอยต์ ทั้งที่เอกสารทั่วไปใช้ 11-12)
+      แต่ตอนพิมพ์เราตั้ง 16 พอยต์ตามมาตรฐานอยู่แล้ว ถ้าคงไว้จะกลายเป็น
+      16 คูณ 1.51 = ตัวใหญ่เกินจริงบนกระดาษ */
 
 @font-face {
   font-family: "TH Sarabun New";
@@ -26,7 +29,6 @@
   font-weight: 100 550;
   font-style: normal;
   font-display: swap;
-  size-adjust: 151%;
 }
 @font-face {
   font-family: "TH Sarabun New";
@@ -34,7 +36,6 @@
   font-weight: 551 900;
   font-style: normal;
   font-display: swap;
-  size-adjust: 151%;
 }
 @font-face {
   font-family: "TH Sarabun New";
@@ -42,7 +43,6 @@
   font-weight: 100 550;
   font-style: italic;
   font-display: swap;
-  size-adjust: 151%;
 }
 @font-face {
   font-family: "TH Sarabun New";
@@ -50,13 +50,12 @@
   font-weight: 551 900;
   font-style: italic;
   font-display: swap;
-  size-adjust: 151%;
 }
 
 /* คัดจากมอคอัปต้นฉบับ (Med Return App.dc.html บรรทัด 15–19) ตัวต่อตัว
    เปลี่ยนแค่ชื่อฟอนต์ให้ชี้ไปฟอนต์ที่ฝังไว้ตอน build (next/font) แทนการโหลดจาก Google ตอนใช้งาน */
 *{-webkit-tap-highlight-color:transparent;box-sizing:border-box}
-body{margin:0;background:#f6f7f4;font-family:"TH Sarabun New",var(--font-sarabun),Sarabun,system-ui,sans-serif;color:#1e2420}
+body{margin:0;background:#f6f7f4;font-family:var(--font-sarabun),Sarabun,system-ui,sans-serif;color:#1e2420}
 a{color:#2f7d5d}a:hover{color:#24614a}
 /* ── ลูกศรของช่องเลือกต้องเหมือนกันทุกช่องในเว็บ (พี่กันทัก 2 รอบ 26 ส.ค. 2569) ──
    เบราว์เซอร์วาดลูกศรของ <select> เองด้วยรูปแบบของระบบ ซึ่งต่างกันระหว่าง

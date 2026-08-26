@@ -99,6 +99,8 @@ export function lotsVals(app, d) {
       hn: r.hn || '—'
     })),
     slipCountLabel: slipRows.length.toLocaleString('en-US') + ' รายการ',
+    // แหล่งที่มาแบบเต็มสำหรับหัวเอกสาร — รวมชื่อ รพ.สต. ไว้ในบรรทัดเดียว
+    slipSrcLabel: slip ? (srcLabel(slip.src) + (slip.src === 'pcu' && slip.pcuSite ? ' (' + slip.pcuSite + ')' : '')) : '',
     slipSavedLabel: money(slipSaved),
     slipLostLabel: money(slipLost),
     slipHasLost: slipLost > 0,

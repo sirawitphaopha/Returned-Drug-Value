@@ -93,9 +93,28 @@ export function renderLots(V) {
 //    (คลาส .slip-sheet กับ .slip-hide) ไม่งั้นได้เมนูกับปุ่มติดไปเต็มกระดาษ
 export function renderLotSlip(V) {
   if (!V.slipOpen) return null;
+
+  // ── สไตล์ตารางแบบเอกสารราชการ ────────────────────────────────────────────
+  //
+  // พี่กันทัก 26 ส.ค. 2569: "เอกสารราชการ ใช้ตารางแบบนี้เหรอ"
+  // แล้วสั่ง "เอกสารอ่ะ วาดใหม่ จัดเรียงใหม่เลย ส่วนในเว็บก็ทำตารางคล้าย ๆ กันด้วย
+  //          เฉพาะหน้าแสดง ตารางอื่นในเว็บห้ามแตะ"
+  //
+  // ตารางในเอกสารราชการไทยมี "เส้นกรอบครบทุกด้าน" ทุกช่อง ไม่ใช่เส้นใต้อย่างเดียว
+  // แบบเส้นใต้เป็นสไตล์เว็บสมัยใหม่ ซึ่งดูไม่เป็นเอกสารเมื่อพิมพ์ลงกระดาษ
+  //
+  // 🚨 ตารางนี้ใช้เฉพาะในใบสรุป — ตารางหน้าบันทึก ประวัติ คลังยา ห้ามแตะ (พี่กันสั่ง)
+  const LINE = '1px solid #1e2420';
+  const TH = 'border:' + LINE + ';padding:6px 7px;font:700 12.5px Sarabun,sans-serif;background:#eef1ee;text-align:center';
+  const TD = 'border:' + LINE + ';padding:6px 7px;font:400 12.5px Sarabun,sans-serif';
+  const NUM = TD + ';text-align:right;font-variant-numeric:tabular-nums';
+  const MID = TD + ';text-align:center';
+  // แถวยอดรวมอยู่ในตารางเลย ไม่ลอยข้างนอก — เอกสารราชการนับยอดในกรอบเดียวกับข้อมูล
+  const SUM = 'border:' + LINE + ';padding:7px;font:700 13px Sarabun,sans-serif;background:#f6f7f4';
+
   return (
     <div className="slip-backdrop" role="dialog" aria-modal="true" style={s('position:fixed;inset:0;z-index:60;background:rgba(30,36,32,.45);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto')}>
-      <div className="slip-sheet" style={s('width:100%;max-width:720px;background:#fff;border-radius:14px;overflow:hidden')}>
+      <div className="slip-sheet" style={s('width:100%;max-width:760px;background:#fff;border-radius:14px;overflow:hidden')}>
 
         <div className="slip-hide" style={s('display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid rgba(30,36,32,.1);background:#f6f7f4')}>
           <div style={s('font:700 15px Sarabun,sans-serif;flex:1;min-width:0')}>ใบสรุป Lot</div>
@@ -117,103 +136,127 @@ export function renderLotSlip(V) {
           <div {...kb(V.closeLotSlip)} aria-label="ปิดใบสรุป" className="hv-bg-f6" style={s('width:36px;height:36px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>✕</div>
         </div>
 
-        <div style={s('padding:22px 26px 26px')}>
-          {/* ── หัวกระดาษแบบเอกสารราชการ ──────────────────────────────────
-              ชื่อหน่วยงานอยู่บนสุดกึ่งกลาง แล้วชื่อเอกสารตัวใหญ่ใต้ลงมา
-              เป็นรูปแบบเดียวกับเอกสารอื่นของโรงพยาบาล เอาเข้าแฟ้มแล้วเข้าชุดกัน */}
-          <div style={s('text-align:center;padding-bottom:10px')}>
-            <div style={s('font:600 13px/1.5 Sarabun,sans-serif;color:#414a44;overflow-wrap:anywhere')}>{V.slipOrg}</div>
-            <div role="heading" aria-level="1" style={s('font:700 21px/1.35 Sarabun,sans-serif;margin-top:3px')}>ใบสรุปรายการยาคืน</div>
+        <div style={s('padding:26px 30px 30px')}>
+
+          {/* ── ส่วนหัว ────────────────────────────────────────────────────────
+              ชื่อหน่วยงานบนสุด แล้วชื่อเอกสารตัวใหญ่ ทั้งคู่จัดกึ่งกลาง
+              เป็นรูปแบบเดียวกับหนังสือราชการทั่วไป เอาเข้าแฟ้มแล้วเข้าชุดกัน */}
+          <div style={s('text-align:center;margin-bottom:16px')}>
+            <div style={s('font:600 13.5px/1.55 Sarabun,sans-serif;color:#1e2420;overflow-wrap:anywhere')}>{V.slipOrg}</div>
+            <div role="heading" aria-level="1" style={s('font:700 20px/1.4 Sarabun,sans-serif;margin-top:4px')}>ใบสรุปรายการยาคืน</div>
           </div>
 
-          <div style={s('display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;padding-bottom:10px;border-bottom:2px solid #2f7d5d')}>
-            <div style={s('font:400 12px/1.7 Sarabun,sans-serif;color:#414a44')}>
-              <div>เลขที่เอกสาร <b style={s('color:#1e2420')}>{V.slipDocNo}</b></div>
-              <div>วันที่รับคืน <b style={s('color:#1e2420')}>{V.slipDate}</b></div>
-            </div>
-            <div style={s('text-align:right;font:400 12px/1.7 Sarabun,sans-serif;color:#414a44')}>
-              <div style={s("font:700 17px Sarabun,sans-serif;color:#2f7d5d")}>{V.slipLot}</div>
-              {/* วันเวลาที่พิมพ์ — โผล่เฉพาะตอนสั่งพิมพ์จริง ไม่รกจอตอนดูบนหน้าจอ */}
-              {V.slipPrintedAt && <div>พิมพ์เมื่อ {V.slipPrintedAt}</div>}
-            </div>
-          </div>
-
-          <div style={s('display:flex;gap:22px;flex-wrap:wrap;padding:10px 0 12px;font:400 12px Sarabun,sans-serif;color:#414a44')}>
-            <span>ผู้บันทึก: <b>{V.slipBy}</b></span>
-            {V.slipSite && <span>รพ.สต.: <b>{V.slipSite}</b></span>}
-            <span>จำนวน: <b>{V.slipCountLabel}</b></span>
-          </div>
+          {/* ── ตารางข้อมูลหัวเรื่อง ────────────────────────────────────────────
+              🚨 เอกสารราชการใส่ข้อมูลหัวเรื่องในตารางเหมือนกัน ไม่ปล่อยเป็นข้อความลอย
+                 เพื่อให้ตำแหน่งของแต่ละช่องคงที่ ตรวจสอบย้อนหลังได้ว่าอะไรอยู่ตรงไหน */}
+          <table style={s('width:100%;border-collapse:collapse;margin-bottom:14px')}>
+            <tbody>
+              <tr>
+                <td style={s(TD + ';width:110px;background:#f6f7f4;font-weight:600')}>เลขที่เอกสาร</td>
+                <td style={s(TD)}>{V.slipDocNo}</td>
+                <td style={s(TD + ';width:110px;background:#f6f7f4;font-weight:600')}>เลข Lot</td>
+                <td style={s(TD + ';font-weight:600')}>{V.slipLot}</td>
+              </tr>
+              <tr>
+                <td style={s(TD + ';background:#f6f7f4;font-weight:600')}>วันที่รับคืน</td>
+                <td style={s(TD)}>{V.slipDate}</td>
+                <td style={s(TD + ';background:#f6f7f4;font-weight:600')}>แหล่งที่มา</td>
+                <td style={s(TD)}>{V.slipSrcLabel}</td>
+              </tr>
+              <tr>
+                <td style={s(TD + ';background:#f6f7f4;font-weight:600')}>ผู้บันทึก</td>
+                <td style={s(TD)}>{V.slipBy}</td>
+                <td style={s(TD + ';background:#f6f7f4;font-weight:600')}>จำนวนรายการ</td>
+                <td style={s(TD)}>{V.slipCountLabel}</td>
+              </tr>
+            </tbody>
+          </table>
 
           {V.slipLoading && (
             <div style={s('text-align:center;padding:30px;font:400 13px Sarabun,sans-serif;color:#6b746e')}>กำลังโหลดรายการยา</div>
           )}
 
+          {/* ── ตารางรายการยา ─────────────────────────────────────────────────
+              เส้นกรอบครบทุกช่อง หัวตารางพื้นเทาจัดกึ่งกลาง ตามแบบเอกสารราชการ
+              🚨 ยอดรวมอยู่ในตารางเป็นแถวสุดท้าย ไม่ลอยอยู่ข้างนอกแบบเดิม */}
           {!V.slipLoading && (
-            <table style={s('width:100%;border-collapse:collapse;font:400 12.5px Sarabun,sans-serif')}>
+            <table style={s('width:100%;border-collapse:collapse')}>
               <thead>
                 <tr>
-                  <th style={s('text-align:left;padding:7px 6px;border-bottom:1px solid rgba(30,36,32,.18);font-weight:600;width:28px')}>#</th>
-                  <th style={s('text-align:left;padding:7px 6px;border-bottom:1px solid rgba(30,36,32,.18);font-weight:600')}>รายการยา</th>
-                  <th style={s('text-align:left;padding:7px 6px;border-bottom:1px solid rgba(30,36,32,.18);font-weight:600;width:80px')}>HN</th>
-                  <th style={s('text-align:right;padding:7px 6px;border-bottom:1px solid rgba(30,36,32,.18);font-weight:600;width:92px')}>จำนวน</th>
-                  <th style={s('text-align:right;padding:7px 6px;border-bottom:1px solid rgba(30,36,32,.18);font-weight:600;width:80px')}>ราคา/หน่วย</th>
-                  <th style={s('text-align:right;padding:7px 6px;border-bottom:1px solid rgba(30,36,32,.18);font-weight:600;width:88px')}>มูลค่า</th>
-                  <th style={s('text-align:right;padding:7px 6px;border-bottom:1px solid rgba(30,36,32,.18);font-weight:600;width:60px')}>สถานะ</th>
+                  <th style={s(TH + ';width:34px')}>ที่</th>
+                  <th style={s(TH)}>รายการยา</th>
+                  <th style={s(TH + ';width:76px')}>HN</th>
+                  <th style={s(TH + ';width:88px')}>จำนวน</th>
+                  <th style={s(TH + ';width:78px')}>ราคา/หน่วย</th>
+                  <th style={s(TH + ';width:88px')}>มูลค่า</th>
+                  <th style={s(TH + ';width:74px')}>สถานะ</th>
                 </tr>
               </thead>
               <tbody>
                 {V.slipRows.map((r) => (
                   <tr key={r.key}>
-                    <td style={s('padding:6px;border-bottom:1px solid rgba(30,36,32,.07);color:#9aa19c')}>{r.no}</td>
-                    <td style={s('padding:6px;border-bottom:1px solid rgba(30,36,32,.07);overflow-wrap:anywhere')}>{r.name}</td>
-                    <td style={s('padding:6px;border-bottom:1px solid rgba(30,36,32,.07);color:#6b746e')}>{r.hn}</td>
-                    <td style={s("padding:6px;border-bottom:1px solid rgba(30,36,32,.07);text-align:right;font-family:var(--font-plex),Sarabun,sans-serif;font-variant-numeric:tabular-nums")}>{r.qtyLabel}</td>
-                    <td style={s("padding:6px;border-bottom:1px solid rgba(30,36,32,.07);text-align:right;font-family:var(--font-plex),Sarabun,sans-serif;font-variant-numeric:tabular-nums;color:#6b746e")}>{r.priceLabel}</td>
-                    <td style={s("padding:6px;border-bottom:1px solid rgba(30,36,32,.07);text-align:right;font-family:var(--font-plex),Sarabun,sans-serif;font-variant-numeric:tabular-nums;font-weight:600")}>{r.valueLabel}</td>
-                    <td style={sx('padding:6px;border-bottom:1px solid rgba(30,36,32,.07);text-align:right;font-weight:600', { color: r.dispColor })}>{r.dispLabel}</td>
+                    <td style={s(MID + ';color:#6b746e')}>{r.no}</td>
+                    <td style={s(TD + ';overflow-wrap:anywhere')}>{r.name}</td>
+                    <td style={s(MID + ';color:#414a44')}>{r.hn}</td>
+                    <td style={s(NUM)}>{r.qtyLabel}</td>
+                    <td style={s(NUM + ';color:#414a44')}>{r.priceLabel}</td>
+                    <td style={s(NUM + ';font-weight:600')}>{r.valueLabel}</td>
+                    <td style={sx(MID + ';font-weight:600', { color: r.dispColor })}>{r.dispLabel}</td>
                   </tr>
                 ))}
+
+                {/* แถวยอดรวม — อยู่ในกรอบตารางเดียวกับข้อมูล */}
+                <tr>
+                  <td colSpan="5" style={s(SUM + ';text-align:right')}>รวมมูลค่ายาที่ใช้ต่อได้</td>
+                  <td style={s(SUM + ';text-align:right;font-variant-numeric:tabular-nums')}>{V.slipSavedLabel}</td>
+                  <td style={s(SUM)}></td>
+                </tr>
+                {V.slipHasLost && (
+                  <tr>
+                    <td colSpan="5" style={s(SUM + ';text-align:right')}>รวมมูลค่ายาที่ต้องทำลาย</td>
+                    <td style={s(SUM + ';text-align:right;font-variant-numeric:tabular-nums')}>{V.slipLostLabel}</td>
+                    <td style={s(SUM)}></td>
+                  </tr>
+                )}
+                <tr>
+                  <td colSpan="5" style={s(SUM + ';text-align:right;background:#e7f2ec')}>รวมทั้งสิ้น</td>
+                  <td style={s(SUM + ';text-align:right;background:#e7f2ec;font-variant-numeric:tabular-nums')}>{V.slipTotalLabel}</td>
+                  <td style={s(SUM + ';background:#e7f2ec')}></td>
+                </tr>
               </tbody>
             </table>
           )}
 
-          <div style={s('display:flex;justify-content:flex-end;gap:26px;padding-top:12px;margin-top:4px;border-top:2px solid #2f7d5d;font:400 12.5px Sarabun,sans-serif')}>
-            <div style={s('text-align:right')}>
-              <div style={s('color:#6b746e')}>ใช้ต่อได้</div>
-              <div style={s("font:700 15px Sarabun,sans-serif;color:#2f7d5d")}>{V.slipSavedLabel}</div>
+          {/* วันเวลาที่พิมพ์ — โผล่เฉพาะตอนสั่งพิมพ์จริง ไม่รกจอตอนดูบนหน้าจอ
+              ผู้ตรวจสอบต้องรู้ว่าใบในมือพิมพ์เมื่อไร เพราะยอดเปลี่ยนได้ถ้ามีคนแก้ล็อตย้อนหลัง */}
+          {V.slipPrintedAt && (
+            <div style={s('font:400 11.5px Sarabun,sans-serif;color:#414a44;margin-top:8px;text-align:right')}>
+              พิมพ์เมื่อ {V.slipPrintedAt}
             </div>
-            {V.slipHasLost && (
-              <div style={s('text-align:right')}>
-                <div style={s('color:#6b746e')}>ทำลาย</div>
-                <div style={s("font:700 15px Sarabun,sans-serif;color:#c2543c")}>{V.slipLostLabel}</div>
-              </div>
-            )}
-            <div style={s('text-align:right')}>
-              <div style={s('color:#6b746e')}>รวมทั้งหมด</div>
-              <div style={s("font:700 15px Sarabun,sans-serif")}>{V.slipTotalLabel}</div>
-            </div>
-          </div>
+          )}
 
           {/* ── ช่องลงนาม 3 ฝ่าย ─────────────────────────────────────────────
-              ใบนี้ใช้เป็นหลักฐานในแฟ้มได้ · เอกสารยาคืนของโรงพยาบาลต้องมีทั้ง
-              คนที่ส่งมอบยา คนที่รับเข้าห้องยา และหัวหน้าที่ตรวจสอบยอด
-              🚨 ห้ามยุบเหลือ 2 ช่อง — ผู้บันทึกกับผู้ตรวจสอบเป็นคนละบทบาทกัน
-                 คนบันทึกเป็นผู้ปฏิบัติ ส่วนผู้ตรวจสอบเป็นผู้รับรองความถูกต้องของยอด */}
-          <div className="slip-sign" style={s('display:flex;gap:26px;flex-wrap:wrap;margin-top:40px;font:400 11.5px Sarabun,sans-serif;color:#6b746e')}>
-            <div style={s('flex:1 1 150px')}>
-              <div style={s('border-bottom:1px dotted rgba(30,36,32,.45);height:30px')}></div>
-              <div style={s('margin-top:6px;text-align:center')}>ผู้ส่งมอบยา</div>
-              <div style={s('margin-top:2px;text-align:center;color:#9aa19c')}>วันที่ ......... / ......... / .........</div>
+              เอกสารยาคืนของโรงพยาบาลต้องมีทั้งคนที่ส่งมอบยา คนที่รับเข้าห้องยา
+              และหัวหน้าที่ตรวจสอบยอด
+              🚨 ห้ามยุบเหลือ 2 ช่อง — ผู้บันทึกเป็นผู้ปฏิบัติ ส่วนผู้ตรวจสอบเป็นผู้รับรองยอด */}
+          <div className="slip-sign" style={s('display:flex;gap:26px;flex-wrap:wrap;margin-top:44px;font:400 11.5px Sarabun,sans-serif;color:#414a44')}>
+            <div style={s('flex:1 1 160px;text-align:center')}>
+              <div style={s('border-bottom:1px dotted #1e2420;height:32px')}></div>
+              <div style={s('margin-top:7px')}>( ................................................ )</div>
+              <div style={s('margin-top:4px;font-weight:600')}>ผู้ส่งมอบยา</div>
+              <div style={s('margin-top:2px;color:#6b746e')}>วันที่ ......... / ......... / .........</div>
             </div>
-            <div style={s('flex:1 1 150px')}>
-              <div style={s('border-bottom:1px dotted rgba(30,36,32,.45);height:30px')}></div>
-              <div style={s('margin-top:6px;text-align:center')}>ผู้บันทึกรับคืน</div>
-              <div style={s('margin-top:2px;text-align:center;color:#9aa19c')}>{V.slipBy}</div>
+            <div style={s('flex:1 1 160px;text-align:center')}>
+              <div style={s('border-bottom:1px dotted #1e2420;height:32px')}></div>
+              <div style={s('margin-top:7px')}>( {V.slipBy} )</div>
+              <div style={s('margin-top:4px;font-weight:600')}>ผู้บันทึกรับคืน</div>
+              <div style={s('margin-top:2px;color:#6b746e')}>วันที่ ......... / ......... / .........</div>
             </div>
-            <div style={s('flex:1 1 150px')}>
-              <div style={s('border-bottom:1px dotted rgba(30,36,32,.45);height:30px')}></div>
-              <div style={s('margin-top:6px;text-align:center')}>ผู้ตรวจสอบ</div>
-              <div style={s('margin-top:2px;text-align:center;color:#9aa19c')}>วันที่ ......... / ......... / .........</div>
+            <div style={s('flex:1 1 160px;text-align:center')}>
+              <div style={s('border-bottom:1px dotted #1e2420;height:32px')}></div>
+              <div style={s('margin-top:7px')}>( ................................................ )</div>
+              <div style={s('margin-top:4px;font-weight:600')}>ผู้ตรวจสอบ</div>
+              <div style={s('margin-top:2px;color:#6b746e')}>วันที่ ......... / ......... / .........</div>
             </div>
           </div>
         </div>

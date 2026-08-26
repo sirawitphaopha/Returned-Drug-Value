@@ -20,13 +20,17 @@ export function renderToast(V) {
         <span style={{ ...s("width:20px;height:20px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font:700 11px Sarabun,sans-serif;flex:none"), background: V.toastDot }}>{V.toastIcon}</span>
         <span style={s('font:500 13.5px/1.45 Sarabun,sans-serif;flex:1;min-width:0;overflow-wrap:anywhere')}>{V.toastText}</span>
         <span style={{ ...s("font:700 14px Sarabun,sans-serif;font-variant-numeric:tabular-nums;flex:none"), color: V.toastValueColor }}>{V.toastValue}</span>
-        <span
-          onClick={V.closeToast}
-          role="button"
-          aria-label="ปิดข้อความ"
-          title="ปิดข้อความ"
-          style={s('flex:none;width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font:400 14px Sarabun,sans-serif;color:rgba(255,255,255,.72);background:rgba(255,255,255,.1);cursor:pointer')}
-        >✕</span>
+        {/* ปุ่มปิดมีเฉพาะข้อความผิดพลาด — ข้อความสำเร็จหายเองใน 4 วินาที
+            ถ้าใส่ปุ่มให้ทุกอัน กรอกยา 30 ตัวก็ต้องกดปิด 30 ครั้ง (พี่กันทัก) */}
+        {V.toastClosable && (
+          <span
+            onClick={V.closeToast}
+            role="button"
+            aria-label="ปิดข้อความ"
+            title="ปิดข้อความ"
+            style={s('flex:none;width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font:400 14px Sarabun,sans-serif;color:rgba(255,255,255,.72);background:rgba(255,255,255,.1);cursor:pointer')}
+          >✕</span>
+        )}
       </div>
     </div>
   );

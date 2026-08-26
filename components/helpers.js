@@ -19,10 +19,14 @@ function fontify(css) {
     .replace(/'IBM Plex Sans Thai'/g, "Sarabun")
     // ฟอนต์ของ "ชื่อเว็บ" ต้องแปลงก่อน Sarabun เพราะเป็นคนละตัวกัน
     .replace(/\bCharmonman\b/g, 'var(--font-charmonman),Charmonman')
-    // 🚨 พี่กันสั่ง 26 ส.ค. 2569 ให้ใช้ TH Sarabun New ทั้งเว็บ (ฟอนต์หนังสือราชการไทย)
-    //    ทั้งเว็บเขียนว่า Sarabun อยู่ราว 600 จุด ไม่ไล่แก้ทีละจุด แปลงที่นี่จุดเดียว
-    //    ฟอนต์ฝังไว้ที่ public/fonts/ ประกาศ @font-face ใน globals.css
-    .replace(/\bSarabun\b/g, '"TH Sarabun New",var(--font-sarabun),Sarabun');
+    // 🚨 หน้าเว็บใช้ Sarabun · TH Sarabun New ใช้เฉพาะตอนพิมพ์เอกสารเท่านั้น
+    //    พี่กันเคาะ 26 ส.ค. 2569: "หน้าเว็บทั้งหมด เอากลับเป็น Sarabun จาก Google และฝังเลย
+    //    ส่วน Sarabun New ยังเอาอยู่ แต่จะฝังใน PDF แค่จุดเดียวเท่านั้น"
+    //
+    //    เคยลองใช้ฟอนต์ราชการทั้งเว็บแล้วถอยกลับ — มันออกแบบมาสำหรับกระดาษ
+    //    ตัวเล็กและเส้นบาง อ่านบนจอคอมห้องยาที่แสงจ้าได้ยากกว่า Sarabun
+    //    การสลับฟอนต์เฉพาะตอนพิมพ์อยู่ใน @media print ของ globals.css จุดเดียว
+    .replace(/\bSarabun\b/g, 'var(--font-sarabun),Sarabun');
 }
 
 // ตัดที่ ; แต่ไม่ตัดถ้าอยู่ในวงเล็บหรือในเครื่องหมายคำพูด
