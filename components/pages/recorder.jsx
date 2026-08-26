@@ -33,9 +33,14 @@ export function renderRecorderField(V) {
         <span style={s('font:500 15px Sarabun,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>
           {V.recorderName || '— เลือกผู้บันทึก —'}
         </span>
-        <span style={sx('flex:none;font:400 12px Sarabun,sans-serif;color:#2f7d5d;transition:transform .15s', {
+        <span style={sx('flex:none;display:flex;align-items:center;color:#414a44;transition:transform .15s', {
           transform: 'rotate(' + (open ? '180deg' : '0') + ')'
-        })}>▾</span>
+        })}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 9.5 12 15.5 18 9.5" />
+          </svg>
+        </span>
       </div>
 
       {open && (

@@ -211,9 +211,9 @@ export function renderHistoryNarrow(V) {
           )}
         </div>
         <div style={s('display:flex;align-items:center;gap:6px;margin-top:9px')}>
-          <input type="date" value={V.histFrom} onChange={V.onHistFrom} style={sx("flex:1;min-width:0;height:38px;padding:0 9px;border-radius:8px;background:#f6f7f4;font:400 12.5px Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.14)') })} />
+          <input type="date" value={V.histFrom} onChange={V.onHistFrom} style={sx("flex:1;min-width:0;height:38px;padding:0 9px;border-radius:8px;background:#f6f7f4;font:400 16px Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.14)') })} />
           <span style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;flex:none')}>ถึง</span>
-          <input type="date" value={V.histTo} onChange={V.onHistTo} style={sx("flex:1;min-width:0;height:38px;padding:0 9px;border-radius:8px;background:#f6f7f4;font:400 12.5px Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.14)') })} />
+          <input type="date" value={V.histTo} onChange={V.onHistTo} style={sx("flex:1;min-width:0;height:38px;padding:0 9px;border-radius:8px;background:#f6f7f4;font:400 16px Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.14)') })} />
         </div>
       </div>
 
@@ -281,7 +281,11 @@ export function renderHistoryNarrow(V) {
         ))}
 
         {V.histTruncated && (
-          <div style={s('text-align:center;font:400 12px Sarabun,sans-serif;color:#9aa19c;padding:4px 0 8px')}>{V.histTruncLabel}</div>
+          <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px;padding:4px 0 10px')}>
+            <div style={s('text-align:center;font:400 12px Sarabun,sans-serif;color:#6b746e')}>{V.histTruncLabel}</div>
+            <div {...kb(V.loadMoreHistory)} className="hv-bg-f6 tap"
+              style={s('display:inline-flex;align-items:center;min-height:44px;padding:10px 22px;border:1px solid rgba(30,36,32,.16);border-radius:999px;background:#fff;font:600 13.5px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>{V.loadMoreLabel}</div>
+          </div>
         )}
       </div>
     </div>

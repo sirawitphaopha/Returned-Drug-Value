@@ -3,7 +3,7 @@
 // · ยอดสะสมปีงบมาจากฐานข้อมูล ไม่ได้นับจากรายการในเครื่อง
 import { SOURCES, money, thaiDate } from '@/lib/format';
 import { cleanQty, qtyNum, qtyText, splitDrugName, splitPercent, splitRelease, markMatch,
-  cleanQtyExpr, evalQty, isQtyExpr, exprText, isResolvedQty, splitResolved } from '../helpers';
+  cleanQtyExpr, evalQty, isQtyExpr, exprText, isResolvedQty, splitResolved, DESTROY_REASONS } from '../helpers';
 import { moveHi } from '@/lib/drugSearch';
 import { pillColorOf } from '@/lib/drugPillColors';
 
@@ -193,10 +193,20 @@ export function recordVals(app, d) {
   // 🚨 ต้องคิดจาก "แถวที่กองอยู่" ไม่ใช่จากผลค้นหา — คนละชุดข้อมูลกัน
   const rowStColorOf = makeStColorOf(st.rows.map((r) => ({ id: r.drugId, name: r.name })));
 
-  const setRowDisp = (rid, disp) => () => {
-    const rows = st.rows.map((x) => (x.rid === rid ? Object.assign({}, x, { disposition: disp }) : x));
+  const applyRowDisp = (rid, disp, reason) => {
+    const rows = st.rows.map((x) => (x.rid === rid
+      ? Object.assign({}, x, { disposition: disp, reason: disp === 'destroy' ? (reason || x.reason || '') : '' })
+      : x));
     app.persist({ rows: rows });
     app.animateTo(sumReuse(rows));
+  };
+
+  // 🚨 กด "ทำลาย" ต้องถามเหตุผลก่อนเสมอ — กด "ใช้ต่อได้" ไม่ต้องถาม
+  //    เพราะใช้ต่อได้คือสภาพปกติ ไม่มีอะไรต้องอธิบาย
+  const setRowDisp = (rid, disp) => () => {
+    if (disp !== 'destroy') return applyRowDisp(rid, disp);
+    const row = st.rows.find((x) => x.rid === rid);
+    app.askDestroyReason(row ? row.name : '', (reason) => applyRowDisp(rid, 'destroy', reason));
   };
 
   return {
@@ -354,6 +364,21 @@ export function recordVals(app, d) {
       ? 'ค้นชื่อยาด้านบน หรือแตะยาที่คืนบ่อย'
       : 'ค้นชื่อยาด้านบน — ตั้งยาที่คืนบ่อยได้ที่ปุ่ม ⋯ มุมขวาบน',
 
+    // ── หน้าต่างเลือกเหตุผลที่ต้องทำลาย (ผลตรวจข้อ ส-8) ──────────────────────
+    reasonOpen: !!st.reasonAsk,
+    reasonDrugLabel: st.reasonAsk && st.reasonAsk.label
+      ? st.reasonAsk.label
+      : 'เลือกเหตุผลเพื่อบันทึกว่าทำไมยานี้ต้องถูกทำลาย',
+    closeReason: app.closeReasonPick,
+    reasonList: DESTROY_REASONS.map((r) => ({
+      label: r.label,
+      help: r.help,
+      bg: '#fff',
+      border: 'rgba(30,36,32,.13)',
+      fg: '#1e2420',
+      pick: () => app.pickDestroyReason(r.label)
+    })),
+
     // ── แหล่งที่มา · วันที่ · HN ─────────────────────────────────────────────
     sources: SOURCES.map((s) => ({
       label: s.label,
@@ -449,8 +474,13 @@ export function recordVals(app, d) {
     pendReuseFg: pendReuse ? '#2f7d5d' : '#9aa19c',
     pendDestroyBg: pendReuse ? 'transparent' : '#fbe4dd',
     pendDestroyFg: pendReuse ? '#9aa19c' : '#c2543c',
-    setPendingReuse: () => app.setState({ pendingDisp: 'reuse' }),
-    setPendingDestroy: () => app.setState({ pendingDisp: 'destroy' }),
+    setPendingReuse: () => app.setState({ pendingDisp: 'reuse', pendingReason: '' }),
+    // ยังไม่ได้กดเพิ่มเข้ารายการ แต่ถามเหตุผลตั้งแต่ตอนนี้เลย
+    // จะได้ติดไปกับแถวทันทีที่กดเพิ่ม ไม่ต้องกลับมาไล่กรอกทีหลัง
+    setPendingDestroy: () => app.askDestroyReason(
+      st.pending ? st.pending.name : '',
+      (reason) => app.setState({ pendingDisp: 'destroy', pendingReason: reason })
+    ),
     // ราคารวมถูกย้ายไปกล่องท้ายแถวแล้ว บรรทัดนี้จึงไม่ต้องบอกราคาซ้ำ
     // แต่ถ้าพิมพ์เป็นสูตร ต้องกางให้เห็นว่าคิดได้เท่าไร ก่อนกด Enter
     desktopHint: !pending

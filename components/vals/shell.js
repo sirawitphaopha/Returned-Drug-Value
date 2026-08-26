@@ -23,12 +23,12 @@ export function shellVals(app, d) {
     // cls = คลาสของแท็บฝั่งคอม · .tab-btn ให้กรอบจาง ๆ · .on บอกว่าแท็บนี้เปิดอยู่
     //       (ตัวที่เปิดอยู่ห้ามเปลี่ยนสีตอนเอาเมาส์ชี้ ดู globals.css)
     tabs: [
-      { label: 'บันทึก', radius: '5px', on: st.screen === 'record', cls: st.screen === 'record' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'record' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'record' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'record' ? '#2f7d5d' : '#8d948f', pick: pickScreen('record') },
-      { label: 'ประวัติ', radius: '50%', on: st.screen === 'history', cls: st.screen === 'history' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'history' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'history' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'history' ? '#2f7d5d' : '#8d948f', pick: pickScreen('history') },
-      { label: 'สรุป', radius: '3px', on: st.screen === 'summary', cls: st.screen === 'summary' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'summary' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'summary' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'summary' ? '#2f7d5d' : '#8d948f', pick: pickScreen('summary') },
+      { label: 'บันทึก', radius: '5px', on: st.screen === 'record', cls: st.screen === 'record' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'record' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'record' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'record' ? '#2f7d5d' : '#6b746e', pick: pickScreen('record') },
+      { label: 'ประวัติ', radius: '50%', on: st.screen === 'history', cls: st.screen === 'history' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'history' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'history' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'history' ? '#2f7d5d' : '#6b746e', pick: pickScreen('history') },
+      { label: 'สรุป', radius: '3px', on: st.screen === 'summary', cls: st.screen === 'summary' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'summary' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'summary' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'summary' ? '#2f7d5d' : '#6b746e', pick: pickScreen('summary') },
       // คลังยา — ตาราง drugs ของกลาง ใช้ร่วมกันทุกเว็บห้องยา (พี่กันสั่งให้เป็นแท็บ 13 ส.ค. 2569)
       // ต้องเรียก openCatalog ไม่ใช่ pickScreen เฉย ๆ เพราะต้องสั่งโหลดคลังยาดิบด้วย
-      { label: 'คลังยา', radius: '8px', on: st.screen === 'catalog', cls: st.screen === 'catalog' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'catalog' ? '#2f7d5d' : '#9aa19c', navBg: st.screen === 'catalog' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'catalog' ? '#2f7d5d' : '#8d948f', pick: app.openCatalog }
+      { label: 'คลังยา', radius: '8px', on: st.screen === 'catalog', cls: st.screen === 'catalog' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'catalog' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'catalog' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'catalog' ? '#2f7d5d' : '#6b746e', pick: app.openCatalog }
     ],
 
     // ปุ่มออกจากระบบ — โผล่เฉพาะตอนเว็บล็อกด้วยรหัสผ่านห้องยาอยู่จริง
@@ -64,6 +64,14 @@ export function shellVals(app, d) {
       : 'สร้างข้อมูลสมมติทั้งปีงบให้ดูว่าเว็บทำงานเต็มที่แล้วหน้าตาเป็นยังไง ข้อมูลอยู่ในเครื่องอย่างเดียว ไม่ถูกส่งขึ้นฐานข้อมูล',
     demoBanner: 'กำลังดูข้อมูลตัวอย่าง — ตัวเลขทั้งหมดเป็นของสมมติ ไม่ได้อยู่ในฐานข้อมูลจริง',
 
+    // ── แถบเตือนเน็ตหลุด (ผลตรวจข้อ ต-17 · พี่กันเคาะ 26 ส.ค. 2569) ──
+    // 🚨 ต้องบอกให้ชัดว่า "ของที่กรอกไว้ไม่หาย" ไม่ใช่แค่บอกว่าเน็ตหลุด
+    //    ไม่งั้นเภสัชกรจะรีบจดใส่กระดาษเผื่อไว้ ซึ่งเสียเวลาโดยไม่จำเป็น
+    //    ร่างถูกเก็บในเครื่องทุกครั้งที่กดเพิ่มยา ไม่ได้พึ่งเน็ตเลย
+    offline: !!st.offline,
+    offlineBanner: 'ออฟไลน์ — ยังกรอกต่อได้ตามปกติ รายการที่กรอกไว้ถูกเก็บในเครื่องนี้แล้ว',
+    offlineHint: 'กดบันทึกได้เมื่อเน็ตกลับมา',
+
     isAbout: st.screen === 'about',
     footerYear: (Number((st.today || '').slice(0, 4)) || new Date().getFullYear()) + 543,
     aboutStat: 'ในระบบ: ' + Number(st.fy.records || 0).toLocaleString('en-US') + ' รายการ · ประหยัดสะสม ' + money(st.fy.saved || 0),
@@ -75,6 +83,7 @@ export function shellVals(app, d) {
     saveBarRef: app.saveBarRef,
 
     toastOpen: !!st.toast,
+    closeToast: app.closeToast,
     toastText: st.toast ? st.toast.text : '',
     toastValue: st.toast ? st.toast.value : '',
     toastIcon: st.toast && st.toast.ok ? '✓' : '!',

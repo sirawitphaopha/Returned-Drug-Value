@@ -93,8 +93,8 @@ export function renderSummaryWide(V) {
                 <span style={sx('font:600 13.5px Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
               </div>
             </div>
-            <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" style={sx('width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:700 16px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>ℹ</div>
-            <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" style={sx('width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:600 17px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⚙</div>
+            {/* 🚨 ไม่มีปุ่ม ℹ ⚙ ตรงนี้แล้ว — ซ้ำกับแถบบนสุด (nav.jsx) ที่โผล่ทุกหน้าฝั่งคอม
+                พี่กันทักเอง 26 ส.ค. 2569 · ฝั่งมือถือยังต้องมี เพราะแถบล่างไม่มีปุ่มสองตัวนี้ */}
           </div>
         </div>
 

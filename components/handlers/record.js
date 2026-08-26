@@ -28,6 +28,8 @@ export function recordActions(app) {
       rid: Date.now() + Math.random(),
       drugId: drug.id, name: drug.name, unit: drug.unit,
       price: drug.price, qty: qty, disposition: disp,
+      // เหตุผลที่เลือกไว้ตอนกดปุ่มทำลาย ติดไปกับแถวทันที (ผลตรวจข้อ ส-8)
+      reason: disp === 'destroy' ? (app.state.pendingReason || '') : '',
       // แปะ HN กับแหล่งที่มา ณ ตอนกดเพิ่มลงในแถวเลย
       // ถ้าใช้ค่าของทั้งหน้าจอตอนกดบันทึก คนไข้คนที่ 2 จะทับ HN ของคนแรกทั้งล็อต
       hn: app.state.hn || '', source: app.state.source,
@@ -238,6 +240,27 @@ export function recordActions(app) {
       sheetReason: '',
       query: ''
     }, () => { if (app.sheetQtyRef.current) app.sheetQtyRef.current.focus(); });
+  };
+
+  // ── เลือกเหตุผลที่ต้องทำลาย (ผลตรวจข้อ ส-8 · พี่กันเคาะแบบ ก 26 ส.ค. 2569) ──
+  //
+  // 🚨 เด้งถามทันทีที่กดปุ่มทำลาย ไม่ใช่ให้ไปกรอกทีหลัง
+  //    เพราะ "ทีหลัง" แปลว่าไม่มีวันได้กรอก — เส้นทางหลักบนคอมไม่เคยมีช่องนี้เลย
+  //
+  // next = สิ่งที่จะทำเมื่อเลือกเหตุผลแล้ว · รับเหตุผลที่เลือกเป็นค่าเข้า
+  // ปิดหน้าต่างโดยไม่เลือก = ไม่ทำอะไรเลย ของยังเป็น "ใช้ต่อได้" เหมือนเดิม
+  app.askDestroyReason = (label, next) => {
+    app.setState({ reasonAsk: { label: label || '', next: next } });
+  };
+
+  app.closeReasonPick = () => app.setState({ reasonAsk: null });
+
+  app.pickDestroyReason = (reason) => {
+    const ask = app.state.reasonAsk;
+    if (!ask) return;
+    // ปิดหน้าต่างก่อนแล้วค่อยทำงาน — กติกาเดียวกับป๊อปยืนยัน (ดูข้อ 3.23)
+    // ถ้าปล่อยให้แต่ละที่ปิดเอง จะมีที่ที่ลืมปิดแล้วดูเหมือนปุ่มค้าง
+    app.setState({ reasonAsk: null }, () => ask.next(reason));
   };
 
   app.closeSheet = () => app.setState({ sheet: null, sheetQty: '', sheetReason: '', sheetOff: null });

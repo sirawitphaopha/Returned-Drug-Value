@@ -33,7 +33,7 @@ export function renderAbout(V) {
 
       {/* หัวเรื่อง */}
       <div style={s('text-align:center;padding:6px 0 2px')}>
-        <div style={s('font:700 31px Charmonman,cursive;color:#24614a')}>มูลค่ายาคืน</div>
+        <div style={s('font:700 30px/1.95 Charmonman,cursive;color:#24614a')}>มูลค่ายาคืน</div>
         <div style={s('font:400 12.5px/1.55 Sarabun,sans-serif;color:#6b746e;margin-top:5px')}>
           ระบบแปลงยาที่ผู้ป่วยคืนมาให้เป็นตัวเลขมูลค่า พร้อมสรุปเป็นตัวชี้วัดรายปีงบประมาณ · {V.orgName}
         </div>
@@ -125,6 +125,15 @@ export function renderAbout(V) {
             <div style={s(CHIP)}>
               {supaLogo(17)}
               <span style={s(CHIP_TX)}>Supabase</span>
+            </div>
+            {/* three.js — ใช้กับฉากหลังแคปซูลยาลอยในหน้าเข้าสู่ระบบ (เพิ่ม 26 ส.ค. 2569)
+                🚨 โหลดเฉพาะหน้านั้นหน้าเดียว ไม่ถ่วงหน้าบันทึกที่ใช้งานจริงทุกวัน */}
+            <div style={s(CHIP)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2.2 21.4 19.6 12 17.2 2.6 19.6z" fill="none" stroke="#1e2420" strokeWidth="1.5" strokeLinejoin="round" />
+                <path d="M12 2.2 12 17.2" stroke="#1e2420" strokeWidth="1.1" opacity=".45" />
+              </svg>
+              <span style={s(CHIP_TX)}>three.js</span>
             </div>
             <div style={s(CHIP)}>
               <svg width="24" height="17" viewBox="0 0 48 30">

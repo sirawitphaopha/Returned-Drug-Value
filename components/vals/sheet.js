@@ -1,6 +1,6 @@
 // ค่าของป๊อปอัปใส่จำนวน — คัดจากมอคอัป (บรรทัด 1414–1441)
 import { PRESETS, money } from '@/lib/format';
-import { cleanQty, qtyNum, DESTROY_REASONS } from '../helpers';
+import { cleanQty, qtyNum, DESTROY_REASONS, destroyReasonHelp } from '../helpers';
 
 export function sheetVals(app, d) {
   const st = d.st;
@@ -48,11 +48,15 @@ export function sheetVals(app, d) {
     // แต่ได้ข้อมูลที่ผู้บริหารเอาไปตัดสินใจได้จริง (หมดอายุเยอะ = สั่งยาเกิน)
     sheetIsDestroy: !reuse,
     sheetReasons: DESTROY_REASONS.map((r) => ({
-      label: r,
-      bg: st.sheetReason === r ? '#fbe4dd' : '#f0f1ee',
-      fg: st.sheetReason === r ? '#c2543c' : '#414a44',
-      pick: () => app.setState({ sheetReason: st.sheetReason === r ? '' : r })
+      label: r.label,
+      help: r.help,
+      on: st.sheetReason === r.label,
+      bg: st.sheetReason === r.label ? '#fbe4dd' : '#f0f1ee',
+      fg: st.sheetReason === r.label ? '#c2543c' : '#414a44',
+      pick: () => app.setState({ sheetReason: st.sheetReason === r.label ? '' : r.label })
     })),
+    // คำอธิบายของตัวที่เลือกอยู่ — โผล่ใต้แถวชิป ไม่ต้องยัดคำอธิบายลงในชิปทุกอัน
+    sheetReasonHelp: destroyReasonHelp(st.sheetReason),
     sheetCta: sheet && sheet.kind === 'add' ? 'เพิ่ม' : 'บันทึกการแก้ไข',
     sheetValueLabel: sheet && qty
       ? (sheet.kind === 'add' ? (reuse ? '+' : '−') : '') + money(sheet.drug.price * qty)

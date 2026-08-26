@@ -118,22 +118,26 @@ export function renderRecordNarrow(V) {
               <span style={s("font:700 15px Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
             </div>
             <div style={s('min-width:0')}>
-              <div style={s('font:700 21px/1.2 Charmonman,cursive')}>มูลค่ายาคืน</div>
-              <div style={s('font:400 11.5px/1.2 Sarabun,sans-serif;color:#6b746e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>{V.orgName}</div>
+              {/* 🚨 Charmonman ลากหางสระลงมายาวมาก เกินกรอบบรรทัดของตัวเอง
+                  ระยะบรรทัด 1.5 ยังไม่พอ (พี่กันเจอทับ 2 รอบ) ต้องกันที่ใต้ตัวอักษรเพิ่ม
+                  ใช้ padding-bottom แทนการเพิ่มระยะบรรทัด เพราะระยะบรรทัดดันตัวอักษรลงด้วย
+                  ทำให้ชื่อไม่อยู่กลางแถบ ส่วน padding ดันเฉพาะของที่อยู่ข้างล่าง */}
+              <div style={s('font:700 18px/1.95 Charmonman,cursive')}>มูลค่ายาคืน</div>
+              <div style={s('font:400 11.5px/1.2 Sarabun,sans-serif;color:#6b746e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px')}>{V.orgName}</div>
             </div>
           </div>
           <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
-            <div {...kb(V.toggleMore)} style={s("display:flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid rgba(30,36,32,.14);border-radius:8px;font:500 12.5px Sarabun,sans-serif;cursor:pointer")}>{V.dateLabel} <span style={s('color:#9aa19c')}>▾</span></div>
+            <div {...kb(V.toggleMore)} style={s("display:flex;align-items:center;gap:6px;min-height:44px;padding:6px 13px;border:1px solid rgba(30,36,32,.14);border-radius:9px;font:500 12.5px Sarabun,sans-serif;cursor:pointer")}>{V.dateLabel} <span style={s('color:#9aa19c')}>▾</span></div>
             {/* ปุ่มเกี่ยวกับ แยกออกมาเป็นปุ่มของตัวเองข้างเฟือง — พี่กันสั่ง
                 เดิมซ่อนอยู่ในหน้าตั้งค่า ต้องเลื่อนลงไปหา ไม่มีใครเจอ */}
-            <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
-            <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
+            <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-bg-f6" style={s('width:44px;height:44px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
+            <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" className="hv-bg-f6" style={s('width:44px;height:44px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 17px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
           </div>
         </div>
 
         {/* ปุ่ม ✕ ล้างช่องค้นหาทีเดียว — พี่กันขอ ไม่ต้องกด Backspace รัว */}
         <div style={s('position:relative')}>
-          <input ref={V.searchRef} value={V.query} onChange={V.onQuery} onKeyDown={V.onSearchKey} placeholder={V.searchPlaceholder} style={s('width:100%;height:50px;padding:0 46px 0 14px;border:1px solid rgba(30,36,32,.16);border-radius:12px;background:#f6f7f4;font:400 15.5px Sarabun,sans-serif;color:#1e2420')} />
+          <input ref={V.searchRef} value={V.query} onChange={V.onQuery} onKeyDown={V.onSearchKey} placeholder={V.searchPlaceholder} style={s('width:100%;height:50px;padding:0 46px 0 14px;border:1px solid rgba(30,36,32,.16);border-radius:12px;background:#f6f7f4;font:400 16px Sarabun,sans-serif;color:#1e2420')} />
           {V.hasQuery && (
             <div {...kb(V.clearQuery)} aria-label="ล้างช่องค้นหายา" className="hv-bg-e6e" style={s('position:absolute;right:9px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;background:rgba(30,36,32,.06)')}>✕</div>
           )}
@@ -161,7 +165,7 @@ export function renderRecordNarrow(V) {
 
         <div style={s('display:flex;gap:7px;margin-top:10px;flex-wrap:wrap')}>
           {V.sources.map((src) => (
-            <div key={src.label} {...kb(src.pick)} style={sx('padding:7px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: src.bg, color: src.fg })}>{src.label}</div>
+            <div key={src.label} {...kb(src.pick)} style={sx('display:flex;align-items:center;min-height:44px;padding:7px 15px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: src.bg, color: src.fg })}>{src.label}</div>
           ))}
         </div>
 
@@ -174,11 +178,11 @@ export function renderRecordNarrow(V) {
             <div style={s('display:flex;gap:9px')}>
               <div style={s('flex:1')}>
                 <div style={s('font:500 11px Sarabun,sans-serif;color:#6b746e;margin-bottom:4px')}>วันที่</div>
-                <input type="date" value={V.dateIso} onChange={V.onDate} style={s("width:100%;height:42px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 14px Sarabun,sans-serif")} />
+                <input type="date" value={V.dateIso} onChange={V.onDate} max={V.dateMax} style={s("width:100%;height:42px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 16px Sarabun,sans-serif")} />
               </div>
               <div style={s('flex:1')}>
                 <div style={s('font:500 11px Sarabun,sans-serif;color:#6b746e;margin-bottom:4px')}>HN (ไม่บังคับ)</div>
-                <input value={V.hn} onChange={V.onHn} inputMode="numeric" placeholder="ปล่อยว่างได้" style={s("width:100%;height:42px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 14px Sarabun,sans-serif")} />
+                <input value={V.hn} onChange={V.onHn} inputMode="numeric" placeholder="ปล่อยว่างได้" style={s("width:100%;height:42px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 16px Sarabun,sans-serif")} />
               </div>
             </div>
             {/* ผู้บันทึกล็อต — ต่อจากวันที่/HN ตามที่พี่กันสั่ง */}
@@ -525,7 +529,7 @@ export function renderRecordWide(V) {
         <div style={s('display:flex;gap:10px')}>
           <div style={s('flex:1')}>
             <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:5px')}>วันที่</div>
-            <input type="date" value={V.dateIso} onChange={V.onDate} style={s("width:100%;height:42px;padding:0 10px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 13.5px Sarabun,sans-serif")} />
+            <input type="date" value={V.dateIso} onChange={V.onDate} max={V.dateMax} style={s("width:100%;height:42px;padding:0 10px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 13.5px Sarabun,sans-serif")} />
           </div>
           <div style={s('flex:1')}>
             <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:5px')}>HN</div>

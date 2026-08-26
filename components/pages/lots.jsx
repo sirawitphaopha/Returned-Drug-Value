@@ -105,18 +105,36 @@ export function renderLotSlip(V) {
             </svg>
             พิมพ์
           </div>
+          {/* บันทึก PDF — ใช้ตัวแปลงของเบราว์เซอร์ ต่างกันแค่ตั้งชื่อไฟล์ให้ก่อน
+              (ดูเหตุผลที่ไม่ลงตัวสร้าง PDF เพิ่ม ใน handlers/lots.js) */}
+          <div {...kb(V.savePdf)} className="hv-bg-f6 tap"
+            style={s('height:38px;padding:0 14px;border-radius:9px;border:1px solid rgba(30,36,32,.16);background:#fff;color:#2f7d5d;display:flex;align-items:center;gap:7px;font:600 13px Sarabun,sans-serif;cursor:pointer')}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" />
+            </svg>
+            บันทึก PDF
+          </div>
           <div {...kb(V.closeLotSlip)} aria-label="ปิดใบสรุป" className="hv-bg-f6" style={s('width:36px;height:36px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>✕</div>
         </div>
 
         <div style={s('padding:22px 26px 26px')}>
-          <div style={s('display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding-bottom:12px;border-bottom:2px solid #2f7d5d')}>
-            <div>
-              <div role="heading" aria-level="1" style={s('font:700 18px Sarabun,sans-serif')}>ใบสรุปยาคืน</div>
-              <div style={s('font:400 12px Sarabun,sans-serif;color:#6b746e;margin-top:2px')}>{V.slipOrg}</div>
+          {/* ── หัวกระดาษแบบเอกสารราชการ ──────────────────────────────────
+              ชื่อหน่วยงานอยู่บนสุดกึ่งกลาง แล้วชื่อเอกสารตัวใหญ่ใต้ลงมา
+              เป็นรูปแบบเดียวกับเอกสารอื่นของโรงพยาบาล เอาเข้าแฟ้มแล้วเข้าชุดกัน */}
+          <div style={s('text-align:center;padding-bottom:10px')}>
+            <div style={s('font:600 13px/1.5 Sarabun,sans-serif;color:#414a44;overflow-wrap:anywhere')}>{V.slipOrg}</div>
+            <div role="heading" aria-level="1" style={s('font:700 21px/1.35 Sarabun,sans-serif;margin-top:3px')}>ใบสรุปรายการยาคืน</div>
+          </div>
+
+          <div style={s('display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;padding-bottom:10px;border-bottom:2px solid #2f7d5d')}>
+            <div style={s('font:400 12px/1.7 Sarabun,sans-serif;color:#414a44')}>
+              <div>เลขที่เอกสาร <b style={s('color:#1e2420')}>{V.slipDocNo}</b></div>
+              <div>วันที่รับคืน <b style={s('color:#1e2420')}>{V.slipDate}</b></div>
             </div>
-            <div style={s('text-align:right')}>
+            <div style={s('text-align:right;font:400 12px/1.7 Sarabun,sans-serif;color:#414a44')}>
               <div style={s("font:700 17px Sarabun,sans-serif;color:#2f7d5d")}>{V.slipLot}</div>
-              <div style={s('font:400 12px Sarabun,sans-serif;color:#6b746e;margin-top:2px')}>{V.slipDate}</div>
+              {/* วันเวลาที่พิมพ์ — โผล่เฉพาะตอนสั่งพิมพ์จริง ไม่รกจอตอนดูบนหน้าจอ */}
+              {V.slipPrintedAt && <div>พิมพ์เมื่อ {V.slipPrintedAt}</div>}
             </div>
           </div>
 
@@ -176,15 +194,26 @@ export function renderLotSlip(V) {
             </div>
           </div>
 
-          {/* ช่องลงชื่อ — ใบนี้ใช้เป็นหลักฐานในแฟ้มได้ ต้องมีที่ให้เซ็นรับ */}
-          <div style={s('display:flex;gap:40px;margin-top:34px;font:400 12px Sarabun,sans-serif;color:#6b746e')}>
-            <div style={s('flex:1')}>
-              <div style={s('border-bottom:1px dotted rgba(30,36,32,.4);height:26px')}></div>
-              <div style={s('margin-top:5px;text-align:center')}>ผู้บันทึก</div>
+          {/* ── ช่องลงนาม 3 ฝ่าย ─────────────────────────────────────────────
+              ใบนี้ใช้เป็นหลักฐานในแฟ้มได้ · เอกสารยาคืนของโรงพยาบาลต้องมีทั้ง
+              คนที่ส่งมอบยา คนที่รับเข้าห้องยา และหัวหน้าที่ตรวจสอบยอด
+              🚨 ห้ามยุบเหลือ 2 ช่อง — ผู้บันทึกกับผู้ตรวจสอบเป็นคนละบทบาทกัน
+                 คนบันทึกเป็นผู้ปฏิบัติ ส่วนผู้ตรวจสอบเป็นผู้รับรองความถูกต้องของยอด */}
+          <div className="slip-sign" style={s('display:flex;gap:26px;flex-wrap:wrap;margin-top:40px;font:400 11.5px Sarabun,sans-serif;color:#6b746e')}>
+            <div style={s('flex:1 1 150px')}>
+              <div style={s('border-bottom:1px dotted rgba(30,36,32,.45);height:30px')}></div>
+              <div style={s('margin-top:6px;text-align:center')}>ผู้ส่งมอบยา</div>
+              <div style={s('margin-top:2px;text-align:center;color:#9aa19c')}>วันที่ ......... / ......... / .........</div>
             </div>
-            <div style={s('flex:1')}>
-              <div style={s('border-bottom:1px dotted rgba(30,36,32,.4);height:26px')}></div>
-              <div style={s('margin-top:5px;text-align:center')}>ผู้ตรวจรับ</div>
+            <div style={s('flex:1 1 150px')}>
+              <div style={s('border-bottom:1px dotted rgba(30,36,32,.45);height:30px')}></div>
+              <div style={s('margin-top:6px;text-align:center')}>ผู้บันทึกรับคืน</div>
+              <div style={s('margin-top:2px;text-align:center;color:#9aa19c')}>{V.slipBy}</div>
+            </div>
+            <div style={s('flex:1 1 150px')}>
+              <div style={s('border-bottom:1px dotted rgba(30,36,32,.45);height:30px')}></div>
+              <div style={s('margin-top:6px;text-align:center')}>ผู้ตรวจสอบ</div>
+              <div style={s('margin-top:2px;text-align:center;color:#9aa19c')}>วันที่ ......... / ......... / .........</div>
             </div>
           </div>
         </div>

@@ -18,12 +18,31 @@ export function settingsActions(app) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'บันทึกการตั้งค่าไม่สำเร็จ');
 
-      app.setState({
-        orgName: data.setting.orgName,
-        favIds: data.setting.favIds,
-        defaultSource: data.setting.defaultSource,
-        staff: Array.isArray(data.setting.staff) ? data.setting.staff : [],
-        pcuSites: Array.isArray(data.setting.pcuSites) ? data.setting.pcuSites : []
+      // 🚨🚨 ห้ามเอาคำตอบจากเซิร์ฟเวอร์มาทับช่องที่ผู้ใช้กำลังพิมพ์อยู่
+      //
+      // อาการที่พี่กันเจอ 26 ส.ค. 2569: พิมพ์ชื่อหน่วยงานยาว ๆ แล้วตัวอักษรหายเป็นท่อน
+      // เหมือนระบบตัดจำนวนคำ ทั้งที่ไม่มีการตัดที่ไหนเลย
+      //
+      // กลไก: ระบบรอให้หยุดพิมพ์ 0.5 วินาทีแล้วค่อยส่งขึ้นเซิร์ฟเวอร์
+      //   1. พิมพ์ "กลุ่มงานเภสัชกรรม" แล้วหยุดคิดแป๊บหนึ่ง → ยิงขึ้นเซิร์ฟเวอร์
+      //   2. พิมพ์ต่อ "และคุ้มครองผู้บริโภค" ระหว่างที่คำขอยังเดินทางอยู่
+      //   3. คำตอบกลับมาว่าชื่อคือ "กลุ่มงานเภสัชกรรม" → setState ทับ
+      //   4. ที่พิมพ์ไปในข้อ 2 หายหมดต่อหน้าต่อตา
+      //
+      // ยิ่งชื่อยาว ยิ่งหยุดพิมพ์บ่อย ยิ่งโดนบ่อย · ชื่อสั้น ๆ จึงไม่เคยมีปัญหา
+      //
+      // วิธีแก้: ถ้าค่าบนจอไม่ตรงกับค่าที่เพิ่งส่งไป แปลว่าผู้ใช้พิมพ์ต่อแล้ว → คงของบนจอไว้
+      // ตระกูลเดียวกับ "กันคำตอบเก่าทับคำตอบใหม่" ที่หน้าประวัติใช้เลขลำดับ
+      app.setState((st) => {
+        const sent = patch.orgName;
+        const typing = sent !== undefined && st.orgName !== sent;
+        return {
+          orgName: typing ? st.orgName : data.setting.orgName,
+          favIds: data.setting.favIds,
+          defaultSource: data.setting.defaultSource,
+          staff: Array.isArray(data.setting.staff) ? data.setting.staff : [],
+          pcuSites: Array.isArray(data.setting.pcuSites) ? data.setting.pcuSites : []
+        };
       });
       writeCache(LS.setting, data.setting);
     } catch (e) {

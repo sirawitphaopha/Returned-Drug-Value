@@ -5,7 +5,8 @@ import { SOURCES } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
-const DEFAULT_ORG = 'ห้องยาผู้ป่วยนอก · รพ.ปรางค์กู่';
+// ชื่อตั้งต้นดึงจากจุดกลาง เพื่อให้หน้าเข้าสู่ระบบกับหลังบ้านตรงกันเสมอ
+import { DEFAULT_ORG } from '@/lib/format';
 const SOURCE_KEYS = SOURCES.map((s) => s.key);
 
 function shape(row) {
@@ -45,7 +46,9 @@ export async function PUT(req) {
     const patch = { updated_at: new Date().toISOString() };
 
     if (body.orgName !== undefined) {
-      const name = String(body.orgName).trim().slice(0, 120);
+      // เผื่อไว้ 200 ตัวอักษร — ชื่อเต็มยศแบบราชการยาวกว่าที่คิด
+      // "กลุ่มงานเภสัชกรรมและคุ้มครองผู้บริโภค โรงพยาบาลปรางค์กู่ จังหวัดศรีสะเกษ" = 72 ตัว
+      const name = String(body.orgName).trim().slice(0, 200);
       // ปล่อยให้ว่างไม่ได้ ชื่อนี้ไปโผล่บน header กับหัวไฟล์ที่ส่งออก
       patch.org_name = name || DEFAULT_ORG;
     }

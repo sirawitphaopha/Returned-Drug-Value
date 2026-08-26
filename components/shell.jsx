@@ -13,6 +13,7 @@ import { renderLots, renderLotSlip } from './pages/lots';
 import { renderLotEdit } from './pages/lotedit';
 import { renderCatalog } from './pages/catalog';
 import { renderToast } from './pages/toast';
+import { renderReasonPick } from './pages/reason';
 import { renderConfirm } from './pages/confirm';
 import { renderAbout } from './pages/about';
 import { renderFooter } from './pages/footer';
@@ -42,6 +43,18 @@ export function renderShell(app) {
           <span style={s('font:600 11px Sarabun,sans-serif;background:rgba(255,255,255,.25);border-radius:6px;padding:2px 8px;flex:none')}>กดเพื่อปิด</span>
         </div>
       )}
+      {/* ── แถบเตือนเน็ตหลุด ──────────────────────────────────────────────
+          🚨 สีแดงอิฐตัดกับเขียวของเว็บชัด ๆ ตามที่พี่กันสั่ง — เห็นทันทีแม้กวาดตาผ่าน
+          วางเหนือพื้นที่เลื่อน จึงค้างอยู่บนสุดเสมอ ไม่เลื่อนหนีไปกับเนื้อหา
+          role="status" ให้โปรแกรมอ่านหน้าจออ่านให้เมื่อสถานะเปลี่ยน */}
+      {V.offline && (
+        <div role="status" aria-live="polite"
+          style={s('flex:none;display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;padding:9px 14px;background:#c2543c;color:#fff;font:600 12.5px Sarabun,sans-serif;text-align:center')}>
+          <span>{V.offlineBanner}</span>
+          <span style={s('font:400 12px Sarabun,sans-serif;color:rgba(255,255,255,.82)')}>{V.offlineHint}</span>
+        </div>
+      )}
+
       {/* พื้นที่เลื่อน — ใช้ flex คอลัมน์เพื่อดันท้ายเว็บลงล่างสุดเสมอ
           แม้เนื้อหาจะสั้นกว่าจอ (margin-top:auto ในตัว footer) */}
       {/* overflow-anchor:none = ปิดระบบ "ยึดตำแหน่งเลื่อน" ของเบราว์เซอร์
@@ -83,6 +96,7 @@ export function renderShell(app) {
       {renderLotSlip(V)}
       {renderLotEdit(V)}
       {renderToast(V)}
+      {renderReasonPick(V)}
       {renderConfirm(V)}
     </div>
   );

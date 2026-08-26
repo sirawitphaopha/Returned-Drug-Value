@@ -41,7 +41,7 @@ export function renderNavWide(V) {
             <div style={s('position:absolute;inset:4px;border:1.6px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
             <span style={s("font:700 13px Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
           </div>
-          <div style={s('font:700 20px Charmonman,cursive')}>มูลค่ายาคืน</div>
+          <div style={s('font:700 19px/1.95 Charmonman,cursive')}>มูลค่ายาคืน</div>
         </div>
         {/* กรอบจาง ๆ ให้เห็นว่าเป็นปุ่ม + เข้มขึ้นตอนเอาเมาส์ชี้ (พี่กันสั่ง)
             สีตอนชี้อยู่ใน .tab-btn ที่ globals.css ไม่ใช่ที่นี่ เพราะ React ทำ :hover ในสไตล์ไม่ได้ */}

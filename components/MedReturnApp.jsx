@@ -40,6 +40,10 @@ export default class MedReturnApp extends React.Component {
       // ผู้ใช้แตะช่องวันที่เองในรอบการใช้งานนี้แล้วหรือยัง
       // อยู่ใน state เฉย ๆ ไม่ถูกเก็บลงเครื่อง จึงเป็นเท็จเสมอตอนเปิดเว็บใหม่
       dateTouched: false,
+      // เน็ตหลุดอยู่หรือเปล่า (ผลตรวจข้อ ต-17)
+      // 🚨 เริ่มเป็นเท็จเสมอ ห้ามอ่าน navigator.onLine ตอนสร้าง state
+      //    เพราะฝั่งเซิร์ฟเวอร์ไม่มีตัวนี้ จะพังตั้งแต่วาดจอครั้งแรก
+      offline: false,
       // ชื่อ รพ.สต. ต้นทาง — ใช้เฉพาะตอน source เป็น 'pcu'
       pcuSite: '',
       pcuSites: [],           // รายชื่อที่เลือกได้ มาจากการตั้งค่า (ฐานข้อมูล)
@@ -148,6 +152,11 @@ export default class MedReturnApp extends React.Component {
       pending: null,
       qtyInput: '',
       pendingDisp: 'reuse',
+      // หน้าต่างเลือกเหตุผลที่ต้องทำลาย (ผลตรวจข้อ ส-8)
+      // เก็บสิ่งที่จะทำหลังเลือกไว้ในนี้ ตัวหน้าต่างจึงไม่ต้องรู้ว่าถูกเปิดจากที่ไหน
+      reasonAsk: null,
+      // เหตุผลที่เลือกไว้ตอนกดปุ่มทำลาย ก่อนกดเพิ่มเข้ารายการ
+      pendingReason: '',
       // เครื่องคิดเลขในช่องจำนวน (คอมเท่านั้น · พี่กันสั่ง 25 ส.ค. 2569)
       calcOpen: false,
       // แถวที่กำลังแก้จำนวนอยู่ในตาราง "รายการในครั้งนี้" — เก็บเป็นข้อความ
@@ -344,6 +353,12 @@ export default class MedReturnApp extends React.Component {
     this._dayTimer = setInterval(this.checkDayRollover, 60000);
     document.addEventListener('visibilitychange', this._onVisible);
     window.addEventListener('online', this._onOnline);
+    // ⚠️ เดิมฟังแต่ 'online' — รู้ตอนเน็ตกลับมา แต่ไม่เคยรู้ตอนเน็ตหลุด
+    window.addEventListener('offline', this._onOffline);
+    // เช็คสถานะจริงตอนเปิดเว็บด้วย — เผลอเปิดตอนเน็ตหลุดอยู่แล้วจะได้เห็นป้ายทันที
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      this.setState({ offline: true });
+    }
 
     // ป๊อปอัปหนีแป้นพิมพ์บนมือถือ — บาง iOS ไม่หดพื้นที่ให้แม้ตั้ง interactiveWidget แล้ว
     // เลยวัดความสูงจริงของแป้นพิมพ์เอง แล้วส่งเป็นตัวแปร --kb ให้ CSS ใช้ดันป๊อปอัปขึ้น
@@ -401,7 +416,8 @@ export default class MedReturnApp extends React.Component {
   };
 
   // เน็ตโรงพยาบาลหลุดแล้วกลับมา — ระหว่างที่หลุดอาจมีคนแก้ยาไปแล้ว
-  _onOnline = () => { this.syncDrugs(); this.retryFailedSave(); };
+  _onOnline = () => { this.setState({ offline: false }); this.syncDrugs(); this.retryFailedSave(); };
+  _onOffline = () => { this.setState({ offline: true }); };
 
   // ── ส่งซ้ำอัตโนมัติเมื่อเน็ตกลับมา ─────────────────────────────────────────
   //
@@ -448,6 +464,7 @@ export default class MedReturnApp extends React.Component {
     document.removeEventListener('mousedown', this._onDocDown);
     document.removeEventListener('visibilitychange', this._onVisible);
     window.removeEventListener('online', this._onOnline);
+    window.removeEventListener('offline', this._onOffline);
     if (this._vv && this._onVV) {
       this._vv.removeEventListener('resize', this._onVV);
       this._vv.removeEventListener('scroll', this._onVV);

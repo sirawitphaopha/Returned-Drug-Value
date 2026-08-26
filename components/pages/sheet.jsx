@@ -33,10 +33,10 @@ export function renderSheet(V) {
           {V.sheetIsOff && (
             <div style={s('background:#f6f7f4;border-radius:11px;padding:11px 12px;margin-bottom:13px')}>
               <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:7px')}>ยานอกบัญชีโรงพยาบาล — กรอกเอง</div>
-              <input value={V.offName} onChange={V.onOffName} placeholder="ชื่อยา" style={s('width:100%;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 13.5px Sarabun,sans-serif;margin-bottom:7px')} />
+              <input value={V.offName} onChange={V.onOffName} placeholder="ชื่อยา" style={s('width:100%;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 16px Sarabun,sans-serif;margin-bottom:7px')} />
               <div style={s('display:flex;gap:7px')}>
-                <input value={V.offUnit} onChange={V.onOffUnit} placeholder="หน่วย เช่น เม็ด" style={s('flex:1;min-width:0;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 13.5px Sarabun,sans-serif')} />
-                <input value={V.offPrice} onChange={V.onOffPrice} inputMode="decimal" placeholder="ราคา/หน่วย" style={s("flex:1;min-width:0;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 13.5px Sarabun,sans-serif")} />
+                <input value={V.offUnit} onChange={V.onOffUnit} placeholder="หน่วย เช่น เม็ด" style={s('flex:1;min-width:0;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 16px Sarabun,sans-serif')} />
+                <input value={V.offPrice} onChange={V.onOffPrice} inputMode="decimal" placeholder="ราคา/หน่วย" style={s("flex:1;min-width:0;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 16px Sarabun,sans-serif")} />
               </div>
             </div>
           )}
@@ -48,9 +48,15 @@ export function renderSheet(V) {
               <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:6px')}>เหตุผลที่ต้องทำลาย</div>
               <div style={s('display:flex;flex-wrap:wrap;gap:6px')}>
                 {V.sheetReasons.map((r) => (
-                  <div key={r.label} {...kb(r.pick)} className="tap" style={sx('padding:7px 12px;border-radius:999px;cursor:pointer;font:500 12px Sarabun,sans-serif', { background: r.bg, color: r.fg })}>{r.label}</div>
+                  <div key={r.label} {...kb(r.pick)} className="tap" title={r.help}
+                    style={sx('padding:9px 12px;border-radius:999px;cursor:pointer;font:500 12px Sarabun,sans-serif', { background: r.bg, color: r.fg })}>{r.label}</div>
                 ))}
               </div>
+              {/* 🚨 คำอธิบายโผล่ใต้แถวชิปของตัวที่เลือกอยู่ ไม่ยัดลงในชิปทุกอัน
+                  ชิป 12 อันพร้อมคำอธิบายจะยาวจนล้นจอมือถือ และอ่านไม่ทันอยู่ดี */}
+              {V.sheetReasonHelp && (
+                <div style={s('font:400 11.5px/1.5 Sarabun,sans-serif;color:#6b746e;background:#f6f7f4;border-radius:8px;padding:8px 10px;margin-top:7px')}>{V.sheetReasonHelp}</div>
+              )}
             </div>
           )}
 

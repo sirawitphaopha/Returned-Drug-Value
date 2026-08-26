@@ -3,7 +3,7 @@
 *{-webkit-tap-highlight-color:transparent;box-sizing:border-box}
 body{margin:0;background:#f6f7f4;font-family:var(--font-sarabun),Sarabun,system-ui,sans-serif;color:#1e2420}
 a{color:#2f7d5d}a:hover{color:#24614a}
-input{font-family:inherit}input:focus{outline:none}::placeholder{color:#9aa19c}
+input{font-family:inherit}input:focus{outline:none}::placeholder{color:#6b746e;opacity:1}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(30,36,32,.18);border-radius:9px}
 
 /* วงกลมหมุนตอนรอวัดความกว้างจอ (มอคอัปไม่มี เพราะเป็นไฟล์เดียวไม่มีฝั่งเซิร์ฟเวอร์) */
@@ -16,6 +16,10 @@ input{font-family:inherit}input:focus{outline:none}::placeholder{color:#9aa19c}
 .hv-bg-fbe:hover{background:#fbe4dd!important}
 .hv-bg-e6e:hover{background:#e6e9e5!important}
 .hv-bg-eef:hover{background:#eef6f1!important}
+/* แถวเหตุผลที่ต้องทำลาย — ชี้แล้วพื้นเป็นแดงจางพร้อมขอบแดง (พี่กันสั่ง 26 ส.ค. 2569)
+   🚨 ต้องเขียน border เต็มประโยค ห้ามเขียนแค่ border-color
+      เขียนครึ่งเดียวแล้วอีกครึ่งค้างของเก่า จะได้ขอบดำ (บทเรียนจาก ME-DRP) */
+.hv-reason:hover{background:#fdf2ef!important;border:1px solid rgba(194,84,60,.4)!important}
 .hv-bg-e3f:hover{background:#e3f0e8!important}
 .hv-del:hover{background:#fdf1ed!important;color:#c2543c!important}
 .hv-fg-red:hover{color:#c2543c!important}
@@ -79,25 +83,47 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
    ทำไมไม่เปิดหน้าต่างใหม่แล้วพิมพ์: หน้าต่างใหม่ต้องโหลดฟอนต์ไทยซ้ำ
    และเบราว์เซอร์บางตัวบล็อกหน้าต่างที่เปิดเอง = พิมพ์ไม่ออกโดยไม่มีอะไรเตือน */
 @media print {
-  /* ซ่อนทั้งเว็บก่อน */
-  body > * { display: none !important; }
+  /* ═══════════════════════════════════════════════════════════════════════
+     พิมพ์เฉพาะใบสรุป Lot เท่านั้น
+     ═══════════════════════════════════════════════════════════════════════
 
-  /* แล้วเปิดเฉพาะสายที่พาไปถึงใบสรุป */
-  body > div:has(.slip-sheet) { display: block !important; }
+     🚨 เขียนใหม่ 26 ส.ค. 2569 — พี่กันกด Ctrl+P แล้วได้หน้าเว็บทั้งหน้าออกมา
+        แทนที่จะได้ใบสรุป (มีปุ่ม "แก้ไข" "ดูรายการ" "ใบสรุป" ติดไปในกระดาษด้วย)
+
+     ของเดิมใช้ท่า  body > * { display:none }  แล้วเปิดเฉพาะสายที่มี .slip-sheet
+     ด้วยตัวเลือก :has() ซึ่งพึ่งพาสองอย่าง — เบราว์เซอร์ต้องรองรับ :has()
+     และเนื้อหาต้องเป็นลูกชั้นแรกของ body พอดี ถ้าเครื่องมือสร้างเว็บห่อชั้นเพิ่ม
+     หรือมีสคริปต์แทรก div เข้ามา ตัวเลือกจะไม่ตรงแล้วทุกอย่างโผล่ออกมาหมด
+
+     ท่าใหม่ใช้ visibility แทน — ซ่อนทั้งหน้าก่อน แล้วเปิดเฉพาะใบกับลูกหลานของมัน
+     ไม่พึ่ง :has() ไม่สนใจว่าใบถูกห่ออยู่ลึกกี่ชั้น ทำงานเหมือนกันทุกเบราว์เซอร์
+
+     ⚠️ visibility ต่างจาก display ตรงที่ของที่ถูกซ่อนยัง "กินที่" อยู่
+        จึงต้องดึงใบออกมาวางมุมบนซ้ายด้วย position:absolute ไม่งั้นจะได้
+        กระดาษเปล่านำหน้าหลายหน้าตามความสูงของเนื้อหาที่ซ่อนไว้ */
+
+  body * { visibility: hidden !important; }
+  .slip-sheet, .slip-sheet * { visibility: visible !important; }
+
   .slip-backdrop {
-    display: block !important;
     position: static !important;
     background: none !important;
     padding: 0 !important;
     overflow: visible !important;
+    display: block !important;
   }
+
   .slip-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
     max-width: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
   }
 
-  /* แถบหัวที่มีปุ่มพิมพ์กับปุ่มปิด ไม่ต้องติดไปในกระดาษ */
+  /* แถบหัวที่มีปุ่มพิมพ์ ปุ่มบันทึก PDF และปุ่มปิด ไม่ต้องติดไปในกระดาษ */
   .slip-hide { display: none !important; }
 
   /* บังคับให้พิมพ์สีตามที่เห็นบนจอ — ไม่งั้นเส้นเขียวกับตัวเลขแดงหายหมด
@@ -106,6 +132,13 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
 
   /* ห้ามตัดแถวกลางคัน — ครึ่งบรรทัดอยู่หน้าหนึ่ง อีกครึ่งอยู่อีกหน้า อ่านไม่รู้เรื่อง */
   tr, td, th { break-inside: avoid; }
+
+  /* 🚨 หัวตารางต้องซ้ำทุกหน้า — ใบที่มี 80 รายการกินกระดาษ 2-3 แผ่น
+     หน้าที่สองเป็นต้นไปจะเห็นแต่ตัวเลขลอย ๆ ไม่รู้ว่าคอลัมน์ไหนคืออะไร */
+  thead { display: table-header-group; }
+
+  /* ช่องลงนามห้ามตกไปอยู่หน้าใหม่ลำพัง — ต้องอยู่กับยอดรวมเสมอ */
+  .slip-sign { break-inside: avoid; }
 
   @page { margin: 14mm 12mm; }
 }
