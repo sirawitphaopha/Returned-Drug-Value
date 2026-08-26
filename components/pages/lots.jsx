@@ -146,31 +146,23 @@ export function renderLotSlip(V) {
             <div role="heading" aria-level="1" style={s('font:700 20px/1.4 Sarabun,sans-serif;margin-top:4px')}>ใบสรุปรายการยาคืน</div>
           </div>
 
-          {/* ── ตารางข้อมูลหัวเรื่อง ────────────────────────────────────────────
-              🚨 เอกสารราชการใส่ข้อมูลหัวเรื่องในตารางเหมือนกัน ไม่ปล่อยเป็นข้อความลอย
-                 เพื่อให้ตำแหน่งของแต่ละช่องคงที่ ตรวจสอบย้อนหลังได้ว่าอะไรอยู่ตรงไหน */}
-          <table style={s('width:100%;border-collapse:collapse;margin-bottom:14px')}>
-            <tbody>
-              <tr>
-                <td style={s(TD + ';width:110px;background:#f6f7f4;font-weight:600')}>เลขที่เอกสาร</td>
-                <td style={s(TD)}>{V.slipDocNo}</td>
-                <td style={s(TD + ';width:110px;background:#f6f7f4;font-weight:600')}>เลข Lot</td>
-                <td style={s(TD + ';font-weight:600')}>{V.slipLot}</td>
-              </tr>
-              <tr>
-                <td style={s(TD + ';background:#f6f7f4;font-weight:600')}>วันที่รับคืน</td>
-                <td style={s(TD)}>{V.slipDate}</td>
-                <td style={s(TD + ';background:#f6f7f4;font-weight:600')}>แหล่งที่มา</td>
-                <td style={s(TD)}>{V.slipSrcLabel}</td>
-              </tr>
-              <tr>
-                <td style={s(TD + ';background:#f6f7f4;font-weight:600')}>ผู้บันทึก</td>
-                <td style={s(TD)}>{V.slipBy}</td>
-                <td style={s(TD + ';background:#f6f7f4;font-weight:600')}>จำนวนรายการ</td>
-                <td style={s(TD)}>{V.slipCountLabel}</td>
-              </tr>
-            </tbody>
-          </table>
+          {/* ── ข้อมูลหัวเรื่อง ─────────────────────────────────────────────────
+              🚨 ส่วนนี้ไม่ทำเป็นตาราง — พี่กันทัก 26 ส.ค. 2569 ว่า "อันนี้ไม่ทำตาราง
+                 เราบอกให้ทำเหรอ" · ที่สั่งไว้คือให้ตารางรายการยาเป็นแบบเอกสาร
+                 ไม่ได้สั่งให้หัวเรื่องเป็นตารางด้วย
+              วางเป็นสองคอลัมน์แบบหนังสือราชการ ซ้ายเป็นหัวข้อ ขวาเป็นค่า */}
+          <div style={s('display:flex;gap:34px;flex-wrap:wrap;margin-bottom:16px;font:400 13px/1.9 Sarabun,sans-serif;color:#1e2420')}>
+            <div style={s('flex:1 1 260px;min-width:0')}>
+              <div>เลขที่เอกสาร&nbsp;&nbsp;<b>{V.slipDocNo}</b></div>
+              <div>วันที่รับคืน&nbsp;&nbsp;<b>{V.slipDate}</b></div>
+              <div>ผู้บันทึก&nbsp;&nbsp;<b>{V.slipBy}</b></div>
+            </div>
+            <div style={s('flex:1 1 220px;min-width:0')}>
+              <div>เลข Lot&nbsp;&nbsp;<b>{V.slipLot}</b></div>
+              <div>แหล่งที่มา&nbsp;&nbsp;<b>{V.slipSrcLabel}</b></div>
+              <div>จำนวนรายการ&nbsp;&nbsp;<b>{V.slipCountLabel}</b></div>
+            </div>
+          </div>
 
           {V.slipLoading && (
             <div style={s('text-align:center;padding:30px;font:400 13px Sarabun,sans-serif;color:#6b746e')}>กำลังโหลดรายการยา</div>
