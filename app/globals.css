@@ -352,6 +352,26 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
       หน้าประวัติกับหน้าคลังยาตรึงมาตั้งแต่แรก มีหน้านี้ที่ตกไป
       พื้นที่เลื่อนของเว็บนี้คือกล่องใน shell.jsx ไม่ใช่ทั้งหน้า top:0 จึงหมายถึงขอบบนกล่องนั้น
    🚨 กรอบตาราง .col-tab ห้ามใส่ overflow เด็ดขาด — sticky จะตายทันที */
+/* ── โครงจางระหว่างรอข้อมูล (skeleton) ─────────────────────────────────────
+   พี่กันสั่ง 27 ส.ค. 2569: "หน้าโหลดทุกหน้า ทำ skeleton ไว้ให้หมด
+                            และต้องโครงเหมือนกับเว็บ"
+
+   คลื่นแสงวิ่งจากซ้ายไปขวาบอกว่ากำลังทำงานอยู่ ไม่ใช่ค้าง
+   🚨 ช้าพอที่จะไม่กวนตา (1.4 วินาทีต่อรอบ) — เร็วกว่านี้จะกลายเป็นจอกระพริบ
+   🚨 ต้องมี prefers-reduced-motion เหมือนแอนิเมชันอื่นทั้งเว็บ */
+.skel{
+  background: linear-gradient(90deg, #eceeea 0%, #f4f6f3 42%, #eceeea 84%);
+  background-size: 260% 100%;
+  animation: skel-wave 1.4s ease-in-out infinite;
+}
+@keyframes skel-wave{
+  0%   { background-position: 130% 0 }
+  100% { background-position: -30% 0 }
+}
+@media (prefers-reduced-motion: reduce){
+  .skel{ animation: none; background: #eceeea }
+}
+
 /* ── ฟอนต์ตัวอักษรอังกฤษและตัวเลข (พี่กันสั่ง 27 ส.ค. 2569) ──────────────────
    ตัวแปรนี้ถูกเขียนทับตอนผู้ใช้เลือกในหน้าตั้งค่า แล้วเก็บไว้ในเครื่อง
    🚨 ห้ามตั้งเป็นค่าว่าง — ประโยค font-family จะพังทั้งบรรทัด

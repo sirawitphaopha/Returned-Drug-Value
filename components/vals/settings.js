@@ -58,6 +58,10 @@ export function settingsVals(app, d) {
     setLight: () => app.setTheme(false),
     setDark: () => app.setTheme(true),
 
+    // สวิตช์ดูโครงจางค้างไว้ (เครื่องมือดูงาน ไม่ใช่การตั้งค่าของผู้ใช้)
+    skelDemo: !!st.skelDemo,
+    toggleSkelDemo: app.toggleSkelDemo,
+
     // ── ฟอนต์ตัวอักษรอังกฤษและตัวเลข (พี่กันสั่ง 27 ส.ค. 2569 · เอาแบบเดียวกับเว็บ HCV) ──
     // ภาษาไทยใช้ Sarabun เสมอไม่ว่าเลือกอะไร เพราะ Roboto Mono ไม่มีตัวอักษรไทย
     enFontMono: st.enFont !== 'thai',

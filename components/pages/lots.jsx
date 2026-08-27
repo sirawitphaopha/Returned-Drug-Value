@@ -3,6 +3,7 @@
 import { createPortal } from 'react-dom';
 import { s, sx, kb } from '../helpers';
 import { renderExportBtn } from './exportbtn';
+import { skelTable, skelCard } from './skeleton';
 
 // ── ปุ่มจัดการท้ายแถว ────────────────────────────────────────────────────────
 // แยกออกมาเพราะใช้ทั้งตาราง (จอกว้าง) และการ์ด (จอแคบ) ต้องเหมือนกันเป๊ะ
@@ -153,8 +154,13 @@ export function renderLots(V) {
 
       </div>{/* ปิดแถบหัวที่ตรึงไว้ */}
 
-      {V.lotsLoading && (
-        <div style={s('text-align:center;padding:40px 12px;font:400 13px Sarabun,sans-serif;color:#6b746e')}>กำลังโหลดรายการ Lot</div>
+      {/* โครงจางระหว่างรอ — ใช้คอลัมน์ชุดเดียวกับตารางจริง (V.lotCols)
+          จึงกว้างเท่ากันเป๊ะ ตอนข้อมูลมาถึงหน้าจอไม่กระโดด */}
+      {(V.lotsLoading || V.skelDemo) && V.lotsWide && skelTable(V.lotCols, 7)}
+      {(V.lotsLoading || V.skelDemo) && !V.lotsWide && (
+        <div style={s('display:flex;flex-direction:column;gap:9px')}>
+          {[0, 1, 2, 3, 4].map((i) => skelCard(76, { key: i }))}
+        </div>
       )}
 
       {V.lotsEmpty && !V.lotsFilteredOut && (
@@ -174,7 +180,7 @@ export function renderLots(V) {
       )}
 
       {/* ── ตาราง (จอกว้าง) ──────────────────────────────────────────────── */}
-      {V.lotsWide && !V.lotsEmpty && !V.lotsLoading && (
+      {V.lotsWide && !V.lotsEmpty && !V.lotsLoading && !V.skelDemo && (
         <div className="col-tab" style={s('border:1px solid rgba(30,36,32,.10);border-radius:11px;background:#fff')}>
           <div className="col-head" style={s('display:flex;padding:11px 15px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);border-radius:10px 10px 0 0;font:600 11.5px Sarabun,sans-serif;letter-spacing:.04em')}>
             {V.lotCols.map((c) => (
@@ -217,7 +223,7 @@ export function renderLots(V) {
       )}
 
       {/* ── การ์ด (จอแคบ) ────────────────────────────────────────────────── */}
-      {!V.lotsWide && !V.lotsEmpty && !V.lotsLoading && (
+      {!V.lotsWide && !V.lotsEmpty && !V.lotsLoading && !V.skelDemo && (
         <div style={s('display:flex;flex-direction:column;gap:8px')}>
           {V.lotRows.map((l) => (
             <div key={l.key} style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:11px;padding:12px 13px')}>
@@ -240,7 +246,7 @@ export function renderLots(V) {
         </div>
       )}
 
-      {V.lotsHasMore && (
+      {V.lotsHasMore && !V.skelDemo && (
         <div {...kb(V.moreLots)} className="hv-bg-f6 tap" style={s('margin-top:10px;height:44px;border-radius:11px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 13.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>{V.lotsMoreLabel}</div>
       )}
     </div>

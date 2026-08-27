@@ -36,6 +36,31 @@ export function renderVals(app) {
 
   const box = Object.assign({}, ...parts.map((p) => p[1]));
 
+  // ── สวิตช์ดูโครงจาง (พี่กันสั่ง 27 ส.ค. 2569) ──────────────────────────
+  // 🚨 เปิดสวิตช์แล้วต้องไม่มีข้อมูลจริงเหลืออยู่เลย
+  //    ของเดิมแค่วาดโครงจางเพิ่มเข้าไป ข้อมูลจริงยังอยู่ครบ = ซ้อนกันสองชุด
+  //    พี่กันเห็นแล้วทัก "เปิดโหมดนี้ ไม่โหลดข้อมูลจริงสิ"
+  // 🚨 ทำที่จุดรวมร่างจุดเดียว ทุกหน้าได้ผลพร้อมกัน
+  //    ถ้าไปดักทีละหน้าจะตกหล่นแน่นอน (มี 6 หน้าที่มีรายการ)
+  if (app.state.skelDemo) {
+    box.histRows = [];
+    box.lotRows = [];
+    box.catRows = [];
+    box.priceRows = [];
+    box.rows = [];
+    box.sumTop = [];
+    box.sumTopReturned = [];
+    box.sumMonths = [];
+    box.sumSources = [];
+    box.lotEditRows = [];
+    // ธงว่างต้องปิดด้วย ไม่งั้นจะขึ้นข้อความ "ไม่พบรายการ" ทับโครงจาง
+    box.histEmpty = false;
+    box.lotsEmpty = false;
+    box.lotsFilteredOut = false;
+    box.priceEmpty = false;
+    box.catEmpty = false;
+  }
+
   // เตือนตอน dev ถ้ามีคีย์ซ้ำข้ามไฟล์ — เคยพลาดมาแล้ว (fyLabel ของหน้าบันทึกโดน summary ทับ
   // จนค่าจากเซิร์ฟเวอร์ไม่เคยถูกใช้เลย และ setLight/setDark ซ้ำจนกลายเป็นโค้ดตาย)
   // 🚨 เพิ่มไฟล์ใหม่ใน parts ข้างบน = ได้รับการตรวจอัตโนมัติ ไม่ต้องมาเติมรายชื่อสองที่

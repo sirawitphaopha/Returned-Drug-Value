@@ -3,6 +3,7 @@
 // 🚨 ตาราง drugs ใช้ร่วมกัน 3 เว็บ · แก้ที่นี่กระทบ ME-DRP กับ TB Calculator ด้วย
 // 🚨 ลบยาไม่ได้โดยตั้งใจ ใช้ "ซ่อน" แทน (พี่กันสั่ง 13 ส.ค. 2569)
 import { s, sx, kb } from '../helpers';
+import { skelTableTag } from './skeleton';
 
 // หัวตารางตรึงใต้แถบค้นหาที่ตรึงอยู่ก่อนแล้ว — ระยะวัดจริงจาก ResizeObserver ผ่าน --cathead
 const TH = 'padding:9px 10px;text-align:left;font:600 12px Sarabun,sans-serif;color:#fff;background:#2f7d5d;white-space:nowrap;position:sticky;top:var(--cathead,150px);z-index:2';
@@ -107,8 +108,9 @@ export function renderCatalog(V) {
         </div>
         </div>
 
-        {V.catLoading ? (
-          <div style={s('padding:40px;text-align:center;font:400 13px Sarabun,sans-serif;color:#6f7873')}>กำลังโหลดคลังยา</div>
+        {(V.catLoading || V.skelDemo) ? (
+          /* คลังยามี 14 คอลัมน์ ใช้ชุดจริง (V.catCols) จะได้กว้างตรงกัน */
+          skelTableTag(V.catCols, 11, { extraCols: ["178px"] })
         ) : (
           <div style={s('border:1px solid #eef1ee;border-radius:10px')}>
             <table style={s('width:100%;border-collapse:collapse')}>

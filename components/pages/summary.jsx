@@ -4,6 +4,7 @@
 import { s, sx, kb } from '../helpers';
 import { renderDrugName } from './drugname';
 import { renderExportBtn } from './exportbtn';
+import { skelSummary } from './skeleton';
 
 // แถบบอกสถานะบนสุดของหน้าสรุป — ไม่มีในมอคอัป (มอคอัปมีข้อมูลอยู่ในเครื่องเลยไม่ต้องรอ)
 // ของจริงต้องรอเซิร์ฟเวอร์ ถ้าไม่บอกอะไรเลย ผู้ใช้จะเห็น 0.00 กราฟว่าง
@@ -67,6 +68,9 @@ function renderTopReturned(V) {
 }
 
 export function renderSummaryWide(V) {
+  // 🚨 ระหว่างโหลดต้องโชว์โครงจาง ไม่ใช่ตัวเลข 0.00
+  //    หน้านี้คือหน้าที่ฉายให้ผู้บริหารดู เลข 0 ที่ยังโหลดไม่เสร็จอ่านเป็น "ปีนี้ไม่ประหยัดเลย"
+  //    (ผลตรวจข้อ ก-1 · พี่กันสั่งทำ skeleton 27 ส.ค. 2569)
   return (
     <div style={sx('width:100%;flex:1 0 auto;display:flex;flex-direction:column', { background: V.sumBg, color: V.sumFg })}>
       {/* 🚨 width:100% ห้ามลบ — เหตุผลเดียวกับหน้าบันทึก · ระยะขอบ 26px ให้เท่าอีก 2 หน้า */}
@@ -98,6 +102,10 @@ export function renderSummaryWide(V) {
           </div>
         </div>
 
+        {/* 🚨 โครงจางแทนเฉพาะเนื้อหา ไม่กินหัวเรื่อง
+            พี่กันทัก 27 ส.ค. 2569: "สรุปควรเป็นหน้านี้เหรอ ต้อง skeleton ทั้งเว็บเหรอ"
+            หัวเรื่องกับปุ่มปีงบเป็นของจริงที่วาดได้ทันที ไม่ต้องรอเซิร์ฟเวอร์ */}
+        {(V.sumLoading || V.skelDemo) ? skelSummary() : (<>
         <div style={s('display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;margin-bottom:26px')}>
           <div style={s('flex:1 1 420px;min-width:0')}>
             <div style={sx('font:500 clamp(14px,1.4vw,19px) Sarabun,sans-serif;margin-bottom:2px', { color: V.sumMuted })}>มูลค่ายาที่ประหยัดได้สะสม</div>
@@ -189,6 +197,7 @@ export function renderSummaryWide(V) {
         </div>
 
         {renderTopReturned(V)}
+        </>)}
       </div>
     </div>
   );

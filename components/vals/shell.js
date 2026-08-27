@@ -10,6 +10,8 @@ export function shellVals(app, d) {
   // กดชื่อเว็บแล้วกลับหน้าแรก — ท่ามาตรฐานของเว็บทุกเว็บ
   // (พี่กันสั่ง 26 ส.ค. 2569 "ชื่อเว็บ เราอยากให้กดแล้วกลับไปที่หน้าแรก")
   const goHome = () => app.goScreen('record');
+  // ธงดูโครงจางค้างไว้ — ทุกหน้าอ่านตัวนี้ตัวเดียว (ดู handlers/ui.js → toggleSkelDemo)
+  const skelDemo = !!st.skelDemo;
 
   return {
     shellBg: st.screen === 'summary' ? (d.dark ? '#151a17' : '#f6f7f4') : '#f6f7f4',
@@ -27,6 +29,7 @@ export function shellVals(app, d) {
     // cls = คลาสของแท็บฝั่งคอม · .tab-btn ให้กรอบจาง ๆ · .on บอกว่าแท็บนี้เปิดอยู่
     //       (ตัวที่เปิดอยู่ห้ามเปลี่ยนสีตอนเอาเมาส์ชี้ ดู globals.css)
     goHome: goHome,
+    skelDemo: skelDemo,
     tabs: [
       { label: 'บันทึก', radius: '5px', on: st.screen === 'record', cls: st.screen === 'record' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'record' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'record' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'record' ? '#2f7d5d' : '#6b746e', pick: pickScreen('record') },
       { label: 'ประวัติ', radius: '50%', on: st.screen === 'history', cls: st.screen === 'history' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'history' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'history' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'history' ? '#2f7d5d' : '#6b746e', pick: pickScreen('history') },

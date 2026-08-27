@@ -1,6 +1,7 @@
 // หน้าตั้งราคายา — ไม่มีในมอคอัป (มอคอัปฝังราคาปลอมไว้ในไฟล์)
 // ใช้สี ระยะ และความโค้งชุดเดียวกับหน้าบันทึก จะได้ไม่รู้สึกเป็นคนละเว็บ
 import { s, sx, kb } from '../helpers';
+import { skelCard } from './skeleton';
 
 export function renderPrices(V) {
   return (
@@ -46,8 +47,10 @@ export function renderPrices(V) {
           <span style={s('font:400 11px Sarabun,sans-serif;color:rgba(30,36,32,.4)')}>ปล่อยช่องหน่วยว่างไว้ = ใช้หน่วยเริ่มต้น</span>
         </div>
 
-        {V.priceLoading && (
-          <div style={s('text-align:center;padding:40px 12px;font:400 13px Sarabun,sans-serif;color:#6b746e')}>กำลังโหลดรายการยา</div>
+        {(V.priceLoading || V.skelDemo) && (
+          <div style={s("display:flex;flex-direction:column;gap:8px;padding:4px 0")}>
+            {[0, 1, 2, 3, 4, 5, 6].map((i) => skelCard(58, { key: i }))}
+          </div>
         )}
 
         {V.priceEmpty && (

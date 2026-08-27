@@ -11,6 +11,7 @@
 import { s, sx, kb } from '../helpers';
 import { renderDrugName } from './drugname';
 import { renderPcuField } from './pcufield';
+import { skelLotEdit } from './skeleton';
 
 export function renderLotEdit(V) {
   if (!V.lotEditOpen) return null;
@@ -26,8 +27,8 @@ export function renderLotEdit(V) {
             style={s('margin-left:auto;width:30px;height:30px;border-radius:8px;background:#f2f4f1;color:#6b746e;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px')}>✕</div>
         </div>
 
-        {V.lotEditLoading ? (
-          <div style={s('padding:44px;text-align:center;font:400 13px Sarabun,sans-serif;color:#6f7873')}>กำลังโหลดข้อมูลล็อต</div>
+        {(V.lotEditLoading || V.skelDemo) ? (
+          skelLotEdit()
         ) : (
           <>
             {/* ── ค่าระดับล็อต ── */}

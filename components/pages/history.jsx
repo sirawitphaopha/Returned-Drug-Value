@@ -3,6 +3,7 @@
 import { s, sx, kb } from '../helpers';
 import { renderExportBtn } from './exportbtn';
 import { renderDrugName } from './drugname';
+import { skelTable, skelCard } from './skeleton';
 
 // แถบเครื่องมือเสริม — ไม่มีในมอคอัป
 // เดิมมีแค่ 4 ปุ่มช่วงเวลาสำเร็จรูป + ตัดที่ 60 แถว แล้วบอกให้ "กรองช่วงวันที่ให้แคบลง"
@@ -116,9 +117,8 @@ export function renderHistoryWide(V) {
           <span style={s('width:80px')}></span>
         </div>
 
-        {V.histLoading && (
-          <div style={s('padding:40px 16px;text-align:center;font:400 13.5px Sarabun,sans-serif;color:#6b746e')}>กำลังโหลดประวัติ</div>
-        )}
+        {/* โครงจางใช้คอลัมน์ชุดเดียวกับตารางจริง (V.histCols) */}
+        {(V.histLoading || V.skelDemo) && skelTable(V.histCols, 9, { noHead: true })}
         {V.histEmpty && (
           <div style={s('padding:40px 16px;text-align:center;font:400 13.5px Sarabun,sans-serif;color:#6b746e')}>{V.histEmptyLabel}</div>
         )}
@@ -170,7 +170,7 @@ export function renderHistoryWide(V) {
         ))}
       </div>
 
-      {V.histTruncated && (
+      {V.histTruncated && !V.skelDemo && (
         <div style={s('text-align:center;padding:14px 0 0')}>
           <div style={s('font:400 12px Sarabun,sans-serif;color:#6f7873;margin-bottom:8px')}>{V.histTruncLabel}</div>
           <div {...kb(V.loadMoreHistory)} className="hv-bg-f6 tap" style={s('display:inline-flex;align-items:center;padding:10px 20px;border:1px solid rgba(30,36,32,.16);border-radius:999px;background:#fff;font:600 13px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>{V.loadMoreLabel}</div>
@@ -247,8 +247,11 @@ export function renderHistoryNarrow(V) {
           <span style={s("font:600 12.5px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{V.histTotalLabel}</span>
         </div>
 
-        {V.histLoading && (
-          <div style={s('text-align:center;padding:30px 12px;font:400 13.5px Sarabun,sans-serif;color:#6b746e')}>กำลังโหลดประวัติ</div>
+        {/* ฝั่งมือถือเป็นการ์ด ไม่ใช่ตาราง โครงจางจึงต้องเป็นการ์ดตาม */}
+        {(V.histLoading || V.skelDemo) && (
+          <div style={s('display:flex;flex-direction:column;gap:9px')}>
+            {[0, 1, 2, 3, 4, 5].map((i) => skelCard(84, { key: i }))}
+          </div>
         )}
         {V.histEmpty && (
           <div style={s('text-align:center;padding:30px 12px;border:1px dashed rgba(30,36,32,.16);border-radius:12px;font:400 13.5px Sarabun,sans-serif;color:#6b746e')}>{V.histEmptyLabel}</div>
@@ -315,7 +318,7 @@ export function renderHistoryNarrow(V) {
           </div>
         ))}
 
-        {V.histTruncated && (
+        {V.histTruncated && !V.skelDemo && (
           <div style={s('display:flex;flex-direction:column;align-items:center;gap:9px;padding:4px 0 10px')}>
             <div style={s('text-align:center;font:400 12px Sarabun,sans-serif;color:#6b746e')}>{V.histTruncLabel}</div>
             <div {...kb(V.loadMoreHistory)} className="hv-bg-f6 tap"
