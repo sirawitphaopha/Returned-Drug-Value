@@ -97,7 +97,7 @@ input{font-family:inherit}input:focus{outline:none}::placeholder{color:#6b746e;o
       ไม่ใช่ดูแค่ว่ามีกฎเขียนไว้ */
 .hv-bg-f6:hover{background:#e8f2ec!important;border-color:rgba(47,125,93,.30)!important;color:#2f7d5d!important}
 .hv-bg-fbe:hover{background:#fbe4dd!important}
-.hv-bg-e6e:hover{background:#dfe9e3!important}
+.hv-bg-e6e:hover{background:#d9e7df!important}
 .hv-bg-eef:hover{background:#dcece3!important}
 /* แถวเหตุผลที่ต้องทำลาย — ชี้แล้วพื้นเป็นแดงจางพร้อมขอบแดง (พี่กันสั่ง 26 ส.ค. 2569)
    🚨 ต้องเขียน border เต็มประโยค ห้ามเขียนแค่ border-color
@@ -109,6 +109,137 @@ input{font-family:inherit}input:focus{outline:none}::placeholder{color:#6b746e;o
 /* ปุ่มยืนยันลบในป๊อปอัป — ไม่มีในมอคอัป ใช้แดงเดิมหยดลงมาหนึ่งขั้น */
 .hv-red:hover{background:#a8452f!important}
 .hv-bd-green:hover{border-color:#2f7d5d!important}
+
+/* ── ชุดใหม่ 26 ส.ค. 2569 · พี่กันเคาะจากมอคอัป public/hover-mockup.html ─────
+
+   ปุ่มในเว็บที่ยังไม่มีสีตอนชี้มี 99 ปุ่ม แบ่ง 6 กลุ่มตามบทบาท
+   แต่ละกลุ่มได้สีคนละแบบ เพราะพื้นปุ่มไม่เหมือนกัน
+   🚨 ห้ามใช้กฎกลางครอบทุกปุ่ม (พี่กันสั่ง "ต้องแก้มือทุกปุ่มเท่านั้น") */
+
+/* กลุ่ม 1 · ปุ่มหลักสีทึบ — เข้มอยู่แล้ว ชี้แล้วเข้มขึ้นนิดเดียวในสีเดิม
+   (.hv-teal กับ .hv-red มีอยู่แล้วด้านบน ตัวนี้เพิ่มสีส้มของหน้าคลังยา) */
+.hv-amber:hover{background:#92400e!important}
+/* แถบเตือนโหมดดูตัวอย่าง (พาดเต็มความกว้างบนสุด กดแล้วปิดโหมด)
+   พื้นเดิมส้มสด #d68a2a → ชี้แล้วส้มเข้มขึ้นในโทนเดียวกัน
+   🚨 ห้ามใช้ .hv-amber ที่เป็นน้ำตาลเข้ม #92400e — กระโดดจนดูเหมือนคนละแถบ */
+.hv-demo:hover{background:#c2761c!important}
+
+/* กลุ่ม 3 · ปุ่มสลับสถานะ — ต้องแยกสองคลาสตามสถานะ
+   🚨 ใส่คลาสเดียวให้ทั้งสองสถานะไม่ได้ ตัวที่เลือกอยู่จะพัง
+      ตัวที่เลือก = พื้นทึบ ชี้แล้วต้องเข้มขึ้น
+      ตัวไม่เลือก = พื้นอ่อน ชี้แล้วต้องเข้มขึ้นในโทนเขียวของเว็บ */
+.hv-seg-on:hover{background:#24614a!important}
+/* 🚨 ต้องต่างจากพื้นเดิม #f0f1ee ให้เห็นชัด เดิมใช้ #dfe9e3 ต่างกันน้อยเกินไป
+      จนบางครั้งมองไม่ออกว่าถูกชี้อยู่ (เครื่องมือตรวจก็จับไม่ได้บ้างไม่ได้บ้าง) */
+.hv-seg-off:hover{background:#d3e6dc!important;color:#2f7d5d!important}
+/* คู่ใช้ต่อ/ทำลาย — โทนแดงของตัวเองตอนไม่ได้เลือก */
+.hv-des-on:hover{background:#a8452f!important}
+.hv-des-off:hover{background:#fbe0d8!important}
+
+/* กลุ่ม 4 · ปุ่มไอคอนเล็ก — ชี้แล้วมีพื้นเขียวจางขึ้นมา
+   🚨 เขียน border เต็มประโยคไม่ได้เพราะปุ่มพวกนี้ขอบไม่เหมือนกัน ใช้ border-color แทน
+      แต่ต้องมี border เดิมอยู่แล้วทุกตัว (ตรวจแล้ว) จึงไม่เกิดขอบดำ */
+.hv-ico:hover{background:#e8f2ec!important;border-color:rgba(47,125,93,.34)!important;color:#2f7d5d!important}
+
+/* กลุ่ม 5 · ปุ่มข้อความไม่มีกรอบ — พื้นจางบาง ๆ กับเปลี่ยนสีตัวหนังสือ
+   🚨 ห้ามใส่กรอบตอนชี้ กรอบจะดันให้ตัวหนังสือขยับ */
+.hv-txt:hover{background:#eef4f0!important;color:#2f7d5d!important}
+/* ปุ่มพื้นครีม (ซ่อนยาในหน้าคลังยา) — เข้มขึ้นในโทนส้มของตัวเอง */
+.hv-cream:hover{background:#fbeed4!important}
+
+/* ปุ่มที่กดไม่ได้ (เพิ่ม · บันทึก ตอนยังไม่มีรายการ)
+   พี่กันสั่ง 27 ส.ค. 2569 ว่าปุ่มพวกนี้ก็ต้องขึ้นสีตอนชี้ด้วย
+   🚨 เข้มขึ้นแค่พอรู้ว่าเมาส์อยู่ตรงนี้ ห้ามเข้มจนดูเหมือนกดได้
+      พื้นเดิม #e9ebe8 → #dde0dc ต่างกันพอเห็นแต่ยังอ่านว่าปิดอยู่ */
+.hv-off:hover{background:#dde0dc!important}
+
+/* ปุ่มบันทึกตอนยังไม่ได้เลือกยา — ข้อความ "เลือกยาก่อน"
+   พี่กันสั่ง 27 ส.ค. 2569: "ไม่ชอบสีเทา ปุ่มนี้ขออนิเมชั่นแปลก ๆ ไม่เหมือนเพื่อน"
+   สีครีมอมเหลืองมาจากสีอำพัน #96650f ที่เว็บใช้อยู่แล้ว (ความเข้มข้น % · โหมดดูตัวอย่าง)
+   🚨 ห้ามใช้เขียว จะดูเหมือนกดได้ทั้งที่ยังกดไม่ได้
+   สั่นซ้ายขวาครั้งเดียวตอนเมาส์เข้า สื่อว่า "ยังไม่ได้นะ" — ไม่มีปุ่มอื่นในเว็บทำแบบนี้ */
+.hv-wait{transition:background-color .15s ease,color .15s ease,border-color .15s ease}
+.hv-wait:hover{background:#f4e3bc!important;color:#96650f!important;border-color:rgba(150,101,15,.45)!important;animation:hv-shake .42s ease}
+@keyframes hv-shake{
+  0%,100%{transform:translateX(0)}
+  18%{transform:translateX(-5px)}
+  36%{transform:translateX(5px)}
+  54%{transform:translateX(-3px)}
+  72%{transform:translateX(3px)}
+  86%{transform:translateX(-1px)}
+}
+/* คนที่ตั้งเครื่องให้ลดการเคลื่อนไหว ไม่ต้องสั่น เหลือแค่เปลี่ยนสี */
+@media (prefers-reduced-motion:reduce){.hv-wait:hover{animation:none}}
+
+/* ── ปุ่มธีม สว่าง / เข้ม — แอนิเมชันแทนการเปลี่ยนสี ────────────────────────
+   พี่กันสั่ง 27 ส.ค. 2569 ว่าปุ่มคู่นี้ไม่ต้องเปลี่ยนสี แต่ขอแอนิเมชัน
+   จึงทำเป็นชั้นซ้อนทับ ไม่แตะสีพื้นกับสีตัวหนังสือของปุ่มเลย
+
+   🚨 ปุ่มคู่นี้เปลี่ยนสีเองตามธีมที่เลือกอยู่ (4 ชุดสี) แอนิเมชันจึงใช้
+      currentColor กับสีทองโปร่ง ซึ่งเห็นได้ทั้งบนพื้นเข้มและพื้นอ่อน
+   🚨 ต้องไม่ค้างทับตัวหนังสือ — แสงจางลงเองเมื่อจบ ดาวก็หายไป */
+.hv-sun, .hv-moon { position: relative; overflow: hidden; }
+.hv-sun > *, .hv-moon > * { position: relative; z-index: 1; }
+
+/* สว่าง — แสงอุ่นเปล่งจากกลางปุ่มออกไปรอบ ๆ เหมือนดวงอาทิตย์ขึ้น */
+.hv-sun::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(circle at 50% 52%, rgba(255,196,72,.62), rgba(255,196,72,.16) 46%, transparent 68%);
+  opacity: 0; transform: scale(.3);
+}
+.hv-sun:hover::after { animation: hv-sunrise 1.05s cubic-bezier(.22,.68,.32,1); }
+@keyframes hv-sunrise {
+  0%   { opacity: 0; transform: scale(.3) }
+  38%  { opacity: 1; transform: scale(1.06) }
+  62%  { opacity: 1; transform: scale(1) }
+  100% { opacity: 0; transform: scale(1) }
+}
+
+/* เข้ม — ผืนมืดคืบเข้ามาจากขวา แล้วมีดาวขึ้นตามทีละดวง */
+.hv-moon::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: linear-gradient(100deg, transparent 0%, rgba(24,32,44,.20) 38%, rgba(14,20,30,.46) 100%);
+  transform: translateX(102%);
+}
+.hv-moon:hover::after { animation: hv-nightfall 1.05s ease; }
+@keyframes hv-nightfall {
+  0%   { transform: translateX(102%); opacity: 1 }
+  52%  { transform: translateX(0);    opacity: 1 }
+  100% { transform: translateX(0);    opacity: 0 }
+}
+/* ดาว 5 ดวงวาดด้วยจุดเดียวแล้วทำเงาซ้ำ — ใช้สีตัวหนังสือของปุ่มจึงตัดกับพื้นเสมอ */
+.hv-moon::before {
+  content: ""; position: absolute; top: 29%; left: 15%; width: 3px; height: 3px;
+  border-radius: 50%; background: currentColor; pointer-events: none; opacity: 0;
+  box-shadow: 19px 10px 0 currentColor, 37px -5px 0 currentColor,
+              56px 14px 0 currentColor, 74px 1px 0 currentColor, 92px 8px 0 currentColor;
+}
+.hv-moon:hover::before { animation: hv-stars 1.05s ease .16s; }
+@keyframes hv-stars {
+  0%   { opacity: 0 }
+  45%  { opacity: 1 }
+  78%  { opacity: .5 }
+  100% { opacity: 0 }
+}
+/* คนที่ตั้งเครื่องให้ลดการเคลื่อนไหว ไม่ต้องมีทั้งแสงและดาว */
+@media (prefers-reduced-motion: reduce) {
+  .hv-sun:hover::after, .hv-moon:hover::after, .hv-moon:hover::before { animation: none }
+}
+/* ปุ่มพื้นขาวขอบแดง (ล้างตัวกรอง) — พื้นแดงจางในโทนของตัวเอง ไม่ใช่เขียว */
+/* ปุ่ม/ช่องที่มีกรอบแดง (ยังไม่ได้เลือกผู้บันทึก · ล้างตัวกรอง)
+   🚨 ชี้แล้วต้องเป็นแดงเข้มขึ้น ไม่ใช่เขียว — สีตอนชี้ต้องตามสีของปุ่มนั้น
+      พี่กันสั่ง 27 ส.ค. 2569: "กรอบมันสีแดงนะ จุ้มไปต้องสีแดงสิ"
+   🚨 กรอบเดิมทึบ .55 ตอนชี้ต้องเข้มกว่านั้น ไม่ใช่ .5 ซึ่งจางลง */
+.hv-bg-red-l:hover{background:#fdf1ed!important;border-color:rgba(194,84,60,.85)!important;color:#c2543c!important}
+/* หัวคอลัมน์ตาราง — พื้นอยู่บนแถบเขียวอ่อนอยู่แล้ว ใช้เขียวโปร่งทับ */
+.hv-col:hover{background:rgba(47,125,93,.12)!important;color:#2f7d5d!important}
+/* ลิงก์ข้อความ — ไม่มีพื้น ใช้เปลี่ยนสีกับขีดใต้ */
+/* 🚨 ลิงก์ท้ายเว็บสีเขียวเทลอยู่แล้ว ตั้งสีตอนชี้เป็นเขียวเดิมจึงไม่เปลี่ยนอะไร
+      (บั๊กเดียวกับ .hv-bg-e3f ที่เคยตั้งเท่าพื้นเดิม) ต้องเข้มขึ้นกว่าเดิมจริง ๆ */
+.hv-link:hover{color:#1d5340!important;background:#eef4f0!important;border-bottom-color:#1d5340!important}
+
+/* 🚨 กลุ่ม 6 พื้นหลังหน้าต่างซ้อน ไม่ทำสีตอนชี้โดยตั้งใจ
+      มันกินพื้นที่เต็มจอ ใส่สีแล้วทั้งจอจะกะพริบทุกครั้งที่เลื่อนเมาส์ผ่าน */
 
 /* ── เส้นโฟกัส ────────────────────────────────────────────────────────────────
    มอคอัปปิดเส้นโฟกัสทิ้ง (บรรทัด 18) เพราะเป็นเดโมกดด้วยเมาส์อย่างเดียว
@@ -136,6 +267,11 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
 .tab-btn{border:1px solid rgba(30,36,32,.10);transition:background .12s,border-color .12s,color .12s}
 .tab-btn.on{border-color:rgba(47,125,93,.30)}
 .tab-btn:not(.on):hover{background:#e3f0e8 !important;border-color:rgba(47,125,93,.34) !important;color:#2f7d5d !important}
+/* แท็บที่เลือกอยู่ (พื้นเขียวทึบ) — เดิมไม่มีสีตอนชี้เลย เพิ่มให้เข้มขึ้นในสีเดิม */
+/* 🔴 แท็บที่เลือกอยู่ พื้นเป็นเขียวอ่อน #e3f0e8 ตัวหนังสือเขียวเข้ม #2f7d5d
+      เคยตั้งเป็นเขียวทึบ #24614a แล้วตัวหนังสือกลืนหายจนอ่านไม่ออก
+      พี่กันจับได้ทันที 27 ส.ค. 2569 · ต้องเข้มขึ้นในโทนอ่อนเท่านั้น */
+.tab-btn.on:hover{background:#cfe6da !important}
 
 /* ── แถบกรองติดบนตอนเลื่อน (หน้าประวัติ แบบคอม) ──────────────────────────────
    ชื่อหน้า + ช่องค้น + ปุ่มช่วงเวลา + ช่วงวันที่ + ถังขยะ + ส่งออก CSV
@@ -143,6 +279,63 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
 
    margin ลบ + padding เท่ากัน = แผ่ทับระยะขอบของหน้า (20px บน · 26px ข้าง)
    ไม่งั้นแถวจะโผล่ให้เห็นตรงร่องขอบตอนเลื่อนผ่านใต้แถบ */
+/* ── ชี้แถวไหน แถวนั้นเปลี่ยนสี (พี่กันสั่ง 27 ส.ค. 2569) ──────────────────
+
+   พี่กันสั่ง: "กูบอกให้เอาเมาส์ไปชี้ทีละแถว แล้วแถวนั้นเปลี่ยนสี"
+
+   🚨 รอบแรกแคลร์เข้าใจผิดเป็น "ชี้หัวคอลัมน์แล้วทั้งคอลัมน์เปลี่ยน"
+      ซึ่งไม่มีใครสั่ง และผลออกมาเละมาก — ถอนทิ้งแล้ว
+
+   🚨 ต้องมี !important เพราะแถวมีพื้นสลับขาว/เทาอ่อนเขียนฝังในแท็ก
+      ซึ่งชนะกฎในไฟล์ CSS เสมอ */
+
+.col-row { transition: background-color .12s ease; }
+.col-row:hover { background: #eef6f1 !important; }
+
+
+
+/* 🚨 ปุ่มในแถวต้องเปลี่ยนสีตามแถวด้วย (พี่กันสั่ง 27 ส.ค. 2569)
+      ไม่งั้นแถวเปลี่ยนสีแต่ปุ่มยังขาวอยู่ ดูเหมือนปุ่มลอยไม่เข้าพวก
+      แต่ละปุ่มต้องเข้มขึ้นในโทนสีของตัวเอง ไม่ใช่โทนเดียวกันหมด */
+.col-row:hover .hv-cream { background: #fbeed4 !important; }
+.col-row:hover .hv-bg-f6 { background: #e8f2ec !important; border-color: rgba(47,125,93,.30) !important; }
+.col-row:hover .hv-teal  { background: #24614a !important; }
+
+/* ── เส้นแบ่งคอลัมน์ (พี่กันสั่ง 27 ส.ค. 2569) ─────────────────────────────
+
+   เส้นแนวตั้งคั่นระหว่างคอลัมน์ ทำให้เห็นชัดว่าคอลัมน์ไหนถึงไหน
+   และเวลาไฮไลต์จะดูออกทันทีว่าแถบสีตรงกับคอลัมน์จริงหรือเหลื่อม
+
+   🚨 เส้นแบ่งคอลัมน์ = เส้นแนวตั้งด้านขวาของแต่ละช่อง (border-right)
+      ไม่ใช่กรอบล้อมรอบทั้งสี่ด้าน — แคลร์เคยใส่ outline รอบทุกช่อง
+      ผลคือตารางเต็มไปด้วยกรอบสี่เหลี่ยมจนดูเละ (พี่กันเห็นแล้วทักทันที)
+
+   🚨 คอลัมน์สุดท้ายไม่มีเส้น ไม่งั้นซ้ำกับขอบตาราง
+
+   🚨 เส้นต้องเต็มความสูงแถว และใช้สีเดียวกับเส้นแบ่งแถว
+      ช่องที่สูงแค่ตัวหนังสือทำให้เส้นเป็นขีดสั้น ๆ ลอยกลางแถว
+      พี่กันทัก 27 ส.ค. 2569: "เส้นคือเส้น แบบเส้นแบ่งแถว" */
+/* 🚨 ต้องมี !important — แถวเขียน align-items:center ฝังในแท็ก
+      ซึ่งชนะกฎในไฟล์ CSS เสมอ ช่องจึงสูงแค่ 34px ในแถวที่สูง 53px
+      เส้นแบ่งเลยขาดเป็นช่วง ๆ ไม่เต็มแบบตาราง Excel (พี่กันทัก 27 ส.ค. 2569) */
+.col-head > span,
+.col-row > span {
+  align-self: stretch !important;
+  display: flex;
+  align-items: center;
+}
+.col-head > span:not(:last-child),
+.col-row > span:not(:last-child) {
+  border-right: 1px solid rgba(30, 36, 32, .06);
+}
+/* แถวต้องไม่มีระยะบนล่างของตัวเอง ให้ช่องข้างในถือแทน เส้นจะได้เต็มความสูง */
+.col-row { padding-top: 0 !important; padding-bottom: 0 !important; }
+.col-row > span { padding-top: 9px; padding-bottom: 9px; }
+
+
+
+
+
 .hist-head{position:sticky;top:0;z-index:5;background:#f6f7f4;
   margin:-20px -26px 0;padding:20px 26px 2px}
 

@@ -40,7 +40,7 @@ function renderHistTools(V) {
       </div>
 
       {V.histLot && (
-        <div {...kb(V.clearLot)} aria-label="เลิกกรองเฉพาะ Lot นี้" className="tap" style={s('display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>
+        <div {...kb(V.clearLot)} aria-label="เลิกกรองเฉพาะ Lot นี้" className="hv-bg-e3f tap" style={s('display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>
           Lot {V.histLot} <span aria-hidden="true" style={s('font:400 13px Sarabun,sans-serif')}>✕</span>
         </div>
       )}
@@ -80,7 +80,7 @@ export function renderHistoryWide(V) {
         </div>
         <div style={s('display:flex;gap:6px')}>
           {V.ranges.map((g) => (
-            <div key={g.key} {...kb(g.pick)} className="tap" style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
+            <div key={g.key} {...kb(g.pick)} className={(g.on ? 'hv-seg-on' : 'hv-seg-off') + ' tap'} style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
           ))}
         </div>
         <div style={s('margin-left:auto;display:flex;align-items:baseline;gap:14px;font:400 13px Sarabun,sans-serif;color:#6b746e')}>
@@ -214,21 +214,21 @@ export function renderHistoryNarrow(V) {
                เมาส์ชี้แม่นกว่านิ้วมาก ปุ่มเล็กบนคอมไม่ใช่ปัญหา */}
         <div style={s('display:flex;gap:8px;flex-wrap:wrap')}>
           {V.ranges.map((g) => (
-            <div key={g.key} {...kb(g.pick)} style={sx('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
+            <div key={g.key} {...kb(g.pick)} className={g.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
           ))}
           {/* เด่นกว่าชิปช่วงเวลาแบบเดียวกับฝั่งคอม — ของสองอย่างที่ทำคนละเรื่องกัน
               ไม่ควรหน้าตาเหมือนกัน (กฎ "อะไรที่คล้ายกันทำให้เหมือนกัน" ใช้กับของที่คล้ายกันจริง) */}
-          <div {...kb(V.openLots)} style={s('min-height:44px;padding:0 16px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(47,125,93,.34);font:600 13px Sarabun,sans-serif;cursor:pointer;background:#e3f0e8;color:#2f7d5d')}>
+          <div {...kb(V.openLots)} className="hv-bg-e3f" style={s('min-height:44px;padding:0 16px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(47,125,93,.34);font:600 13px Sarabun,sans-serif;cursor:pointer;background:#e3f0e8;color:#2f7d5d')}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
             <path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M3 6h.01" /><path d="M3 12h.01" /><path d="M3 18h.01" />
           </svg>
             รายการ Lot
           </div>
-          <div {...kb(V.toggleTrash)} style={sx('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>{V.trashLabel}</div>
+          <div {...kb(V.toggleTrash)} className={V.histTrash ? 'hv-seg-on' : 'hv-seg-off'} style={sx('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>{V.trashLabel}</div>
           {/* 🚨 เขียน "Lot" เป็นภาษาอังกฤษเสมอ ห้ามแปลว่า "ชุด" (พี่กันสั่ง — แคลร์เคยแปลผิดมาแล้ว)
               ตรงนี้หลุดมาจากรอบก่อน เพิ่งเจอตอนไล่ทำหน้ารายการ Lot */}
           {V.histLot && (
-            <div {...kb(V.clearLot)} className="tap" style={s('display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>Lot {V.histLot} ✕</div>
+            <div {...kb(V.clearLot)} className="hv-bg-e3f tap" style={s('display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>Lot {V.histLot} ✕</div>
           )}
         </div>
         <div style={s('display:flex;align-items:center;gap:6px;margin-top:9px')}>
@@ -266,7 +266,7 @@ export function renderHistoryNarrow(V) {
                   border: '1px solid ' + it.border,
                   borderLeft: '3px solid ' + (it.hasLot ? (it.lotBand ? '#2f7d5d' : '#a8d3bd') : 'transparent')
                 })}>
-                  <div {...kb(it.edit)} style={s('min-width:0;cursor:pointer;margin-bottom:7px')}>
+                  <div {...kb(it.edit)} className="hv-txt" style={s('min-width:0;cursor:pointer;margin-bottom:7px;padding:2px 5px;margin-left:-5px;border-radius:6px')}>
                     {/* ฝั่งมือถือวาดชื่อยาพร้อมสีเหมือนกัน แค่ตัวใหญ่ขึ้นนิดหนึ่ง
                         ไม่ตัดด้วยจุดไข่ปลา เพราะการ์ดมือถือยอมให้สูงขึ้นได้ */}
                     <div style={s('overflow-wrap:anywhere')}>{renderDrugName(it.parts, { size: '14.5px' })}</div>
@@ -280,7 +280,7 @@ export function renderHistoryNarrow(V) {
                         {/* ป้าย Lot กดได้ → กรองดูเฉพาะ Lot นั้น
                             ดึงออกมาจากบรรทัดรายละเอียดที่เดิมยัดรวมกันจนอ่านยาก */}
                         {it.hasLot && (
-                          <span {...kb(it.openLot)} className="tap" style={s("font:500 10px Sarabun,sans-serif;color:#2f7d5d;background:#e3f0e8;border-radius:5px;padding:2px 7px;cursor:pointer;white-space:nowrap")}>{it.lotLabel}</span>
+                          <span {...kb(it.openLot)} className="hv-bg-e3f tap" style={s("font:500 10px Sarabun,sans-serif;color:#2f7d5d;background:#e3f0e8;border-radius:5px;padding:2px 7px;cursor:pointer;white-space:nowrap")}>{it.lotLabel}</span>
                         )}
                       </div>
                     </div>

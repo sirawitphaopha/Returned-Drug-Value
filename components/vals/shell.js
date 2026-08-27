@@ -53,6 +53,8 @@ export function shellVals(app, d) {
     showLayoutSwitch: st.vw >= 960 && st.hasMouse,
     anyModalOpen: !!(st.confirm || st.sheet || st.settingsOpen),
     // สีปุ่มที่เลือกอยู่ใช้เขียวของเว็บ ไม่ใช่ดำแบบมอคอัป — ชุดเดียวกับปุ่มเพิ่ม/แหล่งที่มา
+    // ธงบอกว่าตอนนี้ดูแบบคอมอยู่ไหม ใช้เลือกคลาสสีตอนเอาเมาส์ชี้
+    layoutDeskOn: !st.forceNarrow,
     layoutDeskBg: st.forceNarrow ? 'transparent' : '#2f7d5d',
     layoutDeskFg: st.forceNarrow ? '#6b746e' : '#fff',
     layoutMobBg: st.forceNarrow ? '#2f7d5d' : 'transparent',

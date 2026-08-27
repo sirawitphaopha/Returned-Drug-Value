@@ -10,14 +10,14 @@ export function renderNavNarrow(V) {
         <div style={s('max-width:520px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;gap:7px')}>
           <span style={s("font:500 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:#6f7873")}>มุมมอง</span>
           <div style={s('display:flex;padding:2px;border-radius:8px;background:#f0f1ee;gap:2px')}>
-            <div {...kb(V.useDesktop)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutDeskBg, color: V.layoutDeskFg })}>คอม</div>
-            <div {...kb(V.useMobile)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutMobBg, color: V.layoutMobFg })}>มือถือ</div>
+            <div {...kb(V.useDesktop)} className={(V.layoutDeskOn ? 'hv-seg-on' : 'hv-txt') + ' tap'} style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutDeskBg, color: V.layoutDeskFg })}>คอม</div>
+            <div {...kb(V.useMobile)} className={(V.layoutDeskOn ? 'hv-txt' : 'hv-seg-on') + ' tap'} style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutMobBg, color: V.layoutMobFg })}>มือถือ</div>
           </div>
         </div>
       )}
       <div style={s('max-width:520px;margin:0 auto;display:flex;justify-content:space-around')}>
         {V.tabs.map((t) => (
-          <div key={t.label} {...kb(t.pick)} style={sx('display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 18px;cursor:pointer;font:600 11px Sarabun,sans-serif', { color: t.fg })}>
+          <div key={t.label} {...kb(t.pick)} className="hv-txt" style={sx('display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 18px;cursor:pointer;font:600 11px Sarabun,sans-serif', { color: t.fg })}>
             <span style={{ width: '20px', height: '20px', border: '2px solid ' + t.fg, borderRadius: t.radius }}></span>{t.label}
           </div>
         ))}
@@ -67,8 +67,8 @@ export function renderNavWide(V) {
           <div style={s('display:flex;align-items:center;gap:7px')}>
             <span style={s("font:500 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:#6f7873")}>มุมมอง</span>
             <div style={s('display:flex;padding:2px;border-radius:8px;background:#f0f1ee;gap:2px')}>
-              <div {...kb(V.useDesktop)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutDeskBg, color: V.layoutDeskFg })}>คอม</div>
-              <div {...kb(V.useMobile)} className="tap" style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutMobBg, color: V.layoutMobFg })}>มือถือ</div>
+              <div {...kb(V.useDesktop)} className={(V.layoutDeskOn ? 'hv-seg-on' : 'hv-txt') + ' tap'} style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutDeskBg, color: V.layoutDeskFg })}>คอม</div>
+              <div {...kb(V.useMobile)} className={(V.layoutDeskOn ? 'hv-txt' : 'hv-seg-on') + ' tap'} style={sx('padding:5px 11px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.layoutMobBg, color: V.layoutMobFg })}>มือถือ</div>
             </div>
           </div>
         )}

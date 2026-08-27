@@ -187,6 +187,7 @@ export function historyVals(app, d) {
       key: r.key,
       label: r.label,
       bg: st.histRange === r.key ? '#2f7d5d' : '#f0f1ee',
+      on: st.histRange === r.key,
       fg: st.histRange === r.key ? '#fff' : '#414a44',
       pick: () => app.setHistRange(r.key)
     })),

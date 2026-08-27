@@ -213,6 +213,7 @@ export function lotsVals(app, d) {
     lotsRanges: RANGES.map((r) => ({
       key: r.key,
       label: r.label,
+      on: st.lotsRange === r.key,
       bg: st.lotsRange === r.key ? '#2f7d5d' : '#f0f1ee',
       fg: st.lotsRange === r.key ? '#fff' : '#414a44',
       pick: () => app.setLotsRange(r.key)
@@ -381,6 +382,7 @@ function lotEditVals(app, st) {
       key: s.key,
       label: s.label,
       bg: e.source === s.key ? '#2f7d5d' : '#fff',
+      on: e.source === s.key,
       fg: e.source === s.key ? '#fff' : '#414a44',
       border: e.source === s.key ? '#2f7d5d' : 'rgba(30,36,32,.14)',
       pick: () => app.setLotEditField('source', s.key)
@@ -451,6 +453,7 @@ function lotEditVals(app, st) {
         // ใช้ต่อ / ทำลาย
         pillBg: reuse ? '#f0f1ee' : '#fbe4dd',
         reuseBg: reuse ? '#fff' : 'transparent',
+        reuseOn: reuse,
         reuseFg: reuse ? '#2f7d5d' : '#c9a096',
         destroyBg: reuse ? 'transparent' : '#fff',
         destroyFg: reuse ? '#6f7873' : '#c2543c',

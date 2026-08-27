@@ -38,7 +38,7 @@ export function renderShell(app) {
       {/* แถบเตือนโหมดดูตัวอย่าง — ต้องเห็นตลอดเวลาที่เปิดโหมด
           จะได้ไม่มีใครเผลอคิดว่าตัวเลขบนจอคือของจริง */}
       {V.demo && (
-        <div {...kb(V.toggleDemo)} style={s('flex:none;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 14px;background:#d68a2a;color:#fff;font:600 12px Sarabun,sans-serif;cursor:pointer;text-align:center')}>
+        <div {...kb(V.toggleDemo)} className="hv-demo" style={s('flex:none;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 14px;background:#d68a2a;color:#fff;font:600 12px Sarabun,sans-serif;cursor:pointer;text-align:center')}>
           <span>⚠ {V.demoBanner}</span>
           <span style={s('font:600 11px Sarabun,sans-serif;background:rgba(255,255,255,.25);border-radius:6px;padding:2px 8px;flex:none')}>กดเพื่อปิด</span>
         </div>

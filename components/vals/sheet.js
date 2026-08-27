@@ -38,6 +38,7 @@ export function sheetVals(app, d) {
     })),
     sheetPillBg: reuse ? '#f0f1ee' : '#fbe4dd',
     sheetReuseBg: reuse ? '#fff' : 'transparent',
+    sheetReuseOn: reuse,
     sheetReuseFg: reuse ? '#2f7d5d' : '#c9a096',
     sheetDestroyBg: reuse ? 'transparent' : '#fff',
     sheetDestroyFg: reuse ? '#6f7873' : '#c2543c',

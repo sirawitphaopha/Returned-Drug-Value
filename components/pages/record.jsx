@@ -131,7 +131,7 @@ export function renderRecordNarrow(V) {
             </div>
           </div>
           <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
-            <div {...kb(V.toggleMore)} style={s("display:flex;align-items:center;gap:6px;min-height:44px;padding:6px 13px;border:1px solid rgba(30,36,32,.14);border-radius:9px;font:500 12.5px Sarabun,sans-serif;cursor:pointer")}>{V.dateLabel} <span style={s('color:#6f7873')}>▾</span></div>
+            <div {...kb(V.toggleMore)} className="hv-bg-f6" style={s("display:flex;align-items:center;gap:6px;min-height:44px;padding:6px 13px;border:1px solid rgba(30,36,32,.14);border-radius:9px;font:500 12.5px Sarabun,sans-serif;cursor:pointer")}>{V.dateLabel} <span style={s('color:#6f7873')}>▾</span></div>
             {/* ปุ่มเกี่ยวกับ แยกออกมาเป็นปุ่มของตัวเองข้างเฟือง — พี่กันสั่ง
                 เดิมซ่อนอยู่ในหน้าตั้งค่า ต้องเลื่อนลงไปหา ไม่มีใครเจอ */}
             <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-bg-f6" style={s('width:44px;height:44px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
@@ -163,13 +163,13 @@ export function renderRecordNarrow(V) {
         {V.noResults && (
           <div style={s('margin-top:8px;padding:13px 14px;border:1px dashed rgba(30,36,32,.18);border-radius:12px;text-align:center')}>
             <div style={s('font:400 13px Sarabun,sans-serif;color:#6b746e;margin-bottom:9px')}>ไม่พบยาชื่อนี้ ลองพิมพ์ชื่อสามัญ เช่น amlo, metf, insu</div>
-            <div {...kb(V.openOffListDrug)} className="tap" style={s('display:inline-flex;align-items:center;padding:9px 16px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>ยาอื่น — พิมพ์ชื่อเอง</div>
+            <div {...kb(V.openOffListDrug)} className="hv-bg-e3f tap" style={s('display:inline-flex;align-items:center;padding:9px 16px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>ยาอื่น — พิมพ์ชื่อเอง</div>
           </div>
         )}
 
         <div style={s('display:flex;gap:7px;margin-top:10px;flex-wrap:wrap')}>
           {V.sources.map((src) => (
-            <div key={src.label} {...kb(src.pick)} style={sx('display:flex;align-items:center;min-height:44px;padding:7px 15px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: src.bg, color: src.fg })}>{src.label}</div>
+            <div key={src.label} {...kb(src.pick)} className={src.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('display:flex;align-items:center;min-height:44px;padding:7px 15px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: src.bg, color: src.fg })}>{src.label}</div>
           ))}
         </div>
 
@@ -243,7 +243,7 @@ export function renderRecordNarrow(V) {
         <div style={s('display:flex;flex-direction:column;gap:7px')}>
           {V.rows.map((row) => (
             <div key={row.rid} style={sx('background:#fff;border-radius:11px;padding:10px 12px', { border: '1px solid ' + row.border })}>
-              <div {...kb(row.edit)} style={s('min-width:0;cursor:pointer;margin-bottom:7px')}>
+              <div {...kb(row.edit)} className="hv-txt" style={s('min-width:0;cursor:pointer;margin-bottom:7px;padding:2px 5px;margin-left:-5px;border-radius:6px')}>
                 <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif;overflow-wrap:anywhere')}>{row.name}</div>
                 <div style={s('font:400 11.5px/1.3 Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums')}>{row.detail}</div>
                 {/* เหตุผลที่ทำลาย — ที่เดียวกับฝั่งคอม ใต้ชื่อยา (พี่กันถาม 26 ส.ค. 2569) */}
@@ -255,8 +255,8 @@ export function renderRecordNarrow(V) {
               </div>
               <div style={s('display:flex;align-items:center;justify-content:space-between;gap:8px')}>
                 <div style={sx('display:flex;padding:2px;border-radius:7px;flex:none', { background: row.pillBg })}>
-                  <div {...kb(row.setReuse)} className="tap" style={sx('padding:5px 10px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.reuseBg, color: row.reuseFg })}>ใช้ต่อ</div>
-                  <div {...kb(row.setDestroy)} className="tap" style={sx('padding:5px 10px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.destroyBg, color: row.destroyFg })}>ทำลาย</div>
+                  <div {...kb(row.setReuse)} className={(row.reuseOn ? 'hv-seg-on' : 'hv-txt') + ' tap'} style={sx('padding:5px 10px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.reuseBg, color: row.reuseFg })}>ใช้ต่อ</div>
+                  <div {...kb(row.setDestroy)} className={(row.reuseOn ? 'hv-des-off' : 'hv-des-on') + ' tap'} style={sx('padding:5px 10px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.destroyBg, color: row.destroyFg })}>ทำลาย</div>
                 </div>
                 <div style={s('display:flex;align-items:center;gap:8px;min-width:0')}>
                   <div style={sx("font:600 15px Sarabun,sans-serif;font-variant-numeric:tabular-nums;text-align:right", { color: row.color })}>{row.valueLabel}</div>
@@ -299,7 +299,7 @@ export function renderRecordWide(V) {
             {V.noResults && (
               <div style={s('position:absolute;left:0;right:0;top:100%;margin-top:6px;z-index:9;border:1px dashed rgba(30,36,32,.18);border-radius:10px;background:#fff;padding:14px;text-align:center')}>
                 <div style={s('font:400 13px Sarabun,sans-serif;color:#6b746e;margin-bottom:9px')}>{V.noResultsHint}</div>
-                <div {...kb(V.openOffListDrug)} className="tap" style={s('display:inline-flex;align-items:center;padding:9px 16px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>ยาอื่น — พิมพ์ชื่อเอง</div>
+                <div {...kb(V.openOffListDrug)} className="hv-bg-e3f tap" style={s('display:inline-flex;align-items:center;padding:9px 16px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px Sarabun,sans-serif;cursor:pointer')}>ยาอื่น — พิมพ์ชื่อเอง</div>
               </div>
             )}
             {V.hasResults && (
@@ -333,7 +333,7 @@ export function renderRecordWide(V) {
                 อักขระอย่าง ▦ หน้าตาเป็นแค่ตาราง ไม่สื่อว่าเป็นเครื่องคิดเลข
                 และคอมโรงพยาบาลที่ฟอนต์ไม่ครบจะเห็นเป็นสี่เหลี่ยมเปล่า
                 stroke/fill ใช้ currentColor จึงเปลี่ยนสีตามสถานะเปิด-ปิดเองโดยไม่ต้องส่งสีเข้ามา */}
-            <div {...kb(V.toggleCalc)} className="tap" title="เครื่องคิดเลข"
+            <div {...kb(V.toggleCalc)} className="hv-ico tap" title="เครื่องคิดเลข"
               style={sx('position:absolute;right:8px;bottom:8px;width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none',
                 { background: V.calcBg, color: V.calcFg })}>
               <svg width="15" height="17" viewBox="0 0 16 18" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" aria-hidden="true">
@@ -356,7 +356,7 @@ export function renderRecordWide(V) {
                 </div>
                 <div style={s('display:grid;grid-template-columns:repeat(4,1fr);gap:5px')}>
                   {V.calcKeys.map((b) => (
-                    <div key={b.k} {...kb(b.press)}
+                    <div key={b.k} {...kb(b.press)} className={b.kind === 'eq' ? 'hv-teal' : 'hv-txt'}
                       style={sx('height:36px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none',
                         b.kind === 'op' ? { background: '#eef3f0', color: '#2f7d5d', font: "600 15px Sarabun,sans-serif" }
                         : b.kind === 'eq' ? { background: '#2f7d5d', color: '#fff', font: "700 15px Sarabun,sans-serif" }
@@ -373,8 +373,8 @@ export function renderRecordWide(V) {
           <div style={s('width:176px')}>
             <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:5px')}>สถานะ</div>
             <div style={s('height:46px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;display:flex;align-items:center;padding:3px;gap:3px')}>
-              <div {...kb(V.setPendingReuse)} style={sx('flex:1;text-align:center;padding:8px 0;border-radius:7px;cursor:pointer;font:600 12.5px Sarabun,sans-serif', { background: V.pendReuseBg, color: V.pendReuseFg })}>ใช้ต่อได้</div>
-              <div {...kb(V.setPendingDestroy)} style={sx('flex:1;text-align:center;padding:8px 0;border-radius:7px;cursor:pointer;font:600 12.5px Sarabun,sans-serif', { background: V.pendDestroyBg, color: V.pendDestroyFg })}>ทำลาย</div>
+              <div {...kb(V.setPendingReuse)} className={V.pendReuseOn ? 'hv-bg-e3f' : 'hv-txt'} style={sx('flex:1;text-align:center;padding:8px 0;border-radius:7px;cursor:pointer;font:600 12.5px Sarabun,sans-serif', { background: V.pendReuseBg, color: V.pendReuseFg })}>ใช้ต่อได้</div>
+              <div {...kb(V.setPendingDestroy)} className={V.pendReuseOn ? 'hv-del' : 'hv-des-off'} style={sx('flex:1;text-align:center;padding:8px 0;border-radius:7px;cursor:pointer;font:600 12.5px Sarabun,sans-serif', { background: V.pendDestroyBg, color: V.pendDestroyFg })}>ทำลาย</div>
             </div>
           </div>
 
@@ -389,7 +389,7 @@ export function renderRecordWide(V) {
             </div>
           </div>
 
-          <div {...kb(V.addInline)} style={sx('height:46px;padding:0 20px;border-radius:9px;display:flex;align-items:center;font:600 14px Sarabun,sans-serif;cursor:pointer', { background: V.addBg, color: V.addFg })}>เพิ่ม <span style={sx("font:400 11px Sarabun,monospace;margin-left:8px", { color: V.addHintFg })}>⏎</span></div>
+          <div {...kb(V.addInline)} className={V.addOn ? 'hv-teal' : 'hv-off'} style={sx('height:46px;padding:0 20px;border-radius:9px;display:flex;align-items:center;font:600 14px Sarabun,sans-serif;cursor:pointer', { background: V.addBg, color: V.addFg })}>เพิ่ม <span style={sx("font:400 11px Sarabun,monospace;margin-left:8px", { color: V.addHintFg })}>⏎</span></div>
         </div>
 
         <div style={s('flex:none;font:400 11.5px Sarabun,sans-serif;color:rgba(30,36,32,.45);margin-bottom:16px;min-height:16px')}>{V.desktopHint}</div>
@@ -490,11 +490,11 @@ export function renderRecordWide(V) {
                   <input autoFocus onFocus={(e) => e.target.select()}
                     value={row.editText} onChange={row.onEditQty} onKeyDown={row.onEditQtyKey} autoComplete="off"
                     style={s("width:150px;height:26px;padding:0 7px;border:1px solid #2f7d5d;border-radius:6px;background:#fff;text-align:right;font:600 13px Sarabun,sans-serif;color:#1e2420;outline:none;box-shadow:0 0 0 3px rgba(47,125,93,.12)")} />
-                  <span {...(row.editCanSave ? kb(row.commitEditQty) : {})} aria-label="ตกลงจำนวนใหม่" className={row.editCanSave ? 'tap' : ''}
+                  <span {...(row.editCanSave ? kb(row.commitEditQty) : {})} aria-label="ตกลงจำนวนใหม่" className={row.editCanSave ? 'hv-txt tap' : ''}
                     title={row.editCanSave ? 'ตกลง' : 'ยังไม่ได้เปลี่ยนจำนวน'}
                     style={sx('width:26px;height:26px;flex:none;border-radius:6px;display:flex;align-items:center;justify-content:center;font:700 13px Sarabun,sans-serif',
                       { background: row.editOkBg, color: row.editOkFg, cursor: row.editCanSave ? 'pointer' : 'not-allowed' })}>✓</span>
-                  <span {...kb(row.cancelEditQty)} aria-label="ยกเลิกการแก้จำนวน" className="tap" title="ยกเลิก"
+                  <span {...kb(row.cancelEditQty)} aria-label="ยกเลิกการแก้จำนวน" className="hv-txt tap" title="ยกเลิก"
                     style={s('width:26px;height:26px;flex:none;border-radius:6px;background:#f2f4f1;color:#6b746e;display:flex;align-items:center;justify-content:center;cursor:pointer;font:600 13px Sarabun,sans-serif')}>✕</span>
                   {row.editPreview && (
                     <span style={s('position:absolute;top:27px;right:0;white-space:nowrap;font:600 10.5px Sarabun,sans-serif;color:#2f7d5d;background:#e7f2ec;border:1px solid rgba(47,125,93,.22);border-radius:5px;padding:2px 7px;z-index:4;pointer-events:none')}>{row.editPreview}</span>
@@ -515,8 +515,8 @@ export function renderRecordWide(V) {
               <span style={sx("width:124px;text-align:right;font:600 15px Sarabun,sans-serif", { color: row.color })}>{row.valueLabel}</span>
               <span style={s('width:150px;display:flex;justify-content:flex-end')}>
                 <span style={sx('display:flex;padding:2px;border-radius:7px', { background: row.pillBg })}>
-                  <span {...kb(row.setReuse)} style={sx('padding:4px 9px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.reuseBg, color: row.reuseFg })}>ใช้ต่อ</span>
-                  <span {...kb(row.setDestroy)} style={sx('padding:4px 9px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.destroyBg, color: row.destroyFg })}>ทำลาย</span>
+                  <span {...kb(row.setReuse)} className={row.reuseOn ? 'hv-seg-on' : 'hv-txt'} style={sx('padding:4px 9px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.reuseBg, color: row.reuseFg })}>ใช้ต่อ</span>
+                  <span {...kb(row.setDestroy)} className={row.reuseOn ? 'hv-des-off' : 'hv-des-on'} style={sx('padding:4px 9px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.destroyBg, color: row.destroyFg })}>ทำลาย</span>
                 </span>
               </span>
               {/* ✕ อยู่กลางคอลัมน์ให้ตรงกับหัว "ล้าง" ซึ่งจัดกลางอยู่แล้ว (พี่กันสั่ง 25 ส.ค. 2569) */}
@@ -537,7 +537,7 @@ export function renderRecordWide(V) {
           <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:6px')}>แหล่งที่มา</div>
           <div style={s('display:flex;flex-wrap:wrap;gap:6px')}>
             {V.sources.map((s2) => (
-              <div key={s2.label} {...kb(s2.pick)} style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: s2.bg, color: s2.fg })}>{s2.label}</div>
+              <div key={s2.label} {...kb(s2.pick)} className={s2.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: s2.bg, color: s2.fg })}>{s2.label}</div>
             ))}
           </div>
           {renderPcuField(V)}
@@ -643,7 +643,7 @@ export function renderRecordWide(V) {
             </div>
           )}
 
-          <div {...kb(V.onSave)} style={sx('height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font:600 15.5px Sarabun,sans-serif;cursor:pointer', { background: V.saveBg, color: V.saveFg })}>{V.saveLabel}</div>
+          <div {...kb(V.onSave)} className={V.saveOn ? 'hv-teal' : 'hv-wait'} style={sx('height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font:600 15.5px Sarabun,sans-serif;cursor:pointer', { background: V.saveBg, color: V.saveFg, border: V.saveBorder, boxSizing: 'border-box' })}>{V.saveLabel}</div>
         </div>
       </div>
     </div>
@@ -683,7 +683,7 @@ export function renderSaveBar(V) {
             </div>
           )}
 
-          <div {...kb(V.onSave)} style={sx('height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font:600 17px Sarabun,sans-serif;cursor:pointer', { background: V.saveBg, color: V.saveFg })}>{V.saveLabel}</div>
+          <div {...kb(V.onSave)} className={V.saveOn ? 'hv-teal' : 'hv-wait'} style={sx('height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font:600 17px Sarabun,sans-serif;cursor:pointer', { background: V.saveBg, color: V.saveFg, border: V.saveBorder, boxSizing: 'border-box' })}>{V.saveLabel}</div>
         </div>
       </div>
     </div>

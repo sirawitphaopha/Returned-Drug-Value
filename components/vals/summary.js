@@ -85,6 +85,9 @@ export function summaryVals(app, d) {
     sumLostPanel: dark ? 'rgba(194,84,60,.14)' : '#fdf1ed',
 
     togTrack: dark ? 'rgba(255,255,255,.09)' : '#e6e9e5',
+    // ธงบอกว่าโหมดไหนถูกเลือกอยู่ ใช้เลือกคลาสสีตอนเอาเมาส์ชี้
+    togLightOn: !dark,
+    togDarkOn: dark,
     togLightBg: dark ? 'transparent' : '#fff',
     togLightFg: dark ? 'rgba(255,255,255,.6)' : '#1e2420',
     togDarkBg: dark ? '#2b332d' : 'transparent',

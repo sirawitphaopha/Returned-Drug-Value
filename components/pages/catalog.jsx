@@ -31,7 +31,7 @@ export function renderCatalog(V) {
               {' · '}แก้ที่นี่แล้วเว็บอื่นของห้องยาเห็นด้วย
             </div>
           </div>
-          <div {...kb(V.catAdd)} className="hv-bg-e3f tap" style={s('background:#2f7d5d;color:#fff;font:600 13px Sarabun,sans-serif;padding:9px 16px;border-radius:9px;cursor:pointer')}>
+          <div {...kb(V.catAdd)} className="hv-teal tap" style={s('background:#2f7d5d;color:#fff;font:600 13px Sarabun,sans-serif;padding:9px 16px;border-radius:9px;cursor:pointer')}>
             เพิ่มยา
           </div>
         </div>
@@ -69,12 +69,12 @@ export function renderCatalog(V) {
 
           <div style={s('flex:1 1 300px;min-width:0;display:flex;gap:6px;flex-wrap:wrap;align-items:center')}>
             {V.catFilters.map((f) => (
-              <div key={f.key} {...kb(f.pick)} className="tap" style={s(f.on ? CHIP_ON : CHIP_OFF)}>{f.label}</div>
+              <div key={f.key} {...kb(f.pick)} className={(f.on ? 'hv-bg-e3f' : 'hv-bg-f6') + ' tap'} style={s(f.on ? CHIP_ON : CHIP_OFF)}>{f.label}</div>
             ))}
             {/* ปุ่มล้าง — โผล่เมื่อมีอะไรให้ล้างจริง ล้างทั้งตัวกรองและคำค้นในปุ่มเดียว
                 เดิมล้างเฉพาะตัวกรอง ผู้ใช้ที่ทั้งค้นทั้งกรองต้องกดสองที่ (พี่กันทัก) */}
             {(V.catHasFilter || V.catHasSearch) && (
-              <div {...kb(V.catClearAll)} className="tap" title="ล้างคำค้นและตัวกรองทั้งหมด"
+              <div {...kb(V.catClearAll)} className="hv-bg-red-l tap" title="ล้างคำค้นและตัวกรองทั้งหมด"
                 style={s(CHIP_BASE + ';border:1px solid rgba(194,84,60,.3);background:#fff;color:#c2543c;font:600 12px Sarabun,sans-serif')}>
                 ✕ ล้างทั้งหมด
               </div>
@@ -100,7 +100,7 @@ export function renderCatalog(V) {
                style={s('border:1px solid #dfe5e1;background:#fff;color:#414a44;font:600 12px Sarabun,sans-serif;padding:6px 13px;border-radius:8px;cursor:pointer;flex:none;text-decoration:none;white-space:nowrap')}>
               ราคากลางยา กระทรวงสาธารณสุข ↗
             </a>
-            <div {...kb(V.catToggleFull)} className="tap" style={s('background:#e3f0e8;color:#2f7d5d;font:600 12px Sarabun,sans-serif;padding:6px 13px;border-radius:8px;cursor:pointer;flex:none')}>
+            <div {...kb(V.catToggleFull)} className="hv-bg-e3f tap" style={s('background:#e3f0e8;color:#2f7d5d;font:600 12px Sarabun,sans-serif;padding:6px 13px;border-radius:8px;cursor:pointer;flex:none')}>
               {V.catFullLabel}
             </div>
           </div>
@@ -120,7 +120,7 @@ export function renderCatalog(V) {
               <thead>
                 <tr>
                   {V.catCols.map((c) => (
-                    <th key={c.key} {...(c.sort ? kb(() => V.catSortBy(c.key)) : {})} style={sx(TH, c.sort ? { cursor: 'pointer' } : null)}>
+                    <th key={c.key} {...(c.sort ? kb(() => V.catSortBy(c.key)) : {})} className={c.sort ? 'hv-teal' : ''} style={sx(TH, c.sort ? { cursor: 'pointer' } : null)}>
                       {c.label}
                       {c.sort && (
                         <span style={s('margin-left:3px;opacity:.75')}>
@@ -172,9 +172,9 @@ export function renderCatalog(V) {
                       </td>
                     )}
                     <td style={s(TD + ';white-space:nowrap')}>
-                      <span {...kb(r.edit)} className="tap" style={s(BTN + ';margin-right:5px')}>แก้ไข</span>
-                      <span {...kb(r.log)} className="tap" style={s(BTN + ';margin-right:5px;color:#6b746e;border-color:#e3e6e1')}>ประวัติ</span>
-                      <span {...kb(r.hide)} className="tap" style={s('border:1px solid #f0d8ae;background:#fef7ec;color:#b45309;font:600 11.5px Sarabun,sans-serif;padding:4px 9px;border-radius:7px;cursor:pointer')}>{r.hideLabel}</span>
+                      <span {...kb(r.edit)} className="hv-bg-f6 tap" style={s(BTN + ';margin-right:5px')}>แก้ไข</span>
+                      <span {...kb(r.log)} className="hv-bg-f6 tap" style={s(BTN + ';margin-right:5px;color:#6b746e;border-color:#e3e6e1')}>ประวัติ</span>
+                      <span {...kb(r.hide)} className="hv-cream tap" style={s('border:1px solid #f0d8ae;background:#fef7ec;color:#b45309;font:600 11.5px Sarabun,sans-serif;padding:4px 9px;border-radius:7px;cursor:pointer')}>{r.hideLabel}</span>
                     </td>
                   </tr>
                 ))}
@@ -189,7 +189,7 @@ export function renderCatalog(V) {
       </div>
 
       {/* ปุ่มลอยกดทีเดียวขึ้นบนสุด — ตารางยาว 417 แถว เลื่อนกลับเองไกลมาก */}
-      <div {...kb(V.catToTop)} className="tap" title="ขึ้นบนสุด"
+      <div {...kb(V.catToTop)} className="hv-teal tap" title="ขึ้นบนสุด"
         style={s('position:fixed;right:24px;bottom:24px;z-index:15;width:44px;height:44px;border-radius:50%;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(30,36,32,.25);font:700 18px Sarabun,sans-serif')}>
         ↑
       </div>
@@ -222,7 +222,7 @@ function renderCatEdit(V) {
     </div>
   );
   const flag = (label, key) => (
-    <div {...kb(() => V.setCatField(key, !d[key]))} className="tap" style={sx('flex:1;min-width:120px;border-radius:9px;padding:10px 12px;font:600 13px Sarabun,sans-serif;cursor:pointer;text-align:center', d[key] ? { border: '1.5px solid #2f7d5d', background: '#e3f0e8', color: '#2f7d5d' } : { border: '1.5px solid #dfe5e1', background: '#fff', color: '#6f7873' })}>
+    <div {...kb(() => V.setCatField(key, !d[key]))} className={(d[key] ? 'hv-bg-e3f' : 'hv-bg-f6') + ' tap'} style={sx('flex:1;min-width:120px;border-radius:9px;padding:10px 12px;font:600 13px Sarabun,sans-serif;cursor:pointer;text-align:center', d[key] ? { border: '1.5px solid #2f7d5d', background: '#e3f0e8', color: '#2f7d5d' } : { border: '1.5px solid #dfe5e1', background: '#fff', color: '#6f7873' })}>
       {label}
     </div>
   );
@@ -302,8 +302,8 @@ function renderCatEdit(V) {
           </div>
         </div>
         <div style={s('border-top:1px solid #eef1ee;padding:13px 18px;display:flex;gap:9px;justify-content:flex-end')}>
-          <div {...kb(V.askCloseCatEdit)} className="tap" style={s('border:1px solid #dfe5e1;background:#fff;color:#6b746e;font:600 13px Sarabun,sans-serif;padding:9px 18px;border-radius:9px;cursor:pointer')}>ยกเลิก</div>
-          <div {...kb(V.saveCatEdit)} className="tap" style={sx('color:#fff;font:600 13px Sarabun,sans-serif;padding:9px 20px;border-radius:9px;cursor:pointer', { background: V.catBusy ? '#6f7873' : '#2f7d5d' })}>
+          <div {...kb(V.askCloseCatEdit)} className="hv-bg-f6 tap" style={s('border:1px solid #dfe5e1;background:#fff;color:#6b746e;font:600 13px Sarabun,sans-serif;padding:9px 18px;border-radius:9px;cursor:pointer')}>ยกเลิก</div>
+          <div {...kb(V.saveCatEdit)} className="hv-teal tap" style={sx('color:#fff;font:600 13px Sarabun,sans-serif;padding:9px 20px;border-radius:9px;cursor:pointer', { background: V.catBusy ? '#6f7873' : '#2f7d5d' })}>
             {V.catBusy ? 'กำลังบันทึก' : 'บันทึก'}
           </div>
         </div>
@@ -314,8 +314,8 @@ function renderCatEdit(V) {
               <div style={s('font:700 15px Sarabun,sans-serif;color:#1e2420;margin-bottom:7px')}>ปิดโดยไม่บันทึกการแก้ไข</div>
               <div style={s('font:400 13px/1.6 Sarabun,sans-serif;color:#6b746e;margin-bottom:16px')}>สิ่งที่แก้ไว้จะหายไปทั้งหมด</div>
               <div style={s('display:flex;gap:9px')}>
-                <div {...kb(V.closeCatEdit)} className="tap" style={s('flex:1;text-align:center;background:#c2543c;color:#fff;font:600 13px Sarabun,sans-serif;padding:10px;border-radius:9px;cursor:pointer')}>ทิ้งการแก้ไข</div>
-                <div {...kb(V.keepCatEdit)} className="tap" style={s('flex:1;text-align:center;border:1px solid #dfe5e1;background:#fff;color:#414a44;font:600 13px Sarabun,sans-serif;padding:10px;border-radius:9px;cursor:pointer')}>กลับไปแก้ต่อ</div>
+                <div {...kb(V.closeCatEdit)} className="hv-red tap" style={s('flex:1;text-align:center;background:#c2543c;color:#fff;font:600 13px Sarabun,sans-serif;padding:10px;border-radius:9px;cursor:pointer')}>ทิ้งการแก้ไข</div>
+                <div {...kb(V.keepCatEdit)} className="hv-bg-f6 tap" style={s('flex:1;text-align:center;border:1px solid #dfe5e1;background:#fff;color:#414a44;font:600 13px Sarabun,sans-serif;padding:10px;border-radius:9px;cursor:pointer')}>กลับไปแก้ต่อ</div>
               </div>
             </div>
           </div>
@@ -340,10 +340,10 @@ function renderCatHide(V) {
             : 'ยาตัวนี้จะหายจากช่องค้นหาของทุกเว็บ แต่รายการยาคืนเก่ายังแสดงชื่อได้ปกติ · เอากลับมาได้ทุกเมื่อ'}
         </div>
         <div style={s('display:flex;gap:9px')}>
-          <div {...kb(V.doHideDrug)} className="tap" style={s('flex:1;text-align:center;background:#b45309;color:#fff;font:600 13px Sarabun,sans-serif;padding:10px;border-radius:9px;cursor:pointer')}>
+          <div {...kb(V.doHideDrug)} className="hv-amber tap" style={s('flex:1;text-align:center;background:#b45309;color:#fff;font:600 13px Sarabun,sans-serif;padding:10px;border-radius:9px;cursor:pointer')}>
             {V.catHideIsBack ? 'เอากลับมา' : 'ซ่อนยา'}
           </div>
-          <div {...kb(V.cancelHideDrug)} className="tap" style={s('flex:1;text-align:center;border:1px solid #dfe5e1;background:#fff;color:#414a44;font:600 13px Sarabun,sans-serif;padding:10px;border-radius:9px;cursor:pointer')}>ยกเลิก</div>
+          <div {...kb(V.cancelHideDrug)} className="hv-bg-f6 tap" style={s('flex:1;text-align:center;border:1px solid #dfe5e1;background:#fff;color:#414a44;font:600 13px Sarabun,sans-serif;padding:10px;border-radius:9px;cursor:pointer')}>ยกเลิก</div>
         </div>
       </div>
     </div>
@@ -383,7 +383,7 @@ function renderCatLog(V) {
           )}
         </div>
         <div style={s('border-top:1px solid #eef1ee;padding:12px 18px;display:flex;justify-content:flex-end')}>
-          <div {...kb(V.closeCatLog)} className="tap" style={s('border:1px solid #dfe5e1;background:#fff;color:#414a44;font:600 13px Sarabun,sans-serif;padding:9px 20px;border-radius:9px;cursor:pointer')}>ปิด</div>
+          <div {...kb(V.closeCatLog)} className="hv-bg-f6 tap" style={s('border:1px solid #dfe5e1;background:#fff;color:#414a44;font:600 13px Sarabun,sans-serif;padding:9px 20px;border-radius:9px;cursor:pointer')}>ปิด</div>
         </div>
       </div>
     </div>

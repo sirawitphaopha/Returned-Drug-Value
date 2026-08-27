@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>สีปุ่มตอนเอาเมาส์ชี้ — ตัวอย่างให้เคาะ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 26px 20px 60px;
+    background: #f6f7f4;
+    font-family: Sarabun, 'Segoe UI', sans-serif;
+    color: #1e2420;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+
+  h1 { font-size: 23px; font-weight: 700; margin: 0 0 6px; }
+  .sub { font-size: 13.5px; color: #6b746e; line-height: 1.7; }
+  .hint {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fdf6e9; border: 1px solid rgba(150,101,15,.28);
+    color: #96650f; font-size: 13px; font-weight: 600;
+    padding: 9px 14px; border-radius: 10px; margin: 12px 0 24px;
+  }
+
+  .card {
+    background: #fff; border: 1px solid rgba(30,36,32,.10);
+    border-radius: 14px; padding: 18px 20px 20px; margin-bottom: 16px;
+  }
+  .card.off { background: #faf9f7; }
+
+  .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .num {
+    width: 26px; height: 26px; border-radius: 8px; flex: none;
+    background: #2f7d5d; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+  }
+  .card.off .num { background: #9aa19c; }
+  .title { font-size: 16.5px; font-weight: 700; }
+  .count { font-size: 12.5px; color: #6b746e; font-weight: 600; }
+  .desc { font-size: 13px; color: #6b746e; line-height: 1.75; margin: 6px 0 14px; }
+  .desc b { color: #414a44; }
+
+  .demo {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    padding: 16px; border-radius: 11px;
+    background: #fff; border: 1px dashed rgba(30,36,32,.14);
+  }
+  .demo.col { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .lbl { font-size: 12px; color: #6b746e; width: 148px; flex: none; }
+
+  .note {
+    font-size: 12.5px; color: #96650f; background: #fdf6e9;
+    border-left: 3px solid #96650f; padding: 9px 12px;
+    border-radius: 0 8px 8px 0; margin-top: 13px; line-height: 1.7;
+  }
+  .note.stop { color: #c2543c; background: #fdf1ed; border-left-color: #c2543c; }
+  .tag { font-size: 11.5px; color: #6b746e; }
+
+  /* ── ปุ่มจริงจากเว็บ ─────────────────────────────────────── */
+  .b { cursor: pointer; user-select: none;
+       transition: background-color .13s ease, border-color .13s ease, color .13s ease; }
+
+  /* กลุ่ม 1 · ปุ่มหลักสีทึบ */
+  .b-teal { height: 38px; padding: 0 17px; border-radius: 9px; background: #2f7d5d; color: #fff;
+            display: inline-flex; align-items: center; font-size: 13px; font-weight: 600; }
+  .b-teal:hover { background: #24614a; }
+  .b-red { height: 38px; padding: 0 17px; border-radius: 9px; background: #c2543c; color: #fff;
+           display: inline-flex; align-items: center; font-size: 13px; font-weight: 600; }
+  .b-red:hover { background: #a8452f; }
+  .b-amber { height: 38px; padding: 0 17px; border-radius: 9px; background: #b45309; color: #fff;
+             display: inline-flex; align-items: center; font-size: 13px; font-weight: 600; }
+  .b-amber:hover { background: #92400e; }
+
+  /* กลุ่ม 2 · ปุ่มรองพื้นขาว มีขอบ */
+  .b-out { height: 38px; padding: 0 16px; border-radius: 9px; background: #fff;
+           border: 1px solid rgba(30,36,32,.16); color: #414a44;
+           display: inline-flex; align-items: center; font-size: 13px; font-weight: 600; }
+  .b-out:hover { background: #e8f2ec; border-color: rgba(47,125,93,.34); color: #2f7d5d; }
+
+  /* กลุ่ม 3 · ปุ่มสลับสถานะ */
+  .b-seg { height: 36px; padding: 0 15px; border-radius: 999px;
+           display: inline-flex; align-items: center; font-size: 12.5px; font-weight: 500; }
+  .b-seg.on { background: #2f7d5d; color: #fff; }
+  .b-seg.on:hover { background: #24614a; }
+  .b-seg.off { background: #f0f1ee; color: #414a44; }
+  .b-seg.off:hover { background: #dfe9e3; color: #2f7d5d; }
+
+  .b-pill { height: 34px; padding: 0 14px; border-radius: 8px;
+            display: inline-flex; align-items: center; font-size: 12.5px; font-weight: 600; }
+  .b-pill.ron { background: #2f7d5d; color: #fff; }
+  .b-pill.ron:hover { background: #24614a; }
+  .b-pill.roff { background: #eef6f1; color: #2f7d5d; }
+  .b-pill.roff:hover { background: #dcece3; }
+  .b-pill.don { background: #c2543c; color: #fff; }
+  .b-pill.don:hover { background: #a8452f; }
+  .b-pill.doff { background: #fdf1ed; color: #c2543c; }
+  .b-pill.doff:hover { background: #fbe0d8; }
+
+  /* กลุ่ม 4 · ปุ่มไอคอนเล็ก */
+  .b-ico { width: 34px; height: 34px; border-radius: 9px;
+           border: 1px solid rgba(30,36,32,.14); background: #fff; color: #6b746e;
+           display: inline-flex; align-items: center; justify-content: center;
+           font-size: 15px; font-weight: 600; }
+  .b-ico:hover { background: #e8f2ec; border-color: rgba(47,125,93,.34); color: #2f7d5d; }
+
+  /* กลุ่ม 5 · ปุ่มข้อความไม่มีกรอบ */
+  .b-txt { padding: 6px 11px; border-radius: 7px; background: transparent; color: #414a44;
+           display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; }
+  .b-txt:hover { background: #eef4f0; color: #2f7d5d; }
+  .b-col { padding: 5px 9px; border-radius: 6px; background: transparent; color: #414a44;
+           display: inline-flex; align-items: center; gap: 5px;
+           font-size: 11.5px; font-weight: 600; letter-spacing: .04em; }
+  .b-col:hover { background: rgba(47,125,93,.10); color: #2f7d5d; }
+  .b-link { color: #6b746e; font-size: 12.5px; font-weight: 500;
+            border-bottom: 1px solid transparent; padding-bottom: 1px; }
+  .b-link:hover { color: #2f7d5d; border-bottom-color: #2f7d5d; }
+
+  /* กลุ่ม 6 · พื้นหลังหน้าต่างซ้อน */
+  .b-back { width: 100%; height: 62px; border-radius: 10px; background: rgba(21,26,23,.42);
+            display: flex; align-items: center; justify-content: center;
+            color: rgba(255,255,255,.82); font-size: 12.5px; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>สีปุ่มตอนเอาเมาส์ชี้ — ตัวอย่างให้เคาะ</h1>
+  <div class="sub">
+    ปุ่มในเว็บที่ยังไม่มีสีตอนเอาเมาส์ชี้มี <b>99 ปุ่ม</b> แบ่งได้ 6 กลุ่มตามบทบาท<br>
+    ปุ่มข้างล่างนี้เป็นของจริงจากเว็บ ใช้สีชุดเดียวกันเป๊ะ
+  </div>
+  <div class="hint">🖱 เอาเมาส์ไปชี้ที่ปุ่มแต่ละอันดู แล้วบอกได้เลยว่าเอาแบบไหน</div>
+
+  <!-- กลุ่ม 1 -->
+  <div class="card">
+    <div class="head">
+      <span class="num">1</span>
+      <span class="title">ปุ่มหลักสีทึบ</span>
+      <span class="count">4 ปุ่ม</span>
+    </div>
+    <div class="desc">
+      ปุ่มที่มีพื้นสีเข้มอยู่แล้ว — <b>ทิ้งการแก้ไข</b> (แดง) · ปุ่ม <b>+ −</b> ในป๊อปใส่จำนวน (เขียว) · ปุ่มยืนยันในหน้าคลังยา (ส้ม)
+    </div>
+    <div class="demo">
+      <span class="b b-teal">เพิ่มรายการ</span>
+      <span class="b b-red">ทิ้งการแก้ไข</span>
+      <span class="b b-amber">ยืนยันการแก้</span>
+      <span class="tag">← ชี้แล้วเข้มขึ้นในสีเดิม ไม่เปลี่ยนสี</span>
+    </div>
+    <div class="note">
+      พี่กันสั่งว่า <b>ปุ่มไหนเข้มอยู่แล้วไม่ควรเข้มเพิ่ม</b> — กลุ่มนี้เลยเข้มขึ้นแค่นิดเดียวพอให้รู้ว่ากำลังชี้อยู่
+    </div>
+  </div>
+
+  <!-- กลุ่ม 2 -->
+  <div class="card">
+    <div class="head">
+      <span class="num">2</span>
+      <span class="title">ปุ่มรองพื้นขาว มีขอบ</span>
+      <span class="count">6 ปุ่ม</span>
+    </div>
+    <div class="desc">
+      <b>ยกเลิก</b> · <b>กลับไปแก้ต่อ</b> · <b>ปิด</b> ในหน้าต่างซ้อนของหน้าคลังยา
+    </div>
+    <div class="demo">
+      <span class="b b-out">ยกเลิก</span>
+      <span class="b b-out">กลับไปแก้ต่อ</span>
+      <span class="b b-out">ปิด</span>
+      <span class="tag">← ชี้แล้วพื้นเป็นเขียวจาง ขอบกับตัวหนังสือเป็นเขียว</span>
+    </div>
+    <div class="note">
+      ปุ่มพื้นขาวห้ามใช้เทา เพราะเทาบนขาวดูเหมือนปุ่ม<b>จางลง</b> ไม่ใช่ถูกชี้ (เคยพลาดมาแล้ว)
+    </div>
+  </div>
+
+  <!-- กลุ่ม 3 -->
+  <div class="card">
+    <div class="head">
+      <span class="num">3</span>
+      <span class="title">ปุ่มสลับสถานะ</span>
+      <span class="count">34 ปุ่ม · กลุ่มใหญ่สุด</span>
+    </div>
+    <div class="desc">
+      ปุ่มที่มี <b>สองสถานะ</b> — <b>ใช้ต่อ/ทำลาย</b> · <b>สว่าง/เข้ม</b> · <b>คอม/มือถือ</b> · แท็บเมนู · ชิปกรองหน้าคลังยา<br>
+      ตัวที่ถูกเลือกอยู่จะเป็นสีทึบ ส่วนตัวที่ยังไม่ถูกเลือกจะเป็นพื้นอ่อน <b>สองแบบนี้ต้องคิดแยกกัน</b>
+    </div>
+    <div class="demo col">
+      <div class="row">
+        <span class="lbl">ชิปช่วงเวลา</span>
+        <span class="b b-seg on">เดือนนี้</span>
+        <span class="tag">← ตัวที่เลือกอยู่ · ชี้แล้วเข้มขึ้นนิดเดียว</span>
+      </div>
+      <div class="row">
+        <span class="lbl"></span>
+        <span class="b b-seg off">วันนี้</span>
+        <span class="b b-seg off">7 วัน</span>
+        <span class="b b-seg off">ปีงบ</span>
+        <span class="tag">← ตัวที่ยังไม่เลือก · ชี้แล้วเป็นเขียวจาง</span>
+      </div>
+      <div class="row">
+        <span class="lbl">ใช้ต่อ / ทำลาย</span>
+        <span class="b b-pill ron">ใช้ต่อได้</span>
+        <span class="b b-pill doff">ทำลาย</span>
+        <span class="tag">← ชี้ทั้งสองอันดู</span>
+      </div>
+      <div class="row">
+        <span class="lbl"></span>
+        <span class="b b-pill roff">ใช้ต่อได้</span>
+        <span class="b b-pill don">ทำลาย</span>
+        <span class="tag">← สลับสถานะกัน</span>
+      </div>
+    </div>
+    <div class="note stop">
+      🚨 จุดที่เคยพลาด — ถ้าใส่สีตอนชี้ชุดเดียวให้ทั้งสองสถานะ ตัวที่เลือกอยู่จะพัง<br>
+      กลุ่มนี้ต้องแยกทำทีละคู่ ทำให้ใช้เวลามากที่สุด
+    </div>
+  </div>
+
+  <!-- กลุ่ม 4 -->
+  <div class="card">
+    <div class="head">
+      <span class="num">4</span>
+      <span class="title">ปุ่มไอคอนเล็ก</span>
+      <span class="count">3 ปุ่ม</span>
+    </div>
+    <div class="desc">
+      <b>▾</b> เปิดรายการยาที่คืนบ่อย · <b>ℹ</b> และ <b>⚙</b> ในหน้าสรุป
+    </div>
+    <div class="demo">
+      <span class="b b-ico">▾</span>
+      <span class="b b-ico">ℹ</span>
+      <span class="b b-ico">⚙</span>
+      <span class="tag">← ชี้แล้วมีพื้นเขียวจางขึ้นมา</span>
+    </div>
+  </div>
+
+  <!-- กลุ่ม 5 -->
+  <div class="card">
+    <div class="head">
+      <span class="num">5</span>
+      <span class="title">ปุ่มข้อความไม่มีกรอบ</span>
+      <span class="count">38 ปุ่ม</span>
+    </div>
+    <div class="desc">
+      หัวคอลัมน์ตาราง · <b>ตกลง/ยกเลิก</b> ในช่องแก้จำนวน · <b>แก้ไข/ประวัติ</b> ในหน้าคลังยา ·
+      <b>ยาอื่น — พิมพ์ชื่อเอง</b> · <b>ล้างตัวกรองทั้งหมด</b> · ลิงก์ท้ายเว็บ
+    </div>
+    <div class="demo col">
+      <div class="row">
+        <span class="lbl">ปุ่มข้อความ</span>
+        <span class="b b-txt">✎ แก้ไข</span>
+        <span class="b b-txt">ประวัติ</span>
+        <span class="b b-txt">ล้างตัวกรองทั้งหมด</span>
+      </div>
+      <div class="row">
+        <span class="lbl">หัวคอลัมน์ตาราง</span>
+        <span class="b b-col">วันที่ ↕</span>
+        <span class="b b-col">ผู้บันทึก ↕</span>
+        <span class="b b-col">มูลค่า ↕</span>
+      </div>
+      <div class="row">
+        <span class="lbl">ลิงก์ท้ายเว็บ</span>
+        <span class="b b-link">เกี่ยวกับ</span>
+      </div>
+    </div>
+    <div class="note">
+      ไม่ใส่กรอบเพิ่มตอนชี้ เพราะกรอบจะดันให้ตัวหนังสือขยับ ใช้พื้นจางกับเปลี่ยนสีตัวหนังสือแทน
+    </div>
+  </div>
+
+  <!-- กลุ่ม 6 -->
+  <div class="card off">
+    <div class="head">
+      <span class="num">6</span>
+      <span class="title">พื้นหลังหน้าต่างซ้อน</span>
+      <span class="count">4 ปุ่ม · เสนอว่าไม่ต้องแตะ</span>
+    </div>
+    <div class="desc">
+      พื้นดำโปร่งด้านหลังหน้าต่างที่กดแล้วปิด — ไม่ใช่ปุ่มจริง
+    </div>
+    <div class="demo">
+      <div class="b-back">พื้นหลังแบบนี้ · กดแล้วปิดหน้าต่าง</div>
+    </div>
+    <div class="note stop">
+      ถ้าใส่สีตอนชี้ให้ของพวกนี้ <b>ทั้งจอจะกะพริบทุกครั้งที่เลื่อนเมาส์ผ่าน</b> เพราะมันกินพื้นที่เต็มหน้า
+    </div>
+  </div>
+
+  <div class="sub" style="margin-top:24px;text-align:center">
+    บอกได้เลยว่าเอากลุ่มไหนบ้าง · กลุ่มไหนอยากได้สีต่างจากนี้ · หรือกลุ่มไหนไม่ต้องทำ
+  </div>
+
+</div>
+</body>
+</html>

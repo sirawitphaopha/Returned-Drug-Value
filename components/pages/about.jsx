@@ -47,7 +47,7 @@ export function renderAbout(V) {
         <div style={s('font:400 12.5px/1.55 Sarabun,sans-serif;color:#6b746e;margin-top:3px')}>
           กลุ่มงานเภสัชกรรมและคุ้มครองผู้บริโภค<br />โรงพยาบาลปรางค์กู่
         </div>
-        <a href="mailto:siravitphoapha9928@hotmail.com" style={s('display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:#e3f0e8;color:#24614a;font:600 13px Sarabun,sans-serif;padding:9px 15px;border-radius:10px;text-decoration:none')}>
+        <a href="mailto:siravitphoapha9928@hotmail.com" className="hv-bg-e3f" style={s('display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:#e3f0e8;color:#24614a;font:600 13px Sarabun,sans-serif;padding:9px 15px;border-radius:10px;text-decoration:none')}>
           ✉️ siravitphoapha9928@hotmail.com
         </a>
       </div>

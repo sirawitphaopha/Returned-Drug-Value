@@ -27,7 +27,7 @@ export function renderSettings(V) {
           <div style={s(LABEL + ';margin-bottom:7px')}>แหล่งที่มาเริ่มต้น</div>
           <div style={s('display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px')}>
             {V.defaultSources.map((ds) => (
-              <div key={ds.label} {...kb(ds.pick)} style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: ds.bg, color: ds.fg })}>{ds.label}</div>
+              <div key={ds.label} {...kb(ds.pick)} className={ds.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: ds.bg, color: ds.fg })}>{ds.label}</div>
             ))}
           </div>
           <div style={s(HINT)}>เปิดแอปมาจะเลือกชิปนี้ให้เลย ตั้งเป็นแหล่งที่คืนบ่อยที่สุดของห้องยาท่าน</div>
@@ -69,8 +69,8 @@ export function renderSettings(V) {
 
           <div style={s(LABEL + ';margin-bottom:7px')}>ธีมหน้าสรุป</div>
           <div style={s('display:flex;gap:6px;margin-bottom:6px')}>
-            <div {...kb(V.setLight)} style={sx('flex:1;text-align:center;padding:11px 0;border-radius:10px;cursor:pointer;font:600 13.5px Sarabun,sans-serif', { background: V.themeLightBg, color: V.themeLightFg })}>สว่าง</div>
-            <div {...kb(V.setDark)} style={sx('flex:1;text-align:center;padding:11px 0;border-radius:10px;cursor:pointer;font:600 13.5px Sarabun,sans-serif', { background: V.themeDarkBg, color: V.themeDarkFg })}>เข้ม</div>
+            <div {...kb(V.setLight)} className="hv-sun" style={sx('flex:1;text-align:center;padding:11px 0;border-radius:10px;cursor:pointer;font:600 13.5px Sarabun,sans-serif', { background: V.themeLightBg, color: V.themeLightFg })}>สว่าง</div>
+            <div {...kb(V.setDark)} className="hv-moon" style={sx('flex:1;text-align:center;padding:11px 0;border-radius:10px;cursor:pointer;font:600 13.5px Sarabun,sans-serif', { background: V.themeDarkBg, color: V.themeDarkFg })}>เข้ม</div>
           </div>
           <div style={s('font:400 11.5px/1.5 Sarabun,sans-serif;color:#6b746e;margin-bottom:22px')}>ห้องประชุมที่ปิดไฟหรือโปรเจกเตอร์คอนทราสต์ต่ำใช้ธีมเข้มจะอ่านง่ายกว่า</div>
 
@@ -78,7 +78,7 @@ export function renderSettings(V) {
               มีไว้ให้เห็นภาพว่าเว็บทำงานเต็มที่แล้วหน้าตาเป็นยังไง
               ตอนที่ยังไม่ได้ใส่ราคายาจริง (ตัวเลขทุกหน้าเป็น 0 หมด) */}
           <div style={s(LABEL + ';margin-bottom:7px')}>โหมดดูตัวอย่าง</div>
-          <div {...kb(V.toggleDemo)} className="tap" style={sx('display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:11px;cursor:pointer;margin-bottom:6px', {
+          <div {...kb(V.toggleDemo)} className={(V.demo ? 'hv-cream' : 'hv-bg-e6e') + ' tap'} style={sx('display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:11px;cursor:pointer;margin-bottom:6px', {
             background: V.demo ? '#fdf3e7' : '#f6f7f4',
             border: '1px solid ' + (V.demo ? 'rgba(214,138,42,.4)' : 'rgba(30,36,32,.1)')
           })}>

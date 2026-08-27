@@ -384,6 +384,9 @@ export function recordVals(app, d) {
       label: s.label,
       // พี่กันสั่งเปลี่ยนจากดำ (#1e2420 ของมอคอัป) เป็นเขียวเทลของธีม
       bg: st.source === s.key ? '#2f7d5d' : '#f0f1ee',
+      // ธงบอกว่าปุ่มนี้ถูกเลือกอยู่ไหม — หน้าจอใช้เลือกคลาสสีตอนเอาเมาส์ชี้
+      // 🚨 ปุ่มสลับสถานะต้องใช้คลาสคนละตัวตามสถานะ ใส่ตัวเดียวให้ทั้งคู่ไม่ได้
+      on: st.source === s.key,
       fg: st.source === s.key ? '#fff' : '#414a44',
       // sourceTouched = ผู้ใช้แตะเองแล้ว · ใช้แยกจาก "ยังเป็นค่าเริ่มต้น"
       // 🚨 ย้ายออกจาก รพ.สต. ต้องล้างชื่อ รพ.สต. ทิ้งทันที ไม่ปล่อยให้ค้าง
@@ -468,9 +471,12 @@ export function recordVals(app, d) {
     addBg: canAdd ? '#2f7d5d' : '#e9ebe8',
     addFg: canAdd ? '#fff' : '#6f7873',
     addHintFg: canAdd ? 'rgba(255,255,255,.5)' : '#b8bdb9',
+    // ปุ่มเพิ่มเป็นเขียวทึบเฉพาะตอนกดได้ · ตอนกดไม่ได้เป็นเทา ไม่ต้องมีสีตอนชี้
+    addOn: canAdd,
     searchBorder: pending ? '#2f7d5d' : 'rgba(30,36,32,.16)',
     pendingUnit: pending ? ' (' + pending.unit + ')' : '',
     pendReuseBg: pendReuse ? '#e3f0e8' : 'transparent',
+    pendReuseOn: pendReuse,
     pendReuseFg: pendReuse ? '#2f7d5d' : '#6f7873',
     pendDestroyBg: pendReuse ? 'transparent' : '#fbe4dd',
     pendDestroyFg: pendReuse ? '#6f7873' : '#c2543c',
@@ -571,6 +577,7 @@ export function recordVals(app, d) {
         border: reuse ? 'rgba(30,36,32,.08)' : 'rgba(194,84,60,.22)',
         pillBg: reuse ? '#f0f1ee' : '#fbe4dd',
         reuseBg: reuse ? '#fff' : 'transparent',
+        reuseOn: reuse,
         reuseFg: reuse ? '#2f7d5d' : '#c9a096',
         destroyBg: reuse ? 'transparent' : '#fff',
         destroyFg: reuse ? '#6f7873' : '#c2543c',
@@ -647,8 +654,12 @@ export function recordVals(app, d) {
       : st.rows.length === 0 ? 'เลือกยาก่อน'
         : st.saveFailed ? 'ลองส่งใหม่'
           : 'บันทึก ' + st.rows.length + ' รายการ',
-    saveBg: st.rows.length === 0 ? '#e9ebe8' : st.saveFailed ? '#1e2420' : '#2f7d5d',
-    saveFg: st.rows.length === 0 ? '#6f7873' : '#fff',
+    // 🎨 ยังไม่เลือกยา = ครีมอมเหลือง ไม่ใช่เทา (พี่กันสั่ง 27 ส.ค. 2569 ว่าไม่ชอบสีเทา)
+    saveBg: st.rows.length === 0 ? '#fdf6e9' : st.saveFailed ? '#1e2420' : '#2f7d5d',
+    saveBorder: st.rows.length === 0 ? '1px solid rgba(150,101,15,.22)' : '1px solid transparent',
+    // กดได้ = พื้นเขียวทึบหรือดำ ต้องมีสีตอนชี้ · ไม่มีรายการ = เทา ไม่ต้องมี
+    saveOn: st.rows.length > 0,
+    saveFg: st.rows.length === 0 ? '#96650f' : '#fff',
     // 🚨 กดบันทึกครั้งแรก = เปิดป๊อปยืนยันก่อน (พี่กันสั่ง 25 ส.ค. 2569)
     //    แต่ตอน "ลองส่งใหม่" หลังเน็ตหลุด ให้ส่งเลย ไม่ต้องยืนยันซ้ำ
     //    เพราะผู้ใช้เพิ่งยืนยันไปเมื่อกี้ ข้อมูลชุดเดิมทุกอย่าง

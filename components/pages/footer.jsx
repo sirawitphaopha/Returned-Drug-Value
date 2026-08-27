@@ -33,7 +33,7 @@ export function renderFooter(V) {
           <span style={sx('font:400 11px Sarabun,sans-serif', { color: muted })}>
             © {V.footerYear} ภก. สิรวิชญ์ เผ่าผา · กลุ่มงานเภสัชกรรม รพ.ปรางค์กู่
           </span>
-          <span {...kb(V.openAbout)} className="tap" style={sx('font:600 11px Sarabun,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px', { color: V.isSummary ? V.sumMuted : '#2f7d5d' })}>
+          <span {...kb(V.openAbout)} className="hv-link tap" style={sx('font:600 11px Sarabun,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px', { color: V.isSummary ? V.sumMuted : '#2f7d5d' })}>
             เกี่ยวกับ
           </span>
         </div>

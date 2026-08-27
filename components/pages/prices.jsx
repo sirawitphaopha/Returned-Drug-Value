@@ -4,7 +4,7 @@ import { s, sx, kb } from '../helpers';
 
 export function renderPrices(V) {
   return (
-    <div style={sx('margin:0 auto;display:flex;flex-direction:column;min-height:100%', { maxWidth: V.pricesWidth })}>
+    <div style={sx('width:100%;margin:0 auto;display:flex;flex-direction:column;min-height:100%', { maxWidth: V.pricesWidth })}>
       <div style={s('padding:16px 20px 14px;background:#fff;border-bottom:1px solid rgba(30,36,32,.07)')}>
         <div style={s('display:flex;align-items:center;gap:10px;margin-bottom:12px')}>
           <div {...kb(V.closePrices)} aria-label="กลับไปหน้าก่อน" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>←</div>
@@ -35,7 +35,7 @@ export function renderPrices(V) {
 
         <div style={s('display:flex;gap:6px;margin-top:10px;flex-wrap:wrap')}>
           {V.priceFilters.map((f) => (
-            <div key={f.key} {...kb(f.pick)} style={sx('padding:7px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: f.bg, color: f.fg })}>{f.label}</div>
+            <div key={f.key} {...kb(f.pick)} className={f.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('padding:7px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: f.bg, color: f.fg })}>{f.label}</div>
           ))}
         </div>
       </div>
@@ -94,7 +94,7 @@ export function renderPrices(V) {
                   <div style={s("font:600 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:rgba(30,36,32,.45);margin-bottom:6px")}>เลือกราคาที่ถูกต้อง</div>
                   <div style={s('display:flex;flex-direction:column;gap:5px')}>
                     {p.suggests.map((sg) => (
-                      <div key={sg.key} {...kb(sg.pick)} className="tap" style={sx('display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;cursor:pointer', {
+                      <div key={sg.key} {...kb(sg.pick)} className={(sg.on ? 'hv-bg-e3f' : 'hv-bg-f6') + ' tap'} style={sx('display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;cursor:pointer', {
                         background: sg.on ? '#e3f0e8' : '#f6f7f4',
                         border: '1px solid ' + (sg.on ? 'rgba(47,125,93,.36)' : 'transparent')
                       })}>
@@ -126,9 +126,9 @@ export function renderPriceBar(V) {
   if (!V.priceBarOpen) return null;
   return (
     <div style={s('flex:none;background:#fff;border-top:1px solid rgba(30,36,32,.08);box-shadow:0 -6px 20px rgba(30,36,32,.06);order:1;position:relative;z-index:5')}>
-      <div style={sx('margin:0 auto;padding:12px 20px max(16px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px', { maxWidth: V.pricesWidth })}>
+      <div style={sx('width:100%;margin:0 auto;padding:12px 20px max(16px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px', { maxWidth: V.pricesWidth })}>
         <div {...kb(V.resetPriceEdits)} className="hv-bg-f6" style={s('height:50px;padding:0 18px;border-radius:12px;border:1px solid rgba(30,36,32,.16);display:flex;align-items:center;justify-content:center;font:600 14px Sarabun,sans-serif;color:#414a44;cursor:pointer;flex:none')}>ยกเลิก</div>
-        <div {...kb(V.savePrices)} style={sx('flex:1;height:50px;border-radius:12px;color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;cursor:pointer', { background: V.priceSaveBg })}>{V.priceSaveLabel}</div>
+        <div {...kb(V.savePrices)} className="hv-teal" style={sx('flex:1;height:50px;border-radius:12px;color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;cursor:pointer', { background: V.priceSaveBg })}>{V.priceSaveLabel}</div>
       </div>
     </div>
   );

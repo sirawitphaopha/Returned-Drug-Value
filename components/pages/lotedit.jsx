@@ -22,7 +22,7 @@ export function renderLotEdit(V) {
           <div style={s('font:700 15.5px Sarabun,sans-serif')}>แก้ไขล็อต</div>
           <div style={s("font:700 14px Sarabun,sans-serif;color:#2f7d5d;background:#e7f2ec;border-radius:7px;padding:3px 10px")}>{V.lotEditLot}</div>
           {!V.lotEditLoading && <div style={s('font:400 12px Sarabun,sans-serif;color:#6b746e')}>{V.lotEditCountLabel}</div>}
-          <div {...kb(V.closeLotEdit)} aria-label="ปิดหน้าต่างแก้ไขล็อต" className="tap" title="ปิด"
+          <div {...kb(V.closeLotEdit)} aria-label="ปิดหน้าต่างแก้ไขล็อต" className="hv-ico tap" title="ปิด"
             style={s('margin-left:auto;width:30px;height:30px;border-radius:8px;background:#f2f4f1;color:#6b746e;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px')}>✕</div>
         </div>
 
@@ -69,7 +69,7 @@ export function renderLotEdit(V) {
                 </div>
                 <div style={s('display:flex;gap:6px;flex-wrap:wrap')}>
                   {V.lotEditSources.map((sc) => (
-                    <div key={sc.key} {...kb(sc.pick)} className="tap"
+                    <div key={sc.key} {...kb(sc.pick)} className={(sc.on ? 'hv-seg-on' : 'hv-seg-off') + ' tap'}
                       style={sx('height:34px;padding:0 13px;border-radius:9px;display:flex;align-items:center;font:600 12.5px Sarabun,sans-serif;cursor:pointer',
                         { background: sc.bg, color: sc.fg, border: '1px solid ' + sc.border })}>{sc.label}</div>
                   ))}
@@ -108,10 +108,10 @@ export function renderLotEdit(V) {
                     <span style={s('width:210px;height:22px;display:flex;align-items:center;justify-content:flex-end;gap:5px;position:relative')}>
                       <input autoFocus onFocus={(e) => e.target.select()} value={r.editText} onChange={r.onQty} onKeyDown={r.onQtyKey} autoComplete="off"
                         style={s("width:140px;height:26px;padding:0 7px;border:1px solid #2f7d5d;border-radius:6px;background:#fff;text-align:right;font:600 13px Sarabun,sans-serif;color:#1e2420;outline:none;box-shadow:0 0 0 3px rgba(47,125,93,.12)")} />
-                      <span {...(r.editCanSave ? kb(r.commitQty) : {})} aria-label="ตกลงจำนวนใหม่" className={r.editCanSave ? 'tap' : ''} title={r.editCanSave ? 'ตกลง' : 'ยังไม่ได้เปลี่ยนจำนวน'}
+                      <span {...(r.editCanSave ? kb(r.commitQty) : {})} aria-label="ตกลงจำนวนใหม่" className={r.editCanSave ? 'hv-txt tap' : ''} title={r.editCanSave ? 'ตกลง' : 'ยังไม่ได้เปลี่ยนจำนวน'}
                         style={sx('width:26px;height:26px;flex:none;border-radius:6px;display:flex;align-items:center;justify-content:center;font:700 13px Sarabun,sans-serif',
                           { background: r.editOkBg, color: r.editOkFg, cursor: r.editCanSave ? 'pointer' : 'not-allowed' })}>✓</span>
-                      <span {...kb(r.cancelQty)} aria-label="ยกเลิกการแก้จำนวน" className="tap" title="ยกเลิก"
+                      <span {...kb(r.cancelQty)} aria-label="ยกเลิกการแก้จำนวน" className="hv-txt tap" title="ยกเลิก"
                         style={s('width:26px;height:26px;flex:none;border-radius:6px;background:#f2f4f1;color:#6b746e;display:flex;align-items:center;justify-content:center;cursor:pointer;font:600 13px Sarabun,sans-serif')}>✕</span>
                       {r.editPreview && (
                         <span style={s('position:absolute;top:27px;right:0;white-space:nowrap;font:600 10.5px Sarabun,sans-serif;color:#2f7d5d;background:#e7f2ec;border:1px solid rgba(47,125,93,.22);border-radius:5px;padding:2px 7px;z-index:4;pointer-events:none')}>{r.editPreview}</span>
@@ -130,8 +130,8 @@ export function renderLotEdit(V) {
                   <span style={sx("width:116px;text-align:right;font:600 14px Sarabun,sans-serif", { color: r.valueColor })}>{r.valueLabel}</span>
                   <span style={s('width:140px;display:flex;justify-content:center')}>
                     <span style={sx('display:flex;padding:2px;border-radius:7px', { background: r.pillBg })}>
-                      <span {...kb(r.setReuse)} style={sx('padding:4px 9px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: r.reuseBg, color: r.reuseFg })}>ใช้ต่อ</span>
-                      <span {...kb(r.setDestroy)} style={sx('padding:4px 9px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: r.destroyBg, color: r.destroyFg })}>ทำลาย</span>
+                      <span {...kb(r.setReuse)} className={r.reuseOn ? 'hv-seg-on' : 'hv-txt'} style={sx('padding:4px 9px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: r.reuseBg, color: r.reuseFg })}>ใช้ต่อ</span>
+                      <span {...kb(r.setDestroy)} className={r.reuseOn ? 'hv-des-off' : 'hv-des-on'} style={sx('padding:4px 9px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: r.destroyBg, color: r.destroyFg })}>ทำลาย</span>
                     </span>
                   </span>
                 </div>
@@ -174,7 +174,7 @@ export function renderLotEdit(V) {
               <div style={s('margin-left:auto;display:flex;gap:9px')}>
                 <div {...kb(V.closeLotEdit)} className="hv-bg-f6"
                   style={s('height:38px;padding:0 16px;border-radius:9px;border:1px solid rgba(30,36,32,.14);background:#fff;display:flex;align-items:center;font:600 13px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>ยกเลิก</div>
-                <div {...(V.lotEditDirty && !V.lotEditBusy ? kb(V.askSaveLotEdit) : {})} className={V.lotEditDirty && !V.lotEditBusy ? 'tap' : ''}
+                <div {...(V.lotEditDirty && !V.lotEditBusy ? kb(V.askSaveLotEdit) : {})} className={V.lotEditDirty && !V.lotEditBusy ? 'hv-teal tap' : ''}
                   title={V.lotEditDirty ? 'บันทึกการแก้ไข' : 'ยังไม่ได้แก้อะไร'}
                   style={sx('height:38px;padding:0 18px;border-radius:9px;display:flex;align-items:center;font:600 13px Sarabun,sans-serif',
                     { background: V.lotEditSaveBg, color: V.lotEditSaveFg, cursor: V.lotEditDirty && !V.lotEditBusy ? 'pointer' : 'not-allowed' })}>{V.lotEditSaveLabel}</div>

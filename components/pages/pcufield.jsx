@@ -41,6 +41,8 @@ export function renderPcuField(V, o) {
         </div>
       ) : (
         <select
+          // 🚨 กรอบเป็นแดงตอนยังไม่ได้เลือกแห่ง สีตอนชี้จึงต้องแดงตาม (พี่กันทัก 27 ส.ค. 2569)
+          className={has ? 'hv-bg-f6' : 'hv-bg-red-l'}
           value={V.pcuSite || ''}
           onChange={V.onPcuSite}
           aria-label="เลือก รพ.สต. ต้นทาง"

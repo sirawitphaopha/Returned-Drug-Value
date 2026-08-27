@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>แอนิเมชันปุ่มธีม</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { font-family: Sarabun, sans-serif; background: #f7f8f6; color: #1e2420;
+         margin: 0; padding: 28px 22px 60px; }
+  h1 { font-size: 21px; margin: 0 0 4px; }
+  .lead { font-size: 13.5px; color: #6b746e; margin: 0 0 26px; line-height: 1.7; }
+  .card { background: #fff; border: 1px solid rgba(30,36,32,.12); border-radius: 14px;
+          padding: 18px 20px 20px; margin-bottom: 16px; max-width: 560px; }
+  h2 { font-size: 15px; margin: 0 0 3px; }
+  .why { font-size: 12.5px; color: #6b746e; margin: 0 0 14px; line-height: 1.65; }
+  .row { display: flex; gap: 6px; }
+  .tbtn { flex: 1; text-align: center; padding: 11px 0; border-radius: 10px;
+          cursor: pointer; font: 600 13.5px Sarabun, sans-serif;
+          position: relative; overflow: hidden; user-select: none; }
+  .on  { background: #1e2420; color: #fff; }
+  .off { background: #f0f1ee; color: #414a44; }
+  .tag { display: inline-block; font: 600 11px Sarabun,sans-serif; color: #2f7d5d;
+         background: #e3f0e8; border-radius: 5px; padding: 2px 8px; margin-left: 7px;
+         vertical-align: 2px; }
+
+  /* ══ แบบ ก — ตรงกับโค้ดในเว็บจริงทุกบรรทัด ══ */
+  .a-sun::after {
+    content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+    background: radial-gradient(circle at 50% 52%, rgba(255,196,72,.62), rgba(255,196,72,.16) 46%, transparent 68%);
+    opacity:0; transform:scale(.3);
+  }
+  .a-sun:hover::after { animation: sunrise 1.05s cubic-bezier(.22,.68,.32,1); }
+  @keyframes sunrise {
+    0%{opacity:0;transform:scale(.3)} 38%{opacity:1;transform:scale(1.06)}
+    62%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1)}
+  }
+  .a-moon::after {
+    content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+    background: linear-gradient(100deg, transparent 0%, rgba(24,32,44,.20) 38%, rgba(14,20,30,.46) 100%);
+    transform: translateX(102%);
+  }
+  .a-moon:hover::after { animation: nightfall 1.05s ease; }
+  @keyframes nightfall {
+    0%{transform:translateX(102%);opacity:1} 52%{transform:translateX(0);opacity:1} 100%{transform:translateX(0);opacity:0}
+  }
+  .a-moon::before {
+    content:""; position:absolute; top:29%; left:15%; width:3px; height:3px;
+    border-radius:50%; background:currentColor; pointer-events:none; opacity:0;
+    box-shadow: 19px 10px 0 currentColor, 37px -5px 0 currentColor, 56px 14px 0 currentColor,
+                74px 1px 0 currentColor, 92px 8px 0 currentColor;
+  }
+  .a-moon:hover::before { animation: stars 1.05s ease .16s; }
+  @keyframes stars { 0%{opacity:0} 45%{opacity:1} 78%{opacity:.5} 100%{opacity:0} }
+
+  /* ══ แบบ ข — เรียบกว่า แสงกวาดผ่านครั้งเดียว ══ */
+  .b-sun::after, .b-moon::after {
+    content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+    transform: translateX(-102%);
+  }
+  .b-sun::after  { background: linear-gradient(102deg, transparent 34%, rgba(255,206,96,.5) 50%, transparent 66%); }
+  .b-moon::after { background: linear-gradient(102deg, transparent 34%, rgba(90,120,170,.42) 50%, transparent 66%); }
+  .b-sun:hover::after, .b-moon:hover::after { animation: sweep .72s ease; }
+  @keyframes sweep { to { transform: translateX(102%) } }
+
+  /* ══ แบบ ค — ปุ่มยกตัวขึ้นแล้ววางลง ══ */
+  .c-btn { transition: transform .2s ease, box-shadow .2s ease; }
+  .c-btn:hover { animation: lift .5s ease; }
+  @keyframes lift {
+    0%,100% { transform: translateY(0) }
+    45%     { transform: translateY(-3px) }
+  }
+  .c-sun:hover  { box-shadow: 0 6px 16px -6px rgba(214,138,42,.75); }
+  .c-moon:hover { box-shadow: 0 6px 16px -6px rgba(47,66,96,.55); }
+
+  /* ══ แบบ ง — วงแหวนขยายออกจากกลาง ══ */
+  .d-btn::after {
+    content:""; position:absolute; left:50%; top:50%; width:8px; height:8px;
+    margin:-4px 0 0 -4px; border-radius:50%; pointer-events:none;
+    border:1.5px solid currentColor; opacity:0;
+  }
+  .d-btn:hover::after { animation: ring .68s ease; }
+  @keyframes ring {
+    0%   { opacity:.75; transform:scale(1) }
+    100% { opacity:0;   transform:scale(16) }
+  }
+  .note { max-width:560px; font-size:12.5px; color:#6b746e; line-height:1.75; margin-top:22px; }
+</style>
+</head>
+<body>
+
+<h1>แอนิเมชันปุ่มธีม 4 แบบ</h1>
+<p class="lead">เอาเมาส์ไปชี้ทีละปุ่มดูค่ะ · สีปุ่มไม่เปลี่ยนเลยสักแบบ ตามที่พี่กันสั่งไว้<br>
+ปุ่มซ้ายคือธีมที่เลือกอยู่ (พื้นเข้ม) ปุ่มขวาคือตัวที่ยังไม่ได้เลือก</p>
+
+<div class="card">
+  <h2>แบบ ก · ดวงอาทิตย์ขึ้น กับ ค่ำลงมีดาว <span class="tag">ตรงกับในเว็บจริงแล้ว</span></h2>
+  <p class="why">สว่าง — แสงอุ่นเปล่งจากกลางปุ่มออกไปรอบ ๆ แล้วจางหายเอง<br>
+     เข้ม — ผืนมืดคืบเข้ามาจากขวา แล้วมีดาวขึ้นตามทีละดวงก่อนจางหาย</p>
+  <div class="row">
+    <div class="tbtn on a-sun">สว่าง</div>
+    <div class="tbtn off a-moon">เข้ม</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>แบบ ข · แสงกวาดผ่านครั้งเดียว</h2>
+  <p class="why">เรียบที่สุด · แถบแสงวิ่งผ่านจากซ้ายไปขวาแล้วจบ<br>
+     สว่างใช้แสงสีทอง เข้มใช้แสงสีน้ำเงินคืน</p>
+  <div class="row">
+    <div class="tbtn on b-sun">สว่าง</div>
+    <div class="tbtn off b-moon">เข้ม</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>แบบ ค · ปุ่มยกตัวขึ้นแล้ววางลง</h2>
+  <p class="why">ไม่มีแสงเลย · ปุ่มลอยขึ้นนิดเดียวพร้อมเงาใต้ปุ่ม แล้ววางกลับ<br>
+     เงาของสว่างเป็นสีทอง เงาของเข้มเป็นสีน้ำเงินเทา</p>
+  <div class="row">
+    <div class="tbtn on c-btn c-sun">สว่าง</div>
+    <div class="tbtn off c-btn c-moon">เข้ม</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>แบบ ง · วงแหวนขยายออกจากกลาง</h2>
+  <p class="why">วงกลมบาง ๆ ผุดจากกลางปุ่มแล้วขยายออกจนจางหาย<br>
+     เหมือนกันทั้งสองปุ่ม ใช้สีตัวหนังสือของปุ่มนั้น</p>
+  <div class="row">
+    <div class="tbtn on d-btn">สว่าง</div>
+    <div class="tbtn off d-btn">เข้ม</div>
+  </div>
+</div>
+
+<p class="note">ตอนนี้ในเว็บจริงเป็น <b>แบบ ก</b> อยู่ค่ะ<br>
+ถ้าพี่กันชอบแบบอื่น บอกตัวอักษรมาได้เลย แคลร์เปลี่ยนให้</p>
+
+</body>
+</html>

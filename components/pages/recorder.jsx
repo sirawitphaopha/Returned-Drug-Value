@@ -23,8 +23,12 @@ export function renderRecorderField(V) {
       </div>
 
       {/* ปุ่มเปิดเมนู — โครงเดียวกับ ME-DRP: ขอบ 1.5px เปลี่ยนสีตอนเปิด · ลูกศรหมุน 180° */}
+      {/* 🚨 กรอบช่องนี้เป็นสีแดงตอนยังไม่ได้เลือกชื่อ สีตอนชี้จึงต้องเป็นแดงตาม
+          ใส่คลาสเขียวให้ทั้งสองสถานะไม่ได้ (พี่กันทัก 27 ส.ค. 2569)
+          🚨 คอมเมนต์ JSX ต้องอยู่นอกแท็ก วางในแอตทริบิวต์แล้วเว็บพังทันที */}
       <div
         {...kb(V.toggleRecorderMenu)}
+        className={!has ? 'hv-bg-red-l' : 'hv-bg-f6'}
         style={sx('width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;border-radius:11px;padding:12px 14px;background:#fff;cursor:pointer', {
           border: '1.5px solid ' + (!has ? 'rgba(194,84,60,.55)' : open ? '#2f7d5d' : 'rgba(30,36,32,.14)'),
           color: has ? '#1e2420' : '#6f7873'
@@ -102,6 +106,7 @@ export function renderRecorderField(V) {
                 />
                 <div
                   {...kb(V.addRecorder)}
+                  className={V.canAddRecorder ? 'hv-teal' : ''}
                   style={sx('height:38px;padding:0 14px;border-radius:9px;display:flex;align-items:center;font:600 13px Sarabun,sans-serif;flex:none', {
                     background: V.canAddRecorder ? '#2f7d5d' : '#e9ebe8',
                     color: V.canAddRecorder ? '#fff' : '#6f7873',

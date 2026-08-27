@@ -33,7 +33,9 @@ export function pricesVals(app, d) {
 
   return {
     isPrices: st.screen === 'prices',
-    pricesWidth: d.wide ? '820px' : '520px',
+    // ความกว้างเท่ากับหน้าอื่นทั้งเว็บ (พี่กันสั่ง 27 ส.ค. 2569)
+    // เดิม 820px ทำให้หน้านี้แคบกว่าเพื่อนจนดูเหมือนคนละเว็บ
+    pricesWidth: d.wide ? '1400px' : '520px',
     closePrices: app.closePrices,
 
     priceProgress: total ? priced.toLocaleString('en-US') + ' / ' + total.toLocaleString('en-US') : '—',
@@ -45,6 +47,7 @@ export function pricesVals(app, d) {
       key: f.key,
       // แท็บ "รอกดเลือก" ติดตัวเลขงานค้างไว้ จะได้รู้ว่าเหลืออีกกี่ตัว
       label: f.key === 'check' && needCheck ? f.label + ' ' + needCheck : f.label,
+      on: st.priceFilter === f.key,
       bg: st.priceFilter === f.key ? '#2f7d5d' : (f.key === 'check' && needCheck ? '#fdf1ed' : '#f0f1ee'),
       fg: st.priceFilter === f.key ? '#fff' : (f.key === 'check' && needCheck ? '#c2543c' : '#414a44'),
       pick: () => app.setPriceFilter(f.key)

@@ -14,7 +14,7 @@ import { renderExportBtn } from './exportbtn';
 function rowButtons(l) {
   return (
     <div style={s('display:flex;gap:6px;justify-content:flex-end')}>
-      <div {...kb(l.openEdit)} aria-label={'แก้ไข Lot ' + l.lot} title="แก้ไขล็อตนี้" className="tap"
+      <div {...kb(l.openEdit)} aria-label={'แก้ไข Lot ' + l.lot} title="แก้ไขล็อตนี้" className="hv-cream tap"
         style={s('height:34px;padding:0 11px;border-radius:9px;border:1px solid rgba(150,101,15,.30);background:#fdf6e9;color:#96650f;display:flex;align-items:center;gap:5px;font:600 12.5px Sarabun,sans-serif;cursor:pointer;flex:none')}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
           <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
@@ -74,7 +74,7 @@ export function renderLots(V) {
             style={sx('height:38px;padding:0 9px;border-radius:8px;background-color:#fff;font:400 12.5px Sarabun,sans-serif', { border: '1px solid ' + (V.lotsCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
           <div style={s('width:6px;flex:none')}></div>
           {V.lotsRanges.map((r) => (
-            <div key={r.key} {...kb(r.pick)} className="tap" style={sx('padding:7px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: r.bg, color: r.fg })}>{r.label}</div>
+            <div key={r.key} {...kb(r.pick)} className={(r.on ? 'hv-seg-on' : 'hv-seg-off') + ' tap'} style={sx('padding:7px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: r.bg, color: r.fg })}>{r.label}</div>
           ))}
         </div>
       </div>
@@ -168,13 +168,13 @@ export function renderLots(V) {
 
       {/* ── ตาราง (จอกว้าง) ──────────────────────────────────────────────── */}
       {V.lotsWide && !V.lotsEmpty && !V.lotsLoading && (
-        <div style={s('border:1px solid rgba(30,36,32,.10);border-radius:11px;background:#fff')}>
-          <div style={s('display:flex;padding:11px 15px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);border-radius:10px 10px 0 0;font:600 11.5px Sarabun,sans-serif;letter-spacing:.04em')}>
+        <div className="col-tab" style={s('border:1px solid rgba(30,36,32,.10);border-radius:11px;background:#fff')}>
+          <div className="col-head" style={s('display:flex;padding:11px 15px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);border-radius:10px 10px 0 0;font:600 11.5px Sarabun,sans-serif;letter-spacing:.04em')}>
             {V.lotCols.map((c) => (
               <span key={c.key}
                 {...(c.pick ? kb(c.pick) : {})}
                 className={c.pick ? 'hv-bg-e3f' : ''}
-                style={sx('display:flex;align-items:center;gap:4px;user-select:none;border-radius:5px;margin:-3px 0;padding:3px 0', Object.assign(
+                style={sx('display:flex;align-items:center;gap:4px;user-select:none;margin:-11px 0;padding:11px 0', Object.assign(
                   { color: c.fg, cursor: c.pick ? 'pointer' : 'default' },
                   c.flex ? { flex: 1, minWidth: '120px' } : { width: c.w, flex: 'none' },
                   c.align === 'right' ? { justifyContent: 'flex-end' } : c.align === 'center' ? { justifyContent: 'center' } : {}
@@ -187,16 +187,16 @@ export function renderLots(V) {
           </div>
 
           {V.lotRows.map((l, i) => (
-            <div key={l.key} style={sx('display:flex;align-items:center;padding:9px 15px;border-top:1px solid rgba(30,36,32,.06)', { background: i % 2 ? '#fbfcfb' : '#fff' })}>
+            <div key={l.key} className="col-row" style={sx('display:flex;align-items:center;padding:9px 15px;border-top:1px solid rgba(30,36,32,.06)', { background: i % 2 ? '#fbfcfb' : '#fff' })}>
               <span style={s('width:92px;flex:none;font:400 12.5px Sarabun,sans-serif;color:#414a44')}>{l.dateLabel}</span>
               <span style={s('width:108px;flex:none;font:700 13.5px Sarabun,sans-serif;color:#2f7d5d')}>{l.lot}</span>
               {/* ชื่อผู้บันทึกยาวให้ขึ้นบรรทัดใหม่ ห้ามตัดทิ้ง เป็นข้อมูลสืบกลับ */}
               <span style={s('flex:1;min-width:120px;font:500 12.5px Sarabun,sans-serif;color:#1e2420;overflow-wrap:anywhere;padding-right:10px')}>{l.by}</span>
               <span style={s('width:108px;flex:none;padding-right:8px;font:500 12.5px Sarabun,sans-serif;color:#414a44')}>{l.srcText}</span>
               <span style={s('width:120px;flex:none;padding-right:8px')}>{siteCell(l)}</span>
-              <span style={s('width:72px;flex:none;text-align:center;font:500 12.5px Sarabun,sans-serif;color:#414a44;font-variant-numeric:tabular-nums')}>{l.itemsCount}</span>
-              <span style={s('width:100px;flex:none;text-align:right;font:600 13px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{l.savedLabel}</span>
-              <span style={sx('width:90px;flex:none;text-align:right;font:600 12.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: l.hasLost ? '#c2543c' : '#c9cdc9' })}>{l.hasLost ? l.lostLabel : '—'}</span>
+              <span style={s('width:72px;flex:none;text-align:center;justify-content:center;font:500 12.5px Sarabun,sans-serif;color:#414a44;font-variant-numeric:tabular-nums')}>{l.itemsCount}</span>
+              <span style={s('width:100px;flex:none;text-align:right;justify-content:flex-end;font:600 13px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{l.savedLabel}</span>
+              <span style={sx('width:90px;flex:none;text-align:right;justify-content:flex-end;font:600 12.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: l.hasLost ? '#c2543c' : '#c9cdc9' })}>{l.hasLost ? l.lostLabel : '—'}</span>
               <span style={s('width:262px;flex:none')}>{rowButtons(l)}</span>
             </div>
           ))}
