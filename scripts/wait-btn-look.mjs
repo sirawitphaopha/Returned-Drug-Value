@@ -49,13 +49,14 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     await page.goto(BASE + '/', { waitUntil: 'networkidle2' });
     await wait(2500);
 
-    const box = await page.evaluate(() => {
-      const el = document.querySelector('.hv-wait');
+        const which = process.argv[2] || "เลือกยาก่อน";
+    const box = await page.evaluate((w) => {
+      const el = [...document.querySelectorAll(".hv-wait, .hv-off-green")].find((e) => e.textContent.indexOf(w) >= 0);
       if (!el) return null;
       const r = el.getBoundingClientRect();
       return { x: r.x, y: r.y, w: r.width, h: r.height };
-    });
-    if (!box) { console.log('ไม่เจอปุ่ม .hv-wait'); return; }
+    }, which);
+    if (!box) { console.log("ไม่เจอปุ่ม " + which); return; }
 
     // เผื่อขอบรอบปุ่มไว้ 14px จะได้เห็นตอนสั่นออกนอกกรอบ
     const clip = {
@@ -63,13 +64,13 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       width: box.w + 28, height: box.h + 28
     };
 
-    const read = () => page.evaluate(() => {
-      const el = document.querySelector('.hv-wait');
+        const read = () => page.evaluate((w) => {
+      const el = [...document.querySelectorAll(".hv-wait, .hv-off-green")].find((e) => e.textContent.indexOf(w) >= 0);
       const c = getComputedStyle(el);
       return { พื้น: c.backgroundColor, ตัวอักษร: c.color, ขอบ: c.borderColor };
-    });
+    }, which);
 
-    await page.screenshot({ path: OUT + '/wait-1-ปกติ.png', clip });
+    await page.screenshot({ path: OUT + '/wait-' + which + '-1-ปกติ.png', clip });
     console.log('ก่อนชี้ ', JSON.stringify(await read()));
 
     // เอาเมาส์เข้าไปกลางปุ่ม
@@ -77,11 +78,11 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
     // ถ่ายระหว่างสั่น (ราว 0.15 วินาทีหลังเมาส์เข้า = ช่วงเหวี่ยงสุด)
     await wait(150);
-    await page.screenshot({ path: OUT + '/wait-2-กำลังสั่น.png', clip });
+    await page.screenshot({ path: OUT + '/wait-' + which + '-2-สั่น.png', clip });
 
     // ถ่ายหลังสั่นจบ เหลือแต่สีตอนชี้
     await wait(700);
-    await page.screenshot({ path: OUT + '/wait-3-ชี้ค้าง.png', clip });
+    await page.screenshot({ path: OUT + '/wait-' + which + '-3-ชี้.png', clip });
     console.log('ตอนชี้  ', JSON.stringify(await read()));
   } finally {
     await browser.close();

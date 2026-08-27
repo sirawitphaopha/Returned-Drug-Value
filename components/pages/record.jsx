@@ -29,7 +29,7 @@ function renderDrugOption(r, big) {
             ทำให้ความแรงโดนตัด และชื่อการค้าหายทั้งอัน — ทั้งที่ค้นด้วยชื่อการค้าอยู่แท้ ๆ
             ความแรงเป็นข้อมูลความปลอดภัย (25 กับ 5000 mcg คนละเรื่อง) ซ่อนไม่ได้
             ยอมให้แถวสูงขึ้นเฉพาะยาชื่อยาว ดีกว่าซ่อนของสำคัญ */}
-        <div style={sx('font-family:var(--font-sarabun),Sarabun,sans-serif;line-height:1.35;overflow-wrap:anywhere', { fontSize: nameSize })}>
+        <div style={sx('font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;line-height:1.35;overflow-wrap:anywhere', { fontSize: nameSize })}>
           <span style={s('font-weight:600;color:#1e2420')}>{r.mkBefore}</span>
           <span style={s('font-weight:700;color:#2f7d5d;background:#dcefe4;border-radius:3px;padding:0 1px')}>{r.mkHit}</span>
           <span style={s('font-weight:600;color:#1e2420')}>{r.mkAfter}</span>
@@ -37,7 +37,7 @@ function renderDrugOption(r, big) {
               วางถัดจากชื่อยาทันที เพราะเป็น "ชื่อเรียกอีกแบบ" ของยาตัวเดียวกัน
               คนละสีกับชื่อการค้า (เทล) เพื่อให้แยกออกว่าอันไหนตัวย่อ อันไหนยี่ห้อ */}
           {r.hasAbbrev && (
-            <span style={sx("font-weight:600;color:#6d3b9e;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:5px", nw(r.abbrevNoWrap))}>
+            <span style={sx("font-weight:600;color:#6d3b9e;font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;margin-left:5px", nw(r.abbrevNoWrap))}>
               ({r.abBefore}<span style={s('background:#ece3f6;border-radius:3px;padding:0 1px')}>{r.abHit}</span>{r.abAfter})
             </span>
           )}
@@ -51,7 +51,7 @@ function renderDrugOption(r, big) {
           {/* ความแรง — ถ้าผลค้นหามียาชื่อเดียวกันหลายตัว ตัวเลขจะถูกทาสีคนละสีเพื่อไม่ให้หยิบสลับ
               (Morphine 10 · 20 · 30 mg) · หน่วยคงสีเทาเดิม บรรทัดจะได้ไม่รก */}
           {r.strength && (
-            <span style={sx("font-weight:500;color:#6b746e;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:6px", nw(r.strengthNoWrap))}>
+            <span style={sx("font-weight:500;color:#6b746e;font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;margin-left:6px", nw(r.strengthNoWrap))}>
               {r.stColor
                 ? <><span style={{ color: r.stColor, fontWeight: 700 }}>{r.stNum}</span>{r.stRest}</>
                 : r.strength}
@@ -60,7 +60,7 @@ function renderDrugOption(r, big) {
           {/* ความเข้มข้น % ในวงเล็บ สีส้มอำพัน — พี่กันขอให้เห็นง่าย
               เลือกสีนี้เพราะไม่ชนกับเทล (ชื่อการค้า) และไม่ชนกับแดง (ทำลาย) */}
           {r.hasPercent && (
-            <span style={sx("font-weight:700;color:#96650f;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:5px", nw(true))}>{r.percentLabel}</span>
+            <span style={sx("font-weight:700;color:#96650f;font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;margin-left:5px", nw(true))}>{r.percentLabel}</span>
           )}
           {/* รูปแบบยา (tab · cap · injection) — ลำดับเดียวกับ ME-DRP คือก่อนชื่อการค้า
               บอกได้ตั้งแต่ตอนค้นว่าเป็นยากินหรือยาฉีด */}
@@ -72,7 +72,7 @@ function renderDrugOption(r, big) {
               เพราะ Morphine 10 mg ER กับ IR เป็นคนละยากัน สลับกันแล้วอันตราย
               และในคลังมี Sodium valproate 200 mg ทั้ง ER และ IR ชื่อเหมือนกันเป๊ะ */}
           {r.hasRelease && (
-            <span style={sx("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:5px", nw(true))}>{r.releaseLabel}</span>
+            <span style={sx("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;margin-left:5px", nw(true))}>{r.releaseLabel}</span>
           )}
           {/* ชื่อการค้าในวงเล็บ สีเทลตัวหนา — แสดงเฉพาะยาที่มี (37 ตัวจาก 417)
               ทำตามแบบ ME-DRP ที่พี่กันชี้ให้ดู · ไฮไลต์คำค้นข้างในด้วยเพราะค้นจากชื่อการค้าได้ */}
@@ -389,7 +389,7 @@ export function renderRecordWide(V) {
             </div>
           </div>
 
-          <div {...kb(V.addInline)} className={V.addOn ? 'hv-teal' : 'hv-off'} style={sx('height:46px;padding:0 20px;border-radius:9px;display:flex;align-items:center;font:600 14px Sarabun,sans-serif;cursor:pointer', { background: V.addBg, color: V.addFg })}>เพิ่ม <span style={sx("font:400 11px Sarabun,monospace;margin-left:8px", { color: V.addHintFg })}>⏎</span></div>
+          <div {...kb(V.addInline)} className={V.addOn ? 'hv-teal' : 'hv-off-green'} style={sx('height:46px;padding:0 20px;border-radius:9px;display:flex;align-items:center;font:600 14px Sarabun,sans-serif;cursor:pointer;box-sizing:border-box', { background: V.addBg, color: V.addFg, border: V.addBorder })}>เพิ่ม <span style={sx("font:400 11px Sarabun,monospace;margin-left:8px", { color: V.addHintFg })}>⏎</span></div>
         </div>
 
         <div style={s('flex:none;font:400 11.5px Sarabun,sans-serif;color:rgba(30,36,32,.45);margin-bottom:16px;min-height:16px')}>{V.desktopHint}</div>
@@ -532,12 +532,15 @@ export function renderRecordWide(V) {
       {/* ระยะห่างถูกรีดลงจาก 18/20 gap16 → 14/16 gap11 เพื่อให้กล่อง "ล็อตนี้" มีที่ยืน
           วัดแล้วก่อนหน้านี้แผงกิน 502px ในพื้นที่ 503px = แน่นเป๊ะไม่มีที่เหลือเลย
           จอ 1366x768 ของพี่กันเหลือพื้นที่จริงราว 640px ยิ่งต้องประหยัดทุกพิกเซล */}
-      <div style={s('width:296px;flex:none;min-height:0;overflow-y:auto;background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:11px')}>
+      {/* 🚨 จอของพี่กันสูง 641px ซึ่งเตี้ยกว่าที่แผงนี้ต้องการ (ราว 655px)
+          รีดระยะห่างลงเท่าที่ทำได้โดยไม่ให้อ่านยาก — 14/11 → 11/8 (พี่กันทัก 27 ส.ค. 2569)
+          ที่เหลือยังต้องเลื่อน ซึ่งปลอดภัยแล้วเพราะปุ่มบันทึกถูกตรึงไว้ก้นแผง */}
+      <div style={s('width:296px;flex:none;min-height:0;overflow-y:auto;background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px;padding:11px 14px;display:flex;flex-direction:column;gap:8px')}>
         <div>
           <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:6px')}>แหล่งที่มา</div>
           <div style={s('display:flex;flex-wrap:wrap;gap:6px')}>
             {V.sources.map((s2) => (
-              <div key={s2.label} {...kb(s2.pick)} className={s2.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('padding:7px 13px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: s2.bg, color: s2.fg })}>{s2.label}</div>
+              <div key={s2.label} {...kb(s2.pick)} className={s2.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('padding:6px 12px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: s2.bg, color: s2.fg })}>{s2.label}</div>
             ))}
           </div>
           {renderPcuField(V)}
@@ -564,7 +567,7 @@ export function renderRecordWide(V) {
             flex:1 ย่อมาจาก 1 1 0% = ฐานความสูงเป็นศูนย์ การคำนวณการหดจะได้ศูนย์ตาม
             กล่องเลยไม่ยอมหดเลยแม้ใส่ min-height:0 แล้วไปดันปุ่มบันทึกตกขอบแผง
             ใช้ฐาน auto (เท่าเนื้อหา) แทน จะโตตอนที่ว่างเหลือ และหดตอนที่ว่างไม่พอ */}
-        <div style={s('flex:1 1 auto;background:#f6f7f4;border-radius:9px;padding:11px 12px;display:flex;flex-direction:column')}>
+        <div style={s('flex:1 1 auto;background:#f6f7f4;border-radius:9px;padding:9px 11px;display:flex;flex-direction:column')}>
           <div style={s("font:600 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:rgba(30,36,32,.45);margin-bottom:6px")}>Lot นี้</div>
 
           {/* 🚨 ห้ามใส่ overflow-y:auto + min-height:0 ตรงนี้ (พี่กันเจอบั๊กที่จอ 768)
@@ -606,7 +609,7 @@ export function renderRecordWide(V) {
           <div style={s('flex:none;border-top:1px dashed rgba(30,36,32,.14);margin-top:7px;padding-top:7px;display:flex;justify-content:space-between;gap:6px;font:400 11px Sarabun,sans-serif')}>
             <span style={s('color:#6b746e;flex:none')}>เลข Lot</span>
             <span style={sx('text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', V.lotNoIsReal
-              ? { font: "600 11.5px var(--font-plex),Sarabun,sans-serif", color: '#2f7d5d' }
+              ? { font: "600 11.5px var(--font-en),var(--font-sarabun),Sarabun,sans-serif", color: '#2f7d5d' }
               : { color: '#6f7873' })}>{V.lotNoLabel}</span>
           </div>
         </div>

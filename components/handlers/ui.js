@@ -30,6 +30,27 @@ export function uiActions(app) {
     });
   };
 
+  // ── ฟอนต์ตัวอักษรอังกฤษและตัวเลข (พี่กันสั่ง 27 ส.ค. 2569) ────────────────
+  // 'mono' = Roboto Mono ตัวเลขกว้างเท่ากันทุกตัว · 'thai' = ใช้ Sarabun เหมือนภาษาไทย
+  // 🚨 เขียนตัวแปร CSS ตรง ๆ ที่ราก ไม่เก็บใน state ของ React
+  //    เพราะฟอนต์ต้องเปลี่ยนทั้งเว็บทันที รวมส่วนที่ยังไม่ถูกวาดใหม่
+  // 🚨 โหมด 'thai' ต้องชี้กลับไปที่ Sarabun ห้ามตั้งเป็นค่าว่าง
+  //    ไม่งั้นประโยค font-family พังทั้งบรรทัด ตัวอักษรกลายเป็นฟอนต์ระบบ
+  app.applyEnFont = (mode) => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.style.setProperty(
+      '--font-en',
+      mode === 'thai' ? 'var(--font-sarabun)' : 'var(--font-mono)'
+    );
+  };
+
+  app.setEnFont = (mode) => {
+    app.setState({ enFont: mode }, () => {
+      app.applyEnFont(mode);
+      writeLS(LS.enFont, mode);
+    });
+  };
+
   // สลับแท็บ — หน้าประวัติกับหน้าสรุปดึงข้อมูลจากเซิร์ฟเวอร์ เลยต้องสั่งโหลดตอนเข้า
   // (มอคอัปไม่มีขั้นนี้เพราะข้อมูลอยู่ในเครื่องอยู่แล้ว)
   app.goScreen = (name) => {

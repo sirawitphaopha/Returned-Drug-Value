@@ -26,7 +26,11 @@ function fontify(css) {
     //    เคยลองใช้ฟอนต์ราชการทั้งเว็บแล้วถอยกลับ — มันออกแบบมาสำหรับกระดาษ
     //    ตัวเล็กและเส้นบาง อ่านบนจอคอมห้องยาที่แสงจ้าได้ยากกว่า Sarabun
     //    การสลับฟอนต์เฉพาะตอนพิมพ์อยู่ใน @media print ของ globals.css จุดเดียว
-    .replace(/\bSarabun\b/g, 'var(--font-sarabun),Sarabun');
+    // 🔤 ฟอนต์อังกฤษกับตัวเลขมาก่อน Sarabun เสมอ (พี่กันสั่ง 27 ส.ค. 2569 · ท่าเดียวกับ HCV)
+    //    เบราว์เซอร์ไล่ตามลำดับ — ตัวไหนมีในฟอนต์แรกใช้ตัวนั้น ไม่มีก็ตกมาตัวถัดไป
+    //    Roboto Mono ไม่มีตัวอักษรไทย ภาษาไทยจึงได้ Sarabun เหมือนเดิมทุกตัว
+    //    ผู้ใช้เลือก "แบบปกติ" ได้ในหน้าตั้งค่า แล้ว --font-en จะชี้กลับมาที่ Sarabun
+    .replace(/\bSarabun\b/g, 'var(--font-en),var(--font-sarabun),Sarabun');
 }
 
 // ตัดที่ ; แต่ไม่ตัดถ้าอยู่ในวงเล็บหรือในเครื่องหมายคำพูด
@@ -104,7 +108,8 @@ export const LS = {
   draft: 'mrv.session',     // แถวที่กองอยู่ ยังไม่กดบันทึก — หายเมื่อบันทึกสำเร็จ
   dark: 'mrv.dark',
   drugs: 'mrv.drugs',       // แคชรายการยา
-  setting: 'mrv.setting'    // แคชการตั้งค่าห้องยา
+  setting: 'mrv.setting',   // แคชการตั้งค่าห้องยา
+  enFont: 'mrv.enfont'      // ฟอนต์ตัวอักษรอังกฤษและตัวเลข ('mono' หรือ 'thai')
 };
 
 export const CACHE_TTL = 12 * 60 * 60 * 1000;   // 12 ชั่วโมง
@@ -428,6 +433,6 @@ export function exprText(raw) {
 //
 // ⚠️ เขียนเป็นข้อความไทยตรง ๆ ไม่คำนวณจากนาฬิกาเครื่อง
 //    เพราะนี่คือ "วันที่ปล่อยรุ่นนี้" ไม่ใช่ "วันนี้" — คอมที่นาฬิกาเพี้ยนจะโชว์มั่ว
-export const APP_VERSION = '0.11.3.0';
+export const APP_VERSION = '0.11.4.0';
 export const APP_FIRST_RELEASE = '4 สิงหาคม 2569';
 export const APP_LAST_UPDATE = '27 สิงหาคม 2569';

@@ -101,7 +101,10 @@ export function renderSummaryWide(V) {
         <div style={s('display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;margin-bottom:26px')}>
           <div style={s('flex:1 1 420px;min-width:0')}>
             <div style={sx('font:500 clamp(14px,1.4vw,19px) Sarabun,sans-serif;margin-bottom:2px', { color: V.sumMuted })}>มูลค่ายาที่ประหยัดได้สะสม</div>
-            <div style={sx("font:700 clamp(44px,9.4vw,132px)/1 Sarabun,sans-serif;letter-spacing:-.045em;font-variant-numeric:tabular-nums;word-break:break-all", { color: V.sumGreen })}>{V.fySavedBig}</div>
+            {/* 🚨 ขนาดนี้ลดลงจาก clamp(44,9.4vw,132) เมื่อ 27 ส.ค. 2569
+                    ฟอนต์ Roboto Mono ตัวเลขกว้างกว่า Sarabun ราว 15% เลขหลักหมื่นขึ้นไปจึงล้นกรอบ
+                    ตัวเลขนี้คือตัวที่ฉายให้ผู้บริหารดู ล้นแล้วอ่านไม่ได้ทั้งจอ */}
+            <div style={sx("font:700 clamp(38px,7.8vw,108px)/1 Sarabun,sans-serif;letter-spacing:-.045em;font-variant-numeric:tabular-nums;word-break:break-all", { color: V.sumGreen })}>{V.fySavedBig}</div>
             <div style={s('font:500 clamp(15px,1.9vw,25px) Sarabun,sans-serif;margin-top:4px')}>฿ <span style={sx('font:400 clamp(12px,1.4vw,19px) Sarabun,sans-serif', { color: V.sumMuted })}>· {V.fyRangeLabel}</span></div>
           </div>
           <div style={s('flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:13px')}>

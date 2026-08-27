@@ -143,7 +143,10 @@ export function renderHistoryWide(V) {
             </span>
             <span style={s('width:88px;color:#6b746e')}>{hr.sourceLabel}</span>
             <span style={s('width:84px;color:#6b746e')}>{hr.hnLabel}</span>
-            <span title={hr.byLabel} style={s('width:104px;color:#6b746e;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px')}>{hr.byLabel}</span>
+            {/* 🚨 ชื่อผู้บันทึกห้ามตัดทิ้ง เป็นข้อมูลสืบกลับว่าใครเซ็นรับล็อตนั้น (กฎเดิมของหน้ารายการ Lot)
+                เดิมใช้ ellipsis ตัดท้าย ชื่อยาว ๆ เลยเหลือ "ภญ. วลัยพรรณ…" อ่านไม่ออกว่านามสกุลอะไร
+                ฟอนต์ Roboto Mono ทำให้เห็นชัดขึ้นเพราะตัวอักษรกว้างกว่าเดิม (พี่กันจับได้ 27 ส.ค. 2569) */}
+            <span title={hr.byLabel} style={s('width:118px;color:#6b746e;font-size:12px;overflow-wrap:anywhere;padding-right:8px;line-height:1.35')}>{hr.byLabel}</span>
             {/* เลข Lot — กดแล้วกรองดูเฉพาะ Lot นั้น */}
             <span style={s('width:96px;padding-right:8px;overflow:hidden')}>
               {hr.hasLot ? (

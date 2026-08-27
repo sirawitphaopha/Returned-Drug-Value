@@ -13,7 +13,7 @@ import { renderExportBtn } from './exportbtn';
 //    ไอคอนเปล่า ๆ ต้องเดาความหมาย และคนที่ไม่ได้ใช้ทุกวันจะไม่กล้ากด
 function rowButtons(l) {
   return (
-    <div style={s('display:flex;gap:6px;justify-content:flex-end')}>
+    <div style={s('display:flex;gap:6px;justify-content:center;width:100%')}>
       <div {...kb(l.openEdit)} aria-label={'แก้ไข Lot ' + l.lot} title="แก้ไขล็อตนี้" className="hv-cream tap"
         style={s('height:34px;padding:0 11px;border-radius:9px;border:1px solid rgba(150,101,15,.30);background:#fdf6e9;color:#96650f;display:flex;align-items:center;gap:5px;font:600 12.5px Sarabun,sans-serif;cursor:pointer;flex:none')}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
@@ -46,6 +46,11 @@ function siteCell(l) {
 export function renderLots(V) {
   return (
     <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:20px 26px 26px;display:flex;flex-direction:column;min-height:100%')}>
+
+      {/* ── แถบหัวที่ตรึงไว้บนสุด (หัวเรื่อง + ช่วงเวลา + ค้นหา + ตัวกรอง) ──────
+          ref = ตัววัดความสูง ส่งให้หัวตารางไปตั้งระยะติดบน (ดู .lots-head ใน globals.css)
+          ทำเหมือนหน้าประวัติทุกอย่าง พี่กันสั่ง 27 ส.ค. 2569 */}
+      <div ref={V.lotsHeadRef} className="lots-head">
 
       {/* ── แถบหัวเรื่อง ─────────────────────────────────────────────────── */}
       <div style={s('display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px')}>
@@ -146,6 +151,8 @@ export function renderLots(V) {
         </div>
       </div>
 
+      </div>{/* ปิดแถบหัวที่ตรึงไว้ */}
+
       {V.lotsLoading && (
         <div style={s('text-align:center;padding:40px 12px;font:400 13px Sarabun,sans-serif;color:#6b746e')}>กำลังโหลดรายการ Lot</div>
       )}
@@ -181,22 +188,28 @@ export function renderLots(V) {
                 ))}
               >
                 {c.label}
-                {c.arrow && <span aria-hidden="true" style={sx('font-size:10px;line-height:1', { color: c.arrowColor })}>{c.arrow}</span>}
+                {c.arrow && <span aria-hidden="true" style={sx('line-height:1;letter-spacing:-.06em;font-weight:700', { color: c.arrowColor, fontSize: c.arrowSize })}>{c.arrow}</span>}
               </span>
             ))}
           </div>
 
           {V.lotRows.map((l, i) => (
             <div key={l.key} className="col-row" style={sx('display:flex;align-items:center;padding:9px 15px;border-top:1px solid rgba(30,36,32,.06)', { background: i % 2 ? '#fbfcfb' : '#fff' })}>
-              <span style={s('width:92px;flex:none;font:400 12.5px Sarabun,sans-serif;color:#414a44')}>{l.dateLabel}</span>
+              <span style={s('width:116px;flex:none;font:400 12.5px Sarabun,sans-serif;color:#414a44')}>{l.dateLabel}</span>
               <span style={s('width:108px;flex:none;font:700 13.5px Sarabun,sans-serif;color:#2f7d5d')}>{l.lot}</span>
               {/* ชื่อผู้บันทึกยาวให้ขึ้นบรรทัดใหม่ ห้ามตัดทิ้ง เป็นข้อมูลสืบกลับ */}
-              <span style={s('flex:1;min-width:120px;font:500 12.5px Sarabun,sans-serif;color:#1e2420;overflow-wrap:anywhere;padding-right:10px')}>{l.by}</span>
-              <span style={s('width:108px;flex:none;padding-right:8px;font:500 12.5px Sarabun,sans-serif;color:#414a44')}>{l.srcText}</span>
-              <span style={s('width:120px;flex:none;padding-right:8px')}>{siteCell(l)}</span>
-              <span style={s('width:72px;flex:none;text-align:center;justify-content:center;font:500 12.5px Sarabun,sans-serif;color:#414a44;font-variant-numeric:tabular-nums')}>{l.itemsCount}</span>
-              <span style={s('width:100px;flex:none;text-align:right;justify-content:flex-end;font:600 13px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{l.savedLabel}</span>
-              <span style={sx('width:90px;flex:none;text-align:right;justify-content:flex-end;font:600 12.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: l.hasLost ? '#c2543c' : '#c9cdc9' })}>{l.hasLost ? l.lostLabel : '—'}</span>
+              <span style={s('flex:1;min-width:120px;font:500 12.5px Sarabun,sans-serif;color:#1e2420;overflow-wrap:anywhere')}>{l.by}</span>
+              <span style={s('width:108px;flex:none;font:500 12.5px Sarabun,sans-serif;color:#414a44')}>{l.srcText}</span>
+              <span style={s('width:120px;flex:none')}>{siteCell(l)}</span>
+              <span style={s('width:88px;flex:none;text-align:center;justify-content:center;font:500 12.5px Sarabun,sans-serif;color:#414a44;font-variant-numeric:tabular-nums')}>{l.itemsCount}</span>
+              <span style={s('width:116px;flex:none;text-align:right;justify-content:flex-end;font:600 13px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{l.savedLabel}</span>
+              {/* มีตัวเลข = ชิดขวาให้หลักตรงกับคอลัมน์ใช้ต่อได้ · ไม่มี = ขีดอยู่กึ่งกลางช่อง
+                  ของเดิมขีดชิดขวาจนไปแนบปุ่มแก้ไข ดูเหมือนเศษที่ห้อยอยู่หน้าปุ่ม ไม่ใช่ข้อมูลของช่อง */}
+              <span style={sx('width:100px;flex:none;font:600 12.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums', {
+                color: l.hasLost ? '#c2543c' : '#c9cdc9',
+                textAlign: l.hasLost ? 'right' : 'center',
+                justifyContent: l.hasLost ? 'flex-end' : 'center'
+              })}>{l.hasLost ? l.lostLabel : '—'}</span>
               <span style={s('width:262px;flex:none')}>{rowButtons(l)}</span>
             </div>
           ))}

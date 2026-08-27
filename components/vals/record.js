@@ -468,10 +468,13 @@ export function recordVals(app, d) {
     sumKeyFg: pendValue > 0 ? '#4e8f70' : '#6f7873',
     sumFg: pendValue > 0 ? '#2f7d5d' : '#b8bdb9',
     // ปุ่ม "เพิ่ม" — พี่กันสั่งเปลี่ยนจากดำเป็นเขียวเทลของธีม
-    addBg: canAdd ? '#2f7d5d' : '#e9ebe8',
-    addFg: canAdd ? '#fff' : '#6f7873',
-    addHintFg: canAdd ? 'rgba(255,255,255,.5)' : '#b8bdb9',
-    // ปุ่มเพิ่มเป็นเขียวทึบเฉพาะตอนกดได้ · ตอนกดไม่ได้เป็นเทา ไม่ต้องมีสีตอนชี้
+    // 🎨 ตอนกดไม่ได้เป็นเขียวจาง = สีของปุ่มตัวเองที่จางลง ไม่ใช่เทาและไม่ใช่ครีม
+    //    พี่กันสั่ง 27 ส.ค. 2569: "ปุ่มมันจริง ๆ สีเขียว ก็แค่เปลี่ยนสีเขียวปกติ"
+    //    🚨 ปุ่มนี้ไม่มีแอนิเมชัน — แอนิเมชันใส่เฉพาะปุ่มที่พี่กันสั่งเองเท่านั้น
+    addBg: canAdd ? '#2f7d5d' : '#eaf3ee',
+    addFg: canAdd ? '#fff' : '#7d9c8d',
+    addHintFg: canAdd ? 'rgba(255,255,255,.5)' : 'rgba(125,156,141,.6)',
+    addBorder: canAdd ? '1px solid transparent' : '1px solid rgba(47,125,93,.16)',
     addOn: canAdd,
     searchBorder: pending ? '#2f7d5d' : 'rgba(30,36,32,.16)',
     pendingUnit: pending ? ' (' + pending.unit + ')' : '',

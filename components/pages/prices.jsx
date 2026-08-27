@@ -65,11 +65,11 @@ export function renderPrices(V) {
                   <div style={s('font:600 14.5px/1.3 Sarabun,sans-serif')}>
                     {p.name}
                     {/* ตัวย่อในวงเล็บสีม่วง — ให้ตรงกับผลค้นหาหน้าบันทึก */}
-                    {p.hasAbbrev && <span style={s("font-weight:600;color:#6d3b9e;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:5px;white-space:nowrap")}>({p.abbrev})</span>}
+                    {p.hasAbbrev && <span style={s("font-weight:600;color:#6d3b9e;font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;margin-left:5px;white-space:nowrap")}>({p.abbrev})</span>}
                     {/* ความเข้มข้น % ในวงเล็บสีส้มอำพัน ให้เหมือนผลค้นหาหน้าบันทึก */}
-                    {p.hasPercent && <span style={s("font-weight:700;color:#96650f;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:5px;white-space:nowrap")}>{p.percentLabel}</span>}
+                    {p.hasPercent && <span style={s("font-weight:700;color:#96650f;font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;margin-left:5px;white-space:nowrap")}>{p.percentLabel}</span>}
                     {/* รูปแบบการออกฤทธิ์ (ER/IR/SR) แดงอมชมพู เอียง หนา — ให้ตรงกับผลค้นหาหน้าบันทึก */}
-                    {p.hasRelease && <span style={s("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-plex),Sarabun,sans-serif;margin-left:5px;white-space:nowrap")}>{p.releaseLabel}</span>}
+                    {p.hasRelease && <span style={s("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;margin-left:5px;white-space:nowrap")}>{p.releaseLabel}</span>}
                     {/* ชื่อการค้าในวงเล็บสีเทล เฉพาะยาที่มี (แบบเดียวกับ ME-DRP) */}
                     {p.hasBrand && <span style={s('color:#2f7d5d;margin-left:6px;white-space:nowrap')}>({p.brand})</span>}
                   </div>

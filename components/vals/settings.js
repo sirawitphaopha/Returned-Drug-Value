@@ -58,6 +58,16 @@ export function settingsVals(app, d) {
     setLight: () => app.setTheme(false),
     setDark: () => app.setTheme(true),
 
+    // ── ฟอนต์ตัวอักษรอังกฤษและตัวเลข (พี่กันสั่ง 27 ส.ค. 2569 · เอาแบบเดียวกับเว็บ HCV) ──
+    // ภาษาไทยใช้ Sarabun เสมอไม่ว่าเลือกอะไร เพราะ Roboto Mono ไม่มีตัวอักษรไทย
+    enFontMono: st.enFont !== 'thai',
+    enMonoBg: st.enFont !== 'thai' ? '#e3f0e8' : '#fff',
+    enMonoBd: st.enFont !== 'thai' ? '#2f7d5d' : 'rgba(30,36,32,.14)',
+    enThaiBg: st.enFont === 'thai' ? '#e3f0e8' : '#fff',
+    enThaiBd: st.enFont === 'thai' ? '#2f7d5d' : 'rgba(30,36,32,.14)',
+    setEnMono: () => app.setEnFont('mono'),
+    setEnThai: () => app.setEnFont('thai'),
+
     // มอคอัปนับรายการที่เก็บในเครื่อง ของจริงนับจากฐานข้อมูลของปีงบปัจจุบัน
     appVersion: APP_VERSION,
     appFirstRelease: APP_FIRST_RELEASE,

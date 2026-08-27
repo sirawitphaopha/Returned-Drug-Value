@@ -5,7 +5,7 @@ import './globals.css';
 //    มอคอัปโหลด 2 ตัวนี้ (บรรทัด 12): Sarabun 300–700 + IBM Plex Sans Thai 400–700
 // ฟอนต์ของ "ชื่อเว็บ" อย่างเดียว — พี่กันเลือกเอง 26 ส.ค. 2569 (ลอง Charm → Charmonman → Charmonman)
 // 🚨 ฝังมากับเว็บผ่าน next/font/google ไม่ได้ลิงก์ CDN — เน็ตโรงพยาบาลบล็อก Google Fonts ได้
-import { IBM_Plex_Sans_Thai, Sarabun, Charmonman } from 'next/font/google';
+import { IBM_Plex_Sans_Thai, Sarabun, Charmonman, Roboto_Mono } from 'next/font/google';
 
 const sarabun = Sarabun({
   subsets: ['thai', 'latin'],
@@ -21,6 +21,17 @@ const charm = Charmonman({
   subsets: ['thai', 'latin'],
   weight: ['400', '700'],
   variable: '--font-charmonman',
+  display: 'swap'
+});
+
+// 🔤 ฟอนต์ตัวอักษรอังกฤษกับตัวเลข — พี่กันสั่ง 27 ส.ค. 2569 ให้เอาแบบเดียวกับเว็บ HCV
+// ตัวเลขทุกตัวกว้างเท่ากันเป๊ะ เลขในตารางจึงเรียงตรงกันเป็นแถวอ่านง่าย
+// 🚨 ฟอนต์นี้ไม่มีตัวอักษรไทย จึงใส่ไว้ "ก่อน" Sarabun ในรายชื่อ
+//    ตัวไทยที่ไม่มีในฟอนต์นี้ เบราว์เซอร์จะตกมาใช้ Sarabun ให้เอง (ท่าเดียวกับ HCV)
+const mono = Roboto_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-mono',
   display: 'swap'
 });
 
@@ -54,7 +65,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="th" className={`${sarabun.variable} ${plex.variable} ${charm.variable}`}>
+    <html lang="th" className={`${sarabun.variable} ${plex.variable} ${charm.variable} ${mono.variable}`}>
       <body>{children}</body>
     </html>
   );

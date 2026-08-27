@@ -74,6 +74,27 @@ export function renderSettings(V) {
           </div>
           <div style={s('font:400 11.5px/1.5 Sarabun,sans-serif;color:#6b746e;margin-bottom:22px')}>ห้องประชุมที่ปิดไฟหรือโปรเจกเตอร์คอนทราสต์ต่ำใช้ธีมเข้มจะอ่านง่ายกว่า</div>
 
+          {/* ── ฟอนต์ตัวอักษรอังกฤษและตัวเลข ────────────────────────────────
+              พี่กันสั่ง 27 ส.ค. 2569 ให้เอาแบบเดียวกับเว็บ HCV
+              🚨 ตัวอย่างในปุ่มต้องเขียนฟอนต์ตรง ๆ ไม่ใช้ตัวแปร --font-en
+                 ไม่งั้นทั้งสองปุ่มจะเปลี่ยนตามที่เลือกอยู่ = เทียบกันไม่ได้ */}
+          <div style={s(LABEL + ';margin-bottom:4px')}>ฟอนต์ตัวอักษรอังกฤษและตัวเลข</div>
+          <div style={s('font:400 11.5px/1.5 Sarabun,sans-serif;color:#6b746e;margin-bottom:8px')}>ภาษาไทยใช้ฟอนต์เดิมเสมอ การเปลี่ยนตรงนี้มีผลกับตัวอักษรอังกฤษและตัวเลขเท่านั้น</div>
+          <div style={s('display:flex;gap:8px;margin-bottom:22px')}>
+            <div {...kb(V.setEnMono)} className="hv-bg-f6 tap"
+              style={sx('flex:1;padding:10px 12px;border-radius:10px;cursor:pointer', { background: V.enMonoBg, border: '1.5px solid ' + V.enMonoBd })}>
+              <div style={s('font:600 13px Sarabun,sans-serif;color:#1e2420')}>Roboto Mono</div>
+              <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;margin-top:1px')}>ตัวเลขเรียงตรงกัน อ่านค่าง่าย</div>
+              <div style={{ font: '400 12px var(--font-mono),monospace', color: '#414a44', marginTop: '6px' }}>L690826-01 · 1,402.50</div>
+            </div>
+            <div {...kb(V.setEnThai)} className="hv-bg-f6 tap"
+              style={sx('flex:1;padding:10px 12px;border-radius:10px;cursor:pointer', { background: V.enThaiBg, border: '1.5px solid ' + V.enThaiBd })}>
+              <div style={s('font:600 13px Sarabun,sans-serif;color:#1e2420')}>แบบปกติ</div>
+              <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;margin-top:1px')}>อ่านสบาย กลมกลืนกับภาษาไทย</div>
+              <div style={{ font: '400 12px var(--font-sarabun),Sarabun,sans-serif', color: '#414a44', marginTop: '6px' }}>L690826-01 · 1,402.50</div>
+            </div>
+          </div>
+
           {/* โหมดดูตัวอย่าง — ข้อมูลปลอมฝังในเว็บ ไม่แตะฐานข้อมูลจริง
               มีไว้ให้เห็นภาพว่าเว็บทำงานเต็มที่แล้วหน้าตาเป็นยังไง
               ตอนที่ยังไม่ได้ใส่ราคายาจริง (ตัวเลขทุกหน้าเป็น 0 หมด) */}

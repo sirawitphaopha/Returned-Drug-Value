@@ -220,6 +220,20 @@ export default class MedReturnApp extends React.Component {
       this._histHeadRO.observe(el);
     };
 
+    // ── วัดความสูงแถบหัวของหน้ารายการ Lot ─────────────────────────────────
+    // หัวตารางต้องตรึงพอดีใต้แถบหัวเรื่อง+แถบค้นหาที่ตรึงอยู่ก่อนแล้ว
+    // ตั้งเลขตายตัวไม่ได้ เพราะปุ่มช่วงเวลากับช่องวันที่ขึ้นบรรทัดใหม่เองเมื่อจอแคบ
+    // (ท่าเดียวกับหน้าประวัติเป๊ะ ๆ — พี่กันสั่ง 27 ส.ค. 2569 ให้ทำเหมือนกัน)
+    this._lotsHeadRO = null;
+    this.lotsHeadRef = (el) => {
+      if (this._lotsHeadRO) { this._lotsHeadRO.disconnect(); this._lotsHeadRO = null; }
+      if (!el || typeof ResizeObserver === 'undefined') return;
+      const write = () => document.documentElement.style.setProperty('--lotshead', el.offsetHeight + 'px');
+      write();
+      this._lotsHeadRO = new ResizeObserver(write);
+      this._lotsHeadRO.observe(el);
+    };
+
     // ── วัดความสูงแถบค้นหาของหน้าคลังยา ────────────────────────────────────
     // หัวตารางต้องตรึงพอดีใต้แถบค้นหาที่ตรึงอยู่ก่อนแล้ว
     // ตั้งเลขตายตัวไม่ได้ เพราะชิปตัวกรองขึ้นบรรทัดใหม่เองเมื่อจอแคบ (flex-wrap)
@@ -303,7 +317,13 @@ export default class MedReturnApp extends React.Component {
     const drugs = readCache(LS.drugs);
     const setting = readCache(LS.setting);
 
-    const patch = { loading: false, vw: window.innerWidth, dark: dark };
+    // ฟอนต์ตัวอักษรอังกฤษและตัวเลข — ค่าเริ่มต้นเป็น Roboto Mono (พี่กันสั่ง 27 ส.ค. 2569)
+    // 🚨 ต้องเขียนตัวแปร CSS ตั้งแต่ตรงนี้ ไม่ใช่รอให้ผู้ใช้กดเลือก
+    //    ไม่งั้นคนที่เคยเลือก "แบบปกติ" ไว้ จะเห็น Roboto Mono แวบหนึ่งตอนเปิดเว็บ
+    const enFont = readLS(LS.enFont) === "thai" ? "thai" : "mono";
+    this.applyEnFont(enFont);
+
+    const patch = { loading: false, vw: window.innerWidth, dark: dark, enFont: enFont };
 
     // เครื่องสัมผัสล้วน (มือถือ/แท็บเล็ต) → (pointer: fine) เป็นเท็จ = ซ่อนสวิตช์มุมมอง
     // โน้ตบุ๊กจอสัมผัสที่ต่อเมาส์ยังนับเป็น fine เพราะดูตัวชี้หลัก
