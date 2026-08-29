@@ -65,6 +65,10 @@ export default class MedReturnApp extends React.Component {
       showMore: false,
       saveFailed: false,
       saveError: '',
+      // ผลการบันทึกล่าสุด — มีค่าเมื่อไหร่ หน้าผลเต็มจอจะขึ้นทับทั้งจอจนกดตกลง
+      // 🚨 ไม่ถูกเก็บลง localStorage โดยตั้งใจ (app.persist ไม่มีคีย์นี้)
+      //    เปิดเว็บใหม่ต้องไม่เจอหน้าผลของล็อตเมื่อวานค้างอยู่
+      result: null,
       rows: [],
       sheet: null,
       sheetQty: '',
@@ -429,6 +433,9 @@ export default class MedReturnApp extends React.Component {
     // ใบสรุปล็อตกดพื้นหลังไม่ปิดโดยตั้งใจ (กันปิดพลาดตอนกำลังจะสั่งพิมพ์)
     // ถ้าไม่มี Esc ก็เหลือทางเดียวคือเล็งปุ่ม ✕ มุมบนขวา — เจอเองตอนเทส 25 ส.ค. 2569
     if (st.slipLot) { this.closeLotSlip(); return; }
+    // หน้าผลบันทึกสำเร็จ — กดพื้นหลังไม่ปิดเหมือนกัน (เลข Lot ที่โชว์อยู่หายแล้วต้องไปหาเอง)
+    // อยู่ล่างกว่าใบสรุป เพราะกดปุ่มบนหน้านี้เปิดใบสรุปซ้อนขึ้นไปได้อีกชั้น
+    if (st.result) { this.closeResult(); return; }
     if (st.settingsOpen) { this.setState({ settingsOpen: false, favQuery: '' }); }
   };
 

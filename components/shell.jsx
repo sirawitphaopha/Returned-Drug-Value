@@ -15,6 +15,7 @@ import { renderCatalog } from './pages/catalog';
 import { renderToast } from './pages/toast';
 import { renderReasonPick } from './pages/reason';
 import { renderConfirm } from './pages/confirm';
+import { renderResult } from './pages/result';
 import { renderAbout } from './pages/about';
 import { renderFooter } from './pages/footer';
 import { renderHisImport } from './pages/himport';
@@ -98,6 +99,7 @@ export function renderShell(app) {
       {renderToast(V)}
       {renderReasonPick(V)}
       {renderConfirm(V)}
+      {renderResult(V)}
     </div>
   );
 }

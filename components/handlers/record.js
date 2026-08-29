@@ -520,7 +520,6 @@ export function recordActions(app) {
     const batchId = st.batchId || newUuid();
     const sending = st.rows;                       // ล็อกชุดที่จะส่งไว้ตรงนี้
     const n = sending.length;
-    const saved = app.savedTotal();
 
     app.persist({ saving: true, saveFailed: false, saveError: '', batchId: batchId });
 
@@ -571,6 +570,27 @@ export function recordActions(app) {
       const sentRid = new Set(sending.map((r) => String(r.rid)));
       const left = app.state.rows.filter((r) => !sentRid.has(String(r.rid)));
 
+      // เซิร์ฟเวอร์บอกจำนวนที่เข้าฐานจริง ถ้าน้อยกว่าที่ส่งแปลว่าบางแถวเคยบันทึกไปแล้ว
+      // (กดลองส่งใหม่หลังเน็ตหลุด) ต้องบอกตรงๆ ไม่ใช่บอกว่าบันทึกครบ
+      const got = typeof data.saved === 'number' ? data.saved : n;
+
+      // ── ยอดของล็อตที่เพิ่งส่งไป — คิดจาก sending ไม่ใช่แถวที่ยังอยู่บนจอ ──
+      // ระหว่างรอเซิร์ฟเวอร์ตอบ เภสัชกรพิมพ์ยาเพิ่มได้ ถ้านับจากของบนจอตัวเลขจะเกินจริง
+      const sumOf = (list) => list.reduce((a, r) => a + (Number(r.price) || 0) * (Number(r.qty) || 0), 0);
+      const sentReuse = sending.filter((r) => r.disposition === 'reuse');
+      const sentDestroy = sending.filter((r) => r.disposition !== 'reuse');
+      // จำนวนรวมแยกตามหน่วยนับจริง — ห้ามบวกข้ามหน่วย (กฎข้อ 3.4 ใน CLAUDE.md)
+      const byUnitSent = {};
+      for (const r of sending) {
+        const u = (r.unit || 'หน่วย').trim();
+        byUnitSent[u] = (byUnitSent[u] || 0) + (Number(r.qty) || 0);
+      }
+      const qtyLabelSent = Object.keys(byUnitSent)
+        .map((u) => ({ u, n: byUnitSent[u] }))
+        .sort((a, b) => b.n - a.n)
+        .map((x) => qtyText(x.n) + ' ' + x.u)
+        .join(' · ');
+
       app.persist({
         rows: left,
         saveFailed: false,
@@ -582,20 +602,30 @@ export function recordActions(app) {
         batchId: null,
         saving: false,
         lastLot: data.lot || '',
-        fy: data.fy || st.fy
+        fy: data.fy || st.fy,
+        // ── หน้าผลเต็มจอ (พี่กันสั่ง 29 ส.ค. 2569 · แบบ ข จากมอคอัป) ──
+        // เก็บค่าที่จะโชว์ไว้ในก้อนนี้เลย ไม่ให้หน้าผลไปอ่านจาก state ที่กำลังถูกล้าง
+        // 🚨 เก็บ src กับ pcuSite ของล็อตที่เพิ่งส่งไว้ด้วย ปุ่มใบสรุปต้องใช้
+        result: {
+          kind: 'ok',
+          lot: data.lot || '',
+          date: st.date,
+          by: st.recorder || '',
+          src: st.source,
+          pcuSite: st.source === 'pcu' ? (st.pcuSite || '') : '',
+          items: n,
+          qtyLabel: qtyLabelSent,
+          saved: sumOf(sentReuse),
+          lost: sumOf(sentDestroy),
+          note: got < n
+            ? ('บันทึกเข้าระบบ ' + got + ' รายการ · อีก ' + (n - got) + ' รายการเคยบันทึกไปแล้วก่อนหน้านี้ จึงไม่ถูกนับซ้ำ')
+            : ''
+        }
       });
       app.invalidate();
       app.animateTo(sumReuse(left));
 
-      // เซิร์ฟเวอร์บอกจำนวนที่เข้าฐานจริง ถ้าน้อยกว่าที่ส่งแปลว่าบางแถวเคยบันทึกไปแล้ว
-      // (กดลองส่งใหม่หลังเน็ตหลุด) ต้องบอกตรงๆ ไม่ใช่บอกว่าบันทึกครบ
-      const got = typeof data.saved === 'number' ? data.saved : n;
-      const lotTag = data.lot ? ' · Lot ' + data.lot : '';
-      if (got < n) {
-        app.toast('บันทึก ' + got + ' รายการ · อีก ' + (n - got) + ' รายการเคยบันทึกไปแล้ว', '', false);
-      } else {
-        app.toast('บันทึก ' + n + ' รายการแล้ว' + lotTag, money(saved));
-      }
+      // ไม่มีข้อความเด้งตอนสำเร็จอีกแล้ว — หน้าผลเต็มจอบอกครบกว่าและไม่หายไปใน 2 วินาที
     } catch (e) {
       const msg = (e && e.message) || '';
       app.setState({ saving: false, saveFailed: true, saveError: msg });
@@ -603,5 +633,17 @@ export function recordActions(app) {
     } finally {
       app._saving = false;
     }
+  };
+
+  // ── ปุ่มบนหน้าผลบันทึกสำเร็จ ───────────────────────────────────────────────
+  app.closeResult = () => app.setState({ result: null });
+
+  // ใบสรุป Lot ตัวเดียวกับที่กดดูจากหน้ารายการ Lot (พี่กันสั่ง "แบบเดียวกันกับที่กดดูในเว็บ ที่มันปริ้นได้")
+  // 🚨 ส่งแค่หัวล็อตไป — openLotSlip จะไปดึงแถวจริงจากฐานเอง
+  //    ยอดบนใบจึงมาจากข้อมูลที่เข้าฐานแล้วจริง ไม่ใช่ตัวเลขที่ค้างอยู่ในเครื่อง
+  app.openResultSlip = () => {
+    const r = app.state.result;
+    if (!r || !r.lot) return;
+    app.openLotSlip({ lot: r.lot, date: r.date, by: r.by, src: r.src, pcuSite: r.pcuSite });
   };
 }

@@ -12,6 +12,7 @@ import { signVals } from './sign';
 import { himportVals } from './himport';
 import { lotsVals } from './lots';
 import { catalogVals } from './catalog';
+import { resultVals } from './result';
 
 export function renderVals(app) {
   const d = derive(app);
@@ -31,7 +32,8 @@ export function renderVals(app) {
     ['sign', signVals(app, d)],
     ['himport', himportVals(app, d)],
     ['lots', lotsVals(app, d)],
-    ['catalog', catalogVals(app, d)]
+    ['catalog', catalogVals(app, d)],
+    ['result', resultVals(app, d)]
   ];
 
   const box = Object.assign({}, ...parts.map((p) => p[1]));
