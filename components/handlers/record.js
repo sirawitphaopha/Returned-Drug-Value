@@ -92,7 +92,7 @@ export function recordActions(app) {
     //    → เภสัชกรไม่กดลองใหม่ แต่กดล้างทั้งหมดแล้วรับคนไข้รายถัดไป
     //    → กรอกชุดใหม่ กดบันทึก → ฐานเห็นก้อนเดิม เลยใช้เลข Lot เดิมของคนไข้รายก่อน
     //    → ใบสรุปพิมพ์รวมสองรอบเป็นก้อนเดียว สืบกลับผิดคน
-    app.persist({ rows: [], batchId: null, saveFailed: false, saveError: '' });
+    app.persist({ rows: [], batchId: null, saveFailed: false, saveError: '', failedBy: '', result: null });
     app.animateTo(0);
     app.toast('ล้างรายการทั้งหมดแล้ว', '');
   };
@@ -493,7 +493,14 @@ export function recordActions(app) {
     });
   };
 
-  app.save = async () => {
+  // opts.auto = true → ระบบลองส่งเองเบื้องหลัง (ตัวตั้งเวลาถอยห่าง · เน็ตกลับมา · เพิ่งเปิดเว็บ)
+  // 🚨 การส่งเองห้ามเปิดหน้าเต็มจอทั้งตอนสำเร็จและตอนล้ม
+  //    เภสัชกรอาจกำลังพิมพ์ยาล็อตถัดไปอยู่ จู่ ๆ มีจอเต็มเด้งมาคือการขัดจังหวะ
+  //    และถ้าล้มซ้ำทุก 5 นาทีจะกลายเป็นจอเด้งทั้งวัน จนคนเลิกอ่านข้อความบนนั้น
+  // ⚠️ app.save ถูกใช้เป็นตัวรับการกดปุ่มด้วย (onSave) จึงได้ event object มาเป็น opts
+  //    ต้องเทียบ === true เท่านั้น ห้ามเช็คแค่ว่ามีค่าไหม
+  app.save = async (opts) => {
+    const auto = !!(opts && opts.auto === true);
     const st = app.state;
     // ยามในหน่วยความจำ ไม่ต้องรอ setState — กันกดรัวสองครั้งแล้วได้ batchId คนละตัว
     // ซึ่งจะทำให้ระบบกันบันทึกซ้ำใช้ไม่ได้ แล้วข้อมูลเข้าฐานสองชุด
@@ -505,8 +512,14 @@ export function recordActions(app) {
       app.toast('เลือกวันที่ก่อนบันทึก', '', false);
       return;
     }
-    // ต้องมีชื่อผู้บันทึกเสมอ — ช่องอยู่ในแผงข้างถัดจากวันที่
-    if (!(st.recorder || '').trim()) {
+    // ── ใครเซ็นล็อตนี้ ────────────────────────────────────────────────────
+    // ปกติคือชื่อในช่องผู้บันทึก · แต่ของค้างที่เปิดเว็บใหม่มาเจอจะไม่มีชื่อในช่องนั้น
+    // เพราะช่องผู้บันทึกถูกล้างทุกครั้งที่เปิดเว็บโดยตั้งใจ (กฎข้อ 3.24 คอมเป็นเครื่องกลาง)
+    // 🚨 ล็อตที่ค้างถูกเซ็นไปแล้วตั้งแต่กดส่งครั้งแรก การส่งซ้ำคือส่งของเดิมที่เซ็นไว้
+    //    จึงใช้ชื่อที่เก็บคู่กับของค้าง ไม่ใช่บังคับให้คนถัดไปมาเซ็นแทน
+    //    ถ้าไม่ทำแบบนี้ ระบบจะส่งของค้างเองไม่ได้เลยหลังเปิดเว็บใหม่ ต้องมีคนมากดทุกครั้ง
+    const by = (st.recorder || '').trim() || (st.saveFailed ? (st.failedBy || '').trim() : '');
+    if (!by) {
       app.toast('เลือกชื่อผู้บันทึกก่อน', '', false);
       app.setState({ recorderMenuOpen: true, showMore: true });
       return;
@@ -533,7 +546,7 @@ export function recordActions(app) {
           source: st.source,
           pcuSite: st.pcuSite,
           hn: st.hn,
-          recordedBy: st.recorder,
+          recordedBy: by,
           items: sending.map((r) => ({
             clientRid: String(r.rid),
             drugId: r.drugId,
@@ -601,16 +614,19 @@ export function recordActions(app) {
         date: left.length ? app.state.date : (app.state.today || st.date),
         batchId: null,
         saving: false,
+        // ล็อตค้างถูกส่งไปแล้ว เลิกจำชื่อผู้เซ็นของมัน ไม่ให้ไปติดกับล็อตถัดไป
+        failedBy: '',
         lastLot: data.lot || '',
         fy: data.fy || st.fy,
         // ── หน้าผลเต็มจอ (พี่กันสั่ง 29 ส.ค. 2569 · แบบ ข จากมอคอัป) ──
         // เก็บค่าที่จะโชว์ไว้ในก้อนนี้เลย ไม่ให้หน้าผลไปอ่านจาก state ที่กำลังถูกล้าง
         // 🚨 เก็บ src กับ pcuSite ของล็อตที่เพิ่งส่งไว้ด้วย ปุ่มใบสรุปต้องใช้
-        result: {
+        // ส่งเองสำเร็จตอนผู้ใช้ทำอย่างอื่นอยู่ — บอกด้วยข้อความเด้งพอ ไม่ยึดจอทั้งจอ
+        result: auto ? null : {
           kind: 'ok',
           lot: data.lot || '',
           date: st.date,
-          by: st.recorder || '',
+          by: by,
           src: st.source,
           pcuSite: st.source === 'pcu' ? (st.pcuSite || '') : '',
           items: n,
@@ -624,19 +640,58 @@ export function recordActions(app) {
       });
       app.invalidate();
       app.animateTo(sumReuse(left));
+      // ส่งได้แล้ว เลิกจับเวลาลองส่งเอง และล้างตัวนับครั้งให้พร้อมสำหรับล็อตถัดไป
+      app.clearRetry();
 
-      // ไม่มีข้อความเด้งตอนสำเร็จอีกแล้ว — หน้าผลเต็มจอบอกครบกว่าและไม่หายไปใน 2 วินาที
+      // ตอนกดส่งเองไม่มีข้อความเด้งแล้ว — หน้าผลเต็มจอบอกครบกว่าและไม่หายไปใน 2 วินาที
+      // แต่ตอนระบบส่งให้เองต้องมี ไม่งั้นของขึ้นระบบไปแล้วโดยไม่มีอะไรบอกเลย
+      if (auto) {
+        app.toast('ส่งข้อมูลที่ค้างอยู่สำเร็จแล้ว', data.lot ? 'Lot ' + data.lot : '');
+      }
     } catch (e) {
       const msg = (e && e.message) || '';
-      app.setState({ saving: false, saveFailed: true, saveError: msg });
-      app.toast(msg || 'ส่งไม่สำเร็จ กดลองส่งใหม่ได้', '', false);
+
+      // ยอดของที่ค้างอยู่ — โชว์บนหน้าส่งไม่สำเร็จให้เห็นว่าค้างไปเท่าไร
+      const stuckValue = sending.reduce((a, r) => a + (Number(r.price) || 0) * (Number(r.qty) || 0), 0);
+
+      // 🚨 ผ่าน persist ไม่ใช่ setState — ธงส่งไม่สำเร็จต้องลงไปนอนในเครื่องด้วย
+      //    ปิดแท็บแล้วเปิดใหม่จะได้รู้ว่าของก้อนนี้ยังไม่ขึ้นระบบ แล้วลองส่งเองต่อ
+      app.persist({
+        saving: false,
+        saveFailed: true,
+        saveError: msg,
+        // จำไว้ว่าใครเซ็นล็อตนี้ เผื่อปิดแท็บแล้วเปิดใหม่ ระบบจะได้ส่งเองต่อได้
+        failedBy: by,
+        // ส่งเองแล้วล้มซ้ำขณะหน้าส่งไม่สำเร็จเปิดค้างอยู่ — อัปเดตสาเหตุล่าสุดให้ตรง
+        // ไม่ใช่ปล่อยข้อความรอบแรกค้างไว้ทั้งที่สาเหตุเปลี่ยนไปแล้ว
+        result: auto ? (app.state.result && app.state.result.kind === 'fail'
+          ? Object.assign({}, app.state.result, { error: msg })
+          : app.state.result) : {
+          kind: 'fail',
+          date: st.date,
+          by: by,
+          src: st.source,
+          pcuSite: st.source === 'pcu' ? (st.pcuSite || '') : '',
+          items: n,
+          value: stuckValue,
+          error: msg
+        }
+      });
+      // ตั้งคิวลองส่งเองรอบถัดไป — ถอยห่างขึ้นทุกครั้งที่ล้มซ้ำ
+      app.scheduleRetry(null, auto);
+      // ตอนคนกดเองมีหน้าเต็มจอบอกอยู่แล้ว ข้อความเด้งซ้อนอีกชั้นเป็นการบอกซ้ำเปล่า ๆ
+      if (auto) app.toast(msg || 'ยังส่งไม่สำเร็จ ระบบจะลองใหม่ให้เอง', '', false);
     } finally {
       app._saving = false;
     }
   };
 
-  // ── ปุ่มบนหน้าผลบันทึกสำเร็จ ───────────────────────────────────────────────
+  // ── ปุ่มบนหน้าผล (ทั้งสำเร็จและไม่สำเร็จ) ─────────────────────────────────
   app.closeResult = () => app.setState({ result: null });
+
+  // ปุ่ม "ส่งอีกครั้ง" บนหน้าส่งไม่สำเร็จ — นับเป็นการกดเอง ไม่ใช่การส่งเองของระบบ
+  // 🚨 ห่อด้วยลูกศรเปล่า ไม่ผูก app.save ตรง ๆ ไม่งั้น event ของการกดจะกลายเป็น opts
+  app.resultRetry = () => app.save();
 
   // ใบสรุป Lot ตัวเดียวกับที่กดดูจากหน้ารายการ Lot (พี่กันสั่ง "แบบเดียวกันกับที่กดดูในเว็บ ที่มันปริ้นได้")
   // 🚨 ส่งแค่หัวล็อตไป — openLotSlip จะไปดึงแถวจริงจากฐานเอง

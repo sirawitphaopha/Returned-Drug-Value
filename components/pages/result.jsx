@@ -33,8 +33,72 @@ function line(label, value) {
   );
 }
 
+// ── หน้าส่งไม่สำเร็จ ────────────────────────────────────────────────────────
+//
+// พี่กันสั่ง 29 ส.ค. 2569: "จุดส่งไม่สำเร็จต้องดี ๆ เลย เอาเหมือนกัน
+// เพราะส่งไม่สำเร็จสำคัญมาก ระบบต้องเก็บไว้ในเครื่องก่อนถ้าไม่สำเร็จ และส่งให้เองถ้าเน็ตมา"
+//
+// สามอย่างที่หน้านี้ต้องตอบให้ได้ ไม่งั้นคนจะกดซ้ำรัว ๆ หรือปิดทิ้งแล้วลืม
+//   1. ของหายไหม        → ไม่หาย เก็บอยู่ในเครื่องนี้แล้ว
+//   2. ระบบทำอะไรอยู่    → นับถอยหลังจริงจนกว่าจะลองส่งเองครั้งถัดไป
+//   3. ต้องทำอะไรต่อ     → ส่งอีกครั้งเดี๋ยวนี้ หรือปล่อยให้ระบบจัดการแล้วทำงานอื่นต่อ
+function renderFail(V) {
+  return (
+    <div role="dialog" aria-modal="true" aria-label="ส่งข้อมูลไม่สำเร็จ"
+      style={s('position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:24px 20px;text-align:center;background:linear-gradient(180deg,#fdf5f2,#f9e4dd)')}>
+
+      <div style={s('flex:1 0 0;min-height:0')}></div>
+
+      <div style={s('width:78px;height:78px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 0 0 9px rgba(194,84,60,.10)')}>
+        <span aria-hidden="true" style={s('font:400 40px/1 Sarabun,sans-serif;color:#c2543c')}>✕</span>
+      </div>
+
+      <div role="heading" aria-level="1" style={s('margin-top:14px;font:800 23px Sarabun,sans-serif;color:#a8452f;letter-spacing:-.3px')}>ส่งขึ้นระบบไม่สำเร็จ</div>
+      <div style={s('margin-top:7px;font:600 13.5px/1.6 Sarabun,sans-serif;color:#8a4030')}>ข้อมูลถูกเก็บไว้ในเครื่องนี้แล้ว ยังไม่ขึ้นระบบส่วนกลาง</div>
+
+      {/* สถานะการลองส่งเอง — ตัวเลขต้องเดินจริงทุกวินาที ไม่ใช่ข้อความลอย ๆ */}
+      <div role="status" aria-live="polite" style={s('width:100%;max-width:360px;margin-top:15px;padding:11px 14px;border-radius:12px;background:#fff;border:1px solid rgba(194,84,60,.22)')}>
+        <div style={s('font:700 14px Sarabun,sans-serif;color:#1e2420')}>{V.resultNext}</div>
+        {V.resultTriesText && (
+          <div style={s('margin-top:3px;font:400 12px Sarabun,sans-serif;color:#6f7873')}>{V.resultTriesText}</div>
+        )}
+      </div>
+
+      <div style={s('width:100%;max-width:360px;margin-top:11px;background:#fff;border:1px solid rgba(30,36,32,.10);border-radius:14px;padding:13px 15px;text-align:left')}>
+        {line('รายการที่ค้าง', V.resultItems)}
+        {line('มูลค่ารวม', V.resultValue)}
+        {line('ผู้บันทึก', V.resultBy)}
+        {line('แหล่งที่มา', V.resultSrc)}
+        <div style={s('display:flex;justify-content:space-between;gap:12px;padding:7px 0')}>
+          <span style={s('font:400 13px Sarabun,sans-serif;color:#6b746e;flex:none')}>วันที่รับคืน</span>
+          <span style={s('font:600 13px Sarabun,sans-serif;color:#1e2420;text-align:right')}>{V.resultDate}</span>
+        </div>
+      </div>
+
+      {/* สาเหตุจากเซิร์ฟเวอร์ — ตัวเล็กสุดเพราะเป็นภาษาช่าง คนอ่านหลักคือแคลร์ตอนตามหาสาเหตุ */}
+      {V.resultError && (
+        <div style={s('width:100%;max-width:360px;margin-top:9px;font:400 11.5px/1.55 Sarabun,sans-serif;color:#8a4030;text-align:left;word-break:break-word')}>
+          สาเหตุ {V.resultError}
+        </div>
+      )}
+
+      <div style={s('width:100%;max-width:360px;margin-top:16px;display:flex;flex-direction:column;gap:10px')}>
+        <div {...kb(V.resultRetry)} className="hv-red" style={sx('display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:12px;color:#fff;font:700 15.5px Sarabun,sans-serif', {
+          background: V.resultSaving ? '#d19081' : '#c2543c',
+          cursor: V.resultSaving ? 'default' : 'pointer',
+          pointerEvents: V.resultSaving ? 'none' : 'auto'
+        })}>{V.resultSaving ? 'กำลังส่ง' : 'ส่งอีกครั้งเดี๋ยวนี้'}</div>
+        <div {...kb(V.resultClose)} className="hv-del" style={s('display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:11px;color:#a8452f;font:600 14px Sarabun,sans-serif;cursor:pointer')}>เก็บไว้ส่งทีหลัง</div>
+      </div>
+
+      <div style={s('flex:1 0 0;min-height:0')}></div>
+    </div>
+  );
+}
+
 export function renderResult(V) {
   if (!V.resultOpen) return null;
+  if (V.resultFail) return renderFail(V);
 
   return (
     <div role="dialog" aria-modal="true" aria-label="ผลการบันทึก"

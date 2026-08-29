@@ -69,6 +69,12 @@ export default class MedReturnApp extends React.Component {
       // 🚨 ไม่ถูกเก็บลง localStorage โดยตั้งใจ (app.persist ไม่มีคีย์นี้)
       //    เปิดเว็บใหม่ต้องไม่เจอหน้าผลของล็อตเมื่อวานค้างอยู่
       result: null,
+      // เวลาที่ระบบจะลองส่งของค้างครั้งถัดไป (0 = ไม่มีคิว) กับจำนวนครั้งที่ลองไปแล้ว
+      retryAt: 0,
+      retryTries: 0,
+      // ชื่อผู้บันทึกของล็อตที่ส่งไม่สำเร็จ ใช้ตอนส่งซ้ำหลังเปิดเว็บใหม่เท่านั้น
+      // 🚨 ไม่ใช่ค่าในช่องผู้บันทึก และห้ามเอาไปเติมในช่องนั้น (กฎข้อ 3.24)
+      failedBy: '',
       rows: [],
       sheet: null,
       sheetQty: '',
@@ -312,6 +318,19 @@ export default class MedReturnApp extends React.Component {
     if (prevState.hi !== this.state.hi && this.hiRef.current) {
       this.hiRef.current.scrollIntoView({ block: 'nearest' });
     }
+
+    // ── นาฬิกาถอยหลังบนหน้าส่งไม่สำเร็จ ──────────────────────────────────
+    // เดินเฉพาะตอนหน้านั้นเปิดอยู่จริง — ไม่ใช่ตลอดเวลาที่มีของค้าง
+    // เว็บเปิดค้างทั้งวัน ตัวจับเวลาที่เดินเปล่าทุกวินาทีคือการวาดจอทิ้งวันละหมื่นรอบ
+    const failNow = !!this.state.result && this.state.result.kind === 'fail';
+    const failBefore = !!prevState.result && prevState.result.kind === 'fail';
+    if (failNow && !failBefore && !this._tickTimer) {
+      this._tickTimer = setInterval(() => this.setState({ tick: Date.now() }), 1000);
+    }
+    if (!failNow && this._tickTimer) {
+      clearInterval(this._tickTimer);
+      this._tickTimer = null;
+    }
   }
 
   componentDidMount() {
@@ -361,6 +380,14 @@ export default class MedReturnApp extends React.Component {
       if (box.sourceTouched) patch.sourceTouched = true;
       if (typeof box.pcuSite === 'string') patch.pcuSite = box.pcuSite;
       if (typeof box.date === 'string' && box.date) patch.date = box.date;
+      // ของค้างที่เคยส่งไม่สำเร็จ ต้องยังรู้ตัวว่าค้างอยู่หลังเปิดเว็บใหม่
+      // 🚨 ติดธงเฉพาะตอนมีแถวเหลือจริง — ธงค้างโดยไม่มีของ = กล่องแดงขึ้นเปล่า ๆ
+      if (box.saveFailed && patch.rows && patch.rows.length) {
+        patch.saveFailed = true;
+        patch.saveError = typeof box.saveError === 'string' ? box.saveError : '';
+        // ผู้บันทึกที่เซ็นล็อตค้างนี้ไว้ — เก็บแยกจากช่องผู้บันทึกโดยตั้งใจ
+        patch.failedBy = typeof box.failedBy === 'string' ? box.failedBy : '';
+      }
     }
 
     if (Array.isArray(drugs)) patch.drugs = drugs;
@@ -374,6 +401,9 @@ export default class MedReturnApp extends React.Component {
     this.setState(patch, () => {
       this.animateTo(this.savedTotal());
       this.boot();
+      // ของค้างจากรอบก่อน — ลองส่งให้เองเลย ไม่ต้องรอให้ใครกด
+      // เส้นทางเดียวกับตอนเน็ตกลับมา จึงใช้ batchId เดิมและไม่มีทางได้ข้อมูลซ้ำ
+      if (patch.saveFailed) this.retryFailedSave();
     });
     window.addEventListener('resize', this._onResize);
     window.addEventListener('keydown', this._onKey);
@@ -384,6 +414,10 @@ export default class MedReturnApp extends React.Component {
     this._dayTimer = setInterval(this.checkDayRollover, 60000);
     document.addEventListener('visibilitychange', this._onVisible);
     window.addEventListener('online', this._onOnline);
+    // ปิดแท็บทั้งที่ของยังไม่ขึ้นระบบ = ไม่มีใครรู้เลยว่ามีของค้าง จนกว่าจะมีคนเปิดเครื่องเดิม
+    // 🚨 เตือนเฉพาะตอนส่งไม่สำเร็จจริง ๆ ไม่ใช่ทุกครั้งที่มีร่างค้าง
+    //    ร่างที่ยังกรอกไม่เสร็จเป็นเรื่องปกติของงานประจำวัน เตือนทุกครั้งแล้วคนจะเลิกอ่าน
+    window.addEventListener('beforeunload', this._onBeforeUnload);
     // ⚠️ เดิมฟังแต่ 'online' — รู้ตอนเน็ตกลับมา แต่ไม่เคยรู้ตอนเน็ตหลุด
     window.addEventListener('offline', this._onOffline);
     // เช็คสถานะจริงตอนเปิดเว็บด้วย — เผลอเปิดตอนเน็ตหลุดอยู่แล้วจะได้เห็นป้ายทันที
@@ -451,6 +485,15 @@ export default class MedReturnApp extends React.Component {
 
   // เน็ตโรงพยาบาลหลุดแล้วกลับมา — ระหว่างที่หลุดอาจมีคนแก้ยาไปแล้ว
   _onOnline = () => { this.setState({ offline: false }); this.syncDrugs(); this.retryFailedSave(); };
+
+  // ข้อความที่โชว์เป็นของเบราว์เซอร์เอง แก้ไม่ได้ — สิ่งเดียวที่ทำได้คือให้มันถามหรือไม่ถาม
+  _onBeforeUnload = (e) => {
+    const st = this.state;
+    if (!st.saveFailed || !st.rows.length || st.demo) return;
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  };
   _onOffline = () => { this.setState({ offline: true }); };
 
   // ── ส่งซ้ำอัตโนมัติเมื่อเน็ตกลับมา ─────────────────────────────────────────
@@ -470,18 +513,57 @@ export default class MedReturnApp extends React.Component {
   retryFailedSave = () => {
     const st = this.state;
     if (!st.saveFailed || !st.rows.length || this._saving || st.demo) return;
+    // สัญญาณจากภายนอก (เน็ตกลับมา · กลับเข้าแท็บ · เพิ่งเปิดเว็บ) = จังหวะที่มีหวังที่สุด
+    // จึงเริ่มนับจังหวะถอยใหม่ทุกครั้ง ไม่สืบทอดจังหวะยาว ๆ ของรอบก่อนมา
+    this._retryStep = 0;
+    this.scheduleRetry(1200, false);
+  };
+
+  // ── ลองส่งเองเป็นระยะ ถี่ก่อนแล้วห่างขึ้น (พี่กันเคาะ 29 ส.ค. 2569 ข้อ 1) ──
+  //
+  // ทำไมรอสัญญาณ "เน็ตกลับมา" อย่างเดียวไม่พอ
+  //   เบราว์เซอร์ยิงสัญญาณนั้นเมื่อ "เครื่องหลุดจากเครือข่าย" เท่านั้น
+  //   แต่อาการที่เจอจริงในโรงพยาบาลคือไวไฟยังต่ออยู่ครบทุกขีด แค่ออกอินเทอร์เน็ตไม่ได้
+  //   เครื่องจึงคิดว่าตัวเองออนไลน์ตลอด ไม่มีสัญญาณไหนยิงเลย ของค้างเงียบข้ามวันได้
+  //
+  // 🚨 ต้องถอยห่างขึ้น ห้ามยิงถี่เท่าเดิมตลอด — เน็ตล่มยาว ๆ จะกลายเป็นยิงคำขอเปล่า
+  //    ใส่เซิร์ฟเวอร์เป็นพัน ๆ ครั้ง ทั้งที่รู้อยู่แล้วว่าส่งไม่ได้
+  // 🚨 ค้างที่ 5 นาทีไปเรื่อย ๆ ไม่หยุดลองเอง — หยุดเมื่อไหร่แปลว่าต้องมีคนมากดเอง
+  //    ซึ่งเป็นสิ่งเดียวที่พยายามเลี่ยงตั้งแต่ต้น
+  RETRY_WAITS = [20000, 40000, 80000, 160000, 300000];
+
+  scheduleRetry = (delay, countUp) => {
     if (this._retryTimer) clearTimeout(this._retryTimer);
+    if (countUp) this._retryStep = Math.min((this._retryStep || 0) + 1, this.RETRY_WAITS.length - 1);
+    const wait = typeof delay === 'number' ? delay : this.RETRY_WAITS[this._retryStep || 0];
+    // เวลาที่จะลองครั้งต่อไป — หน้าส่งไม่สำเร็จเอาไปนับถอยหลังให้เห็นว่าระบบยังทำงานอยู่
+    this.setState({ retryAt: Date.now() + wait, retryTries: this._retryTries || 0 });
     this._retryTimer = setTimeout(() => {
       const cur = this.state;
-      if (!cur.saveFailed || !cur.rows.length || this._saving) return;
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
-      this.toast('เน็ตกลับมาแล้ว กำลังส่งข้อมูลที่ค้างอยู่', '', false);
-      this.save();
-    }, 1200);
+      if (!cur.saveFailed || !cur.rows.length || this._saving || cur.demo) return;
+      // เครื่องรู้ตัวว่าหลุดเครือข่าย ยิงไปก็ล้มแน่ ๆ — รอรอบถัดไป ไม่นับเป็นครั้งที่ลอง
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+        this.scheduleRetry(null, true);
+        return;
+      }
+      this._retryTries = (this._retryTries || 0) + 1;
+      this.setState({ retryTries: this._retryTries });
+      // 🚨 ส่งแบบเงียบ — ไม่เปิดหน้าเต็มจอทั้งตอนสำเร็จและตอนล้ม
+      //    เภสัชกรอาจกำลังกรอกล็อตถัดไปอยู่ หน้าเต็มจอเด้งขึ้นมาเองคือการขัดจังหวะ
+      this.save({ auto: true });
+    }, wait);
+  };
+
+  clearRetry = () => {
+    if (this._retryTimer) { clearTimeout(this._retryTimer); this._retryTimer = null; }
+    this._retryStep = 0;
+    this._retryTries = 0;
+    this.setState({ retryAt: 0, retryTries: 0 });
   };
 
   componentWillUnmount() {
     if (this._retryTimer) { clearTimeout(this._retryTimer); this._retryTimer = null; }
+    if (this._tickTimer) { clearInterval(this._tickTimer); this._tickTimer = null; }
     if (this._histHeadRO) { this._histHeadRO.disconnect(); this._histHeadRO = null; }
     if (this._catHeadRO) { this._catHeadRO.disconnect(); this._catHeadRO = null; }
     if (this._mqMouse && this._onMouseKind) {
@@ -498,6 +580,7 @@ export default class MedReturnApp extends React.Component {
     document.removeEventListener('mousedown', this._onDocDown);
     document.removeEventListener('visibilitychange', this._onVisible);
     window.removeEventListener('online', this._onOnline);
+    window.removeEventListener('beforeunload', this._onBeforeUnload);
     window.removeEventListener('offline', this._onOffline);
     if (this._vv && this._onVV) {
       this._vv.removeEventListener('resize', this._onVV);

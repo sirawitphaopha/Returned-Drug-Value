@@ -17,15 +17,40 @@ export function resultVals(app, d) {
   const st = app.state;
   const r = st.result;
   if (!r) {
-    return { resultOpen: false, resultOk: false };
+    return { resultOpen: false, resultOk: false, resultFail: false };
   }
 
   const srcLabel = (SOURCES.find((s) => s.key === r.src) || {}).label || r.src || '';
   const site = String(r.pcuSite || '').trim();
 
+  // ── นับถอยหลังจนกว่าระบบจะลองส่งเองครั้งถัดไป ────────────────────────────
+  // ต้องเห็นตัวเลขเดินจริง ไม่ใช่เขียนลอย ๆ ว่า "ระบบจะลองใหม่ให้"
+  // ประโยคลอย ๆ ไม่มีอะไรพิสูจน์ว่าระบบยังทำงานอยู่ คนจะไม่เชื่อแล้วกดเองรัว ๆ
+  const leftMs = Math.max(0, Number(st.retryAt || 0) - Date.now());
+  const leftSec = Math.ceil(leftMs / 1000);
+  const nextText = st.saving
+    ? 'กำลังส่ง'
+    : leftSec > 60
+      ? 'ลองส่งใหม่ให้เองในอีก ' + Math.ceil(leftSec / 60) + ' นาที'
+      : leftSec > 0
+        ? 'ลองส่งใหม่ให้เองในอีก ' + leftSec + ' วินาที'
+        : 'กำลังลองส่งใหม่';
+
   return {
     resultOpen: true,
     resultOk: r.kind === 'ok',
+    resultFail: r.kind === 'fail',
+
+    // ── หน้าส่งไม่สำเร็จ ──
+    resultValue: money(r.value || 0),
+    resultError: r.error || '',
+    resultNext: nextText,
+    resultTries: Number(st.retryTries || 0),
+    resultTriesText: Number(st.retryTries || 0) > 0
+      ? 'ระบบลองส่งให้เองแล้ว ' + st.retryTries + ' ครั้ง'
+      : '',
+    resultSaving: !!st.saving,
+    resultRetry: app.resultRetry,
     resultLot: r.lot || '',
     resultHasLot: !!r.lot,
     resultDate: r.date ? thaiDate(r.date) : '',
