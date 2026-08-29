@@ -4,7 +4,7 @@
 //    1. ข้อมูลชุดนี้ไม่เคยถูกส่งขึ้นเซิร์ฟเวอร์ · ทุกหน้าอ่านจากก้อนในหน่วยความจำ
 //    2. เปิดโหมดนี้แล้ว "ปุ่มบันทึกถูกปิด" กันข้อมูลปลอมหลุดเข้าของจริง
 //    3. ปิดโหมดแล้วทุกอย่างกลับไปอ่านของจริงทันที (ล้างแคชให้ด้วย)
-import { buildDemo, demoSummary, demoTopReturned, demoHistory, demoDraft } from '@/lib/demo';
+import { buildDemo, demoSummary, demoTopReturned, demoHistory, demoDraft, DEMO_PCU } from '@/lib/demo';
 import { LS, clearLS, readLS, writeLS } from '../helpers';
 
 export function demoActions(app) {
@@ -51,6 +51,9 @@ export function demoActions(app) {
       settingsOpen: false,
       drugs: drugs,
       hotIds: hotIds,
+      // รายชื่อ รพ.สต. ชุดตัวอย่าง — ต้องมี ไม่งั้นเปิดโหมดนี้แล้วช่องเลือก รพ.สต.
+      // ขึ้นว่า "ยังไม่ได้ตั้งรายชื่อ" และไม่มีทางเห็นการบังคับเลือกที่เพิ่งทำ (กฎข้อ 3.12)
+      pcuSites: DEMO_PCU,
       // ยาที่คืนบ่อย 6 ตัวแรกของชุดตัวอย่าง
       favIds: box.drugs.slice(0, 6).map((d) => d.id),
       recorder: 'ภก. สิรวิชญ์ เผ่าผา',
@@ -98,6 +101,7 @@ export function demoActions(app) {
       settingsOpen: false,
       drugs: [],
       hotIds: [],            // ล้างยาคืนบ่อยของชุดตัวอย่าง · boot() จะโหลดของจริงมาทับ
+      pcuSites: [],          // รายชื่อ รพ.สต. ปลอมต้องหายไปด้วย boot() โหลดของจริงมาแทน
       favIds: [],
       lastLot: '',
       sum: null,

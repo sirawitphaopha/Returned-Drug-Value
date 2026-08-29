@@ -381,6 +381,36 @@ export function recordActions(app) {
     app.pushSetting({ staff: staff, lastRecorder: name });
   };
 
+  // ── รพ.สต. ต้นทาง — บังคับเลือกเมื่อรายชื่อถูกตั้งไว้แล้ว ──────────────────
+  //
+  // พี่กันสั่ง 29 ส.ค. 2569: "กฎบ้านั่นทำตอนยังไม่ใส่รายชื่อ รพ.สต. ไง
+  //   ดังนั้น พอใส่แล้ว ต้องบังคับกรอก"
+  //
+  // เดิมไม่บังคับ เพราะตอนนั้นยังไม่ได้ตั้งรายชื่อ รพ.สต. ลงฐาน ถ้าบังคับไว้
+  // ห้องยาจะบันทึกงานประจำวันไม่ได้เลย · ตอนนี้รายชื่อครบ 13 แห่งแล้ว เหตุผลนั้นหมดไป
+  // และล็อตที่ไม่มีชื่อแห่งคือล็อตที่ตอบไม่ได้ว่ายาชุดนี้คืนมาจากที่ไหน
+  //
+  // 🚨 ยังปล่อยผ่านเมื่อรายชื่อว่างเปล่า — ไม่มีตัวเลือกให้กดแล้วยังบังคับ
+  //    เท่ากับปิดประตูไม่ให้บันทึกอะไรได้เลย ซึ่งแย่กว่าข้อมูลที่ยังไม่ครบ
+  //
+  // 🚨 ตรวจแถวด้วย ไม่ใช่ตรวจแค่ปุ่มแหล่งที่มาที่เลือกค้างอยู่ตอนนี้
+  //    แถวเก็บ source ไว้ตั้งแต่ตอนกดเพิ่ม (คนไข้ 2 คนในล็อตเดียวใช้คนละแหล่งได้)
+  //    เพิ่มยาตอนเลือก รพ.สต. ไว้ แล้วสลับไป OPD ก่อนกดส่ง = แถวนั้นยังเป็น รพ.สต.
+  //    ที่ไม่มีชื่อแห่งติดไปด้วย ซึ่งไม่มีอะไรจับได้เลยหลังเข้าฐานแล้ว
+  app.pcuSiteMissing = () => {
+    const st = app.state;
+    const sites = Array.isArray(st.pcuSites) ? st.pcuSites : [];
+    if (!sites.length) return false;
+    // ชื่อระดับล็อต — ส่งไปเป็นค่าสำรองให้ทุกแถวที่ไม่มีชื่อของตัวเอง (ตรงกับ /api/returns)
+    const lotSite = st.source === 'pcu' ? (st.pcuSite || '').trim() : '';
+    if (st.source === 'pcu' && !lotSite) return true;
+    return (st.rows || []).some((r) => {
+      const src = r.source || st.source;
+      if (src !== 'pcu') return false;
+      return !((r.pcuSite || '').trim() || lotSite);
+    });
+  };
+
   // ── ป๊อปยืนยันก่อนส่งขึ้นระบบ ─────────────────────────────────────────────
   //
   // พี่กันสั่ง 25 ส.ค. 2569: "ตอนจะกดส่งข้อมูล เราอยากให้มันมีป๊อปอัปถามยืนยันอีกครั้ง
@@ -400,6 +430,10 @@ export function recordActions(app) {
     if (!(st.recorder || '').trim()) {
       app.toast('เลือกชื่อผู้บันทึกก่อน', '', false);
       app.setState({ recorderMenuOpen: true, showMore: true });
+      return;
+    }
+    if (app.pcuSiteMissing()) {
+      app.toast('เลือก รพ.สต. ต้นทางก่อนบันทึก', '', false);
       return;
     }
 
@@ -475,6 +509,10 @@ export function recordActions(app) {
     if (!(st.recorder || '').trim()) {
       app.toast('เลือกชื่อผู้บันทึกก่อน', '', false);
       app.setState({ recorderMenuOpen: true, showMore: true });
+      return;
+    }
+    if (app.pcuSiteMissing()) {
+      app.toast('เลือก รพ.สต. ต้นทางก่อนบันทึก', '', false);
       return;
     }
 

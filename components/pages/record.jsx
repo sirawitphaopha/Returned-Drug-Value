@@ -175,7 +175,7 @@ export function renderRecordNarrow(V) {
 
         {/* รพ.สต. ต้นทาง — วางนอกส่วน "ตัวเลือกเพิ่มเติม" ให้เห็นทันทีที่เลือก รพ.สต.
             ไม่ใช่ซ่อนไว้จนต้องกดเปิดหา ซึ่งจะทำให้ลืมกรอกได้ง่ายมาก */}
-        {renderPcuField(V)}
+        {renderPcuField(V, { required: true })}
 
         {V.showMore && (
           <div style={s('margin-top:11px;padding-top:11px;border-top:1px solid rgba(30,36,32,.08);display:flex;flex-direction:column;gap:9px')}>
@@ -543,7 +543,7 @@ export function renderRecordWide(V) {
               <div key={s2.label} {...kb(s2.pick)} className={s2.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('padding:6px 12px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: s2.bg, color: s2.fg })}>{s2.label}</div>
             ))}
           </div>
-          {renderPcuField(V)}
+          {renderPcuField(V, { required: true })}
         </div>
 
         <div style={s('display:flex;gap:10px')}>
