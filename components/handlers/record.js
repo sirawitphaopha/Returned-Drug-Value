@@ -82,6 +82,94 @@ export function recordActions(app) {
     });
   };
 
+  // ── ร่างที่เก็บไว้บนเซิร์ฟเวอร์ (พี่กันสั่ง 31 ส.ค. 2569) ────────────────────
+  //
+  // 🚨 เอามาทำต่อแล้วต้องย้ายเจ้าของทันที ลบของต้นทางทิ้ง
+  //    ไม่งั้นเครื่องเดิมกับเครื่องนี้จะมีของชุดเดียวกัน แล้วกดบันทึกทั้งคู่
+  //    = ยาชุดเดียวเข้าฐานสองรอบ มูลค่านับซ้ำ (ปัญหาเดิมที่เพิ่งแก้ไป)
+  app.takeServerDraft = async (deviceId, tabId) => {
+    const box = (app.state.serverDrafts || []).find(
+      (d) => d.device_id === deviceId && d.tab_id === tabId
+    );
+    if (!box) return;
+
+    if (app.state.rows.length) {
+      app.toast('หน้าต่างนี้มีรายการค้างอยู่แล้ว', 'บันทึกหรือล้างของในมือก่อน แล้วค่อยเอาล็อตนี้มาทำต่อ', false);
+      return;
+    }
+
+    const rows = (Array.isArray(box.rows) ? box.rows : []).filter(
+      (r) => r && r.rid != null && typeof r.price === 'number' && typeof r.qty === 'number'
+    );
+    if (!rows.length) {
+      await app.dropServerDraft(deviceId, tabId);
+      app.loadServerDrafts();
+      app.toast('ล็อตนี้ไม่มีรายการเหลือแล้ว', '', false);
+      return;
+    }
+
+    await app.dropServerDraft(deviceId, tabId);
+    app.setState({
+      serverDrafts: (app.state.serverDrafts || []).filter(
+        (d) => !(d.device_id === deviceId && d.tab_id === tabId)
+      )
+    }, () => {
+      app.persist({
+        rows: rows,
+        batchId: box.batch_id || null,
+        hn: typeof box.hn === 'string' ? box.hn : '',
+        source: typeof box.source === 'string' && box.source ? box.source : app.state.source,
+        sourceTouched: !!box.source,
+        pcuSite: typeof box.pcu_site === 'string' ? box.pcu_site : '',
+        date: typeof box.return_date === 'string' && box.return_date ? box.return_date : app.state.date,
+        // ล็อตที่ส่งไม่สำเร็จ ต้องรู้ตัวต่อว่ายังค้างอยู่ พร้อมชื่อคนที่เซ็นไว้
+        saveFailed: !!box.save_failed,
+        failedBy: typeof box.failed_by === 'string' ? box.failed_by : ''
+      });
+      app.animateTo(rows.reduce((a, r) => a + (r.disposition === 'reuse' ? r.price * r.qty : 0), 0));
+      const from = deviceId === app.state.deviceId ? '' : ' จาก ' + deviceId;
+      app.toast('เอาล็อตที่กรอกค้างไว้มาทำต่อแล้ว' + from, rows.length + ' รายการ');
+    });
+  };
+
+  // ทิ้งร่างบนเซิร์ฟเวอร์ — ผ่านหน้าต่างยืนยันเสมอ เพราะย้อนกลับไม่ได้
+  app.askDropServerDraft = (deviceId, tabId) => {
+    const box = (app.state.serverDrafts || []).find(
+      (d) => d.device_id === deviceId && d.tab_id === tabId
+    );
+    if (!box) return;
+    const rows = Array.isArray(box.rows) ? box.rows : [];
+    const value = rows.reduce((a, r) => a + (r && r.disposition === 'reuse' ? (r.price || 0) * (r.qty || 0) : 0), 0);
+    app.setState({
+      confirm: {
+        title: 'ทิ้งล็อตที่กรอกค้างไว้',
+        detail: deviceId + ' · ' + (box.items || rows.length) + ' รายการ · ' + money(value),
+        note: 'ทิ้งแล้วเอากลับมาไม่ได้อีก',
+        okLabel: 'ทิ้งทั้งล็อต',
+        run: async () => {
+          await app.dropServerDraft(deviceId, tabId);
+          app.setState({
+            serverDrafts: (app.state.serverDrafts || []).filter(
+              (d) => !(d.device_id === deviceId && d.tab_id === tabId)
+            )
+          });
+          app.toast('ทิ้งล็อตที่กรอกค้างไว้แล้ว', '', false);
+        }
+      }
+    });
+  };
+
+  // เปิด/ปิดรายการร่างจากเครื่องอื่น — ต้องกดเองเท่านั้น ไม่โผล่มาเอง
+  // เปิด/ปิดหน้าต่างรายการล็อตค้าง — ต้องกดเองเท่านั้น ไม่โผล่มาเอง
+  // ปิดทีไรล้างล็อตที่กางดูไว้ด้วย เปิดใหม่จะได้เริ่มจากหุบทั้งหมด
+  app.toggleOtherDrafts = () => app.setState({
+    showOtherDrafts: !app.state.showOtherDrafts,
+    parkedSeen: ''
+  });
+
+  // กางดูยาในล็อตไหน — ทีละล็อตเท่านั้น กางหลายอันพร้อมกันแล้วเลื่อนหายาก
+  app.seeParked = (key) => app.setState({ parkedSeen: key || '' });
+
   app.blockNoPrice = () => false;
 
   app.addRow = (drug, qty, disp) => {
@@ -225,11 +313,22 @@ export function recordActions(app) {
   // ⚠️ เลขล้วน (ไม่มีเครื่องหมาย) ยังเป็น Enter ทีเดียวเหมือนเดิม ไม่มีอะไรให้เฉลย
   // 🚨 เก็บสูตรไว้ในช่องด้วย ต่อ "=ผลลัพธ์" ท้าย ไม่ใช่แทนที่ด้วยตัวเลขเปล่า
   //    "25+25=50" ตรวจย้อนได้ว่ามาจากการบวกอะไร ถ้าเหลือแค่ "50" จะไม่รู้ที่มา
+  // กล่องกางดูสูตรเต็ม — เปิดเมื่อสูตรยาวเกินช่อง (พี่กันสั่ง)
+  app.toggleQtyFull = () => app.setState({ qtyFull: !app.state.qtyFull });
+  app.closeQtyFull = () => { if (app.state.qtyFull) app.setState({ qtyFull: false }); };
+
   app.resolveQty = () => {
     const n = evalQty(app.state.qtyInput);
     if (!n) return;
     app.setState({ qtyInput: String(app.state.qtyInput).split('=')[0] + '=' + n }, () => {
-      if (app.qtyRef.current) app.qtyRef.current.focus();
+      const el = app.qtyRef.current;
+      if (!el) return;
+      el.focus();
+      // 🚨 สูตรยาวกว่าช่อง ต้องดันมุมมองไปท้ายสุดเอง ไม่งั้นขีดกะพริบอยู่ท้าย
+      //    แต่สายตาเห็นแค่ต้นสูตร แล้วนึกว่าระบบไม่ได้คิดให้ (พี่กันเจอเอง)
+      const end = el.value.length;
+      try { el.setSelectionRange(end, end); } catch (e) {}
+      el.scrollLeft = el.scrollWidth;
     });
   };
 

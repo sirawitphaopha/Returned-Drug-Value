@@ -593,3 +593,7 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
 
   @page { size: A4 portrait; margin: 16mm; }
 }
+
+/* ปุ่มพื้นแดงอมชมพู — ใช้ในแถบเตือนที่พื้นเป็นโทนแดง
+   🚨 ปุ่มในแถบต้องอยู่โทนเดียวกับแถบ ไม่ใช่เขียวบนพื้นแดง (พี่กันทัก 31 ส.ค. 2569) */
+.hv-crim:hover { background: #8e2049 !important; }

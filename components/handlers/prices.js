@@ -37,6 +37,9 @@ export function pricesActions(app) {
       }
     }
 
+    // 🚨 โหมดดูตัวอย่างใช้ราคาปลอมที่ตั้งไว้ตอน enterDemo
+    if (app.state.demo) return;
+
     app.setState({ priceLoading: true });
     try {
       const res = await app.fetchT('/api/prices');

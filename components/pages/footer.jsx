@@ -13,7 +13,7 @@ export function renderFooter(V) {
   const line = V.isSummary ? V.sumBorder : 'rgba(30,36,32,.08)';
 
   return (
-    <div style={sx('margin-top:auto;padding:16px 20px 20px', {
+    <div style={sx('margin-top:auto;padding:8px 20px 10px', {
       borderTop: '1px solid ' + line
     })}>
       <div style={sx('max-width:1400px;margin:0 auto;display:flex;gap:8px', wide

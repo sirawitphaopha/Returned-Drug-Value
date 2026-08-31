@@ -11,6 +11,8 @@ import { renderSettings } from './pages/settings';
 import { renderPrices, renderPriceBar } from './pages/prices';
 import { renderLots, renderLotSlip } from './pages/lots';
 import { renderLotEdit } from './pages/lotedit';
+import { renderDeviceAsk } from './pages/device';
+import { renderParkedSheet } from './pages/parkedsheet';
 import { renderCatalog } from './pages/catalog';
 import { renderToast } from './pages/toast';
 import { renderReasonPick } from './pages/reason';
@@ -96,6 +98,8 @@ export function renderShell(app) {
       {renderHisImport(V)}
       {renderLotSlip(V)}
       {renderLotEdit(V)}
+      {renderParkedSheet(V)}
+      {renderDeviceAsk(V)}
       {renderToast(V)}
       {renderReasonPick(V)}
       {renderConfirm(V)}

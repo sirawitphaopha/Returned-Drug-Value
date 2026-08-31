@@ -4,7 +4,8 @@
 //    1. ข้อมูลชุดนี้ไม่เคยถูกส่งขึ้นเซิร์ฟเวอร์ · ทุกหน้าอ่านจากก้อนในหน่วยความจำ
 //    2. เปิดโหมดนี้แล้ว "ปุ่มบันทึกถูกปิด" กันข้อมูลปลอมหลุดเข้าของจริง
 //    3. ปิดโหมดแล้วทุกอย่างกลับไปอ่านของจริงทันที (ล้างแคชให้ด้วย)
-import { buildDemo, demoSummary, demoTopReturned, demoHistory, demoDraft, DEMO_PCU } from '@/lib/demo';
+import { buildDemo, demoSummary, demoTopReturned, demoHistory, demoDraft, DEMO_PCU,
+  demoParked, demoServerDrafts, demoCatalog, demoPrices, demoTrash } from '@/lib/demo';
 import { LS, clearLS, readLS, writeLS, myTabId, draftKeyOf } from '../helpers';
 
 export function demoActions(app) {
@@ -32,7 +33,12 @@ export function demoActions(app) {
     app._realDraft = {
       rows: st0.rows, batchId: st0.batchId, hn: st0.hn,
       source: st0.source, sourceTouched: st0.sourceTouched, date: st0.date,
-      pcuSite: st0.pcuSite
+      pcuSite: st0.pcuSite,
+      // 🚨 ต้องเก็บ 3 อย่างนี้ไว้ด้วย ไม่งั้นปิดโหมดแล้วชื่อเครื่องจริงหาย
+      //    และล็อตค้างของจริงถูกข้อมูลปลอมทับ (เรื่องเดียวกับร่างที่กรอกค้าง)
+      deviceId: st0.deviceId,
+      parked: st0.parked,
+      serverDrafts: st0.serverDrafts
     };
 
     // ยาที่ถูกคืนบ่อยในชุดตัวอย่าง — ให้ช่องค้นหาดันขึ้นก่อนเหมือนของจริง
@@ -68,6 +74,22 @@ export function demoActions(app) {
       sumLoading: false,
       topReturned: demoTopReturned(box),
       lots: box.lots,
+      // ── คลังยากับหน้าราคาต้องเป็นของปลอมด้วย (พี่กันสั่ง 31 ส.ค. 2569) ──────
+      // 🚨 เดิมสองหน้านี้ไม่รู้จักโหมดตัวอย่างเลย กดแท็บคลังยาแล้วโหลดยาจริง
+      //    417 ตัวพร้อมราคาจริงมาโชว์ ผิดกติกาข้อแรกของโหมดนี้
+      catalog: demoCatalog(box),
+      catLoading: false,
+      catDraw: 60,
+      priceItems: demoPrices(box),
+      priceLoading: false,
+      // ── ชื่อเครื่องกับล็อตที่กรอกค้างไว้ ────────────────────────────────────
+      // ตั้งชื่อเครื่องตัวอย่างเสมอ เพื่อให้หน้าตั้งค่ามีของให้ดู
+      // และหน้าต่างถามชื่อเครื่องไม่เด้งขึ้นมาขวางตอนกำลังดูตัวอย่าง
+      deviceId: 'computer OPD เครื่องที่ 1',
+      deviceAsk: false,
+      parked: demoParked(box),
+      serverDrafts: demoServerDrafts(box),
+      showOtherDrafts: false,
       histRows: [], histMore: [], histTotal: 0, histSaved: 0
     }, () => {
       app.animateTo(draftSaved);
@@ -93,7 +115,12 @@ export function demoActions(app) {
       source: typeof real.source === 'string' ? real.source : 'opd',
       sourceTouched: !!real.sourceTouched,
       pcuSite: typeof real.pcuSite === "string" ? real.pcuSite : "",
-      date: real.date || app.state.today
+      date: real.date || app.state.today,
+      // ชื่อเครื่องจริงกลับมา · ถ้าเครื่องนี้ยังไม่เคยตั้ง ให้หน้าต่างถามเด้งตามเดิม
+      deviceId: real.deviceId || '',
+      deviceAsk: !real.deviceId,
+      parked: Array.isArray(real.parked) ? real.parked : [],
+      serverDrafts: Array.isArray(real.serverDrafts) ? real.serverDrafts : []
     };
 
     app.setState(Object.assign({
@@ -107,12 +134,112 @@ export function demoActions(app) {
       sum: null,
       topReturned: [],
       lots: [],
+      catalog: [], catLoading: false, catDraw: 60,
+      priceItems: [], priceLoading: false,
+      showOtherDrafts: false,
       histRows: [], histMore: [], histTotal: 0, histSaved: 0
     }, back), () => {
       app.boot();
       app.loadHistory(true);
       app.animateTo(back.rows.reduce((a, x) => a + (x.disposition === 'reuse' ? x.price * x.qty : 0), 0));
       app.toast('ปิดโหมดดูตัวอย่างแล้ว', 'กลับมาใช้ข้อมูลจริง');
+    });
+  };
+
+  // ── ดูตัวอย่างหน้าที่ปกติเรียกดูไม่ได้ (พี่กันสั่ง 31 ส.ค. 2569) ───────────
+  //
+  // 🚨 ทุกตัวทำงานเฉพาะในโหมดดูตัวอย่าง ตรวจซ้ำที่นี่อีกชั้น
+  //    เผื่อมีใครไปเรียกจากที่อื่นโดยไม่ผ่านปุ่มในหน้าตั้งค่า
+  app.previewResult = (kind) => {
+    if (!app.state.demo) return;
+    const box = app._demo;
+    const rows = box ? demoDraft(box) : [];
+    const reuse = rows.filter((r) => r.disposition === 'reuse');
+    const destroy = rows.filter((r) => r.disposition === 'destroy');
+    const sum = (list) => list.reduce((a, r) => a + r.price * r.qty, 0);
+    // นับจำนวนแยกตามหน่วยนับ ห้ามบวกข้ามหน่วย (กฎข้อ 3.4)
+    const byUnit = {};
+    for (const r of rows) byUnit[r.unit] = (byUnit[r.unit] || 0) + r.qty;
+    const qtyLabel = Object.keys(byUnit).slice(0, 3).map((u) => byUnit[u] + ' ' + u).join(' · ');
+
+    const base = {
+      date: app.state.date, by: 'ภก. สิรวิชญ์ เผ่าผา',
+      src: 'opd', pcuSite: '', items: rows.length
+    };
+
+    app.setState({
+      settingsOpen: false,
+      result: kind === 'fail'
+        ? Object.assign({}, base, {
+            kind: 'fail', value: sum(reuse),
+            error: 'เชื่อมต่อระบบส่วนกลางไม่ได้ — เน็ตอาจหลุดชั่วคราว'
+          })
+        : Object.assign({}, base, {
+            kind: 'ok',
+            lot: (box && box.lots && box.lots[0] && box.lots[0].lot) || 'L690831-01',
+            qtyLabel: qtyLabel,
+            saved: sum(reuse), lost: sum(destroy), note: ''
+          })
+    });
+  };
+
+  // หน้าโหลดข้อมูลไม่สำเร็จ — ติดธงให้ครบทุกหน้าพร้อมกัน จะได้กดดูได้ทุกแท็บ
+  app.previewLoadFail = () => {
+    if (!app.state.demo) return;
+    app.setState({
+      settingsOpen: false,
+      screen: 'summary',
+      loadErr: {
+        sum: 'โหลดยอดสรุปไม่สำเร็จ', hist: 'โหลดประวัติไม่สำเร็จ',
+        lots: 'โหลดรายการ Lot ไม่สำเร็จ', cat: 'โหลดคลังยาไม่สำเร็จ',
+        price: 'โหลดราคายาไม่สำเร็จ'
+      },
+      sum: null, histRows: [], histMore: [], lots: []
+    });
+    app.toast('กำลังดูตัวอย่างหน้าโหลดไม่สำเร็จ', 'กดปิดโหมดดูตัวอย่างเพื่อกลับสู่ปกติ', false);
+  };
+
+  app.clearPreviewLoadFail = () => {
+    if (!app.state.demo) return;
+    const box = app._demo;
+    app.setState({ loadErr: {}, sum: box ? demoSummary(box) : null, lots: box ? box.lots : [] },
+      () => app.loadHistory(true));
+  };
+
+  // หน้านำเข้าราคาจาก HIS — ใส่ผลจับคู่ตัวอย่างไว้ให้เลย ไม่ต้องมีไฟล์จริง
+  app.previewHisImport = () => {
+    if (!app.state.demo) return;
+    const box = app._demo;
+    const items = box ? demoPrices(box) : [];
+    // 🚨 ต้องมีครบทั้ง 3 กอง ไม่งั้นเห็นแท็บเดียวแล้วนึกว่าระบบมีแค่นั้น
+    //    มั่นใจ = ชื่อกับความแรงตรงกันหมด · ต้องเลือก = เจอหลายราคา · ไม่เจอ = ไม่มีในไฟล์
+    // 🚨 รูปร่างแถวต้องตรงกับที่ matchAll() ใน lib/hisMatch.js คืนมาเป๊ะ ๆ
+    //    ไม่งั้นหน้าจอนับกลุ่มไม่ได้ แล้วขึ้นว่างเปล่าทั้งสามแท็บ (เจอมาแล้ว)
+    //    ช่องสำคัญคือ level (sure/pick/none) · candidates · pickedIndex · checked
+    const rows = items.slice(0, 12).map(function (it, i) {
+      var level = i < 7 ? 'sure' : i < 10 ? 'pick' : 'none';
+      var up = String(it.name || '').toUpperCase();
+      var cands = level === 'none' ? [] : (level === 'pick'
+        ? [{ name: up + ' (ในบัญชี)', price: it.price, unit: it.unit },
+           { name: up + ' (นอกบัญชี)', price: Math.round(it.price * 1.4 * 100) / 100, unit: it.unit }]
+        : [{ name: up, price: it.price, unit: it.unit }]);
+      return {
+        drugId: it.id,
+        webName: it.name,
+        unit: it.unit || '',
+        oldPrice: level === 'sure' ? 0 : Number(it.price || 0),
+        level: level,
+        candidates: cands,
+        pickedIndex: cands.length ? 0 : -1,
+        checked: level === 'sure',
+        manualPrice: ''
+      };
+    });
+    app.setState({
+      settingsOpen: false, screen: 'prices',
+      hisOpen: true, hisRows: rows, hisError: '', hisReading: false,
+      hisFileName: 'ตัวอย่าง-รายการยา-HIS.xlsx', hisTotal: 654,
+      hisTab: 'sure', hisSaving: false, hisBackfill: true
     });
   };
 
@@ -143,6 +270,8 @@ export function demoActions(app) {
   };
 
   app.doLogout = async () => {
+    // ยกธงก่อนทุกอย่าง — ตัวเตือนก่อนออกจากหน้าจะได้ไม่มาขวาง
+    app._leaving = true;
     // 🚨 ล้าง HN ออกจากร่างในเครื่องก่อนเสมอ (ผลตรวจข้อ ก-7)
     //    คอมห้องยาเป็นเครื่องกลางใช้ร่วมกันทั้งเวร ร่างใน localStorage ไม่มีวันหมดอายุ
     //    ถ้าไม่ล้าง HN ของคนไข้จะค้างให้คนเวรถัดไปเห็น — เป็นประเด็น PDPA ที่ตรวจสอบได้จริง
@@ -162,6 +291,9 @@ export function demoActions(app) {
       // ประตูตรวจที่ middleware จะเป็นคนตัดสินอีกทีว่าเข้าได้ไหม
     }
     window.location.href = '/login';
+    // เผื่อเบราว์เซอร์ไม่เปลี่ยนหน้าให้ (โดนบล็อก) — คืนตัวเตือนกลับใน 3 วินาที
+    // ไม่งั้นเว็บจะไม่เตือนอะไรเลยตลอดการใช้งานรอบนั้น
+    setTimeout(() => { app._leaving = false; }, 3000);
   };
 
   // ── ตัวแทนการโหลดข้อมูลตอนอยู่ในโหมดตัวอย่าง ─────────────────────────────
@@ -177,11 +309,14 @@ export function demoActions(app) {
       limit: 60,
       offset: 0
     });
-    // ถังขยะในโหมดตัวอย่างว่างเสมอ (ไม่ได้ลบอะไรจริง)
+    // ถังขยะมีของให้ดูด้วย (พี่กันสั่ง 31 ส.ค. 2569)
+    // 🚨 ของในถังขยะตัวอย่างกู้คืนไม่ได้จริง เพราะ fetchT ดักคำขอที่ไม่ใช่ GET ไว้
+    //    ตรงนี้มีไว้ให้เห็นหน้าตาตอนมีของ ไม่ใช่ให้ลองกดกู้
+    const trash = st.histTrash ? demoTrash(box) : null;
     app.setState({
-      histRows: st.histTrash ? [] : h.rows,
-      histTotal: st.histTrash ? 0 : h.total,
-      histSaved: st.histTrash ? 0 : h.saved,
+      histRows: trash || h.rows,
+      histTotal: trash ? trash.length : h.total,
+      histSaved: trash ? 0 : h.saved,
       histMore: [], histLoading: false
     });
   };

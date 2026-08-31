@@ -67,6 +67,21 @@ export function renderSettings(V) {
             </>
           )}
 
+          {/* ── เครื่องนี้ ────────────────────────────────────────────────────
+              ชื่อเครื่องใช้บอกว่าล็อตที่กรอกค้างไว้เป็นของเครื่องไหน
+              ตั้งครั้งเดียวตอนเปิดเว็บครั้งแรก แล้วมาแก้ตรงนี้ได้ */}
+          <div style={s(LABEL + ';margin-bottom:4px')}>เครื่องนี้</div>
+          <div style={s('font:400 11.5px/1.5 Sarabun,sans-serif;color:#6b746e;margin-bottom:8px')}>ใช้บอกว่าล็อตที่กรอกค้างไว้เป็นของเครื่องไหน ตอนต้องเอางานมาทำต่อจากเครื่องที่เสีย</div>
+          <div style={s('display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:22px;padding:11px 13px;border-radius:10px;background:#f6f7f4;border:1px solid rgba(30,36,32,.10)')}>
+            <div style={s('flex:1;min-width:150px;font:600 13.5px Sarabun,sans-serif;color:#1e2420')}>
+              {V.deviceLabel || 'ยังไม่ได้ตั้งชื่อเครื่อง'}
+            </div>
+            <div {...kb(V.openDeviceAsk)} aria-label="เปลี่ยนชื่อเครื่อง" className="hv-bg-e3f tap"
+              style={s('padding:9px 15px;border-radius:9px;background:#eef6f1;color:#2f7d5d;font:700 12.5px Sarabun,sans-serif;cursor:pointer;flex:none')}>
+              เปลี่ยน
+            </div>
+          </div>
+
           <div style={s(LABEL + ';margin-bottom:7px')}>ธีมหน้าสรุป</div>
           <div style={s('display:flex;gap:6px;margin-bottom:6px')}>
             <div {...kb(V.setLight)} className="hv-sun" style={sx('flex:1;text-align:center;padding:11px 0;border-radius:10px;cursor:pointer;font:600 13.5px Sarabun,sans-serif', { background: V.themeLightBg, color: V.themeLightFg })}>สว่าง</div>
@@ -94,6 +109,55 @@ export function renderSettings(V) {
               <div style={{ font: '400 12px var(--font-sarabun),Sarabun,sans-serif', color: '#414a44', marginTop: '6px' }}>L690826-01 · 1,402.50</div>
             </div>
           </div>
+
+          {/* ── ดูตัวอย่างหน้าจอที่ปกติเรียกดูไม่ได้ (พี่กันสั่ง 31 ส.ค. 2569) ───
+              🚨 โผล่เฉพาะตอนอยู่ในโหมดดูตัวอย่าง
+                 ไม่งั้นเภสัชกรกดเล่นตอนใช้งานจริงแล้วเจอจอ "ส่งไม่สำเร็จ" ปลอม ๆ */}
+          {V.demo && (
+            <>
+              <div style={s(LABEL + ';margin-bottom:4px')}>ดูตัวอย่างหน้าจอ</div>
+              <div style={s('font:400 11.5px/1.5 Sarabun,sans-serif;color:#6b746e;margin-bottom:8px')}>หน้าพวกนี้เกิดขึ้นเองตามสถานการณ์ กดดูล่วงหน้าได้ที่นี่โดยไม่ต้องรอให้เกิดจริง</div>
+              <div style={s('display:flex;flex-direction:column;gap:6px;margin-bottom:22px')}>
+                <div {...kb(V.previewOk)} aria-label="ดูตัวอย่างหน้าบันทึกสำเร็จ" className="hv-bg-e3f tap"
+                  style={s('display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;background:#eef6f1;cursor:pointer')}>
+                  <div>
+                    <div style={s('font:600 13px Sarabun,sans-serif;color:#1e2420')}>หน้าบันทึกสำเร็จ</div>
+                    <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;margin-top:1px')}>จอที่ขึ้นหลังกดส่งแล้วเข้าระบบเรียบร้อย</div>
+                  </div>
+                  <span style={s('font:600 12px Sarabun,sans-serif;color:#2f7d5d;flex:none')}>เปิดดู</span>
+                </div>
+
+                <div {...kb(V.previewFail)} aria-label="ดูตัวอย่างหน้าส่งไม่สำเร็จ" className="hv-del tap"
+                  style={s('display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;background:#fdf3f5;cursor:pointer')}>
+                  <div>
+                    <div style={s('font:600 13px Sarabun,sans-serif;color:#1e2420')}>หน้าส่งไม่สำเร็จ</div>
+                    <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;margin-top:1px')}>จอตอนเน็ตหลุด พร้อมนาฬิกานับถอยหลังก่อนลองส่งเอง</div>
+                  </div>
+                  <span style={s('font:600 12px Sarabun,sans-serif;color:#b02a5b;flex:none')}>เปิดดู</span>
+                </div>
+
+                <div {...kb(V.hasLoadErr ? V.clearPreviewLoadFail : V.previewLoadFail)}
+                  aria-label={V.hasLoadErr ? 'เลิกดูตัวอย่างหน้าโหลดไม่สำเร็จ' : 'ดูตัวอย่างหน้าโหลดไม่สำเร็จ'}
+                  className="hv-cream tap"
+                  style={s('display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;background:#fdf8ec;cursor:pointer')}>
+                  <div>
+                    <div style={s('font:600 13px Sarabun,sans-serif;color:#1e2420')}>หน้าโหลดข้อมูลไม่สำเร็จ</div>
+                    <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;margin-top:1px')}>กล่องแจ้งเตือนในหน้าสรุป ประวัติ Lot คลังยา และราคายา</div>
+                  </div>
+                  <span style={s('font:600 12px Sarabun,sans-serif;color:#96650f;flex:none')}>{V.hasLoadErr ? 'เลิกดู' : 'เปิดดู'}</span>
+                </div>
+
+                <div {...kb(V.previewHisImport)} aria-label="ดูตัวอย่างหน้านำเข้าราคาจาก HIS" className="hv-bg-f6 tap"
+                  style={s('display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;background:#f6f7f4;cursor:pointer')}>
+                  <div>
+                    <div style={s('font:600 13px Sarabun,sans-serif;color:#1e2420')}>หน้านำเข้าราคาจาก HIS</div>
+                    <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;margin-top:1px')}>ตารางจับคู่ยากับราคา แยกเป็นมั่นใจ ต้องเลือก และไม่เจอ</div>
+                  </div>
+                  <span style={s('font:600 12px Sarabun,sans-serif;color:#414a44;flex:none')}>เปิดดู</span>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* โหมดดูตัวอย่าง — ข้อมูลปลอมฝังในเว็บ ไม่แตะฐานข้อมูลจริง
               มีไว้ให้เห็นภาพว่าเว็บทำงานเต็มที่แล้วหน้าตาเป็นยังไง

@@ -166,6 +166,16 @@ export default class MedReturnApp extends React.Component {
       // ── ล็อตที่กรอกค้างไว้ในหน้าต่างที่ปิดไปแล้ว (พี่กันสั่ง 31 ส.ค. 2569) ──
       // ไม่ดึงมาเอง แค่ขึ้นแถบบอกว่ามีอยู่ พร้อมปุ่มเอากลับมาหรือทิ้ง
       parked: [],
+      // ── ชื่อเครื่อง + ร่างบนเซิร์ฟเวอร์ (พี่กันสั่ง 31 ส.ค. 2569) ──────────
+      deviceId: '',        // ชื่อเครื่องที่เลือกไว้ เช่น computer OPD เครื่องที่ 1
+      deviceAsk: false,    // เปิดหน้าต่างถามชื่อเครื่องอยู่ไหม
+      deviceKind: 0,       // 1 = คอมพิวเตอร์ · 2 = มือถือ
+      devicePick: '',      // ชื่อที่เลือกค้างไว้ในหน้าต่าง
+      serverDrafts: [],    // ร่างที่เก็บบนเซิร์ฟเวอร์ (ของเครื่องนี้และเครื่องอื่น)
+      keepDays: 7,
+      showOtherDrafts: false,   // รายการร่างจากเครื่องอื่น ต้องกดเปิดเอง
+      parkedSeen: '',          // ล็อตที่กางดูยาอยู่ในหน้าต่างนั้น (ทีละล็อต)
+      qtyFull: false,          // กางดูสูตรเต็มในช่องจำนวนอยู่ไหม
       sumFy: 0,              // ปีงบที่เลือกดู (0 = ปีปัจจุบัน)
       sumFyYears: [],
       topReturned: [],       // ยาที่ถูกคืนบ่อยที่สุด — เรียงตามจำนวนครั้ง
@@ -174,6 +184,10 @@ export default class MedReturnApp extends React.Component {
       animSaved: 0,
       toast: null,
       vw: 430,
+      // ความสูงจอ — ใช้ตัดสินว่าจอสูงพอจะล็อกความสูงหน้าบันทึกไหม
+      // 🚨 จอเตี้ยแล้วยังล็อกอยู่ = กรอบรายการยาโดนบีบจนเหลือ 2 แถว
+      //    พี่กันเจอเองตอนเปิดโครมสูง 577px แล้วทัก "อันนี้บีบมากกก"
+      vh: 900,
       // มีเมาส์จริงไหม — วัดตอน componentDidMount ด้วย (pointer: fine)
       // ใช้กันสวิตช์ "คอม/มือถือ" ไม่ให้โผล่บนเครื่องสัมผัสจริง (พี่กันสั่ง — ขึ้นมาแล้วบังจอ)
       // ความกว้างอย่างเดียวไม่พอ แท็บเล็ตแนวนอนกว้าง 1024 จะหลุดขึ้นมา
@@ -224,6 +238,7 @@ export default class MedReturnApp extends React.Component {
 
     this.searchRef = React.createRef();
     this.qtyRef = React.createRef();
+    this.qtyLayerRef = React.createRef();   // ชั้นที่วาดสูตรในช่องจำนวน — เลื่อนตาม input
     this.sheetQtyRef = React.createRef();
     // พื้นที่เลื่อนหลักของทั้งแอป — goScreen ใช้เด้งกลับบนสุดตอนสลับแท็บ
     this.scrollRef = React.createRef();
@@ -302,7 +317,9 @@ export default class MedReturnApp extends React.Component {
     // วาดใหม่เฉพาะตอนความกว้างเปลี่ยนจริง — ลากขอบหน้าต่างจะยิง event รัวมาก
     // แต่ละครั้งวิ่ง renderVals ใหม่ทั้งก้อน (กรองยา 417 ตัว) เครื่องเก่าจะกระตุก
     this._onResize = () => {
-      if (window.innerWidth !== this.state.vw) this.setState({ vw: window.innerWidth });
+      if (window.innerWidth !== this.state.vw || window.innerHeight !== this.state.vh) {
+        this.setState({ vw: window.innerWidth, vh: window.innerHeight });
+      }
     };
     this._raf = null;
     this._toastTimer = null;
@@ -349,6 +366,7 @@ export default class MedReturnApp extends React.Component {
     // วาดจอจากของที่มีในเครื่องก่อน ไม่ต้องรอเซิร์ฟเวอร์ แล้วค่อยยิงไปทับ
     // ── ร่างของหน้าต่างนี้ (พี่กันสั่ง 31 ส.ค. 2569 ให้ทุกหน้าต่างเป็นเอกเทศ) ──
     // 🚨 อ่านเฉพาะร่างที่มีรหัสหน้าต่างนี้ ห้ามแตะของหน้าต่างอื่นเด็ดขาด
+    const patchDevice = {};
     const myKey = draftKeyOf(myTabId());
     let draft = readLS(myKey);
 
@@ -372,10 +390,15 @@ export default class MedReturnApp extends React.Component {
     // ฟอนต์ตัวอักษรอังกฤษและตัวเลข — ค่าเริ่มต้นเป็น Roboto Mono (พี่กันสั่ง 27 ส.ค. 2569)
     // 🚨 ต้องเขียนตัวแปร CSS ตั้งแต่ตรงนี้ ไม่ใช่รอให้ผู้ใช้กดเลือก
     //    ไม่งั้นคนที่เคยเลือก "แบบปกติ" ไว้ จะเห็น Roboto Mono แวบหนึ่งตอนเปิดเว็บ
+    // ชื่อเครื่อง — ยังไม่เคยเลือก = เปิดหน้าต่างถามทันที ไม่มีทางข้าม (พี่กันสั่ง)
+    const device = readLS(LS.device);
+    patchDevice.deviceId = typeof device === 'string' ? device : '';
+    patchDevice.deviceAsk = !patchDevice.deviceId;
+
     const enFont = readLS(LS.enFont) === "thai" ? "thai" : "mono";
     this.applyEnFont(enFont);
 
-    const patch = { loading: false, vw: window.innerWidth, dark: dark, enFont: enFont };
+    const patch = Object.assign({ loading: false, vw: window.innerWidth, vh: window.innerHeight, dark: dark, enFont: enFont }, patchDevice);
 
     // เครื่องสัมผัสล้วน (มือถือ/แท็บเล็ต) → (pointer: fine) เป็นเท็จ = ซ่อนสวิตช์มุมมอง
     // โน้ตบุ๊กจอสัมผัสที่ต่อเมาส์ยังนับเป็น fine เพราะดูตัวชี้หลัก
@@ -472,6 +495,9 @@ export default class MedReturnApp extends React.Component {
       // ของค้างจากรอบก่อน — ลองส่งให้เองเลย ไม่ต้องรอให้ใครกด
       // เส้นทางเดียวกับตอนเน็ตกลับมา จึงใช้ batchId เดิมและไม่มีทางได้ข้อมูลซ้ำ
       if (patch.saveFailed) this.retryFailedSave();
+      // 🚨 ต้องเรียกตรงนี้ ไม่ใช่ข้างล่าง — setState ยังไม่ commit ตอนนั้น
+      //    ชื่อเครื่องจึงยังว่าง แล้วตัวดึงร่างจะออกจากฟังก์ชันไปเลยโดยไม่ทำอะไร
+      this.loadServerDrafts();
     });
     window.addEventListener('resize', this._onResize);
     window.addEventListener('keydown', this._onKey);
@@ -506,9 +532,12 @@ export default class MedReturnApp extends React.Component {
     }, 20000);
     document.addEventListener('visibilitychange', this._onVisible);
     window.addEventListener('online', this._onOnline);
-    // ปิดแท็บทั้งที่ของยังไม่ขึ้นระบบ = ไม่มีใครรู้เลยว่ามีของค้าง จนกว่าจะมีคนเปิดเครื่องเดิม
-    // 🚨 เตือนเฉพาะตอนส่งไม่สำเร็จจริง ๆ ไม่ใช่ทุกครั้งที่มีร่างค้าง
-    //    ร่างที่ยังกรอกไม่เสร็จเป็นเรื่องปกติของงานประจำวัน เตือนทุกครั้งแล้วคนจะเลิกอ่าน
+    // ปิดหน้าต่างหรือกดรีเฟรชทั้งที่ยังไม่ได้กดบันทึก = ต้องถามก่อนเสมอ
+    // พี่กันสั่ง 31 ส.ค. 2569: "ป้องกันการกดรีเฟรช มันจะถามก่อนว่าจะออกจากหน้าเว็บนี้ไหม
+    //                          ถ้ายังไม่กดบันทึก"
+    //
+    // ⚠️ เดิมเตือนเฉพาะตอนส่งไม่สำเร็จ ด้วยเหตุผลว่าร่างที่กรอกค้างเป็นเรื่องปกติ
+    //    เตือนบ่อยแล้วคนจะเลิกอ่าน — พี่กันสั่งเปลี่ยนแล้ว ตอนนี้เตือนทุกครั้งที่มีของค้าง
     window.addEventListener('beforeunload', this._onBeforeUnload);
     // ⚠️ เดิมฟังแต่ 'online' — รู้ตอนเน็ตกลับมา แต่ไม่เคยรู้ตอนเน็ตหลุด
     window.addEventListener('offline', this._onOffline);
@@ -597,9 +626,19 @@ export default class MedReturnApp extends React.Component {
   _onOnline = () => { this.setState({ offline: false }); this.pulse(); this.retryFailedSave(); };
 
   // ข้อความที่โชว์เป็นของเบราว์เซอร์เอง แก้ไม่ได้ — สิ่งเดียวที่ทำได้คือให้มันถามหรือไม่ถาม
+  //
+  // ถามเมื่อมีรายการค้างอยู่ในหน้าบันทึกและยังไม่ได้กดบันทึก (พี่กันสั่ง 31 ส.ค. 2569)
+  // ครอบคลุมทั้งการกดรีเฟรช ปิดแท็บ และปิดทั้งหน้าต่าง
+  //
+  // 🚨 โหมดดูตัวอย่างไม่ต้องถาม ของในนั้นเป็นข้อมูลปลอมที่หายได้ไม่เสียหาย
+  // 🚨 ระหว่างกำลังส่งอยู่ (saving) ก็ต้องถาม ยังไม่รู้ผลว่าเข้าฐานหรือยัง
   _onBeforeUnload = (e) => {
     const st = this.state;
-    if (!st.saveFailed || !st.rows.length || st.demo) return;
+    // 🚨 กำลังออกจากระบบเอง = ตั้งใจออกและยืนยันมาแล้วหนึ่งชั้น ห้ามถามซ้ำ
+    //    ไม่งั้นเบราว์เซอร์เด้งถามอีกรอบแล้วผู้ใช้กดออกจากระบบไม่ได้เลย
+    //    (พี่กันเจอเอง 31 ส.ค. 2569 "เรากด log out ไม่ออก")
+    if (this._leaving) return;
+    if (st.demo || !st.rows.length) return;
     e.preventDefault();
     e.returnValue = '';
     return '';

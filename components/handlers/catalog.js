@@ -26,6 +26,10 @@ export function catalogActions(app) {
       }
     }
 
+    // 🚨 โหมดดูตัวอย่างมีคลังยาปลอมของตัวเองอยู่แล้ว (ตั้งไว้ตอน enterDemo)
+    //    ห้ามยิงถามของจริง ไม่งั้นยาจริง 417 ตัวจะมาทับข้อมูลตัวอย่าง
+    if (app.state.demo) return;
+
     app.setState({ catLoading: true });
     try {
       const res = await app.fetchT('/api/catalog');

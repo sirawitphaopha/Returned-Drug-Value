@@ -1,51 +1,125 @@
-// แถบบอกว่ามีล็อตที่กรอกค้างไว้ในหน้าต่างที่ปิดไปแล้ว
+// แถบบอกว่ามีล็อตที่กรอกค้างไว้
 //
-// พี่กันสั่ง 31 ส.ค. 2569:
-//   "ที่กรอก 100 เครื่องก็ต้องแยกกัน และกรอกโครมเดียวกัน แต่คนละคนต้องแยกกัน
-//    ให้ทุกอย่างมันเอกเทศกัน"
+// พี่กันสั่ง 31 ส.ค. 2569 หลังเห็นหน้าจอที่มีแถบเรียงกัน 7 อัน
+//   "ไปแก้ให้มันสะอาดตานะ"
+// แล้วสั่งเพิ่มหลังเห็นของที่แคลร์ทำรอบแรก
+//   "มันทับกันหมดแล้ว" · "ต้องกดดูรายละเอียดได้ด้วยสิ"
 //
-// ทุกหน้าต่างมีร่างของตัวเองแยกขาดจากกัน จึงไม่มีใครเห็นของใครระหว่างที่ยังเปิดอยู่
-// แต่ถ้าหน้าต่างไหนถูกปิดไปทั้งที่ยังกรอกค้าง ของนั้นจะไม่มีใครดูแล
-// แถบนี้จึงมีไว้บอกว่ายังอยู่ครบ พร้อมให้เลือกว่าจะเอากลับมาทำต่อ หรือทิ้ง
+// 🚨🔴 แถบนี้ต้องกินที่คงที่เสมอ ห้ามยืดตามจำนวนล็อต
+//    คอลัมน์ซ้ายของหน้าบันทึกคอมถูกล็อกความสูงเท่าจอไว้ (กฎข้อ 3.2)
+//    ของที่ยืดได้ในนั้นมีแค่กรอบตาราง ตัวอื่นเป็น flex:none หมด
+//    รอบแรกแคลร์ทำเป็นกรอบกางออกในหน้า สูงเพิ่มทีเดียว 290px
+//    เนื้อหาเลยล้นทะลุกล่องออกไปทับท้ายเว็บ — พี่กันเห็นเองแล้วทัก
 //
-// 🚨 ไม่ดึงกลับมาให้เอง — คนที่เปิดหน้าต่างนี้อาจเป็นคนละคนกับที่กรอกค้างไว้
-//    ของที่โผล่มาเองในหน้าจอคนอื่นคือต้นเหตุของปัญหาเดิมทั้งหมด
+//    รายละเอียดจึงต้องไปอยู่ใน "หน้าต่างซ้อน" (pages/parkedsheet.jsx)
+//    ซึ่งลอยอยู่เหนือหน้าเว็บ ไม่กินที่ในผังหน้าเลยแม้แต่พิกเซลเดียว
 //
-// ⚠️ ข้อยกเว้นเดียวคือล็อตที่ "ส่งไม่สำเร็จ" — อันนั้นถูกดึงกลับมาให้อัตโนมัติ
-//    ตั้งแต่ตอนเปิดเว็บ เพราะเป็นยาที่รับคืนจากคนไข้ไปแล้วแต่ยังไม่ขึ้นระบบส่วนกลาง
-//    (ดู MedReturnApp.jsx → componentDidMount)
+// ที่มาของล็อตค้างมี 2 ทาง
+//   ① ในเครื่องนี้    — หน้าต่างที่ปิดไปแล้ว (localStorage)
+//   ② บนเซิร์ฟเวอร์  — เครื่องนี้ หรือเครื่องอื่น (ตาราง mr_draft)
+//
+// 🚨 ไม่ดึงกลับมาให้เอง คนที่เปิดหน้าต่างนี้อาจเป็นคนละคนกับที่กรอกค้างไว้
+//    ยกเว้นล็อตที่ "ส่งไม่สำเร็จ" ในเครื่องเดียวกัน อันนั้นดึงให้ตั้งแต่เปิดเว็บ
 import { s, sx, kb } from '../helpers';
 
+// รวมทุกทางมาเป็นรายการเดียว — ใช้ร่วมกับหน้าต่างซ้อน จึงแยกออกมาเป็นฟังก์ชัน
+export function parkedItems(V) {
+  return []
+    .concat((V.parked || []).map((p) => ({
+      key: 'l:' + p.id,
+      title: 'จากหน้าต่างที่ปิดไปแล้วในเครื่องนี้',
+      detail: [p.countLabel, p.valueLabel, p.whenLabel].filter(Boolean).join(' · '),
+      takeLabel: 'เอากลับมา',
+      hot: false, mine: true,
+      rows: p.rows || [],
+      take: p.take, drop: p.drop
+    })))
+    .concat((V.serverMine || []).map((d) => ({
+      key: 's:' + d.key,
+      title: d.failed ? 'ล็อตที่ส่งไม่สำเร็จ' : 'เก็บไว้บนเซิร์ฟเวอร์',
+      detail: [d.countLabel, d.valueLabel, d.whenLabel,
+        d.soon ? d.soonLabel : 'เหลืออีก ' + d.daysLeft + ' วัน'].filter(Boolean).join(' · '),
+      takeLabel: 'เอากลับมา',
+      hot: !!d.soon, mine: true,
+      rows: d.rows || [],
+      take: d.take, drop: d.drop
+    })))
+    .concat((V.serverOther || []).map((d) => ({
+      key: 'o:' + d.key,
+      title: d.deviceLabel,
+      detail: [d.countLabel, d.valueLabel, d.whenLabel,
+        d.failed ? 'ส่งไม่สำเร็จ' : '',
+        d.soon ? d.soonLabel : 'เหลืออีก ' + d.daysLeft + ' วัน'].filter(Boolean).join(' · '),
+      takeLabel: 'เอามาทำต่อ',
+      hot: !!d.soon, mine: false,
+      rows: d.rows || [],
+      take: d.take, drop: d.drop
+    })));
+}
+
+// สีของแถบ — ใกล้ครบกำหนดล้างเป็นแดง ปกติเป็นครีม
+export function parkedTone(hot) {
+  // 🚨 btn/hv = สีปุ่มหลัก ต้องอยู่โทนเดียวกับพื้นแถบเสมอ
+  //    แถบแดง = ปุ่มแดงเข้ม · แถบครีม = ปุ่มเขียวเทล (คู่สีหลักของเว็บ)
+  //    เขียวบนพื้นแดงคือสิ่งที่พี่กันทักว่า "สีเข้ากันแล้วเหรอ"
+  return hot
+    ? { bg: '#fdf3f5', bd: 'rgba(176,42,91,.24)', fg: '#b02a5b', sub: '#8a6470',
+        btn: '#b02a5b', hv: 'hv-crim' }
+    : { bg: '#fdf8ec', bd: 'rgba(150,101,15,.26)', fg: '#96650f', sub: '#7a6033',
+        btn: '#2f7d5d', hv: 'hv-teal' };
+}
+
 export function renderParked(V) {
-  if (!V.parked || !V.parked.length) return null;
+  const items = parkedItems(V);
+  if (!items.length) return null;
+
+  const mine = items.filter((x) => x.mine);
+  const other = items.filter((x) => !x.mine);
+  const hot = items.some((x) => x.hot);
+  const c = parkedTone(hot);
+
+  // ── ล็อตเดียว แสดงรายละเอียดไปเลย ไม่ต้องให้กดอะไรเพิ่ม ──
+  const single = items.length === 1 ? items[0] : null;
+
+  // ทุกอย่างอยู่บรรทัดเดียว — จำนวนรวม แยกเครื่อง และคำเตือนใกล้ถูกล้าง
+  const head = single
+    ? single.title + ' · ' + single.detail
+    : ['ล็อตที่กรอกค้างไว้ ' + items.length + ' ล็อต',
+       mine.length ? 'เครื่องนี้ ' + mine.length : '',
+       other.length ? 'เครื่องอื่น ' + other.length : '',
+       hot ? 'บางล็อตใกล้ถูกล้าง' : ''].filter(Boolean).join(' · ');
 
   return (
-    <div style={s('flex:none;display:flex;flex-direction:column;gap:8px;margin-bottom:11px')}>
-      {V.parked.map((p) => (
-        <div key={p.id} role="status"
-          style={s('display:flex;align-items:center;gap:11px;flex-wrap:wrap;background:#fdf8ec;border:1px solid rgba(150,101,15,.26);border-radius:11px;padding:11px 13px')}>
-          <div style={s('flex:1;min-width:180px')}>
-            <div style={s('font:700 13px Sarabun,sans-serif;color:#96650f;margin-bottom:2px')}>
-              มีล็อตที่กรอกค้างไว้จากหน้าต่างที่ปิดไปแล้ว
-            </div>
-            <div style={s('font:500 12px Sarabun,sans-serif;color:#7a6033')}>
-              {p.countLabel}
-              {p.valueLabel ? ' · ' + p.valueLabel : ''}
-              {p.whenLabel ? ' · ' + p.whenLabel : ''}
-            </div>
-          </div>
+    <div role="status"
+      style={sx('flex:none;margin-bottom:8px;display:flex;align-items:center;gap:9px;padding:6px 8px 6px 12px;border-radius:10px', {
+        background: c.bg, border: '1px solid ' + c.bd
+      })}>
+      <div style={sx('flex:1;min-width:180px;font:700 12.5px/1.35 Sarabun,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', { color: c.fg })}>
+        {head}
+      </div>
 
-          <div {...kb(p.take)} aria-label="เอาล็อตที่กรอกค้างไว้กลับมา" className="hv-teal tap"
-            style={s('padding:9px 16px;border-radius:9px;background:#2f7d5d;color:#fff;font:700 12.5px Sarabun,sans-serif;cursor:pointer;min-height:40px;display:flex;align-items:center;flex:none')}>
-            เอากลับมา
+      {single ? (
+        <>
+          {/* ล็อตเดียวก็ยังต้องดูได้ว่ามียาอะไรบ้าง ก่อนตัดสินใจว่าจะเอาหรือทิ้ง */}
+          <div {...kb(V.toggleOtherDrafts)} aria-label="ดูรายละเอียดล็อตที่กรอกค้างไว้" className="hv-bg-f6 tap"
+            style={s('padding:6px 12px;border-radius:8px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#414a44;font:600 12.5px Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none')}>
+            ดูรายละเอียด
           </div>
-
-          <div {...kb(p.drop)} aria-label="ทิ้งล็อตที่กรอกค้างไว้" className="hv-del tap"
-            style={s('padding:9px 14px;border-radius:9px;border:1px solid rgba(176,42,91,.28);background:#fff;color:#b02a5b;font:600 12.5px Sarabun,sans-serif;cursor:pointer;min-height:40px;display:flex;align-items:center;flex:none')}>
+          <div {...kb(single.take)} aria-label="เอาล็อตที่กรอกค้างไว้กลับมา" className={c.hv + ' tap'}
+            style={sx('padding:6px 14px;border-radius:8px;color:#fff;font:700 12.5px Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none', { background: c.btn })}>
+            {single.takeLabel}
+          </div>
+          <div {...kb(single.drop)} aria-label="ทิ้งล็อตที่กรอกค้างไว้" className="hv-del tap"
+            style={s('padding:6px 12px;border-radius:8px;border:1px solid rgba(176,42,91,.28);background:#fff;color:#b02a5b;font:600 12.5px Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none')}>
             ทิ้ง
           </div>
+        </>
+      ) : (
+        <div {...kb(V.toggleOtherDrafts)} aria-label="ดูรายการล็อตที่กรอกค้างไว้" className={c.hv + ' tap'}
+          style={sx('padding:6px 14px;border-radius:8px;color:#fff;font:700 12.5px Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none', { background: c.btn })}>
+          ดูทั้งหมด
         </div>
-      ))}
+      )}
     </div>
   );
 }

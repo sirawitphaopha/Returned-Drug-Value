@@ -1,5 +1,5 @@
 // โหลดข้อมูลตั้งต้นจากเซิร์ฟเวอร์ แล้วทับของที่กู้มาจากเครื่อง
-import { LS, SS, writeCache, readSS, writeSS, clearSS, clearAllSS, fetchT } from '../helpers';
+import { LS, SS, writeCache, readSS, writeSS, clearSS, clearAllSS, writeLS, fetchT, myTabId, tabAlive } from '../helpers';
 import { todayISO } from '@/lib/format';
 
 export function dataActions(app) {
@@ -66,6 +66,112 @@ export function dataActions(app) {
     if (app.state.demo) return;
     writeSS(base + ':' + key, val);
   };
+
+  // ── ร่างที่กรอกค้าง เก็บขึ้นเซิร์ฟเวอร์ด้วย (พี่กันสั่ง 31 ส.ค. 2569) ────────
+  //
+  //   "สิ่งที่เรากลัวที่สุด คือกรอกไปชั่วโมงนึง แล้วเน็ตหลุด และกรอกไปแล้วคอมรีสตาร์ต"
+  //
+  // ของเดิมร่างอยู่ในเครื่องเดียว รอดเน็ตหลุด รอดคอมรีสตาร์ต รอดรีเฟรช
+  // แต่ไม่รอดฮาร์ดดิสก์เสีย ไม่รอดการล้างข้อมูลเบราว์เซอร์ และย้ายเครื่องไม่ได้
+  //
+  // 🚨 ยังเก็บในเครื่องเหมือนเดิมทุกอย่าง ตรงนี้เป็นสำเนาสำรองอีกชั้น
+  //    เน็ตหลุดก็กรอกต่อได้ปกติ แล้วค่อยส่งขึ้นตอนเน็ตกลับมา
+  app._draftTimer = null;
+
+  app.pushDraft = () => {
+    const st = app.state;
+    if (st.demo) return;                       // โหมดตัวอย่างห้ามแตะของจริง
+    if (!st.deviceId) return;                  // ยังไม่ได้เลือกเครื่อง เก็บในเครื่องอย่างเดียว
+
+    // 🚨 หน่วงก่อนส่งเสมอ — กรอกยา 1 รายการทำให้ persist ทำงานหลายรอบ
+    //    ถ้าส่งทุกรอบจะได้คำขอเป็นร้อยครั้งต่อการกรอกล็อตเดียว
+    if (app._draftTimer) clearTimeout(app._draftTimer);
+    app._draftTimer = setTimeout(() => {
+      const now = app.state;
+      app.fetchT('/api/drafts', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          deviceId: now.deviceId,
+          tabId: myTabId(),
+          rows: now.rows,
+          batchId: now.batchId || '',
+          hn: now.hn || '',
+          source: now.source || '',
+          pcuSite: now.pcuSite || '',
+          date: now.date || '',
+          saveFailed: !!now.saveFailed,
+          failedBy: now.failedBy || ''
+        })
+      }, 12000).catch(() => {
+        // 🚨 ส่งไม่ขึ้นไม่ใช่เรื่องใหญ่ ร่างยังอยู่ในเครื่องครบ
+        //    เน็ตกลับมาเมื่อไหร่ การแตะครั้งถัดไปจะส่งขึ้นให้เอง
+      });
+    }, 2000);
+  };
+
+  // ── ดึงรายการร่างจากเซิร์ฟเวอร์ ────────────────────────────────────────
+  // คืนทั้งของเครื่องนี้และเครื่องอื่น ฝั่งจอเป็นคนเลือกว่าจะโชว์อะไร
+  app.loadServerDrafts = async () => {
+    const st = app.state;
+    if (st.demo || !st.deviceId) return;
+    try {
+      const u = '/api/drafts?device=' + encodeURIComponent(st.deviceId) +
+        '&tab=' + encodeURIComponent(myTabId());
+      const res = await app.fetchT(u, {}, 12000);
+      const data = await res.json();
+      if (!res.ok || !Array.isArray(data.drafts)) return;
+
+      // 🚨🔴 ต้องตัด 2 อย่างออก ไม่ใช่แค่ของตัวเอง
+      //
+      //    ① ร่างของหน้าต่างนี้เอง — ไม่งั้นเห็นของตัวเองเป็นของค้าง
+      //    ② ร่างของหน้าต่างอื่นในเครื่องเดียวกันที่ ยังเปิดอยู่
+      //       นั่นคือของที่คนอื่นกำลังกรอกอยู่ตรงหน้า ห้ามเสนอให้ใครเอาไปเด็ดขาด
+      //
+      //    เซิร์ฟเวอร์ไม่มีทางรู้ว่าหน้าต่างไหนยังเปิดอยู่ (ทะเบียนอยู่ในเครื่อง)
+      //    การกรองจึงต้องทำฝั่งนี้ · เทสจับได้ตอนเปิดหน้าต่างที่ 4
+      //    แล้วเห็นร่างของ 3 หน้าต่างที่กำลังกรอกอยู่ = ปัญหาเดิมกลับมาทางเซิร์ฟเวอร์
+      const others = data.drafts.filter((d) => {
+        if (d.self) return false;
+        if (d.mine && tabAlive(d.tab_id)) return false;
+        return true;
+      });
+      // 🚨🔴 ต้องเช็คโหมดตัวอย่าง "อีกครั้ง" ตรงนี้ ไม่ใช่แค่ตอนเริ่มฟังก์ชัน
+      //    คำขอนี้ใช้เวลาเดินทาง ระหว่างนั้นผู้ใช้กดเปิดโหมดตัวอย่างได้
+      //    คำตอบที่กลับมาทีหลังจะทับร่างตัวอย่างที่เพิ่งตั้งไว้จนหายเกลี้ยง
+      //    (เจอจากภาพถ่ายหน้าจอจริง แถบขึ้นล็อตเดียวทั้งที่ตั้งไว้ 4 ล็อต)
+      //    ตระกูลเดียวกับบั๊ก "คำตอบเก่าทับสิ่งที่ผู้ใช้กำลังพิมพ์" ในข้อ 3.50
+      if (app.state.demo) return;
+      app.setState({ serverDrafts: others, keepDays: data.keepDays || 7 });
+    } catch (e) {}
+  };
+
+  // ลบร่างของหน้าต่างนี้ออกจากเซิร์ฟเวอร์ — ใช้ตอนบันทึกสำเร็จหรือกดล้าง
+  app.dropServerDraft = (deviceId, tabId) => {
+    const dev = deviceId || app.state.deviceId;
+    const tab = tabId || myTabId();
+    if (!dev || app.state.demo) return Promise.resolve();
+    return app.fetchT('/api/drafts?device=' + encodeURIComponent(dev) +
+      '&tab=' + encodeURIComponent(tab), { method: 'DELETE' }, 12000).catch(() => {});
+  };
+
+  // ── ตั้งชื่อเครื่อง ────────────────────────────────────────────────────
+  // 🚨 เลือกครั้งเดียวตอนเปิดเว็บครั้งแรก แล้วอยู่ยาว แก้ได้ในหน้าตั้งค่า
+  app.pickDevice = (name) => {
+    const v = String(name || '').trim();
+    if (!v) return;
+    writeLS(LS.device, v);
+    app.setState({ deviceId: v, deviceAsk: false }, () => {
+      app.loadServerDrafts();
+      app.pushDraft();          // มีของค้างอยู่แล้วก็ส่งขึ้นเลย
+      app.toast('ตั้งชื่อเครื่องแล้ว', v);
+    });
+  };
+
+  // เปิดจากหน้าตั้งค่า — ต้องปิดหน้าตั้งค่าด้วย ไม่งั้นสองหน้าต่างซ้อนกัน
+  app.openDeviceAsk = () => app.setState({ deviceAsk: true, deviceKind: 0, devicePick: '', settingsOpen: false });
+  app.setDeviceKind = (n) => app.setState({ deviceKind: n, devicePick: '' });
+  app.setDevicePick = (v) => app.setState({ devicePick: v });
 
   // ── ธงโหลดไม่สำเร็จรายหน้า ────────────────────────────────────────────────
   // ตัวเดียวใช้ทุกหน้า ไม่ต้องเพิ่ม state ใหม่ทุกครั้งที่มีหน้าใหม่

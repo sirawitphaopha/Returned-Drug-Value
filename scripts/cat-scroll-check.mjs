@@ -36,6 +36,8 @@ const check = (ok, label, note) => {
       await Promise.all([page.waitForNavigation({ waitUntil: 'networkidle2' }).catch(() => {}),
         page.click('button[type="submit"]')]);
     }
+    // ตั้งชื่อเครื่องไว้ล่วงหน้า ไม่งั้นติดหน้าต่างถามชื่อเครื่อง (มีตั้งแต่ v0.14.0.0)
+    await page.evaluate(() => { try { localStorage.setItem('mrv.device', JSON.stringify('เครื่องทดสอบอัตโนมัติ')); } catch (e) {} });
     await page.goto(BASE + '/', { waitUntil: 'networkidle2' });
     await wait(2500);
     await page.evaluate(() => {

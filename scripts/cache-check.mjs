@@ -78,6 +78,8 @@ const check = (ok, label, note) => {
     const rowCount = () => page.evaluate(() =>
       document.body.innerText.indexOf('ไม่พบรายการ') >= 0 ? 0 : (document.body.innerText.match(/฿/g) || []).length);
 
+    // ตั้งชื่อเครื่องไว้ล่วงหน้า ไม่งั้นติดหน้าต่างถามชื่อเครื่อง (มีตั้งแต่ v0.14.0.0)
+    await page.evaluate(() => { try { localStorage.setItem('mrv.device', JSON.stringify('เครื่องทดสอบอัตโนมัติ')); } catch (e) {} });
     await page.goto(BASE + '/', { waitUntil: 'networkidle2' });
     await wait(3000);
 

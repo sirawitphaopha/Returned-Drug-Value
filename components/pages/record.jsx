@@ -279,9 +279,8 @@ export function renderRecordNarrow(V) {
 // align-items:stretch = ให้คอลัมน์ซ้ายกับแผงขวาสูงเท่ากัน กรอบขาวจะได้ไม่ลอยค้างครึ่งจอ
 export function renderRecordWide(V) {
   return (
-    <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:20px 26px 26px;display:flex;gap:22px;align-items:stretch;flex:1;min-height:440px')}>
+    <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:12px 26px 12px;display:flex;gap:22px;align-items:stretch;flex:1;min-height:440px')}>
       <div style={s('flex:1;min-width:0;min-height:0;display:flex;flex-direction:column')}>
-        {renderParked(V)}
         <div style={s('flex:none;display:flex;gap:10px;align-items:flex-end;margin-bottom:6px')}>
           <div style={s('flex:1;min-width:0;position:relative')}>
             <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:5px')}>ยา</div>
@@ -317,18 +316,56 @@ export function renderRecordWide(V) {
               🚨 ห้ามใส่ inputMode="numeric" แล้ว — แป้นตัวเลขไม่มีเครื่องหมายให้กด
                  (ฝั่งมือถือไม่ได้ใช้ช่องนี้ ใช้ป๊อปอัปคนละตัว จึงไม่กระทบ) */}
           <div style={s('width:225px;position:relative')}>
-            <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:5px')}>จำนวน{V.pendingUnit}</div>
+            <div style={s('display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;height:16px')}>
+              <span style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e')}>จำนวน{V.pendingUnit}</span>
+              {/* ผลลัพธ์อยู่นอกช่อง จึงไม่มีวันโดนสูตรที่ยาวเบียดหาย */}
+              {V.qtyShowSum && (
+                V.qtyLong ? (
+                  /* สูตรยาวเกินช่อง — กดที่ตัวเลขเพื่อกางดูเต็ม (พี่กันสั่ง 31 ส.ค. 2569) */
+                  <span {...kb(V.toggleQtyFull)} aria-label={V.qtyFullOpen ? 'ปิดสูตรเต็ม' : 'กางดูสูตรเต็ม'}
+                    className="hv-bg-e3f tap"
+                    style={s('font:700 12.5px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums;flex:none;cursor:pointer;padding:0 8px;border-radius:6px;background:#eef6f1;display:flex;align-items:center;gap:5px;height:16px')}>
+                    {'รวม ' + V.qtyFullAnswer}
+                    <span style={s('font:600 10px Sarabun,sans-serif;color:#2f7d5d')} aria-hidden="true">{V.qtyFullOpen ? '▲ ปิด' : '▼ ดูเต็ม'}</span>
+                  </span>
+                ) : (
+                  <span style={s('font:700 12.5px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums;flex:none')}>
+                    {'รวม ' + V.qtyFullAnswer}
+                  </span>
+                )
+              )}
+            </div>
             {/* กด Enter ครั้งแรกเมื่อเป็นสูตร → ช่องกลายเป็น "25+25=50" โดยเลข 50 เด่น
                 กด Enter อีกครั้งถึงเพิ่มรายการ (พี่กันสั่ง 25 ส.ค. 2569)
                 🚨 ช่องกรอกทำตัวหนาเฉพาะบางส่วนไม่ได้ จึงวาดข้อความซ้อนทับแล้วซ่อนตัวอักษรจริง
                    ต้องใช้ฟอนต์ ขนาด และระยะขอบชุดเดียวกันทั้งสองชั้น ไม่งั้นขีดกะพริบจะไม่ตรงตัวอักษร */}
-            <input ref={V.qtyRef} value={V.qtyInput} onChange={V.onQtyInput} onKeyDown={V.onQtyKey} placeholder="0" autoComplete="off"
+            <input ref={V.qtyRef} value={V.qtyInput} onChange={V.onQtyInput} onKeyDown={V.onQtyKey} onScroll={V.onQtyScroll} onBlur={V.onQtyBlur} placeholder="0" autoComplete="off"
               style={sx("width:100%;height:46px;padding:0 40px 0 13px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:600 16px Sarabun,sans-serif;caret-color:#1e2420",
                 { color: V.qtyResolved ? 'transparent' : '#1e2420' })} />
             {V.qtyResolved && (
-              <div style={s("position:absolute;left:14px;right:41px;bottom:0;height:46px;display:flex;align-items:center;pointer-events:none;font:600 16px Sarabun,sans-serif;white-space:nowrap;overflow:hidden")}>
-                <span style={s('color:#6f7873')}>{V.qtyExprPart}</span>
-                <span style={s('color:#2f7d5d;font-weight:700')}>{V.qtyAnswerPart}</span>
+              /* วาดทับช่องเพื่อให้สูตรเป็นสีจาง — ไม่วาดผลลัพธ์ตรงนี้
+                 ผลลัพธ์อยู่ป้าย "รวม" เหนือช่องแล้ว วาดซ้ำจะทับสูตรจนอ่านไม่ออก
+                 (พี่กันเห็นเองเป็น "15+15+15+ = 105·15+") */
+              <div ref={V.qtyLayerRef}
+                style={s("position:absolute;left:14px;right:41px;bottom:0;height:46px;display:flex;align-items:center;pointer-events:none;font:600 16px Sarabun,sans-serif;white-space:nowrap;overflow:hidden")}>
+                {/* สูตรสีเทา ผลลัพธ์เขียวเด่น — เรียงต่อกันตามปกติ ไม่ทับกัน
+                    รวมสองชิ้นแล้วต้องเป็นข้อความเดียวกับใน input เป๊ะ ๆ ตัวอักษรจึงไม่เหลื่อม */}
+                <span style={s('color:#6f7873;flex:none')}>{V.qtyExprLeft}</span>
+                <span style={s('color:#2f7d5d;font-weight:700;flex:none')}>{V.qtyAnswerTail}</span>
+              </div>
+            )}
+
+            {/* กล่องสูตรเต็ม — ตัดบรรทัดได้ เห็นทุกตัวเลขในตาเดียว ไม่ต้องเลื่อน
+                ลอยทับของข้างล่าง (position:absolute) จึงไม่ดันผังหน้าให้เพี้ยน */}
+            {V.qtyShowSum && V.qtyLong && V.qtyFullOpen && (
+              <div role="dialog" aria-label="สูตรเต็ม"
+                style={s('position:absolute;left:0;right:0;top:100%;margin-top:6px;z-index:12;background:#fff;border:1px solid rgba(47,125,93,.28);border-radius:11px;box-shadow:0 12px 30px rgba(30,36,32,.16);padding:11px 13px')}>
+                <div style={s('font:600 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:#6b746e;margin-bottom:5px')}>สูตรที่พิมพ์ไว้</div>
+                <div style={s('font:600 14px/1.7 Sarabun,sans-serif;color:#414a44;overflow-wrap:anywhere;margin-bottom:9px')}>{V.qtyFullExpr}</div>
+                <div style={s('display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-top:9px;border-top:1px solid #eef1ef')}>
+                  <span style={s('font:600 12px Sarabun,sans-serif;color:#6b746e')}>รวมทั้งหมด</span>
+                  <span style={s('font:700 21px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{V.qtyFullAnswer}{V.pendingUnit}</span>
+                </div>
               </div>
             )}
 
@@ -395,24 +432,26 @@ export function renderRecordWide(V) {
           <div {...kb(V.addInline)} className={V.addOn ? 'hv-teal' : 'hv-off-green'} style={sx('height:46px;padding:0 20px;border-radius:9px;display:flex;align-items:center;font:600 14px Sarabun,sans-serif;cursor:pointer;box-sizing:border-box', { background: V.addBg, color: V.addFg, border: V.addBorder })}>เพิ่ม <span style={sx("font:400 11px Sarabun,monospace;margin-left:8px", { color: V.addHintFg })}>⏎</span></div>
         </div>
 
-        <div style={s('flex:none;font:400 11.5px Sarabun,sans-serif;color:rgba(30,36,32,.45);margin-bottom:16px;min-height:16px')}>{V.desktopHint}</div>
+        {V.showHint && (
+          <div style={s('flex:none;font:400 11.5px Sarabun,sans-serif;color:rgba(30,36,32,.45);margin-bottom:6px;min-height:16px')}>{V.desktopHint}</div>
+        )}
 
         {/* แถบยาที่คืนบ่อยฝั่งคอม — มอคอัปมีเฉพาะฝั่งมือถือ (บรรทัด 76–92) พี่กันขอให้มีบนคอมด้วย
             ใช้การ์ดหน้าตาเดียวกับมือถือทุกอย่าง ต่างแค่เรียง 6 ช่องแนวนอนแทนตาราง 3 คอลัมน์ */}
         {V.hasFrequent && (
-          <div style={s('flex:none;margin-bottom:16px')}>
-            <div style={s('display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px')}>
+          <div style={s('flex:none;margin-bottom:6px')}>
+            <div style={s('display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px')}>
               <span style={s("font:600 11px Sarabun,sans-serif;letter-spacing:.08em;color:rgba(30,36,32,.45)")}>ยาที่คืนบ่อย</span>
               <span style={s('font:400 11px Sarabun,sans-serif;color:rgba(30,36,32,.4)')}>กดเพื่อใส่จำนวน</span>
             </div>
             <div style={s('display:grid;grid-template-columns:repeat(6,1fr);gap:6px')}>
               {V.frequent.map((f) => (
-                <div key={f.base + f.strength} {...kb(f.pickWide)} className="hv-bd-green" style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:11px;padding:7px 9px;display:flex;flex-direction:column;justify-content:space-between;height:66px;cursor:pointer;overflow:hidden')}>
-                  <div>
-                    <div style={s('font:600 12px/1.25 Sarabun,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>{f.base}</div>
-                    <div style={s('font:600 12px/1.25 Sarabun,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>{f.strength}</div>
+                <div key={f.base + f.strength} {...kb(f.pickWide)} className="hv-bd-green" style={sx('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:11px;padding:5px 9px;display:flex;flex-direction:column;justify-content:center;gap:1px;cursor:pointer;overflow:hidden', { height: V.tight ? '40px' : '48px' })}>
+                  {/* บรรทัดเดียว ชื่อกับความแรงติดกัน — ความแรงเป็นข้อมูลความปลอดภัย ห้ามตัดทิ้ง */}
+                  <div style={s('font:600 12px/1.25 Sarabun,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>
+                    {f.base} <span style={s('color:#6b746e')}>{f.strength}</span>
                   </div>
-                  <div style={sx("font:500 10.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: f.priceColor })}>{f.priceLabel}</div>
+                  <div style={sx("font:500 10.5px/1.2 Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: f.priceColor })}>{f.priceLabel}</div>
                 </div>
               ))}
             </div>
@@ -456,6 +495,9 @@ export function renderRecordWide(V) {
           {/* 🎯 จุดเดียวในหน้าบันทึกแบบคอมที่เลื่อนได้ (พี่กันสั่ง)
               ช่องกรอกยา · ยาที่คืนบ่อย · หัวตาราง · แผงขวา ถูกตรึงหมด ไม่ขยับตามการเลื่อน */}
           <div style={s('flex:1;min-height:0;overflow-y:auto')}>
+          {/* แถบล็อตค้างอยู่ในนี้ ไม่ใช่ข้างนอก — พี่กันสั่งว่าไม่ต้องตรึงตัวนี้
+              เลื่อนดูยาแล้วแถบเลื่อนหายไปเอง กรอบตารางได้ที่คืนเต็ม */}
+          <div style={s('padding:8px 8px 0')}>{renderParked(V)}</div>
           {V.noRows && (
             <div style={s('min-height:100%;padding:34px 16px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center')}>
               <div style={s('font:600 15px Sarabun,sans-serif;margin-bottom:4px')}>ยังไม่มีรายการในครั้งนี้</div>
@@ -464,7 +506,7 @@ export function renderRecordWide(V) {
           )}
 
           {V.rows.map((row) => (
-            <div key={row.rid} style={sx('display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(30,36,32,.05);font:400 14px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { background: row.deskBg })}>
+            <div key={row.rid} style={sx('display:flex;align-items:center;border-bottom:1px solid rgba(30,36,32,.05);font:400 14px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { background: row.deskBg, padding: V.tight ? '6px 16px' : '11px 16px' })}>
               {/* ชื่อยาหน้าตาเหมือนตอนค้นหาเป๊ะ — สีความแรง · รูปแบบยา · ER · ชื่อการค้า
                   (พี่กันสั่ง 25 ส.ค. 2569) ยาฉีดกับยากินจะได้แยกออกตั้งแต่กวาดตา */}
               <span style={s('flex:1;min-width:0')}>

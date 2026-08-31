@@ -39,6 +39,9 @@ export function uiActions(app) {
         failedBy: st.saveFailed ? (st.recorder || st.failedBy || '') : ''
       });
       writeLS(LS.dark, st.dark ? 1 : 0);
+      // 🚨 เก็บขึ้นเซิร์ฟเวอร์ด้วย (พี่กันสั่ง 31 ส.ค. 2569)
+      //    ตัวมันหน่วงเองอยู่แล้ว เรียกถี่แค่ไหนก็ยิงจริงแค่ครั้งเดียว
+      if (app.pushDraft) app.pushDraft();
     });
   };
 

@@ -111,7 +111,10 @@ export const LS = {
   dark: 'mrv.dark',
   drugs: 'mrv.drugs',       // แคชรายการยา
   setting: 'mrv.setting',   // แคชการตั้งค่าห้องยา
-  enFont: 'mrv.enfont'      // ฟอนต์ตัวอักษรอังกฤษและตัวเลข ('mono' หรือ 'thai')
+  enFont: 'mrv.enfont',     // ฟอนต์ตัวอักษรอังกฤษและตัวเลข ('mono' หรือ 'thai')
+  // ชื่อเครื่องที่ผู้ใช้เลือกตอนเปิดเว็บครั้งแรก (พี่กันสั่ง 31 ส.ค. 2569)
+  // 🚨 เก็บในที่เก็บถาวร ไม่ใช่ที่เก็บของแท็บ — เครื่องเดียวกันทุกหน้าต่างต้องได้ชื่อเดียวกัน
+  device: 'mrv.device'
 };
 
 export const CACHE_TTL = 12 * 60 * 60 * 1000;   // 12 ชั่วโมง
@@ -626,6 +629,6 @@ export function exprText(raw) {
 //
 // ⚠️ เขียนเป็นข้อความไทยตรง ๆ ไม่คำนวณจากนาฬิกาเครื่อง
 //    เพราะนี่คือ "วันที่ปล่อยรุ่นนี้" ไม่ใช่ "วันนี้" — คอมที่นาฬิกาเพี้ยนจะโชว์มั่ว
-export const APP_VERSION = '0.13.0.0';
+export const APP_VERSION = '0.15.0.0';
 export const APP_FIRST_RELEASE = '4 สิงหาคม 2569';
 export const APP_LAST_UPDATE = '31 สิงหาคม 2569';

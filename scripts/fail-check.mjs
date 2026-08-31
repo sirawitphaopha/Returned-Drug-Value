@@ -58,6 +58,8 @@ const DEAD = ['/api/summary', '/api/returns', '/api/lots', '/api/catalog', '/api
     }
 
     // ล้างของที่เก็บไว้ในแท็บก่อน ไม่งั้นหน้าหยิบของเก่ามาแสดงแล้วไม่เห็นกล่องแจ้ง
+    // ตั้งชื่อเครื่องไว้ล่วงหน้า ไม่งั้นติดหน้าต่างถามชื่อเครื่อง (มีตั้งแต่ v0.14.0.0)
+    await page.evaluate(() => { try { localStorage.setItem('mrv.device', JSON.stringify('เครื่องทดสอบอัตโนมัติ')); } catch (e) {} });
     await page.goto(BASE + '/', { waitUntil: 'networkidle2' });
     await page.evaluate(() => sessionStorage.clear());
 

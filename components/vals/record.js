@@ -1,7 +1,7 @@
 // ค่าของหน้าบันทึก — คัดจาก renderVals ของมอคอัป (บรรทัด 1160–1290)
 // ต่างจากต้นฉบับ 3 จุด: ตัดเลขคงคลังปลอม · ตัดสวิตช์จำลองเน็ตหลุด
 // · ยอดสะสมปีงบมาจากฐานข้อมูล ไม่ได้นับจากรายการในเครื่อง
-import { SOURCES, money, thaiDate } from '@/lib/format';
+import { SOURCES, money, thaiDate, COMPUTERS, MOBILE_PREFIX } from '@/lib/format';
 import { cleanQty, qtyNum, qtyText, splitDrugName, splitPercent, splitRelease, markMatch,
   cleanQtyExpr, evalQty, isQtyExpr, exprText, isResolvedQty, splitResolved, DESTROY_REASONS } from '../helpers';
 import { moveHi } from '@/lib/drugSearch';
@@ -175,6 +175,33 @@ function sortRows(rows, key, dir) {
   });
 }
 
+// แปลงร่างจากเซิร์ฟเวอร์เป็นข้อความพร้อมวาด
+//
+// 🚨 daysLeft น้อยกว่าหรือเท่ากับ 1 = ใกล้ถูกล้างแล้ว ต้องเตือนให้เห็นชัด
+//    ล้างเงียบ ๆ แล้วไม่มีใครรู้ว่าเคยมีของอยู่ (พี่กันเคาะเก็บไว้ 7 วัน)
+function shapeDraft(d, app) {
+  const rows = Array.isArray(d.rows) ? d.rows : [];
+  const value = rows.reduce((a, r) => a + (r && r.disposition === 'reuse' ? (r.price || 0) * (r.qty || 0) : 0), 0);
+  const left = Number(d.days_left);
+  return {
+    key: d.device_id + '|' + d.tab_id,
+    deviceId: d.device_id,
+    tabId: d.tab_id,
+    deviceLabel: d.device_id,
+    countLabel: (d.items || rows.length) + ' รายการ',
+    valueLabel: value > 0 ? money(value) : '',
+    whenLabel: d.return_date ? 'กรอกไว้ ' + thaiDate(d.return_date) : '',
+    failed: !!d.save_failed,
+    // ยาในล็อต — หน้าต่างรายละเอียดใช้
+    rows: rows,
+    daysLeft: left,
+    soon: left <= 1,
+    soonLabel: left <= 0 ? 'จะถูกล้างวันนี้' : 'จะถูกล้างพรุ่งนี้',
+    take: () => app.takeServerDraft(d.device_id, d.tab_id),
+    drop: () => app.askDropServerDraft(d.device_id, d.tab_id)
+  };
+}
+
 export function recordVals(app, d) {
   const st = d.st;
   const pending = st.pending;
@@ -210,6 +237,41 @@ export function recordVals(app, d) {
   };
 
   return {
+    // ── หน้าต่างถามชื่อเครื่อง (พี่กันสั่ง 31 ส.ค. 2569) ──────────────────────
+    deviceAskOpen: !!st.deviceAsk,
+    deviceKind: st.deviceKind || 0,
+    devicePick: st.devicePick || '',
+    deviceComputers: COMPUTERS,
+    // มือถือระบุด้วยชื่อคน ดึงจากรายชื่อเจ้าหน้าที่ที่ตั้งไว้ในหน้าตั้งค่าอยู่แล้ว
+    deviceMobiles: (st.staff || []).map((x) => MOBILE_PREFIX + x),
+    setDeviceKind: app.setDeviceKind,
+    setDevicePick: app.setDevicePick,
+    toggleOtherDrafts: app.toggleOtherDrafts,
+    showOtherDrafts: !!st.showOtherDrafts,
+    parkedSeen: st.parkedSeen || '',
+    seeParked: app.seeParked,
+    pickDevice: app.pickDevice,
+    deviceLabel: st.deviceId || '',
+    // เปิดหน้าต่างถามชื่อเครื่องอีกครั้ง — ใช้จากหน้าตั้งค่า
+    // 🚨 เดิมมีฟังก์ชันนี้ในโค้ดแต่ไม่มีปุ่มไหนเรียกเลย ตั้งชื่อเครื่องผิดแล้วแก้ไม่ได้
+    //    ต้องล้างข้อมูลเบราว์เซอร์ทิ้งอย่างเดียว ทั้งที่เอกสารเขียนว่าแก้ได้ในหน้าตั้งค่า
+    openDeviceAsk: app.openDeviceAsk,
+
+    // ── ปุ่มดูตัวอย่างหน้าที่ปกติเรียกดูไม่ได้ (โหมดดูตัวอย่างเท่านั้น) ─────
+    previewOk: () => app.previewResult('ok'),
+    previewFail: () => app.previewResult('fail'),
+    previewLoadFail: app.previewLoadFail,
+    clearPreviewLoadFail: app.clearPreviewLoadFail,
+    previewHisImport: app.previewHisImport,
+    hasLoadErr: Object.keys(st.loadErr || {}).some((k) => !!st.loadErr[k]),
+
+    // ── ร่างที่เก็บไว้บนเซิร์ฟเวอร์ ──────────────────────────────────────────
+    // แยกเป็น 2 กอง — ของเครื่องนี้ (ขึ้นแถบเลย) กับของเครื่องอื่น (ต้องกดดู)
+    // 🚨 ของเครื่องอื่นห้ามโผล่มาเอง ไม่งั้นกลับไปเป็นปัญหาเดิมที่เพิ่งแก้
+    serverMine: (st.serverDrafts || []).filter((d) => d.mine).map((d) => shapeDraft(d, app)),
+    serverOther: (st.serverDrafts || []).filter((d) => !d.mine).map((d) => shapeDraft(d, app)),
+    serverOtherCount: (st.serverDrafts || []).filter((d) => !d.mine).length,
+
     // ── ล็อตที่กรอกค้างไว้ในหน้าต่างที่ปิดไปแล้ว (พี่กันสั่ง 31 ส.ค. 2569) ──────
     parked: (st.parked || []).map((x) => ({
       id: x.id,
@@ -217,6 +279,8 @@ export function recordVals(app, d) {
       // 🚨 money() ใส่สัญลักษณ์บาทมาให้แล้ว ห้ามเติมซ้ำ
       valueLabel: x.value > 0 ? money(x.value) : '',
       whenLabel: x.when ? 'กรอกไว้ ' + thaiDate(x.when) : '',
+      // ยาในล็อต — หน้าต่างรายละเอียดใช้ (พี่กันสั่ง "ต้องกดดูรายละเอียดได้ด้วยสิ")
+      rows: Array.isArray(x.rows) ? x.rows : [],
       take: () => app.takeParked(x.id),
       drop: () => app.askDropParked(x.id)
     })),
@@ -446,7 +510,41 @@ export function recordVals(app, d) {
     // ช่องกรอกธรรมดาทำตัวหนา/สีต่างเฉพาะบางส่วนไม่ได้ จึงวาดข้อความซ้อนทับแทน
     // แล้วทำตัวอักษรใน input ให้โปร่งใส (เห็นแต่ขีดกะพริบ) — ตำแหน่งตรงกันเป๊ะเพราะใช้ฟอนต์เดียวกัน
     qtyResolved: isResolvedQty(st.qtyInput) && pendQty > 0,
-    qtyExprPart: splitResolved(st.qtyInput).expr,
+    // สูตรยาวพอที่ช่องจะแสดงไม่หมด — เกณฑ์ 14 ตัวอักษรมาจากวัดจริงบนช่องกว้าง 225px
+    // จอเตี้ย = บีบระยะในแถวยากับแถบยาที่คืนบ่อยให้เตี้ยลง
+    tight: d.tight,
+    qtyLong: String(st.qtyInput || '').length > 14,
+    // 🚨 ป้ายรวมต้องขึ้นตั้งแต่ตอนพิมพ์ ไม่ต้องรอกด Enter (พี่กันสั่ง 31 ส.ค. 2569)
+    //    พิมพ์ 15+15 ปุ๊บต้องเห็น "รวม 30" เลย จะได้รู้ว่าคิดถูกไหมก่อนกดยืนยัน
+    qtyShowSum: pendQty > 0 && '+-*/()'.split('').some(function (ch) { return String(st.qtyInput || '').indexOf(ch) >= 0; }),
+    qtyFullOpen: !!st.qtyFull,
+    toggleQtyFull: app.toggleQtyFull,
+    // สูตรกับผลลัพธ์แยกชิ้น สำหรับวาดในกล่องที่กางออก
+    qtyFullExpr: exprText(String(st.qtyInput || '').split('=')[0]),
+    qtyFullAnswer: pendQty,
+    qtyLayerRef: app.qtyLayerRef,
+    // ช่องกรอกเลื่อนเมื่อไหร่ ชั้นที่วาดสูตรต้องเลื่อนตามเป๊ะ ๆ
+    // ไม่งั้นตัวอักษรที่วาดกับขีดกะพริบจะไม่ตรงกัน
+    // 🚨 เลิกโฟกัสเมื่อไหร่ ให้เลื่อนไปท้ายสุดเสมอ
+    //    ท้ายสุดคือที่ที่คำตอบอยู่ ถ้าปล่อยค้างที่ต้นสูตร คนที่หันมามองทีหลังจะไม่เห็นคำตอบเลย
+    //    (พี่กันเจอเอง 31 ส.ค. 2569 — เลื่อนดูสูตรแล้วคลิกที่อื่น คำตอบหายไปจากสายตา)
+    onQtyBlur: () => {
+      const el = app.qtyRef.current;
+      if (!el) return;
+      el.scrollLeft = el.scrollWidth;
+      if (app.qtyLayerRef.current) app.qtyLayerRef.current.scrollLeft = el.scrollWidth;
+    },
+    onQtyScroll: (e) => {
+      if (app.qtyLayerRef.current) app.qtyLayerRef.current.scrollLeft = e.target.scrollLeft;
+    },
+    // 🚨 ต้องเป็นข้อความเต็มที่อยู่ในช่องจริง ไม่ใช่แค่ครึ่งซ้ายของ =
+    //    เพราะชั้นนี้วาดทับ input ตัวอักษรต้องตรงกันทุกตัวถึงจะไม่เหลื่อม
+    qtyExprPart: String(st.qtyInput || ''),
+    // แยกเป็นสองชิ้นเพื่อทาสีคนละสี — ต่อกันแล้วต้องได้ข้อความเดิมทุกตัวอักษร
+    qtyExprLeft: String(st.qtyInput || '').split('=')[0],
+    qtyAnswerTail: String(st.qtyInput || '').indexOf('=') >= 0
+      ? '=' + String(st.qtyInput || '').split('=').slice(1).join('=')
+      : '',
     qtyAnswerPart: splitResolved(st.qtyInput).answer,
 
     // ── เครื่องคิดเลขในช่องจำนวน (คอมเท่านั้น) ───────────────────────────────
@@ -502,6 +600,10 @@ export function recordVals(app, d) {
     ),
     // ราคารวมถูกย้ายไปกล่องท้ายแถวแล้ว บรรทัดนี้จึงไม่ต้องบอกราคาซ้ำ
     // แต่ถ้าพิมพ์เป็นสูตร ต้องกางให้เห็นว่าคิดได้เท่าไร ก่อนกด Enter
+    // โชว์เมื่อ (ก) ยังไม่มีรายการ — คนเพิ่งเปิดหน้าจะได้อ่านวิธีใช้
+    //          (ข) เลือกยาแล้ว — บรรทัดนี้กลายเป็นที่โชว์ผลลัพธ์สูตรกับปุ่มลัด
+    // ซ่อนเมื่อ กรอกไปแล้วหลายรายการและยังไม่ได้เลือกยาตัวถัดไป (คนใช้เป็นแล้ว)
+    showHint: !!pending || st.rows.length === 0,
     desktopHint: !pending
       ? 'พิมพ์ชื่อยา → Enter เลือกผลแรก → ใส่จำนวน → Enter เพิ่มรายการ แล้วกลับไปช่องยาเอง · ช่องจำนวนพิมพ์ + − × ÷ และวงเล็บได้'
       : pendQty > 0

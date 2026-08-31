@@ -6,6 +6,8 @@ import { searchDrugsEx } from '@/lib/drugSearch';
 import { makeStColorOf } from './record';
 
 export function derive(app) {
+  // จอเตี้ยกว่า 700px = บีบแถวให้เตี้ยลง เห็นยาได้มากขึ้นอีกราว 3 แถว
+  const tight = (app.state.vh || 900) < 700;
   const st = app.state;
   const q = st.query.trim().toLowerCase();
   // เลือกยาไปแล้ว (pending) และช่องค้นหายังเป็นชื่อยาตัวนั้นอยู่ → ปิดรายการผลค้นหา
@@ -49,6 +51,7 @@ export function derive(app) {
     // (คอลัมน์อื่นตรึงความกว้างรวม 522px + แถบข้าง 296px กินไปหมด)
     // แค่ "Metformin 500 mg" ก็ตัดเป็น 3 บรรทัดแล้ว ชื่อยาวกว่านั้นตารางพังเลย
     // ขยับเป็น 1180 → โน้ตบุ๊กจอเล็กได้หน้าจอมือถือซึ่งอ่านง่ายกว่ามาก
-    wide: st.vw >= 1180 && !st.forceNarrow
+    wide: st.vw >= 1180 && !st.forceNarrow,
+    tight: tight
   };
 }

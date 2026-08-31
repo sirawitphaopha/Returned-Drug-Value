@@ -66,6 +66,8 @@ const rowsOf = (page) => page.evaluate(() => {
 });
 
 async function login(page) {
+  // 🚨 ตั้งแต่ v0.13.1.0 เว็บถามก่อนออกจากหน้าเมื่อมีของค้าง ต้องดักไว้ ไม่งั้นสคริปต์ค้าง
+  page.on('dialog', (d) => d.accept().catch(() => {}));
   // 🚨 สคริปต์เทสห้ามส่งของขึ้นฐานจริงเด็ดขาด (เคยเผลอสร้างขยะไป 4 ล็อต)
   await page.setRequestInterception(true);
   page.on('request', (r) => {
@@ -86,6 +88,8 @@ async function login(page) {
       page.click('button[type="submit"]')
     ]);
   }
+  // ตั้งชื่อเครื่องไว้ล่วงหน้า ไม่งั้นติดหน้าต่างถามชื่อเครื่อง (มีตั้งแต่ v0.14.0.0)
+  await page.evaluate(() => { try { localStorage.setItem('mrv.device', JSON.stringify('เครื่องทดสอบอัตโนมัติ')); } catch (e) {} });
   await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
   await wait(3200);
 }
@@ -133,6 +137,19 @@ async function login(page) {
     const d1 = await rowsOf(D);
     const parkedD = await D.evaluate(() => document.body.innerText.indexOf('มีล็อตที่กรอกค้างไว้') >= 0);
     check(d1.length === 0, 'หน้าต่างใหม่เริ่มจากว่างเปล่า', d1.length + ' รายการ');
+    const dbg = await D.evaluate(() => {
+      const el = document.querySelector('[role=\"button\"]');
+      const key = el && Object.keys(el).find((k) => k.indexOf('__reactFiber') === 0);
+      let f = key ? el[key] : null, app = null;
+      while (f) { if (f.stateNode && typeof f.stateNode.persist === 'function') { app = f.stateNode; break; } f = f.return; }
+      if (!app) return 'ไม่เจอตัวแอป';
+      return {
+        ร่างในเครื่อง: (app.state.parked || []).length,
+        ร่างบนเซิร์ฟเวอร์: (app.state.serverDrafts || []).map((d) => d.device_id + '/' + d.tab_id),
+        ทะเบียน: localStorage.getItem('mrv.tabs')
+      };
+    });
+    log('   ที่มาของแถบ: ' + JSON.stringify(dbg));
     check(!parkedD, 'ไม่มีแถวไหนของหน้าต่างที่ยังเปิดอยู่ถูกเสนอให้เอาไป');
 
     // ── ③④ ปิดหน้าต่างทั้งที่กรอกค้าง ──────────────────────────────────
