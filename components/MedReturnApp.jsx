@@ -4,7 +4,7 @@
 import React from 'react';
 import { installHandlers } from './handlers';
 import { renderShell } from './shell';
-import { LS, readLS, readCache } from './helpers';
+import { LS, readLS, readCache, writeLS, clearLS, myTabId, draftKeyOf, touchTab, releaseTab, orphanDrafts } from './helpers';
 import { todayISO } from '@/lib/format';
 
 export default class MedReturnApp extends React.Component {
@@ -163,6 +163,9 @@ export default class MedReturnApp extends React.Component {
       // พี่กันสั่ง 27 ส.ค. 2569: "ก9 เราอยากวาดครบ 417 แต่ส่วนที่ไม่แสดงก็ไม่เรนเดอร์"
       // 🚨 ไม่ใช่ปุ่ม "ดูเพิ่ม" — แถวโผล่เองตอนเลื่อนถึง ผู้ใช้ไม่ต้องรู้ว่ามีการแบ่ง
       catDraw: 60,
+      // ── ล็อตที่กรอกค้างไว้ในหน้าต่างที่ปิดไปแล้ว (พี่กันสั่ง 31 ส.ค. 2569) ──
+      // ไม่ดึงมาเอง แค่ขึ้นแถบบอกว่ามีอยู่ พร้อมปุ่มเอากลับมาหรือทิ้ง
+      parked: [],
       sumFy: 0,              // ปีงบที่เลือกดู (0 = ปีปัจจุบัน)
       sumFyYears: [],
       topReturned: [],       // ยาที่ถูกคืนบ่อยที่สุด — เรียงตามจำนวนครั้ง
@@ -344,7 +347,24 @@ export default class MedReturnApp extends React.Component {
 
   componentDidMount() {
     // วาดจอจากของที่มีในเครื่องก่อน ไม่ต้องรอเซิร์ฟเวอร์ แล้วค่อยยิงไปทับ
-    const draft = readLS(LS.draft);
+    // ── ร่างของหน้าต่างนี้ (พี่กันสั่ง 31 ส.ค. 2569 ให้ทุกหน้าต่างเป็นเอกเทศ) ──
+    // 🚨 อ่านเฉพาะร่างที่มีรหัสหน้าต่างนี้ ห้ามแตะของหน้าต่างอื่นเด็ดขาด
+    const myKey = draftKeyOf(myTabId());
+    let draft = readLS(myKey);
+
+    // ย้ายร่างรุ่นเก่าที่ยังใช้คีย์รวมเข้ามาเป็นของหน้าต่างนี้ ครั้งเดียวจบ
+    // ไม่งั้นคนที่กำลังกรอกค้างอยู่ตอนอัปเดตเวอร์ชัน จะเปิดมาแล้วของหายทั้งล็อต
+    if (!draft) {
+      const old = readLS(LS.draftOld);
+      if (old && (Array.isArray(old) ? old.length : (old.rows || []).length)) {
+        draft = old;
+        writeLS(myKey, old);
+      }
+      clearLS(LS.draftOld);
+    }
+
+    // ล็อตที่กรอกค้างไว้ในหน้าต่างที่ปิดไปแล้ว — ยังอยู่ครบ ไม่ได้หายไปไหน
+    const orphans = orphanDrafts().filter((o) => o.id !== myTabId());
     const dark = readLS(LS.dark) === 1;
     const drugs = readCache(LS.drugs);
     const setting = readCache(LS.setting);
@@ -399,6 +419,45 @@ export default class MedReturnApp extends React.Component {
       }
     }
 
+    // ── ของค้างจากหน้าต่างที่ปิดไปแล้ว ────────────────────────────────────
+    // 🚨 ของที่ "ส่งไม่สำเร็จ" ต้องดึงกลับมาให้เองทันที ไม่ต้องรอใครกด
+    //    มันคือยาที่รับคืนจากคนไข้ไปแล้วแต่ยังไม่ขึ้นระบบส่วนกลาง
+    //    ถ้ารอให้คนสังเกตแล้วกด อาจไม่มีใครกดเลยจนของหายทั้งล็อต
+    //
+    // ส่วนร่างธรรมดาที่ยังกรอกไม่เสร็จ ไม่ดึงมาเอง — ขึ้นแถบให้กดเอากลับมาแทน
+    // เพราะการที่ของคนอื่นโผล่มาเองในหน้าต่างเราคือต้นเหตุของปัญหาเดิมทั้งหมด
+    const failedOne = orphans.find((o) => o.failed);
+    const plainOnes = orphans.filter((o) => !o.failed);
+
+    if (failedOne && !(patch.rows && patch.rows.length)) {
+      const b = failedOne.box;
+      patch.rows = (b.rows || []).filter(
+        (r) => r && r.rid != null && typeof r.price === 'number' && typeof r.qty === 'number'
+      );
+      if (patch.rows.length) {
+        if (b.batchId) patch.batchId = b.batchId;      // ต้องใช้เลขก้อนเดิม ไม่งั้นกันซ้ำไม่ได้
+        if (typeof b.hn === 'string') patch.hn = b.hn;
+        if (typeof b.source === 'string') patch.source = b.source;
+        if (b.sourceTouched) patch.sourceTouched = true;
+        if (typeof b.pcuSite === 'string') patch.pcuSite = b.pcuSite;
+        if (typeof b.date === 'string' && b.date) patch.date = b.date;
+        patch.saveFailed = true;
+        patch.saveError = typeof b.saveError === 'string' ? b.saveError : '';
+        patch.failedBy = typeof b.failedBy === 'string' ? b.failedBy : '';
+        clearLS(failedOne.key);                        // ย้ายมาเป็นของหน้าต่างนี้แล้ว
+        this._tookOrphan = true;
+      }
+    }
+
+    // เหลือแค่ร่างธรรมดา — เก็บไว้เสนอเป็นแถบให้กดเอากลับมา
+    patch.parked = plainOnes.map((o) => ({
+      id: o.id,
+      key: o.key,
+      count: o.rows.length,
+      value: o.rows.reduce((a, r) => a + (r.disposition === 'reuse' ? r.price * r.qty : 0), 0),
+      when: typeof o.box.date === 'string' ? o.box.date : ''
+    }));
+
     if (Array.isArray(drugs)) patch.drugs = drugs;
     if (setting && Array.isArray(setting.favIds)) {
       patch.orgName = setting.orgName;
@@ -421,6 +480,17 @@ export default class MedReturnApp extends React.Component {
     document.addEventListener('mousedown', this._onDocDown);
     // ทวนวันทุก 1 นาที — คอมห้องยาเปิดค้างข้ามคืนเป็นเรื่องปกติ
     this._dayTimer = setInterval(this.checkDayRollover, 60000);
+
+    // ── บอกทะเบียนว่าหน้าต่างนี้ยังเปิดอยู่ ────────────────────────────────
+    // 🚨 จำเป็นสำหรับแยกให้ออกว่าร่างไหนเป็นของหน้าต่างที่ยังกรอกอยู่ (ห้ามแตะ)
+    //    กับร่างของหน้าต่างที่ปิดไปแล้ว (เอากลับมาได้)
+    //    ทุก 15 วินาที ต่ำกว่าเกณฑ์ 45 วินาทีอยู่ 3 เท่า เผื่อเครื่องช้าหรือแท็บถูกพักไว้
+    touchTab();
+    this._tabTimer = setInterval(touchTab, 15000);
+    // 🚨 ปล่อยรหัสคืนก่อนหน้าหาย ไม่งั้นกด F5 แล้วได้รหัสใหม่ = ยาที่กรอกค้างหายทั้งล็อต
+    //    ตอนปิดแท็บจริงก็ปล่อยเหมือนกัน ทำให้ร่างนั้นกลายเป็นของที่ไม่มีเจ้าของทันที
+    //    หน้าต่างที่เปิดทีหลังจึงเห็นและเอากลับมาได้เลย ไม่ต้องรอ 45 วินาที
+    window.addEventListener('pagehide', releaseTab);
 
     // ── อัปเดตสดข้ามเครื่อง ────────────────────────────────────────────────
     // ถามหลังบ้านทุก 20 วินาทีว่า "ลายเซ็นข้อมูลเปลี่ยนไหม" ตอบกลับแค่ตัวเลข 4 ตัว
@@ -505,6 +575,7 @@ export default class MedReturnApp extends React.Component {
   //    ผู้ใช้จึงไม่มีทางเห็นตารางว่างหรือกระตุกระหว่างเลื่อน
   catMoreRef = (el) => {
     if (this._catMoreObs) { this._catMoreObs.disconnect(); this._catMoreObs = null; }
+    if (this._tabTimer) clearInterval(this._tabTimer);
     if (!el || typeof IntersectionObserver === 'undefined') return;
     this._catMoreObs = new IntersectionObserver((ents) => {
       if (ents.some((e) => e.isIntersecting)) this.drawMoreCatalog();
@@ -624,6 +695,7 @@ export default class MedReturnApp extends React.Component {
     window.removeEventListener('online', this._onOnline);
     window.removeEventListener('beforeunload', this._onBeforeUnload);
     window.removeEventListener('offline', this._onOffline);
+    window.removeEventListener('pagehide', releaseTab);
     if (this._vv && this._onVV) {
       this._vv.removeEventListener('resize', this._onVV);
       this._vv.removeEventListener('scroll', this._onVV);

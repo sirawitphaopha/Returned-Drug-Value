@@ -105,7 +105,9 @@ export function kb(fn) {
 
 // ── ข้อมูลที่เก็บไว้ในเครื่อง ─────────────────────────────────────────────────
 export const LS = {
-  draft: 'mrv.session',     // แถวที่กองอยู่ ยังไม่กดบันทึก — หายเมื่อบันทึกสำเร็จ
+  // 🚨 คีย์นี้เป็นของรุ่นเก่า ไม่มีใครเขียนแล้ว เหลือไว้ย้ายของเก่าเข้าคีย์ใหม่ครั้งเดียว
+  //    ร่างรุ่นใหม่แยกรายหน้าต่าง คีย์เป็น mrv.session.<รหัสหน้าต่าง> (ดู draftKeyOf)
+  draftOld: 'mrv.session',
   dark: 'mrv.dark',
   drugs: 'mrv.drugs',       // แคชรายการยา
   setting: 'mrv.setting',   // แคชการตั้งค่าห้องยา
@@ -113,6 +115,121 @@ export const LS = {
 };
 
 export const CACHE_TTL = 12 * 60 * 60 * 1000;   // 12 ชั่วโมง
+
+// ── ร่างของแต่ละหน้าต่าง แยกขาดจากกัน ─────────────────────────────────────
+//
+// พี่กันสั่ง 31 ส.ค. 2569:
+//   "ที่กรอก 100 เครื่องก็ต้องแยกกัน และกรอกโครมเดียวกัน แต่คนละคนต้องแยกกัน
+//    ให้ทุกอย่างมันเอกเทศกัน"
+//
+// ปัญหาเดิม: ร่างที่กรอกค้างมีก้อนเดียวใช้ร่วมทั้งเครื่อง (คีย์ mrv.session)
+// ทุกหน้าต่างเขียนทับกล่องใบเดียวกัน จึงเกิด 2 อย่างนี้เสมอเมื่อเปิดมากกว่าหนึ่งหน้าต่าง
+//   1. ยาที่หน้าต่างหนึ่งเพิ่งเพิ่ม หายไปเงียบ ๆ เมื่ออีกหน้าต่างแตะอะไรก็ตาม
+//   2. กดบันทึกจากสองหน้าต่าง ยาชุดเดียวกันเข้าฐานสองรอบ มูลค่าถูกนับซ้ำ
+//
+// ตอนนี้แต่ละหน้าต่างมีร่างของตัวเอง คีย์เป็น mrv.session.<รหัสหน้าต่าง>
+// เปิดกี่หน้าต่างก็แยกขาดจากกันหมด ไม่มีใครเห็นของใคร ไม่มีใครทับใคร
+
+export const TAB_KEY = 'mrv.tab';        // รหัสหน้าต่างนี้ (อยู่ในที่เก็บของแท็บ)
+export const TABS_KEY = 'mrv.tabs';      // ทะเบียนว่าหน้าต่างไหนยังเปิดอยู่
+export const DRAFT_PREFIX = 'mrv.session.';
+export const TAB_ALIVE = 45000;          // ไม่ส่งสัญญาณเกิน 45 วินาที = ปิดไปแล้ว
+
+// รหัสประจำหน้าต่าง — เกิดครั้งเดียวตอนเปิด อยู่ยาวจนปิดหน้าต่าง
+//
+// 🚨 เก็บใน sessionStorage ไม่ใช่ localStorage
+//    sessionStorage รอดการรีเฟรช (F5 แล้วยังเป็นหน้าต่างเดิม ร่างไม่หาย)
+//    แต่ไม่ข้ามไปหน้าต่างอื่น ซึ่งคือสิ่งที่ต้องการพอดี
+//
+// ⚠️ Chrome มีคำสั่ง "ทำสำเนาแท็บ" ซึ่งก๊อป sessionStorage ไปด้วย = รหัสซ้ำกันสองหน้าต่าง
+//    ทะเบียนหน้าต่าง (TABS_KEY) จับได้ตรงนี้ แล้วออกรหัสใหม่ให้ตัวที่มาทีหลัง
+//
+// 🚨🔴 การรีเฟรชกับการทำสำเนาแท็บ หน้าตาเหมือนกันเป๊ะจากมุมของโค้ดนี้
+//    ทั้งคู่คือ "มีรหัสเดิมใน sessionStorage และทะเบียนบอกว่ารหัสนั้นยังมีคนถืออยู่"
+//
+//    สิ่งที่แยกสองอย่างนี้ออกจากกันคือ หน้าต่างที่กำลังจะรีเฟรช "ปล่อยรหัสคืน"
+//    ก่อนหายไป (ดู releaseTab) ส่วนต้นฉบับที่ถูกทำสำเนายังเปิดอยู่ ไม่ได้ปล่อยอะไร
+//
+//    เคยพลาดมาแล้ว: ไม่มีการปล่อยคืน ทุกการรีเฟรชจึงได้รหัสใหม่
+//    แล้วยาที่กรอกค้างไว้กลายเป็นของหน้าต่างที่ไม่มีตัวตน = กด F5 ทีของหายทั้งล็อต
+let tabId = null;
+
+export function myTabId() {
+  if (tabId) return tabId;
+  try {
+    const had = sessionStorage.getItem(TAB_KEY);
+    const reg = readLS(TABS_KEY) || {};
+    const now = Date.now();
+    // รหัสเดิมยังใช้ได้ ถ้าไม่มีหน้าต่างอื่นที่ยังมีชีวิตถือรหัสนี้อยู่
+    if (had && !(reg[had] && now - reg[had] < TAB_ALIVE)) {
+      tabId = had;
+    } else {
+      tabId = 't' + now.toString(36) + Math.random().toString(36).slice(2, 8);
+      sessionStorage.setItem(TAB_KEY, tabId);
+    }
+  } catch (e) {
+    // เบราว์เซอร์ปิดที่เก็บไว้ — ใช้รหัสชั่วคราวในหน่วยความจำแทน ยังทำงานได้ทุกอย่าง
+    tabId = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+  return tabId;
+}
+
+export const draftKeyOf = (id) => DRAFT_PREFIX + id;
+
+// บอกทะเบียนว่าหน้าต่างนี้ยังอยู่ — เรียกเป็นระยะจากตัวจับเวลา
+export function touchTab() {
+  try {
+    const reg = readLS(TABS_KEY) || {};
+    const now = Date.now();
+    reg[myTabId()] = now;
+    // เก็บกวาดหน้าต่างที่เงียบไปนานแล้ว ไม่งั้นทะเบียนบวมไม่มีที่สิ้นสุด
+    for (const k of Object.keys(reg)) {
+      if (now - reg[k] > TAB_ALIVE * 20) delete reg[k];
+    }
+    writeLS(TABS_KEY, reg);
+  } catch (e) {}
+}
+
+// ปล่อยรหัสคืนก่อนหน้าต่างหายไป — เรียกตอนรีเฟรชและตอนปิดแท็บ
+//
+// 🚨 ต้องเรียกให้ทันก่อนหน้าจะหาย จึงผูกกับ pagehide ไม่ใช่ beforeunload
+//    (beforeunload ไม่ยิงในบางกรณีบนมือถือ ส่วน pagehide ยิงเสมอ)
+export function releaseTab() {
+  try {
+    const reg = readLS(TABS_KEY) || {};
+    delete reg[myTabId()];
+    writeLS(TABS_KEY, reg);
+  } catch (e) {}
+}
+
+export function tabAlive(id) {
+  if (id === myTabId()) return true;
+  const reg = readLS(TABS_KEY) || {};
+  return !!(reg[id] && Date.now() - reg[id] < TAB_ALIVE);
+}
+
+// ไล่ดูร่างค้างของ "หน้าต่างที่ปิดไปแล้ว" ทั้งหมด
+//
+// 🚨 ห้ามแตะร่างของหน้าต่างที่ยังเปิดอยู่เด็ดขาด นั่นคือของที่คนอื่นกำลังกรอกอยู่
+//    การไปดึงมาแสดงคือต้นเหตุของปัญหาเดิมทั้งหมด
+export function orphanDrafts() {
+  const out = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || k.indexOf(DRAFT_PREFIX) !== 0) continue;
+      const id = k.slice(DRAFT_PREFIX.length);
+      if (tabAlive(id)) continue;
+      const v = readLS(k);
+      const rows = v && Array.isArray(v.rows) ? v.rows : [];
+      if (!rows.length) { clearLS(k); continue; }   // ร่างเปล่า ไม่มีประโยชน์ ทิ้งเลย
+      out.push({ id: id, key: k, box: v, rows: rows, failed: !!v.saveFailed });
+    }
+  } catch (e) {}
+  // ของที่ส่งไม่สำเร็จมาก่อนเสมอ เป็นของที่ยังไม่ขึ้นระบบส่วนกลาง
+  out.sort((a, b) => (b.failed ? 1 : 0) - (a.failed ? 1 : 0));
+  return out;
+}
 
 export function readLS(key) {
   try {
@@ -509,6 +626,6 @@ export function exprText(raw) {
 //
 // ⚠️ เขียนเป็นข้อความไทยตรง ๆ ไม่คำนวณจากนาฬิกาเครื่อง
 //    เพราะนี่คือ "วันที่ปล่อยรุ่นนี้" ไม่ใช่ "วันนี้" — คอมที่นาฬิกาเพี้ยนจะโชว์มั่ว
-export const APP_VERSION = '0.12.0.0';
+export const APP_VERSION = '0.13.0.0';
 export const APP_FIRST_RELEASE = '4 สิงหาคม 2569';
 export const APP_LAST_UPDATE = '31 สิงหาคม 2569';

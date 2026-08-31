@@ -1,7 +1,7 @@
 // หน้าบันทึก — เพิ่มยาเข้ารายการ · ป๊อปอัปใส่จำนวน · ส่งขึ้นฐานข้อมูล
 // คัดจากมอคอัป (บรรทัด 912–1051) ตัดสวิตช์จำลองเน็ตหลุดกับ resetDemo ออก
 import { money, thaiDate, SOURCES } from '@/lib/format';
-import { newUuid, fetchT, qtyNum, evalQty, cleanQtyExpr, qtyText } from '../helpers';
+import { newUuid, fetchT, qtyNum, evalQty, cleanQtyExpr, qtyText, readLS, clearLS } from '../helpers';
 
 const sumReuse = (rows) => rows.reduce((a, r) => a + (r.disposition === 'reuse' ? r.price * r.qty : 0), 0);
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
@@ -21,6 +21,67 @@ export function recordActions(app) {
   // ระบบจะ "ตีราคาย้อนหลัง" ให้แถวเก่าที่มูลค่ายังเป็น 0 เองอัตโนมัติ
   // (ดู savePrices ใน handlers/prices.js ที่ส่ง backfill: true)
   // ยังโชว์ป้าย "ยังไม่ใส่ราคา" ในผลค้นหาและในรายการอยู่ ให้เห็นว่าตัวไหนยังรอ
+  // ── ล็อตที่กรอกค้างไว้ในหน้าต่างที่ปิดไปแล้ว (พี่กันสั่ง 31 ส.ค. 2569) ──────
+  //
+  // 🚨 ต้องมีของในมือแล้วห้ามดึงมาทับ — ยาที่กำลังกรอกอยู่สำคัญกว่าของเก่าเสมอ
+  //    ถ้ามีของอยู่แล้วให้บอกไปตรง ๆ ว่าต้องเคลียร์ของในมือก่อน
+  app.takeParked = (id) => {
+    const box = app.state.parked.find((x) => x.id === id);
+    if (!box) return;
+
+    if (app.state.rows.length) {
+      app.toast('หน้าต่างนี้มีรายการค้างอยู่แล้ว', 'บันทึกหรือล้างของในมือก่อน แล้วค่อยเอาล็อตนี้กลับมา', false);
+      return;
+    }
+
+    const v = readLS(box.key);
+    const rows = v && Array.isArray(v.rows)
+      ? v.rows.filter((r) => r && r.rid != null && typeof r.price === 'number' && typeof r.qty === 'number')
+      : [];
+    if (!rows.length) {
+      clearLS(box.key);
+      app.setState({ parked: app.state.parked.filter((x) => x.id !== id) });
+      app.toast('ล็อตนี้ไม่มีรายการเหลือแล้ว', '', false);
+      return;
+    }
+
+    // 🚨 ย้ายมาเป็นของหน้าต่างนี้แล้วต้องลบต้นทางทิ้ง ไม่งั้นหน้าต่างที่สาม
+    //    ที่เปิดขึ้นมาทีหลังจะเห็นล็อตเดียวกันอีก แล้วกดเอากลับมาได้อีกคน
+    clearLS(box.key);
+    app.setState({ parked: app.state.parked.filter((x) => x.id !== id) }, () => {
+      app.persist({
+        rows: rows,
+        batchId: v.batchId || null,
+        hn: typeof v.hn === 'string' ? v.hn : '',
+        source: typeof v.source === 'string' ? v.source : app.state.source,
+        sourceTouched: !!v.sourceTouched,
+        pcuSite: typeof v.pcuSite === 'string' ? v.pcuSite : '',
+        date: typeof v.date === 'string' && v.date ? v.date : app.state.date
+      });
+      app.animateTo(rows.reduce((a, r) => a + (r.disposition === 'reuse' ? r.price * r.qty : 0), 0));
+      app.toast('เอาล็อตที่กรอกค้างไว้กลับมาแล้ว', rows.length + ' รายการ');
+    });
+  };
+
+  // ทิ้งล็อตที่ค้าง — ผ่านหน้าต่างยืนยันเสมอ เพราะย้อนกลับไม่ได้
+  app.askDropParked = (id) => {
+    const box = app.state.parked.find((x) => x.id === id);
+    if (!box) return;
+    app.setState({
+      confirm: {
+        title: 'ทิ้งล็อตที่กรอกค้างไว้',
+        detail: 'ล็อตนี้มี ' + box.count + ' รายการ มูลค่า ' + money(box.value) +
+          ' บาท · ทิ้งแล้วเอากลับมาไม่ได้อีก',
+        okLabel: 'ทิ้งทั้งล็อต',
+        run: () => {
+          clearLS(box.key);
+          app.setState({ parked: app.state.parked.filter((x) => x.id !== id) });
+          app.toast('ทิ้งล็อตที่กรอกค้างไว้แล้ว', '', false);
+        }
+      }
+    });
+  };
+
   app.blockNoPrice = () => false;
 
   app.addRow = (drug, qty, disp) => {

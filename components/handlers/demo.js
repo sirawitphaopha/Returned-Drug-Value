@@ -5,7 +5,7 @@
 //    2. เปิดโหมดนี้แล้ว "ปุ่มบันทึกถูกปิด" กันข้อมูลปลอมหลุดเข้าของจริง
 //    3. ปิดโหมดแล้วทุกอย่างกลับไปอ่านของจริงทันที (ล้างแคชให้ด้วย)
 import { buildDemo, demoSummary, demoTopReturned, demoHistory, demoDraft, DEMO_PCU } from '@/lib/demo';
-import { LS, clearLS, readLS, writeLS } from '../helpers';
+import { LS, clearLS, readLS, writeLS, myTabId, draftKeyOf } from '../helpers';
 
 export function demoActions(app) {
   app.enterDemo = () => {
@@ -148,9 +148,10 @@ export function demoActions(app) {
     //    ถ้าไม่ล้าง HN ของคนไข้จะค้างให้คนเวรถัดไปเห็น — เป็นประเด็น PDPA ที่ตรวจสอบได้จริง
     //    ยาที่กรอกค้างไว้ยังอยู่ครบ ล้างเฉพาะ HN ช่องเดียว
     try {
-      const draft = readLS(LS.draft);
+      const key = draftKeyOf(myTabId());
+      const draft = readLS(key);
       if (draft && typeof draft === 'object' && !Array.isArray(draft)) {
-        writeLS(LS.draft, Object.assign({}, draft, { hn: '' }));
+        writeLS(key, Object.assign({}, draft, { hn: '' }));
       }
     } catch (e) {}
 

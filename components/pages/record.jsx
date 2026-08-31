@@ -1,6 +1,7 @@
 // หน้าบันทึก — คัดจากมอคอัป มือถือ (บรรทัด 28–123) คอม (124–220) แถบบันทึกล่างจอมือถือ (541–565)
 // ตัดออกตามที่ตกลงไว้: สวิตช์จำลองเน็ตหลุด (ของเดโม) และเลขคงคลังปลอมใต้ชื่อยา
 import { s, sx, kb } from '../helpers';
+import { renderParked } from './parked';
 import { renderDrugName } from './drugname';
 import { renderRecorderField } from './recorder';
 import { renderPcuField } from './pcufield';
@@ -110,6 +111,7 @@ function renderDrugOption(r, big) {
 export function renderRecordNarrow(V) {
   return (
     <div style={s('width:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;min-height:100%;flex:1 0 auto')}>
+      {renderParked(V)}
       <div style={s('padding:16px 20px 14px;background:#fff;border-bottom:1px solid rgba(30,36,32,.07)')}>
         <div style={s('display:flex;justify-content:space-between;align-items:center;margin-bottom:10px')}>
           <div style={s('display:flex;align-items:center;gap:10px;min-width:0')}>
@@ -279,6 +281,7 @@ export function renderRecordWide(V) {
   return (
     <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:20px 26px 26px;display:flex;gap:22px;align-items:stretch;flex:1;min-height:440px')}>
       <div style={s('flex:1;min-width:0;min-height:0;display:flex;flex-direction:column')}>
+        {renderParked(V)}
         <div style={s('flex:none;display:flex;gap:10px;align-items:flex-end;margin-bottom:6px')}>
           <div style={s('flex:1;min-width:0;position:relative')}>
             <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:5px')}>ยา</div>

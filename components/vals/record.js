@@ -210,6 +210,16 @@ export function recordVals(app, d) {
   };
 
   return {
+    // ── ล็อตที่กรอกค้างไว้ในหน้าต่างที่ปิดไปแล้ว (พี่กันสั่ง 31 ส.ค. 2569) ──────
+    parked: (st.parked || []).map((x) => ({
+      id: x.id,
+      countLabel: x.count + ' รายการ',
+      // 🚨 money() ใส่สัญลักษณ์บาทมาให้แล้ว ห้ามเติมซ้ำ
+      valueLabel: x.value > 0 ? money(x.value) : '',
+      whenLabel: x.when ? 'กรอกไว้ ' + thaiDate(x.when) : '',
+      take: () => app.takeParked(x.id),
+      drop: () => app.askDropParked(x.id)
+    })),
     // ── ช่องค้นยา ────────────────────────────────────────────────────────────
     query: st.query,
     searchRef: app.searchRef,

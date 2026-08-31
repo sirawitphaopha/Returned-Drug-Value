@@ -1,7 +1,7 @@
 // ตัวช่วยทั่วไป: เก็บลงเครื่อง · ข้อความเด้ง · ตัวเลขที่นับขึ้น
 // คัดจากมอคอัป (บรรทัด 957–1004) ตัดเฉพาะส่วนที่เก็บรายการที่บันทึกแล้วลงเครื่อง
 // เพราะยอด KPI เก่าค้างบนจอแย่กว่ารอโหลดนิดหน่อย
-import { LS, writeLS } from '../helpers';
+import { LS, writeLS, myTabId, draftKeyOf } from '../helpers';
 
 export function uiActions(app) {
   // เก็บเฉพาะร่างที่ยังไม่บันทึก กับธีม — ที่เหลืออยู่บนเซิร์ฟเวอร์
@@ -16,7 +16,7 @@ export function uiActions(app) {
       // หน้าบันทึกมีล็อตตัวอย่างค้างอยู่ ถ้าปล่อยให้เขียนลง localStorage
       // ยาที่พี่กันกรอกค้างไว้จริงก่อนกดเปิดโหมดจะถูกทับหายถาวร กู้ไม่ได้
       if (st.demo) return;
-      writeLS(LS.draft, {
+      writeLS(draftKeyOf(myTabId()), {
         v: 1,
         rows: st.rows,
         batchId: st.batchId,
