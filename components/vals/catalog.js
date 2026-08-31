@@ -1,5 +1,5 @@
 // ค่าที่หน้าคลังยาใช้วาด — ไม่แตะ DOM ไม่ยิง API
-import { splitDrugName, splitPercent, splitRelease } from '../helpers';
+import { splitDrugName, splitPercent, splitRelease, memo1 } from '../helpers';
 import { money, thaiDate } from '@/lib/format';
 import { buildDrugNames } from '@/lib/drugName';
 // ตัวแปลงแป้นพิมพ์ไทย→อังกฤษ ใช้ตัวเดียวกับช่องค้นหายาหน้าบันทึก จะได้ไม่เพี้ยนกัน
@@ -54,7 +54,16 @@ export function catalogVals(app, d) {
   // ชื่อเต็มที่เห็นตอนค้นหา — ประกอบด้วยตัวเดียวกับที่ /api/drugs ใช้
   // ต้องส่งยา "ทุกตัว" เข้าไป ไม่งั้นชื่อที่ได้จะไม่ตรงกับของจริง
   // (ตัวแยกชื่อซ้ำต้องเห็นยาครบถึงจะรู้ว่าต้องต่อท้ายด้วยรูปแบบยาไหม)
-  const fullNames = buildDrugNames(list);
+  //
+  // 🚨 จำผลไว้ (ผลตรวจข้อ ก-8) — งานนี้ประกอบชื่อยา 417 ตัวใหม่ทั้งชุด
+  //    วัดจริงได้ 1.81 มิลลิวินาทีต่อการวาดจอหนึ่งครั้ง มากกว่าทุกหน้ารวมกัน
+  //    และมันทำงาน "ทุกครั้งที่พิมพ์ 1 ตัวอักษรในช่องค้นยาหน้าบันทึก" ด้วย
+  //    ทั้งที่ผลลัพธ์ขึ้นกับรายการยาชุดเดียวเท่านั้น ไม่เกี่ยวกับสิ่งที่พิมพ์เลย
+  //
+  // ของที่เอามาเทียบคือตัวรายการเอง (list) — โหลดใหม่ทีไรได้กล่องใหม่เสมอ
+  // แก้ยาในหน้าคลังยาก็สร้างกล่องใหม่ ชื่อจึงอัปเดตตามทันทีทุกครั้ง
+  app._memo = app._memo || {};
+  const fullNames = memo1(app._memo, 'catNames', [list], () => buildDrugNames(list));
 
   // ── ค้นหา — รองรับลืมสลับแป้นพิมพ์ (พี่กันสั่ง 25 ส.ค. 2569) ────────────────
   // ตั้งใจพิมพ์ warfarin แต่แป้นค้างที่ไทย จะได้ ้ฟก๘ยรfeatures ซึ่งไม่เจออะไรเลย
@@ -84,6 +93,8 @@ export function catalogVals(app, d) {
   }
 
   const s = st.catSort;
+  // จำนวนแถวที่วาดจริงตอนนี้ — เพิ่มเองเมื่อเลื่อนใกล้ถึงท้ายตาราง
+  const drawn = Math.max(60, Number(st.catDraw) || 60);
   if (s) {
     const mul = s.dir === 'desc' ? -1 : 1;
     rows = rows.slice().sort((a, b) => {
@@ -106,6 +117,8 @@ export function catalogVals(app, d) {
   const pfCanSave = !!(pf && pf.who && String(pf.reason || '').trim() && !pf.busy);
 
   return {
+    catFail: (!st.catLoading && !(st.catalog || []).length) ? (st.loadErr.cat || '') : '',
+    catRetry: () => app.loadCatalog(true),
     pfOpen: !!pf,
     pfDrugName: pf ? pf.drugName : '',
     pfRows: pf ? pf.rows : 0,
@@ -163,7 +176,15 @@ export function catalogVals(app, d) {
     catToTop: app.catToTop,
     catHeadRef: app.catHeadRef,
 
-    catRows: rows.map((x) => {
+    // ── วาดครบทุกแถว แต่ทยอยตามที่เลื่อนถึง (ผลตรวจข้อ ก-9) ────────────────
+    // 🚨 catShown ยังเป็นจำนวนที่ "ตรงเงื่อนไข" ทั้งหมด ไม่ใช่จำนวนที่วาดอยู่
+    //    ป้ายบนหน้าจอต้องบอกความจริงว่ามียากี่ตัว ไม่ใช่บอกว่าวาดไปกี่แถวแล้ว
+    catMore: rows.length > drawn,
+    catMoreRef: app.catMoreRef,
+    // ช่องว่างท้ายตารางต้องกินความกว้างเท่าจำนวนคอลัมน์จริง ไม่งั้นตารางเบี้ยว
+    catColSpan: COLS.length + (st.catShowFull ? 1 : 0) + 1,
+
+    catRows: rows.slice(0, drawn).map((x) => {
       const full = fullNames.get(x.id) || '';
       // แยกส่วนของชื่อเต็มเพื่อทาสีให้เหมือนตอนค้นหาจริงทุกจุด
       const sp = splitDrugName(full);

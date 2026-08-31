@@ -1,5 +1,5 @@
 // โหลดข้อมูลตั้งต้นจากเซิร์ฟเวอร์ แล้วทับของที่กู้มาจากเครื่อง
-import { LS, writeCache, fetchT } from '../helpers';
+import { LS, SS, writeCache, readSS, writeSS, clearSS, clearAllSS, fetchT } from '../helpers';
 import { todayISO } from '@/lib/format';
 
 export function dataActions(app) {
@@ -8,11 +8,14 @@ export function dataActions(app) {
   app._histCache = {};
   app._sumCache = null;
 
-  // ล้างแคชทั้งสองก้อนพร้อมกันทุกครั้งที่ข้อมูลเปลี่ยน (บันทึก/แก้/ลบ)
-  // ถ้าล้างแค่ก้อนเดียว ตัวเลขหน้าประวัติกับหน้าสรุปจะหลุดจากกัน
+  // ล้างของที่โหลดมาทั้งหมด — ทั้งในหน่วยความจำและในที่เก็บของแท็บ
+  // ล้างทุกก้อนพร้อมกันเสมอ ถ้าล้างแค่ก้อนเดียว ตัวเลขหน้าประวัติกับหน้าสรุปจะหลุดจากกัน
   // ขยับเลขลำดับด้วย เพื่อตัดคำขอที่ยิงไปแล้วยังไม่กลับ ไม่งั้นคำตอบเก่า
   // (ที่ยังมีแถวซึ่งเพิ่งถูกลบไป) จะกลับมาเขียนแคชทับของใหม่
-  app.invalidate = () => {
+  //
+  // 🚨 แยกจาก invalidate() โดยตั้งใจ ตัวนี้ "ไม่" ประทับว่าเป็นการกระทำของเราเอง
+  //    ใช้ตอนรู้ว่าเครื่องอื่นแก้ข้อมูล ซึ่งต้องขึ้นข้อความบอกผู้ใช้ด้วย
+  app.dropCache = () => {
     app._histCache = {};
     app._sumCache = null;
     // 🚨 แคชรายการ Lot ต้องล้างด้วย (ผลตรวจข้อ ต-7) — เดิมลืมไว้ก้อนเดียว
@@ -21,6 +24,61 @@ export function dataActions(app) {
     if (app._lotsCache) app._lotsCache = {};
     app._histSeq++;
     app._sumSeq++;
+    // 🚨 ต้องล้างที่เก็บของแท็บด้วย ไม่งั้นรีเฟรชแล้วของเก่ากลับมาอีก
+    //    (ของในนั้นไม่มีวันหมดอายุด้วยเวลา ตัวล้างมีแค่ตรงนี้กับลายเซ็น)
+    clearAllSS();
+  };
+
+  // การกระทำของเราเอง (บันทึก/แก้/ลบ) — ล้างแคชแล้วประทับเวลาไว้
+  // ตัวถามลายเซ็นจะได้รู้ว่าความเปลี่ยนแปลงที่เจอเป็นฝีมือเราเอง ไม่ใช่เครื่องอื่น
+  // แล้วไม่ต้องขึ้นข้อความว่า "มีข้อมูลใหม่จากเครื่องอื่น" ให้งง
+  app.invalidate = () => {
+    app._ownAt = Date.now();
+    app.dropCache();
+
+    // 🚨 รีบไปจำลายเซ็นชุดใหม่ทันที ไม่ต้องรอตัวจับเวลารอบถัดไป
+    //    ถ้าไม่ทำ ตัวถามลายเซ็นจะเห็นว่า "ข้อมูลเปลี่ยน" แล้วเด้งข้อความ
+    //    "มีข้อมูลใหม่จากเครื่องอื่น" ทั้งที่เป็นล็อตที่เราเพิ่งกดบันทึกเอง
+    //
+    // หน่วง 1.2 วินาที เพราะลบหลายรายการติด ๆ กันจะเรียกตรงนี้รัวหลายรอบ
+    // และเผื่อให้ฐานข้อมูลบันทึกเสร็จก่อนไปถาม
+    if (app._ownTimer) clearTimeout(app._ownTimer);
+    app._ownTimer = setTimeout(() => { app.pulse({ quiet: true }); }, 1200);
+  };
+
+  // ── ของที่โหลดมาแล้ว เก็บสองที่พร้อมกัน ────────────────────────────────
+  // หน่วยความจำ = เร็ว · ที่เก็บของแท็บ = รอดการรีเฟรช (พี่กันสั่งไว้ 27 ส.ค. 2569)
+  //
+  // 🚨 ไม่มีวันหมดอายุด้วยเวลา — เดิมตั้งไว้ 60 วินาที ซึ่งเป็นตัวเลขที่เดาเอา
+  //    ตัวล้างที่ถูกต้องคือ "ข้อมูลจริงเปลี่ยนหรือยัง" ซึ่งลายเซ็นตอบได้ตรงกว่า
+  //
+  // 🚨 โหมดดูตัวอย่างห้ามเขียนลงที่เก็บของแท็บ ข้อมูลปลอมจะค้างข้ามการรีเฟรช
+  app.boxGet = (base, key, mem) => {
+    if (mem && mem[key]) return mem[key];
+    if (app.state.demo) return null;
+    const v = readSS(base + ':' + key);
+    if (v && mem) mem[key] = v;
+    return v;
+  };
+
+  app.boxSet = (base, key, mem, val) => {
+    if (mem) mem[key] = val;
+    if (app.state.demo) return;
+    writeSS(base + ':' + key, val);
+  };
+
+  // ── ธงโหลดไม่สำเร็จรายหน้า ────────────────────────────────────────────────
+  // ตัวเดียวใช้ทุกหน้า ไม่ต้องเพิ่ม state ใหม่ทุกครั้งที่มีหน้าใหม่
+  app.markLoadErr = (key, msg) => {
+    const cur = app.state.loadErr || {};
+    if (cur[key] === msg) return;
+    app.setState({ loadErr: Object.assign({}, cur, { [key]: msg || 'โหลดข้อมูลไม่สำเร็จ' }) });
+  };
+
+  app.clearLoadErr = (key) => {
+    const cur = app.state.loadErr || {};
+    if (!cur[key]) return;      // ไม่มีอะไรให้ล้าง อย่าสั่งวาดจอใหม่เปล่า ๆ
+    app.setState({ loadErr: Object.assign({}, cur, { [key]: '' }) });
   };
 
   app.boot = async () => {
@@ -139,6 +197,13 @@ export function dataActions(app) {
       if (key === app._drugRev && !force) return;
       app._drugRev = key;
 
+      await app.pullDrugs();
+    } catch (e) {}
+  };
+
+  // ดึงรายการยาชุดใหม่มาทับ — ใช้ร่วมกันระหว่าง syncDrugs กับตัวถามลายเซ็น
+  app.pullDrugs = async () => {
+    try {
       const dres = await app.fetchT('/api/drugs');
       if (!dres.ok) return;
       const data = await dres.json();
@@ -147,8 +212,123 @@ export function dataActions(app) {
 
       // 🚨 ต้องล้างแคชในเครื่องด้วย ไม่งั้นรีเฟรชแล้วของเก่ากลับมาอีก (แคชอายุ 12 ชม.)
       writeCache(LS.drugs, list);
-      app.setState({ drugs: list });
+      // คลังยาดิบในที่เก็บของแท็บก็เก่าไปแล้วเหมือนกัน ทิ้งให้หน้าคลังยาโหลดใหม่
+      clearSS(SS.catalog);
+      app.setState({ drugs: list, catalog: [] });
       app.toast('คลังยามีการแก้ไข อัปเดตให้แล้ว', '', true);
+    } catch (e) {}
+  };
+
+  // ── อัปเดตสดข้ามเครื่อง ──────────────────────────────────────────────────
+  // พี่กันสั่ง 27 ส.ค. 2569:
+  //   "ถ้าเราเปิดตารางประวัติ แล้วมีอีกคนส่งข้อมูลมา มันจะขึ้นอัปเดตให้เราเลย"
+  //
+  // วิธี: ถามหลังบ้านตัวเองว่า "ลายเซ็นข้อมูลเปลี่ยนไหม" — ตอบกลับแค่ตัวเลข 4 ตัว
+  // เปลี่ยนเมื่อไหร่ค่อยดึงของจริงเฉพาะหน้าที่กำลังเปิดอยู่
+  //
+  // 🚨 ไม่ต่อฐานข้อมูลตรงจากเบราว์เซอร์ เพราะต้องเอากุญแจไปไว้ในเบราว์เซอร์
+  //    = ใครเปิดเว็บก็แก้ข้อมูลได้ · ขัดกฎเหล็กข้อ 6 (แนวเดียวกับคลังยาที่ทำไว้แล้ว)
+  // ลายเซ็นชุดล่าสุดที่หน้าจอนี้เห็น
+  // 🚨 กู้จากที่เก็บของแท็บด้วย — รีเฟรชแล้วของที่โหลดไว้ยังอยู่ครบ
+  //    ถ้าไม่กู้ลายเซ็นมาคู่กัน การถามรอบแรกจะไม่มีอะไรให้เทียบ
+  //    แล้วข้อมูลที่เครื่องอื่นแก้ไประหว่างนั้นจะไม่ถูกดึงมาเลยจนกว่าจะถามรอบสอง
+  app._rev = readSS(SS.rev) || null;
+  app._ownAt = 0;       // ครั้งสุดท้ายที่ "เราเอง" เป็นคนเปลี่ยนข้อมูล
+  app._pulsing = false; // กันถามซ้อนกันตอนเน็ตช้า
+
+  app.pulse = async (opts) => {
+    const quiet = !!(opts && opts.quiet);
+    if (app.state.demo) return;          // โหมดตัวอย่างไม่ยุ่งกับของจริง
+    if (app._pulsing) return;
+    app._pulsing = true;
+    try {
+      const res = await app.fetchT('/api/rev', {}, 10000);
+      if (!res.ok) return;
+      const sig = await res.json();
+      if (!sig || sig.error) return;
+
+      const was = app._rev;
+      app._rev = sig;
+      writeSS(SS.rev, sig);
+      if (!was) return;                  // ครั้งแรกหลังเปิดเว็บ ยังไม่มีอะไรให้เทียบ
+
+      // คลังยา — ตาราง drugs ใช้ร่วม 3 เว็บ เภสัชกรแก้ที่ ME-DRP แล้วเว็บนี้ต้องเห็น
+      if (sig.drug !== was.drug) {
+        app._drugRev = sig.drug;
+        await app.pullDrugs();
+      }
+
+      // การตั้งค่า — รายชื่อผู้บันทึก · รพ.สต. · ยาที่คืนบ่อย
+      if (sig.setting !== was.setting) await app.pullSetting();
+
+      // รายการยาคืน — เพิ่ม แก้ ลบ กู้คืน ตีราคาใหม่ หรือแก้ระดับล็อต
+      if (sig.rows !== was.rows || sig.lot !== was.lot) {
+        // 🚨 ต้องแยกให้ออกว่าเป็นฝีมือเราเองหรือเครื่องอื่น
+        //    ไม่งั้นกดบันทึกเองแล้วเด้งข้อความ "มีข้อมูลใหม่จากเครื่องอื่น" ทุกครั้ง
+        //    เผื่อเวลาไว้ 45 วินาที · ตัวจับเวลาถามทุก 20 วินาที ถ้าเผื่อเท่ากันจะชนขอบพอดี
+        //    แล้วบางครั้งจะเด้งข้อความผิด บางครั้งไม่เด้ง = บั๊กที่จับยากที่สุดแบบหนึ่ง
+        const mine = app._ownAt && Date.now() - app._ownAt < 45000;
+        app.dropCache();
+        app.refreshCurrent();
+        if (!mine && !quiet) app.toast('มีข้อมูลใหม่จากเครื่องอื่น อัปเดตให้แล้ว', '', true);
+      }
+    } catch (e) {
+      // เน็ตหลุดชั่วคราวเป็นเรื่องปกติของโรงพยาบาล เงียบไว้ รอบหน้าค่อยถามใหม่
+    } finally {
+      app._pulsing = false;
+    }
+  };
+
+  // ดึงการตั้งค่าชุดใหม่ — ไม่แตะช่องที่ผู้ใช้กำลังกรอกค้างอยู่
+  // 🚨 ห้ามยัดชื่อผู้บันทึกกลับเข้าช่อง คอมห้องยาเป็นเครื่องกลาง ต้องเลือกเองทุกครั้ง
+  app.pullSetting = async () => {
+    try {
+      const res = await app.fetchT('/api/settings');
+      const data = await res.json();
+      if (!res.ok || !data.setting) return;
+      const g = data.setting;
+      writeCache(LS.setting, g);
+      app.setState({
+        orgName: g.orgName,
+        favIds: g.favIds,
+        staff: Array.isArray(g.staff) ? g.staff : [],
+        pcuSites: Array.isArray(g.pcuSites) ? g.pcuSites : [],
+        pcuFull: g.pcuFull || {},
+        defaultSource: g.defaultSource
+      });
+    } catch (e) {}
+  };
+
+  // โหลดเฉพาะหน้าที่กำลังเปิดอยู่ — หน้าอื่นแคชถูกล้างไปแล้ว เข้าเมื่อไหร่ค่อยโหลด
+  // ตรงนี้คือหัวใจของ "ไม่โหลดทุกอย่างตลอดเวลา" ที่พี่กันบ่นไว้
+  app.refreshCurrent = () => {
+    const sc = app.state.screen;
+    if (sc === 'history') app.loadHistory(true);
+    else if (sc === 'summary') { app.loadSummary(true); app.loadTopReturned(); }
+    else if (sc === 'lots') app.loadLots(true);
+    else if (sc === 'catalog') app.loadCatalog(true);
+    else if (sc === 'prices') app.loadPrices(true);
+    // หน้าบันทึกไม่มีตาราง แต่มีตัวเลขใหญ่ "ยอดประหยัดสะสมปีงบ" ที่ต้องขยับตาม
+    else if (sc === 'record') app.refreshFy();
+  };
+
+  // ยอดสะสมปีงบชุดใหม่ — ใช้ตอนเครื่องอื่นบันทึกเข้ามาระหว่างที่เราเปิดหน้าบันทึกค้างไว้
+  // (บันทึกเองไม่ต้องใช้ตัวนี้ เพราะ POST /api/returns คืนยอดใหม่กลับมาให้อยู่แล้ว)
+  app.refreshFy = async () => {
+    if (app.state.demo) return;
+    try {
+      const res = await app.fetchT('/api/summary');
+      const d = await res.json();
+      if (!res.ok) return;
+      app.setState({
+        fy: {
+          saved: Number(d.saved || 0),
+          lost: Number(d.lost || 0),
+          records: Number(d.records || 0),
+          qty: Number(d.qty || 0),
+          zeroPriced: Number(d.zeroPriced || 0)
+        }
+      });
     } catch (e) {}
   };
 

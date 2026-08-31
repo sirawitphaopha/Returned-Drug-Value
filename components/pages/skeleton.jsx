@@ -122,9 +122,11 @@ export function skelTableTag(cols, rows, opts) {
 }
 
 // ── การ์ดใบเดียว ─────────────────────────────────────────────────────────
-export function skelCard(h, extra) {
+// 🚨 key ต้องเป็นพารามิเตอร์ของตัวเอง ห้ามส่งปนไปกับสไตล์
+//    React อ่าน key จากตัว element เท่านั้น ส่งผ่าน style ไปเท่ากับไม่ได้ส่ง
+export function skelCard(h, extra, key) {
   return (
-    <div style={sx('background:#fff;border:1px solid rgba(30,36,32,.10);border-radius:12px;padding:16px 18px', extra || {})}>
+    <div key={key} style={sx('background:#fff;border:1px solid rgba(30,36,32,.10);border-radius:12px;padding:16px 18px', extra || {})}>
       {skelBar('38%', 13, { marginBottom: '14px' })}
       {skelBar('100%', (h || 120) - 40, { borderRadius: '9px' })}
     </div>

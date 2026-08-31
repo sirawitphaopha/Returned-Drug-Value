@@ -247,7 +247,10 @@ export function historyVals(app, d) {
 
     // ตอนกำลังโหลดรอบแรกยังไม่มีแถว อย่าเพิ่งขึ้นว่าไม่พบรายการ
     histLoading: st.histLoading && !rows.length,
-    histEmpty: !st.histLoading && !rows.length,
+    // 🚨 เน็ตหลุดแล้วขึ้น "ไม่พบรายการตามเงื่อนไขนี้" = ส่งผู้ใช้ไปไล่หาของที่ไม่เคยหาย
+    histEmpty: !st.histLoading && !rows.length && !st.loadErr.hist,
+    histFail: (!st.histLoading && !rows.length) ? (st.loadErr.hist || '') : '',
+    histRetry: () => app.loadHistory(true),
     histCountLabel: st.histTotal.toLocaleString('en-US') + ' รายการ',
     histTotalLabel: money(st.histSaved),
     histTruncated: st.histTotal > rows.length,

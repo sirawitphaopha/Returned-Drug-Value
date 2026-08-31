@@ -2,12 +2,11 @@
 // ต่างจากมอคอัปตรงที่มอคอัปกรองในเครื่อง (ข้อมูลกองอยู่ในเครื่องอยู่แล้ว)
 // ของจริงข้อมูลอยู่ในฐานข้อมูล เลยให้ SQL กรองแล้วส่งมาแค่ 60 แถวบนสุด
 import { money } from '@/lib/format';
-import { fetchT } from '../helpers';
+import { SS, fetchT } from '../helpers';
 import { recordsToCsv, downloadCsv } from '@/lib/csv';
 // ตัวแปลงแป้นพิมพ์ไทยเป็นอังกฤษ — ไฟล์เดียวกับที่หน้าบันทึกและหน้าคลังยาใช้
 import { thaiToEnglish } from '@/lib/drugSearch';
 
-const HIST_TTL = 60000;
 const DEBOUNCE = 300;
 
 export function historyActions(app) {
@@ -38,8 +37,10 @@ export function historyActions(app) {
   app.loadHistory = async (force) => {
     if (app.state.demo) { app.demoLoadHistory(); return; }
     const k = keyOf();
-    const c = app._histCache[k];
-    if (!force && c && Date.now() - c.ts < HIST_TTL) {
+    // ของที่โหลดไว้แล้วอยู่ได้ข้ามการรีเฟรช — ไม่มีตัวจับเวลาหมดอายุ
+    // ลายเซ็นข้อมูลจาก /api/rev เป็นตัวบอกว่าเมื่อไหร่ต้องทิ้ง (ตรงกว่านาฬิกา)
+    const c = app.boxGet(SS.hist, k, app._histCache);
+    if (!force && c) {
       // ต้องคืนธงลืมสลับแป้นมาด้วย ไม่งั้นพอหยิบจากแคช ป้าย "ค้นว่า ..." จะหายไปเฉย ๆ
       // ทั้งที่ผลลัพธ์บนจอยังเป็นของคำที่แปลงแล้ว
       app.setState({
@@ -81,15 +82,16 @@ export function historyActions(app) {
       // ตรวจหมายเลขลำดับ "ก่อน" เขียนแคช ไม่งั้นคำตอบเก่าที่ถูกทิ้งจะยังปนเปื้อนแคช
       // แล้วรายการที่เพิ่งลบไปจะโผล่กลับมาเมื่อสลับแท็บกลับภายใน 60 วินาที
       if (seq !== app._histSeq) return;
+      app.clearLoadErr('hist');
       app.setState({ histSwapped: swapped, histSwapLabel: swapLabel });
-      app._histCache[k] = {
+      app.boxSet(SS.hist, k, app._histCache, {
         ts: Date.now(),
         rows: data.rows,
         total: Number(data.total || 0),
         saved: Number(data.saved || 0),
         swapped: swapped,
         swapLabel: swapLabel
-      };
+      });
       app.setState({
         histRows: data.rows,
         histTotal: Number(data.total || 0),
@@ -100,6 +102,9 @@ export function historyActions(app) {
     } catch (e) {
       if (seq !== app._histSeq) return;
       app.setState({ histLoading: false });
+      // ไม่งั้นหน้าจอขึ้น "ไม่พบรายการตามเงื่อนไขนี้" ทั้งที่ความจริงคือเน็ตหลุด
+      // แล้วผู้ใช้จะไปไล่เปลี่ยนช่วงวันที่หาของที่ไม่เคยหายไปไหน
+      app.markLoadErr('hist', 'โหลดประวัติไม่สำเร็จ');
       app.toast('อ่านประวัติไม่สำเร็จ', '', false);
     }
   };

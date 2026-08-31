@@ -2,7 +2,7 @@
 //
 // วิธีทำงานเหมือนหน้าบันทึก: แก้กองไว้ก่อน แล้วกดบันทึกทีเดียว
 // ไม่ใช่แก้ช่องไหนก็เขียนฐานทันที เพราะพิมพ์ราคาผิดกลางคันจะเขียนค่าครึ่ง ๆ ลงไป
-import { LS, clearLS, fetchT } from '../helpers';
+import { LS, SS, clearLS, fetchT } from '../helpers';
 
 const PAGE = 40;
 
@@ -26,14 +26,28 @@ export function pricesActions(app) {
 
   app.loadPrices = async (force) => {
     if (!force && app.state.priceItems.length) return;
+
+    // เก็บไว้ข้ามการรีเฟรชเหมือนหน้าอื่น — ราคายาเปลี่ยนไม่บ่อย
+    // และถ้ามีใครแก้ ลายเซ็นคลังยาจะเปลี่ยน แล้วของในนี้ถูกทิ้งเอง
+    if (!force) {
+      const cached = app.boxGet(SS.prices, 'all', null);
+      if (cached && cached.length) {
+        app.setState({ priceItems: cached, priceLoading: false });
+        return;
+      }
+    }
+
     app.setState({ priceLoading: true });
     try {
       const res = await app.fetchT('/api/prices');
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'โหลดราคายาไม่สำเร็จ');
+      app.clearLoadErr('price');
+      app.boxSet(SS.prices, 'all', null, data.items);
       app.setState({ priceItems: data.items, priceLoading: false });
     } catch (e) {
       app.setState({ priceLoading: false });
+      app.markLoadErr('price', 'โหลดราคายาไม่สำเร็จ');
       app.toast(e.message || 'โหลดราคายาไม่สำเร็จ', '', false);
     }
   };
@@ -108,6 +122,9 @@ export function pricesActions(app) {
       // ราคาเปลี่ยนแล้ว แคชยาในเครื่องใช้ไม่ได้ ต้องดึงใหม่ทั้งชุด
       // ไม่งั้นหน้าบันทึกจะยังโชว์ราคาเก่าไปอีก 12 ชั่วโมง
       clearLS(LS.drugs);
+      // 🚨 ตีราคาย้อนหลังทำให้มูลค่าในประวัติกับหน้าสรุปเปลี่ยนตามไปด้วย
+      //    ถ้าไม่ล้าง จะเห็นตัวเลขเก่าค้างจนกว่าจะปิดแท็บ (แคชไม่หมดอายุด้วยเวลาแล้ว)
+      app.invalidate();
       await Promise.all([app.loadPrices(true), app.boot()]);
       const bf = Number(data.backfilled || 0);
       app.toast(

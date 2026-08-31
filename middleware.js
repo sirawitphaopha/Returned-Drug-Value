@@ -8,8 +8,70 @@
 import { NextResponse } from 'next/server';
 import { AUTH_COOKIE, authConfigured, authEnabled, authCookieValid } from '@/lib/auth';
 
+// ── ตาข่ายกันโค้ดแปลกปลอม (ผลตรวจข้อ ก-14) ────────────────────────────────
+// พี่กันสั่ง 27 ส.ค. 2569: "ก14 ทำ และต้องทำด้วย แต่ทำตอนท้ายก็ได้"
+//
+// ปัญหาเดิม: script-src มี 'unsafe-inline' อยู่ = อนุญาตให้สคริปต์ที่ฝังในหน้าทำงานได้ทุกตัว
+// ซึ่งทำให้ตาข่ายกัน XSS หมดความหมายไปเกือบทั้งหมด — ถ้ามีช่องให้แทรกข้อความเข้ามาได้
+// สักจุด โค้ดนั้นจะทำงานทันที และเว็บนี้มี HN ผู้ป่วยกับสิทธิ์ลบข้อมูลอยู่ในมือ
+//
+// ตัดตรง ๆ ไม่ได้เพราะ Next.js ต้องฝังสคริปต์ในหน้าเพื่อทำให้หน้าเว็บโต้ตอบได้
+// จึงต้องออก "ใบอนุญาต" (nonce) สุ่มใหม่ทุกคำขอ แล้วติดไว้กับสคริปต์ของเราเอง
+// สคริปต์ที่ไม่มีใบอนุญาตจะไม่ถูกรันเลย แม้จะฝังอยู่ในหน้าเดียวกัน
+//
+// 🚨 ใบอนุญาตต้องสุ่มใหม่ทุกคำขอ ห้ามใช้ค่าคงที่เด็ดขาด
+//    ค่าคงที่ = ผู้โจมตีรู้ค่าล่วงหน้า แล้วแนบมากับโค้ดที่แทรกเข้ามาได้ทันที
+//
+// 🚨 style-src ยังต้องมี 'unsafe-inline' ต่อไป (กฎเหล็กข้อของโปรเจกต์นี้)
+//    ทั้งเว็บวาดด้วยสไตล์ฝังในแท็กราว 600 จุด ตัดออกแล้วหน้าเว็บกลายเป็นข้อความเปล่า
+function makeNonce() {
+  // crypto ของ Edge runtime มีเสมอ — แต่กันไว้เผื่อสภาพแวดล้อมที่ไม่มี
+  try {
+    const a = new Uint8Array(16);
+    crypto.getRandomValues(a);
+    let bin = '';
+    for (const b of a) bin += String.fromCharCode(b);
+    return btoa(bin);
+  } catch (e) {
+    return btoa(String(Math.random()) + ':' + String(Math.random()));
+  }
+}
+
+function cspOf(nonce) {
+  const isDev = process.env.NODE_ENV === 'development';
+  return [
+    "default-src 'self'",
+    // 'strict-dynamic' = สคริปต์ที่ได้รับอนุญาตแล้ว โหลดสคริปต์ตัวอื่นต่อได้
+    // จำเป็นเพราะ Next.js โหลดไฟล์ของตัวเองต่อเป็นทอด ๆ
+    // ⚠️ ตอนรันในเครื่องต้องมี 'unsafe-eval' ให้ตัวรีเฟรชอัตโนมัติ (เว็บจริงไม่มี)
+    "script-src 'self' 'nonce-" + nonce + "' 'strict-dynamic'" + (isDev ? " 'unsafe-eval'" : ''),
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    "connect-src 'self'" + (isDev ? ' ws: wss:' : ''),
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'"
+  ].join('; ');
+}
+
+// ติดใบอนุญาตกับคำตอบ แล้วบอก Next.js ให้เอาไปแปะสคริปต์ของตัวเองด้วย
+function withCsp(res, nonce, csp) {
+  res.headers.set('Content-Security-Policy', csp);
+  return res;
+}
+
 export async function middleware(req) {
-  if (!authEnabled()) return NextResponse.next();
+  const nonce = makeNonce();
+  const csp = cspOf(nonce);
+  // ส่งต่อให้ Next.js ทางส่วนหัวของคำขอ — Next อ่านตรงนี้แล้วแปะ nonce ให้สคริปต์เอง
+  const reqHeaders = new Headers(req.headers);
+  reqHeaders.set('x-nonce', nonce);
+  reqHeaders.set('Content-Security-Policy', csp);
+  const pass = () => withCsp(NextResponse.next({ request: { headers: reqHeaders } }), nonce, csp);
+
+  if (!authEnabled()) return pass();
 
   // 🚨 ต้องล็อกแต่ยังไม่มีรหัส = ตั้งค่าไม่ครบ ปิดตายทั้งเว็บรวมหน้าเข้าสู่ระบบ
   //    ห้ามปล่อยผ่าน และห้ามให้เดารหัสว่างเข้ามาได้ (ผลตรวจข้อ ส-2)
@@ -23,12 +85,12 @@ export async function middleware(req) {
 
   const path = req.nextUrl.pathname;
   // หน้าเข้าสู่ระบบกับเส้นทางตรวจรหัส ต้องเข้าได้เสมอ ไม่งั้นวนไม่จบ
-  if (path === '/login' || path === '/api/auth') return NextResponse.next();
+  if (path === '/login' || path === '/api/auth') return pass();
 
   // ตรวจบัตรผ่านฝั่งเซิร์ฟเวอร์เอง — ทั้งลายเซ็นและอายุ (ผลตรวจข้อ ก-15)
   // 🚨 ห้ามกลับไปเทียบค่าคงที่ตรง ๆ อีก บัตรจะกลายเป็นบัตรตลอดชีพทันที
   const got = req.cookies.get(AUTH_COOKIE);
-  if (got && (await authCookieValid(got.value))) return NextResponse.next();
+  if (got && (await authCookieValid(got.value))) return pass();
 
   // เส้นทาง API ตอบเป็นรหัส 401 ไม่ใช่พาไปหน้าเข้าสู่ระบบ
   // (ฝั่งจอจะได้รู้ว่าต้องพาไปกรอกรหัสใหม่ ไม่ใช่ได้หน้า HTML มาแล้วแปลง JSON พัง)
@@ -38,7 +100,7 @@ export async function middleware(req) {
 
   const to = req.nextUrl.clone();
   to.pathname = '/login';
-  return NextResponse.redirect(to);
+  return withCsp(NextResponse.redirect(to), nonce, csp);
 }
 
 export const config = {

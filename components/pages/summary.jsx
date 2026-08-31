@@ -5,6 +5,7 @@ import { s, sx, kb } from '../helpers';
 import { renderDrugName } from './drugname';
 import { renderExportBtn } from './exportbtn';
 import { skelSummary } from './skeleton';
+import { renderLoadFail } from './loadfail';
 
 // แถบบอกสถานะบนสุดของหน้าสรุป — ไม่มีในมอคอัป (มอคอัปมีข้อมูลอยู่ในเครื่องเลยไม่ต้องรอ)
 // ของจริงต้องรอเซิร์ฟเวอร์ ถ้าไม่บอกอะไรเลย ผู้ใช้จะเห็น 0.00 กราฟว่าง
@@ -15,6 +16,18 @@ function renderSumBanner(V) {
       <div style={sx('display:flex;align-items:center;gap:9px;border-radius:11px;padding:11px 14px;margin-bottom:14px;font:500 13px Sarabun,sans-serif', { background: V.sumPanel, border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>
         <span style={s('width:15px;height:15px;border-radius:50%;border:2px solid rgba(47,125,93,.25);border-top-color:#2f7d5d;animation:mrspin .7s linear infinite;flex:none')}></span>
         {V.sumLoadingLabel}
+      </div>
+    );
+  }
+  if (V.sumFail) {
+    return (
+      <div style={s('margin-bottom:14px')}>
+        {renderLoadFail({
+          title: V.sumFail,
+          detail: 'ตัวเลขสรุปทั้งหน้ายังมาไม่ถึง จึงไม่แสดงยอดใด ๆ ไว้ก่อน เพื่อไม่ให้เข้าใจผิดว่าปีงบนี้ยังไม่มีรายการ',
+          retry: V.sumRetry,
+          dark: V.sumDark
+        })}
       </div>
     );
   }
@@ -105,7 +118,9 @@ export function renderSummaryWide(V) {
         {/* 🚨 โครงจางแทนเฉพาะเนื้อหา ไม่กินหัวเรื่อง
             พี่กันทัก 27 ส.ค. 2569: "สรุปควรเป็นหน้านี้เหรอ ต้อง skeleton ทั้งเว็บเหรอ"
             หัวเรื่องกับปุ่มปีงบเป็นของจริงที่วาดได้ทันที ไม่ต้องรอเซิร์ฟเวอร์ */}
-        {(V.sumLoading || V.skelDemo) ? skelSummary() : (<>
+        {/* 🚨 โหลดไม่สำเร็จต้องไม่วาดตัวเลขกับกราฟเลย ไม่ใช่แค่ขึ้นกล่องแจ้งไว้ข้างบน
+            ฿0.00 ที่ค้างอยู่ข้างล่างคือคำตอบที่ผิด และนี่คือหน้าที่เอาไปเสนอผู้บริหาร */}
+        {V.sumFail ? null : (V.sumLoading || V.skelDemo) ? skelSummary() : (<>
         <div style={s('display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;margin-bottom:26px')}>
           <div style={s('flex:1 1 420px;min-width:0')}>
             <div style={sx('font:500 clamp(14px,1.4vw,19px) Sarabun,sans-serif;margin-bottom:2px', { color: V.sumMuted })}>มูลค่ายาที่ประหยัดได้สะสม</div>
@@ -235,6 +250,7 @@ export function renderSummaryNarrow(V) {
           <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" className="hv-ico" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 15px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⚙</div>
         </div>
 
+        {V.sumFail ? null : (<>
         <div style={sx('border-radius:14px;padding:16px 17px 15px;margin-bottom:10px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
           <div style={sx('font:500 12.5px Sarabun,sans-serif;margin-bottom:3px', { color: V.sumMuted })}>มูลค่ายาที่ประหยัดได้สะสม</div>
           <div style={sx("font:700 clamp(34px,10.6vw,50px)/1.02 Sarabun,sans-serif;letter-spacing:-.04em;font-variant-numeric:tabular-nums;word-break:break-all", { color: V.sumGreen })}>{V.fySavedBig}</div>
@@ -316,6 +332,7 @@ export function renderSummaryNarrow(V) {
         </div>
 
         {renderTopReturned(V)}
+        </>)}
 
       </div>
     </div>

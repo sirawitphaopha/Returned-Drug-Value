@@ -144,6 +144,82 @@ export function writeCache(key, v) {
   writeLS(key, { ts: Date.now(), v: v });
 }
 
+// ── ที่เก็บของแท็บ (sessionStorage) ───────────────────────────────────────────
+// ต่างจากที่เก็บถาวรตรงที่ "เบราว์เซอร์ล้างให้เองตอนปิดแท็บ" ไม่ต้องเขียนโค้ดไล่ลบ
+// และรอดการรีเฟรช ซึ่งคือสิ่งที่พี่กันสั่งไว้เป๊ะ ๆ (27 ส.ค. 2569)
+//
+//   "ถ้าครั้งนี้โหลดมาแล้ว แล้วรีเฟรชเว็บแบบปกติ มันจะไม่โหลดใหม่
+//    คือให้มันเก็บในสตอเรจเว็บเลย ... แต่ก็ต้องลบทิ้งถ้าปิดแท็บนะ"
+//
+// 🚨 สามอย่างนี้ห้ามย้ายมาที่นี่ ต้องอยู่ที่เก็บถาวรต่อไป
+//    ร่างที่ยังไม่บันทึก (ของค้างส่งไม่สำเร็จต้องรอดข้ามการปิดแท็บ) · ธีม · ฟอนต์
+//
+// 🚨 ของที่เก็บที่นี่ "ไม่มีวันหมดอายุด้วยเวลา" โดยตั้งใจ
+//    ตัวล้างคือลายเซ็นข้อมูลจาก /api/rev ซึ่งบอกความจริงได้ตรงกว่านาฬิกา
+//    (ข้อมูลไม่เปลี่ยน = ของในมือยังถูกต้องเสมอ ต่อให้ผ่านไปทั้งวัน)
+export const SS = {
+  hist:    'mrv.s.hist',      // ผลค้นประวัติ แยกตามเงื่อนไขที่กรอง
+  sum:     'mrv.s.sum',       // ตัวเลขหน้าสรุป
+  lots:    'mrv.s.lots',      // รายการ Lot แยกตามช่วงวัน
+  catalog: 'mrv.s.catalog',   // คลังยาดิบ 417 ตัว (รวมตัวที่ซ่อน)
+  prices:  'mrv.s.prices',    // ราคายาในหน้าจัดการราคา
+  rev:     'mrv.s.rev'        // ลายเซ็นชุดล่าสุดที่หน้าจอนี้เห็น
+};
+
+export function readSS(key) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+// 🚨 ที่เก็บเต็มแล้วห้ามพังทั้งเว็บ — sessionStorage มีเพดานราว 5 MB
+//    คลังยา 417 ตัวกับประวัติหลายชุดรวมกันยังห่างไกล แต่ถ้าเต็มจริงให้ทิ้งของเก่า
+//    แล้วลองใหม่ครั้งเดียว ไม่ได้ก็ปล่อยผ่าน (เว็บกลับไปโหลดใหม่ทุกครั้งเหมือนเดิม)
+export function writeSS(key, value) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    clearAllSS();
+    try { sessionStorage.setItem(key, JSON.stringify(value)); } catch (e2) {}
+  }
+}
+
+export function clearSS(key) {
+  try { sessionStorage.removeItem(key); } catch (e) {}
+}
+
+// ล้างของที่โหลดมาทั้งหมด — ใช้ตอนข้อมูลเปลี่ยน และตอนเข้า/ออกโหมดดูตัวอย่าง
+// 🚨 ไล่ตามคำนำหน้า ไม่ใช่ไล่ตามรายชื่อคีย์ เพราะประวัติกับ Lot เก็บหลายชุด
+//    (คีย์จริงคือ mrv.s.hist:<เงื่อนไข>) ถ้าลบตามรายชื่อจะเหลือชุดเก่าค้าง
+export function clearAllSS() {
+  try {
+    const kill = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k && k.indexOf('mrv.s.') === 0) kill.push(k);
+    }
+    kill.forEach((k) => sessionStorage.removeItem(k));
+  } catch (e) {}
+}
+
+// ── จำผลของงานหนักไว้ ──────────────────────────────────────────────────────
+// ใช้กับงานที่ "ผลลัพธ์ขึ้นกับของไม่กี่ชิ้น" และคำนวณใหม่ทุกครั้งที่วาดจอ
+//
+// พี่กันสั่ง 27 ส.ค. 2569: "ก8 ต้องแก้เลย เราต้องการจุดที่ดีที่สุด"
+//
+// 🚨 ของที่เอามาเทียบ (deps) ต้องครบ ขาดตัวเดียว = หน้าจอค้างของเก่าโดยไม่มีอะไรเตือน
+//    จึงใช้เฉพาะจุดที่ของนำเข้าชัดเจนจริง ๆ ไม่เอาไปครอบทั้งไฟล์
+export function memo1(box, key, deps, make) {
+  const old = box[key];
+  if (old && old.deps.length === deps.length && old.deps.every((v, i) => v === deps[i])) {
+    return old.val;
+  }
+  const val = make();
+  box[key] = { deps: deps, val: val };
+  return val;
+}
+
 // ── ตัวช่วยกลางฝั่งเบราว์เซอร์ ────────────────────────────────────────────────
 
 // crypto.randomUUID มีเฉพาะ https กับ localhost — เปิดเว็บผ่าน http://192.168.x.x
@@ -433,6 +509,6 @@ export function exprText(raw) {
 //
 // ⚠️ เขียนเป็นข้อความไทยตรง ๆ ไม่คำนวณจากนาฬิกาเครื่อง
 //    เพราะนี่คือ "วันที่ปล่อยรุ่นนี้" ไม่ใช่ "วันนี้" — คอมที่นาฬิกาเพี้ยนจะโชว์มั่ว
-export const APP_VERSION = '0.11.6.0';
+export const APP_VERSION = '0.12.0.0';
 export const APP_FIRST_RELEASE = '4 สิงหาคม 2569';
-export const APP_LAST_UPDATE = '29 สิงหาคม 2569';
+export const APP_LAST_UPDATE = '31 สิงหาคม 2569';

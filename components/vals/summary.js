@@ -105,7 +105,10 @@ export function summaryVals(app, d) {
     // st.sumLoading เดิมถูกตั้งค่าไว้แต่ไม่มีใครเอาไปใช้เลย → หน้าสรุปเลยโชว์ 0.00
     // กราฟ 12 แท่งว่าง แยกไม่ออกว่า "ยังไม่มีข้อมูล" หรือ "เน็ตช้ายังโหลดไม่เสร็จ"
     sumLoading: !!st.sumLoading && !st.sum,
-    sumEmpty: !st.sumLoading && !!st.sum && Number(sum.records || 0) === 0,
+    // 🚨 "ไม่มีข้อมูล" ต้องไม่ขึ้นตอนโหลดไม่สำเร็จ ไม่งั้นบอกความจริงผิดสองชั้น
+    sumEmpty: !st.sumLoading && !st.loadErr.sum && !!st.sum && Number(sum.records || 0) === 0,
+    sumFail: st.loadErr.sum || '',
+    sumRetry: () => app.loadSummary(true),
     sumEmptyLabel: 'ยังไม่มีรายการในปีงบนี้ — บันทึกรายการแรกที่หน้าบันทึก',
     sumLoadingLabel: 'กำลังโหลดยอดสรุป',
     // แถบเตือนเมื่อมีแถวที่บันทึกไปแล้วแต่มูลค่ายังเป็น 0

@@ -154,6 +154,15 @@ export default class MedReturnApp extends React.Component {
       // หน้าสรุป — ยอดทั้งปีงบคิดมาจากฐานข้อมูลก้อนเดียว
       sum: null,
       sumLoading: false,
+      // ── โหลดไม่สำเร็จของแต่ละหน้า ──────────────────────────────────────
+      // 🚨 "โหลดไม่สำเร็จ" กับ "ไม่มีข้อมูล" ต้องแยกจากกันให้เด็ดขาด
+      //    หน้าสรุปเคยวาด ฿0.00 ทุกช่องตอนเซิร์ฟเวอร์ล่ม ซึ่งเป็นหน้าที่เอาไปเสนอผู้บริหาร
+      //    = บอกข้อมูลผิดแบบเงียบ ๆ · หน้าประวัติเคยขึ้น "ไม่พบรายการ" ทั้งที่เน็ตหลุด
+      loadErr: { sum: '', hist: '', lots: '', cat: '', price: '' },
+      // ── หน้าคลังยา — จำนวนแถวที่วาดจริงตอนนี้ (ผลตรวจข้อ ก-9) ────────────
+      // พี่กันสั่ง 27 ส.ค. 2569: "ก9 เราอยากวาดครบ 417 แต่ส่วนที่ไม่แสดงก็ไม่เรนเดอร์"
+      // 🚨 ไม่ใช่ปุ่ม "ดูเพิ่ม" — แถวโผล่เองตอนเลื่อนถึง ผู้ใช้ไม่ต้องรู้ว่ามีการแบ่ง
+      catDraw: 60,
       sumFy: 0,              // ปีงบที่เลือกดู (0 = ปีปัจจุบัน)
       sumFyYears: [],
       topReturned: [],       // ยาที่ถูกคืนบ่อยที่สุด — เรียงตามจำนวนครั้ง
@@ -412,6 +421,19 @@ export default class MedReturnApp extends React.Component {
     document.addEventListener('mousedown', this._onDocDown);
     // ทวนวันทุก 1 นาที — คอมห้องยาเปิดค้างข้ามคืนเป็นเรื่องปกติ
     this._dayTimer = setInterval(this.checkDayRollover, 60000);
+
+    // ── อัปเดตสดข้ามเครื่อง ────────────────────────────────────────────────
+    // ถามหลังบ้านทุก 20 วินาทีว่า "ลายเซ็นข้อมูลเปลี่ยนไหม" ตอบกลับแค่ตัวเลข 4 ตัว
+    // เปลี่ยนเมื่อไหร่ค่อยดึงของจริงเฉพาะหน้าที่เปิดอยู่
+    //
+    // 🚨 แท็บที่ซ่อนอยู่ไม่ถาม — คอมห้องยาเปิดเว็บค้างทั้งวันโดยไม่ได้มอง
+    //    ถ้าถามตลอดจะได้คำขอเปล่าวันละสองพันกว่าครั้งต่อเครื่อง
+    //    (กลับมาที่แท็บเมื่อไหร่ ถามทันทีอยู่แล้วที่ _onVisible)
+    this.pulse();
+    this._revTimer = setInterval(() => {
+      if (document.hidden) return;
+      this.pulse();
+    }, 20000);
     document.addEventListener('visibilitychange', this._onVisible);
     window.addEventListener('online', this._onOnline);
     // ปิดแท็บทั้งที่ของยังไม่ขึ้นระบบ = ไม่มีใครรู้เลยว่ามีของค้าง จนกว่าจะมีคนเปิดเครื่องเดิม
@@ -473,18 +495,35 @@ export default class MedReturnApp extends React.Component {
     if (st.settingsOpen) { this.setState({ settingsOpen: false, favQuery: '' }); }
   };
 
+  // ── ตัวสังเกตท้ายตารางคลังยา ────────────────────────────────────────────
+  // เลื่อนใกล้ถึงท้ายตารางเมื่อไหร่ วาดเพิ่มให้อีกชุด
+  //
+  // 🚨 ต้องเป็นเมธอดตัวเดิมตลอด ห้ามสร้างใหม่ทุกครั้งที่วาดจอ
+  //    ไม่งั้น React จะถอดแล้วต่อตัวสังเกตใหม่ทุกเฟรม (บทเรียนเดียวกับ --bottombar)
+  //
+  // 🚨 เผื่อระยะ 600px ก่อนถึงจริง แถวชุดใหม่จะได้พร้อมก่อนตาไปถึง
+  //    ผู้ใช้จึงไม่มีทางเห็นตารางว่างหรือกระตุกระหว่างเลื่อน
+  catMoreRef = (el) => {
+    if (this._catMoreObs) { this._catMoreObs.disconnect(); this._catMoreObs = null; }
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    this._catMoreObs = new IntersectionObserver((ents) => {
+      if (ents.some((e) => e.isIntersecting)) this.drawMoreCatalog();
+    }, { root: this.scrollRef.current || null, rootMargin: '600px 0px' });
+    this._catMoreObs.observe(el);
+  };
+
   _onVisible = () => {
     if (document.hidden) return;
     this.checkDayRollover();
-    // กลับมาที่แท็บนี้อีกที = จังหวะที่คุ้มจะถามว่าคลังยาถูกแก้ไปหรือยัง
-    // ไม่ตั้งตัวจับเวลาถามเป็นระยะ เพราะการแก้ชื่อยาเกิดปีละไม่กี่ครั้ง
-    // แต่เว็บเปิดค้างทั้งวัน — ถามทุก 30 วินาทีจะได้คำขอเปล่าวันละพันกว่าครั้ง
-    this.syncDrugs();
+    // กลับมาที่แท็บนี้อีกที = จังหวะที่คุ้มที่สุดที่จะถามว่ามีอะไรเปลี่ยนไปบ้าง
+    // ถามทีเดียวได้ครบทั้งคลังยา การตั้งค่า และรายการยาคืน (/api/rev)
+    // ระหว่างที่แท็บซ่อนอยู่ตัวจับเวลาหยุดถาม ตรงนี้จึงเป็นการไล่ให้ทันทันที
+    this.pulse();
     this.retryFailedSave();
   };
 
   // เน็ตโรงพยาบาลหลุดแล้วกลับมา — ระหว่างที่หลุดอาจมีคนแก้ยาไปแล้ว
-  _onOnline = () => { this.setState({ offline: false }); this.syncDrugs(); this.retryFailedSave(); };
+  _onOnline = () => { this.setState({ offline: false }); this.pulse(); this.retryFailedSave(); };
 
   // ข้อความที่โชว์เป็นของเบราว์เซอร์เอง แก้ไม่ได้ — สิ่งเดียวที่ทำได้คือให้มันถามหรือไม่ถาม
   _onBeforeUnload = (e) => {
@@ -575,6 +614,9 @@ export default class MedReturnApp extends React.Component {
     if (this._orgTimer) clearTimeout(this._orgTimer);
     if (this._histTimer) clearTimeout(this._histTimer);
     if (this._dayTimer) clearInterval(this._dayTimer);
+    if (this._revTimer) clearInterval(this._revTimer);
+    if (this._ownTimer) clearTimeout(this._ownTimer);
+    if (this._catMoreObs) { this._catMoreObs.disconnect(); this._catMoreObs = null; }
     window.removeEventListener('resize', this._onResize);
     window.removeEventListener('keydown', this._onKey);
     document.removeEventListener('mousedown', this._onDocDown);
@@ -589,6 +631,16 @@ export default class MedReturnApp extends React.Component {
   }
 
   render() {
+    // ตัวจับเวลาสำหรับหาจุดที่หนัก — มีเฉพาะตอนรันในเครื่อง เปิดด้วย window.__mrvPerf
+    if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && window.__mrvPerf) {
+      const t0 = performance.now();
+      const out = renderShell(this);
+      const ms = performance.now() - t0;
+      const log = (window.__mrvPerfLog = window.__mrvPerfLog || {});
+      const box = (log['(วาดทั้งหน้า)'] = log['(วาดทั้งหน้า)'] || { n: 0, total: 0, max: 0 });
+      box.n++; box.total += ms; box.max = Math.max(box.max, ms);
+      return out;
+    }
     return renderShell(this);
   }
 }

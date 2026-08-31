@@ -1,5 +1,3 @@
-import MedReturnApp from '@/components/MedReturnApp';
-
 // 🚨 ต้องเป็นหน้าที่สร้างสดทุกคำขอ ห้ามให้ Next สร้างล่วงหน้าตอน build (31 ส.ค. 2569)
 //    ตาข่ายกันโค้ดแปลกปลอมออก "ใบอนุญาตรายคำขอ" ที่สุ่มใหม่ทุกครั้ง (ดู middleware.js)
 //    หน้าที่ถูกสร้างล่วงหน้าจะได้ HTML ก้อนเดิมที่ไม่มีใบอนุญาตติดมา
@@ -9,6 +7,6 @@ import MedReturnApp from '@/components/MedReturnApp';
 //    จึงไม่มีทางถูกเก็บเป็นไฟล์นิ่งให้คนทั่วไปโหลดได้ตั้งแต่แรก
 export const dynamic = 'force-dynamic';
 
-export default function Page() {
-  return <MedReturnApp />;
+export default function LoginLayout({ children }) {
+  return children;
 }

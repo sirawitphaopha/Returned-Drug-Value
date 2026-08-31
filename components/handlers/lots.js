@@ -6,7 +6,7 @@
 //
 // ใบสรุปพิมพ์: แปะหน้าถุงยาที่รอตรวจ ให้เวรถัดไปรู้ว่าถุงนี้คือ Lot ไหน
 //              หรือเก็บเข้าแฟ้มเป็นหลักฐานว่าวันนั้นรับคืนอะไรมาบ้าง
-import { fetchT, cleanQtyExpr, evalQty } from '../helpers';
+import { SS, fetchT, cleanQtyExpr, evalQty } from '../helpers';
 import { downloadCsv, lotsToCsv } from '@/lib/csv';
 
 // วันเวลาที่พิมพ์ใบ — ใช้ พ.ศ. ตามที่ห้องยาอ่านกันจริง
@@ -18,7 +18,6 @@ function stampNow() {
     ' เวลา ' + p2(d.getHours()) + '.' + p2(d.getMinutes()) + ' น.';
 }
 
-const LOTS_TTL = 60000;
 
 // วันเริ่มต้นของแต่ละช่วงเวลาในโหมดดูตัวอย่าง — เลียนแบบ rangeOf() ใน /api/lots
 function demoFrom(range, box) {
@@ -122,8 +121,8 @@ export function lotsActions(app) {
     const key = st0.lotsRange === 'custom'
       ? 'custom|' + st0.lotsFrom + '|' + st0.lotsTo
       : st0.lotsRange;
-    const c = app._lotsCache[key];
-    if (!force && c && Date.now() - c.ts < LOTS_TTL) {
+    const c = app.boxGet(SS.lots, key, app._lotsCache);
+    if (!force && c) {
       app.setState({ lots: c.lots, lotsLoading: false });
       return;
     }
@@ -137,10 +136,12 @@ export function lotsActions(app) {
       const res = await app.fetchT(u);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'อ่านรายการ Lot ไม่สำเร็จ');
-      app._lotsCache[key] = { ts: Date.now(), lots: data.lots || [] };
+      app.clearLoadErr('lots');
+      app.boxSet(SS.lots, key, app._lotsCache, { ts: Date.now(), lots: data.lots || [] });
       app.setState({ lots: data.lots || [], lotsLoading: false });
     } catch (e) {
       app.setState({ lotsLoading: false });
+      app.markLoadErr('lots', 'โหลดรายการ Lot ไม่สำเร็จ');
       app.toast(e.message || 'อ่านรายการ Lot ไม่สำเร็จ', '', false);
     }
   };

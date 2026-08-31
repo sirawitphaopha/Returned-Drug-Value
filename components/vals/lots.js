@@ -102,6 +102,9 @@ export function lotsVals(app, d) {
   }
 
   return {
+    // โหลดไม่สำเร็จ ต้องไม่ปนกับ "ไม่มี Lot ในช่วงนี้" (ผลตรวจข้อ ก-1)
+    lotsFail: (!st.lotsLoading && !(st.lots || []).length) ? (st.loadErr.lots || '') : '',
+    lotsRetry: () => app.loadLots(true),
     isLots: st.screen === 'lots',
     // จอกว้างวาดเป็นตาราง จอแคบวาดเป็นการ์ด — ตาราง 8 คอลัมน์ยัดลงมือถือไม่ได้
     lotsWide: !!d.wide,

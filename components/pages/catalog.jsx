@@ -4,6 +4,7 @@
 // 🚨 ลบยาไม่ได้โดยตั้งใจ ใช้ "ซ่อน" แทน (พี่กันสั่ง 13 ส.ค. 2569)
 import { s, sx, kb } from '../helpers';
 import { skelTableTag } from './skeleton';
+import { renderLoadFail } from './loadfail';
 
 // หัวตารางตรึงใต้แถบค้นหาที่ตรึงอยู่ก่อนแล้ว — ระยะวัดจริงจาก ResizeObserver ผ่าน --cathead
 const TH = 'padding:9px 10px;text-align:left;font:600 12px Sarabun,sans-serif;color:#fff;background:#2f7d5d;white-space:nowrap;position:sticky;top:var(--cathead,150px);z-index:2';
@@ -137,7 +138,7 @@ export function renderCatalog(V) {
               </thead>
               <tbody>
                 {V.catRows.map((r) => (
-                  <tr key={r.id} style={sx('border-bottom:1px solid #f2f5f3', { background: r.rowBg })}>
+                  <tr key={r.id} className="cat-row" style={sx('border-bottom:1px solid #f2f5f3', { background: r.rowBg })}>
                     <td style={s(TD + ';color:#6f7873;font-size:11.5px')}>{r.id}</td>
                     {/* สีตรงกับที่ใช้ในผลค้นหา — ม่วง ตัวย่อ · ส้ม เปอร์เซ็นต์ · แดงอมชมพู ออกฤทธิ์ · เทล ชื่อการค้า */}
                     <td style={s(TD + ';color:#6d3b9e;font-weight:600')}>{r.abbrev || '—'}</td>
@@ -180,10 +181,19 @@ export function renderCatalog(V) {
                     </td>
                   </tr>
                 ))}
+                {/* แถวเปล่าท้ายตาราง — พอมันเข้ามาใกล้สายตา ระบบจะวาดแถวชุดถัดไปให้เอง
+                    ไม่มีปุ่มให้กด ผู้ใช้เลื่อนไปเรื่อย ๆ เหมือนตารางวาดครบตั้งแต่แรก */}
+                {V.catMore && (
+                  <tr ref={V.catMoreRef} aria-hidden="true">
+                    <td colSpan={V.catColSpan} style={s('height:1px;padding:0;border:0')} />
+                  </tr>
+                )}
               </tbody>
             </table>
             {V.catRows.length === 0 && (
-              <div style={s('padding:34px;text-align:center;font:400 13px Sarabun,sans-serif;color:#6f7873')}>ไม่พบยาตามเงื่อนไข</div>
+              V.catFail
+                ? renderLoadFail({ title: V.catFail, detail: 'คลังยายังอยู่ครบในระบบ แค่ดึงมาแสดงไม่ได้ตอนนี้', retry: V.catRetry })
+                : <div style={s('padding:34px;text-align:center;font:400 13px Sarabun,sans-serif;color:#6f7873')}>ไม่พบยาตามเงื่อนไข</div>
             )}
           </div>
         )}

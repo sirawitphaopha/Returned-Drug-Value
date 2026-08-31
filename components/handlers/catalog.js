@@ -6,21 +6,38 @@ import { money } from '@/lib/format';
 //
 // 🚨 ลบยาไม่ได้โดยตั้งใจ — ใช้ "ซ่อน" แทน (พี่กันสั่ง 13 ส.ค. 2569)
 //    เพราะรายการยาคืนเก่าที่อ้างถึงยาตัวนั้นยังต้องแสดงชื่อได้อยู่
-import { fetchT } from '../helpers';
+import { SS, fetchT } from '../helpers';
 
 export function catalogActions(app) {
   // โหลดคลังยาดิบ (รวมตัวที่ซ่อนไว้) — ต่างจาก st.drugs ที่กรองตัวซ่อนออกแล้ว
   app.loadCatalog = async (force) => {
     if (app.state.catLoading) return;
     if (app.state.catalog.length && !force) return;
+
+    // โหลดไปแล้วรอบหนึ่งในแท็บนี้ = ไม่ต้องลากยา 417 ตัวมาอีก แม้จะรีเฟรชไปแล้ว
+    // พี่กันสั่ง 27 ส.ค. 2569: "เรื่องคลังยาด้วย ถ้าโหลดมาแล้วครั้งนึง
+    //                          ก็ต้องไม่โหลดอีก ยกเว้นมีใครแก้จากเครื่องอื่น"
+    // ตัวล้างคือลายเซ็นคลังยา (drug_audit) ที่ /api/rev ถามให้ทุก 20 วินาที
+    if (!force) {
+      const cached = app.boxGet(SS.catalog, 'all', null);
+      if (cached && cached.length) {
+        app.setState({ catalog: cached, catLoading: false });
+        return;
+      }
+    }
+
     app.setState({ catLoading: true });
     try {
       const res = await app.fetchT('/api/catalog');
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'โหลดคลังยาไม่สำเร็จ');
-      app.setState({ catalog: Array.isArray(data.drugs) ? data.drugs : [], catLoading: false });
+      const list = Array.isArray(data.drugs) ? data.drugs : [];
+      app.clearLoadErr('cat');
+      app.boxSet(SS.catalog, 'all', null, list);
+      app.setState({ catalog: list, catLoading: false });
     } catch (e) {
       app.setState({ catLoading: false });
+      app.markLoadErr('cat', 'โหลดคลังยาไม่สำเร็จ');
       app.toast('โหลดคลังยาไม่สำเร็จ', '', false);
     }
   };
@@ -30,7 +47,20 @@ export function catalogActions(app) {
     app.loadCatalog();
   };
 
-  app.setCatSearch = (v) => app.setState({ catSearch: v });
+  // วาดเพิ่มอีกชุดเมื่อเลื่อนใกล้ถึงท้ายตาราง
+  // 🚨 เพิ่มทีละ 80 แถว — น้อยกว่านี้จะเรียกถี่จนสะดุด มากกว่านี้ก็ไม่ต่างจากวาดทั้งหมด
+  app.drawMoreCatalog = () => {
+    const cur = app.state.catDraw || 60;
+    const all = (app.state.catalog || []).length;
+    if (cur >= all) return;                 // วาดครบแล้ว ไม่ต้องสั่งวาดจอใหม่เปล่า ๆ
+    app.setState({ catDraw: Math.min(cur + 80, all) });
+  };
+
+  // 🚨 เปลี่ยนเงื่อนไขค้น/กรอง/เรียง ต้องกลับไปเริ่มนับใหม่เสมอ
+  //    ไม่งั้นค้นคำใหม่แล้วได้ผลลัพธ์ยาวเท่าที่เคยเลื่อนไว้ครั้งก่อน ซึ่งไม่มีเหตุผลอะไรเลย
+  const RESET = { catDraw: 60 };
+
+  app.setCatSearch = (v) => app.setState(Object.assign({ catSearch: v }, RESET));
 
   // กดทีเดียวขึ้นบนสุด — ตารางยาว 417 แถว เลื่อนกลับเองไกลมาก
   // 🚨 เว็บนี้เลื่อนใน scrollRef ของ shell ไม่ใช่ทั้งหน้า (window.scrollTo ไม่ทำงาน)
@@ -42,16 +72,16 @@ export function catalogActions(app) {
   // ตัวกรอง — กดซ้ำเพื่อยกเลิก · หลายอันพร้อมกันได้
   app.toggleCatFilter = (key) => {
     const cur = app.state.catFilters;
-    app.setState({ catFilters: cur.includes(key) ? cur.filter((x) => x !== key) : cur.concat(key) });
+    app.setState(Object.assign({ catFilters: cur.includes(key) ? cur.filter((x) => x !== key) : cur.concat(key) }, RESET));
   };
-  app.clearCatFilters = () => app.setState({ catFilters: [] });
+  app.clearCatFilters = () => app.setState(Object.assign({ catFilters: [] }, RESET));
   // ล้างทั้งคำค้นและตัวกรองในทีเดียว — คนที่ทั้งค้นทั้งกรองไม่ต้องไล่กดสองที่
-  app.clearCatAll = () => app.setState({ catFilters: [], catSearch: '' });
+  app.clearCatAll = () => app.setState(Object.assign({ catFilters: [], catSearch: '' }, RESET));
 
   // กดหัวคอลัมน์เพื่อเรียง · กดซ้ำสลับขึ้น/ลง
   app.toggleCatSort = (key) => {
     const s = app.state.catSort;
-    app.setState({ catSort: s && s.key === key ? { key: key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key: key, dir: 'asc' } });
+    app.setState(Object.assign({ catSort: s && s.key === key ? { key: key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key: key, dir: 'asc' } }, RESET));
   };
 
   // คอลัมน์ "ชื่อที่เห็นตอนค้นหา" — ยาวกว่าคอลัมน์อื่นมาก จึงซ่อนไว้ตั้งต้น

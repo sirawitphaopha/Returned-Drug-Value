@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { s, sx, kb } from '../helpers';
 import { renderExportBtn } from './exportbtn';
 import { skelTable, skelCard } from './skeleton';
+import { renderLoadFail } from './loadfail';
 
 // ── ปุ่มจัดการท้ายแถว ────────────────────────────────────────────────────────
 // แยกออกมาเพราะใช้ทั้งตาราง (จอกว้าง) และการ์ด (จอแคบ) ต้องเหมือนกันเป๊ะ
@@ -159,11 +160,16 @@ export function renderLots(V) {
       {(V.lotsLoading || V.skelDemo) && V.lotsWide && skelTable(V.lotCols, 7)}
       {(V.lotsLoading || V.skelDemo) && !V.lotsWide && (
         <div style={s('display:flex;flex-direction:column;gap:9px')}>
-          {[0, 1, 2, 3, 4].map((i) => skelCard(76, { key: i }))}
+          {[0, 1, 2, 3, 4].map((i) => skelCard(76, null, i))}
         </div>
       )}
 
-      {V.lotsEmpty && !V.lotsFilteredOut && (
+      {V.lotsFail && (
+        <div style={s('padding:8px 0 18px')}>
+          {renderLoadFail({ title: V.lotsFail, detail: 'Lot ที่บันทึกไว้ยังอยู่ครบในระบบ แค่ดึงมาแสดงไม่ได้ตอนนี้', retry: V.lotsRetry })}
+        </div>
+      )}
+      {!V.lotsFail && V.lotsEmpty && !V.lotsFilteredOut && (
         <div style={s('text-align:center;padding:34px 12px;border:1px dashed rgba(30,36,32,.16);border-radius:12px')}>
           <div style={s('font:600 15px Sarabun,sans-serif;margin-bottom:4px')}>ยังไม่มี Lot ในช่วงเวลานี้</div>
           <div style={s('font:400 12.5px/1.6 Sarabun,sans-serif;color:#6b746e')}>ลองเปลี่ยนช่วงเวลาด้านบน หรือบันทึกยาคืนสักรอบก่อน</div>

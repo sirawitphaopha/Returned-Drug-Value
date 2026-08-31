@@ -2,6 +2,7 @@
 // ใช้สี ระยะ และความโค้งชุดเดียวกับหน้าบันทึก จะได้ไม่รู้สึกเป็นคนละเว็บ
 import { s, sx, kb } from '../helpers';
 import { skelCard } from './skeleton';
+import { renderLoadFail } from './loadfail';
 
 export function renderPrices(V) {
   return (
@@ -49,11 +50,16 @@ export function renderPrices(V) {
 
         {(V.priceLoading || V.skelDemo) && (
           <div style={s("display:flex;flex-direction:column;gap:8px;padding:4px 0")}>
-            {[0, 1, 2, 3, 4, 5, 6].map((i) => skelCard(58, { key: i }))}
+            {[0, 1, 2, 3, 4, 5, 6].map((i) => skelCard(58, null, i))}
           </div>
         )}
 
-        {V.priceEmpty && (
+        {V.priceFail && (
+          <div style={s('padding:6px 0 14px')}>
+            {renderLoadFail({ title: V.priceFail, detail: 'ราคายายังอยู่ครบในระบบ แค่ดึงมาแสดงไม่ได้ตอนนี้', retry: V.priceRetry })}
+          </div>
+        )}
+        {!V.priceFail && V.priceEmpty && (
           <div style={s('text-align:center;padding:24px 12px;border:1px dashed rgba(30,36,32,.16);border-radius:12px')}>
             <div style={s('font:600 15px Sarabun,sans-serif;margin-bottom:4px')}>ไม่พบยาตามที่ค้น</div>
             <div style={s('font:400 12.5px/1.6 Sarabun,sans-serif;color:#6b746e')}>ลองพิมพ์ชื่อสามัญ เช่น amlo, metf, insu</div>

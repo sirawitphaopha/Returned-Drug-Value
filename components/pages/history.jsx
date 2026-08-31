@@ -4,6 +4,7 @@ import { s, sx, kb } from '../helpers';
 import { renderExportBtn } from './exportbtn';
 import { renderDrugName } from './drugname';
 import { skelTable, skelCard } from './skeleton';
+import { renderLoadFail } from './loadfail';
 
 // แถบเครื่องมือเสริม — ไม่มีในมอคอัป
 // เดิมมีแค่ 4 ปุ่มช่วงเวลาสำเร็จรูป + ตัดที่ 60 แถว แล้วบอกให้ "กรองช่วงวันที่ให้แคบลง"
@@ -119,6 +120,11 @@ export function renderHistoryWide(V) {
 
         {/* โครงจางใช้คอลัมน์ชุดเดียวกับตารางจริง (V.histCols) */}
         {(V.histLoading || V.skelDemo) && skelTable(V.histCols, 9, { noHead: true })}
+        {V.histFail && (
+          <div style={s('padding:26px 16px')}>
+            {renderLoadFail({ title: V.histFail, detail: 'รายการที่บันทึกไว้ยังอยู่ครบในระบบ แค่ดึงมาแสดงไม่ได้ตอนนี้', retry: V.histRetry })}
+          </div>
+        )}
         {V.histEmpty && (
           <div style={s('padding:40px 16px;text-align:center;font:400 13.5px Sarabun,sans-serif;color:#6b746e')}>{V.histEmptyLabel}</div>
         )}
@@ -250,7 +256,12 @@ export function renderHistoryNarrow(V) {
         {/* ฝั่งมือถือเป็นการ์ด ไม่ใช่ตาราง โครงจางจึงต้องเป็นการ์ดตาม */}
         {(V.histLoading || V.skelDemo) && (
           <div style={s('display:flex;flex-direction:column;gap:9px')}>
-            {[0, 1, 2, 3, 4, 5].map((i) => skelCard(84, { key: i }))}
+            {[0, 1, 2, 3, 4, 5].map((i) => skelCard(84, null, i))}
+          </div>
+        )}
+        {V.histFail && (
+          <div style={s('padding:26px 16px')}>
+            {renderLoadFail({ title: V.histFail, detail: 'รายการที่บันทึกไว้ยังอยู่ครบในระบบ แค่ดึงมาแสดงไม่ได้ตอนนี้', retry: V.histRetry })}
           </div>
         )}
         {V.histEmpty && (

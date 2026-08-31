@@ -21,22 +21,77 @@ export function renderVals(app) {
   //    ของเดิมเรียก vals ทุกตัวซ้ำอีกรอบเพื่อตรวจ = ทำงานสองเท่าตอน dev โดยไม่จำเป็น
   //    และรายชื่อที่เอามาตรวจมีแค่ 8 ไฟล์ ขาด himport · lots · catalog ไป 3 ไฟล์
   //    ตัวตรวจที่ตรวจไม่ครบแย่กว่าไม่มีตัวตรวจ เพราะให้ความมั่นใจแบบผิด ๆ
-  const parts = [
-    ['shell', shellVals(app, d)],
-    ['record', recordVals(app, d)],
-    ['history', historyVals(app, d)],
-    ['summary', summaryVals(app, d)],
-    ['sheet', sheetVals(app, d)],
-    ['settings', settingsVals(app, d)],
-    ['prices', pricesVals(app, d)],
-    ['sign', signVals(app, d)],
-    ['himport', himportVals(app, d)],
-    ['lots', lotsVals(app, d)],
-    ['catalog', catalogVals(app, d)],
-    ['result', resultVals(app, d)]
+  // รายชื่อตัวคำนวณ — เก็บเป็น "ฟังก์ชัน" ไม่ใช่ผลลัพธ์ เพื่อให้เลือกเรียกได้
+  const FILES = [
+    ['shell', shellVals],
+    ['record', recordVals],
+    ['history', historyVals],
+    ['summary', summaryVals],
+    ['sheet', sheetVals],
+    ['settings', settingsVals],
+    ['prices', pricesVals],
+    ['sign', signVals],
+    ['himport', himportVals],
+    ['lots', lotsVals],
+    ['catalog', catalogVals],
+    ['result', resultVals]
   ];
 
+  // ── ตัวจับเวลาสำหรับหาจุดที่หนัก (มีเฉพาะตอนรันในเครื่อง) ─────────────────
+  // เปิดด้วย window.__mrvPerf = true แล้วอ่านผลจาก window.__mrvPerfLog
+  // 🚨 เว็บจริงไม่มีโค้ดส่วนนี้เลย ตัวแปลงตัดทิ้งตั้งแต่ตอน build
+  const dev = process.env.NODE_ENV !== 'production';
+  const timing = dev && typeof window !== 'undefined' && window.__mrvPerf;
+  const run = (name, fn) => {
+    if (!timing) return fn(app, d);
+    const t0 = performance.now();
+    const out = fn(app, d);
+    const ms = performance.now() - t0;
+    const log = (window.__mrvPerfLog = window.__mrvPerfLog || {});
+    const box = (log[name] = log[name] || { n: 0, total: 0, max: 0 });
+    box.n++; box.total += ms; box.max = Math.max(box.max, ms);
+    return out;
+  };
+
+  // ── คำนวณเฉพาะหน้าที่กำลังเปิดอยู่ (ผลตรวจข้อ ก-8) ────────────────────────
+  // พี่กันสั่ง 27 ส.ค. 2569: "ก8 ต้องแก้เลย เราต้องการจุดที่ดีที่สุด"
+  //
+  // เดิมคำนวณค่าของทุกหน้าใหม่ทุกครั้งที่วาดจอ แม้แต่หน้าที่ไม่ได้เปิด
+  // พิมพ์ 1 ตัวอักษรในช่องค้นยา = ประกอบชื่อยา 417 ตัวของหน้าคลังยาใหม่ทั้งชุด
+  //
+  // ✅ ตรวจแล้วว่าตัดได้ปลอดภัย — ไล่ดูทีละคีย์ทั้ง 334 ตัวจาก 6 ไฟล์นี้
+  //    ไม่มีหน้าไหนใช้ค่าข้ามไฟล์กันเลยสักตัวเดียว
+  //
+  // 🚨 หน้าที่ถูกข้ามได้ค่าเป็นว่างเปล่า ไม่ใช่ค่าเก่าที่จำไว้
+  //    ถ้าคืนค่าเก่า ธงอย่าง slipOpen จะค้างเป็นจริง แล้วใบสรุปจะเด้งขึ้นมาเอง
+  //    ตัววาดทุกตัวมีด่าน "ไม่มีค่า = ไม่วาด" อยู่แล้ว จึงปลอดภัยกว่า
+  const stt = app.state;
+  const sc = stt.screen;
+  const need = {
+    history: sc === 'history',
+    summary: sc === 'summary',
+    prices: sc === 'prices',
+    catalog: sc === 'catalog',
+    // หน้าต่างซ้อนของรายการ Lot เปิดข้ามหน้าได้ — ใบสรุปเปิดจากหน้าผลหลังกดบันทึกก็ได้
+    lots: sc === 'lots' || !!stt.slipLot || !!stt.lotEdit || !!stt.result,
+    // หน้านำเข้าราคาจากไฟล์ HIS เป็นหน้าต่างซ้อนของหน้าจัดการราคา
+    himport: sc === 'prices' || !!stt.hisOpen
+  };
+
+  const parts = FILES.map(([name, fn]) =>
+    [name, (name in need) && !need[name] ? {} : run(name, fn)]
+  );
+
   const box = Object.assign({}, ...parts.map((p) => p[1]));
+
+  // 🚨 ธงบอกว่าหน้าไหนเปิดอยู่ ต้องมีค่าถูกต้องเสมอ แม้หน้านั้นจะไม่ถูกคำนวณ
+  //    เดิมธงพวกนี้อยู่ในไฟล์ของหน้าตัวเอง ซึ่งกลายเป็นวงจรอุบาทว์ทันทีที่ข้าม
+  //    (ไม่คำนวณหน้าราคา → ไม่มีธง isPrices → กดเข้าหน้าราคาแล้วจอว่างถาวร)
+  box.isHistory = sc === 'history';
+  box.isSummary = sc === 'summary';
+  box.isPrices = sc === 'prices';
+  box.isLots = sc === 'lots';
+  box.isCatalog = sc === 'catalog';
 
   // ── สวิตช์ดูโครงจาง (พี่กันสั่ง 27 ส.ค. 2569) ──────────────────────────
   // 🚨 เปิดสวิตช์แล้วต้องไม่มีข้อมูลจริงเหลืออยู่เลย

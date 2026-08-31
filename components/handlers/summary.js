@@ -1,10 +1,9 @@
 // หน้าสรุป — ดึงยอดทั้งปีงบก้อนเดียว · ส่งออกไฟล์ Excel
 // ยอดรวมทุกตัวคิดใน SQL แล้ว ที่นี่แค่รับมาเก็บ
 import { fyOf } from '@/lib/format';
-import { fetchT } from '../helpers';
+import { SS, fetchT } from '../helpers';
 import { recordsToCsv, downloadCsv } from '@/lib/csv';
 
-const SUM_TTL = 60000;
 
 export function summaryActions(app) {
   // เลขลำดับคำขอ แบบเดียวกับหน้าประวัติ — กดสรุป→ประวัติ→สรุปเร็วๆ จะยิงซ้อนกัน
@@ -13,8 +12,13 @@ export function summaryActions(app) {
 
   app.loadSummary = async (force) => {
     if (app.state.demo) return;      // โหมดตัวอย่างคิดยอดไว้แล้วตอนเปิดโหมด
-    const c = app._sumCache;
-    if (!force && c && Date.now() - c.ts < SUM_TTL) {
+    // กุญแจต้องมีปีงบอยู่ด้วย ไม่งั้นสลับปีแล้วได้ตัวเลขปีเก่ากลับมา
+    const fyKey = String(app.state.sumFy || 'now');
+    const c = app._sumCache && app._sumCache.fy === fyKey
+      ? app._sumCache
+      : app.boxGet(SS.sum, fyKey, null);
+    if (!force && c && c.fy === fyKey) {
+      app._sumCache = c;
       app.setState({ sum: c.data, sumLoading: false });
       return;
     }
@@ -28,7 +32,9 @@ export function summaryActions(app) {
       if (!res.ok) throw new Error(data.error || 'อ่านยอดสรุปไม่สำเร็จ');
       if (seq !== app._sumSeq) return;
 
-      app._sumCache = { ts: Date.now(), data: data };
+      app.clearLoadErr('sum');
+      app._sumCache = { ts: Date.now(), fy: fyKey, data: data };
+      app.boxSet(SS.sum, fyKey, null, app._sumCache);
       // /api/summary ส่ง today มาด้วย — ใช้เป็นตาข่ายรับกรณี /api/bootstrap ล่ม
       // ไม่งั้น today ค้างเป็นค่าว่างตลอด แล้วป้ายปีงบเพี้ยนทั้งหน้า
       const patch = { sum: data, sumLoading: false };
@@ -41,6 +47,9 @@ export function summaryActions(app) {
     } catch (e) {
       if (seq !== app._sumSeq) return;
       app.setState({ sumLoading: false });
+      // 🚨 ต้องปักธงไว้ด้วย ไม่ใช่แค่เด้งข้อความที่หายเองใน 2 วินาที
+      //    ไม่งั้นหน้าจอจะวาด ฿0.00 ทุกช่องค้างไว้ ราวกับว่าปีนี้ยังไม่มีใครคืนยาเลย
+      app.markLoadErr('sum', 'โหลดยอดสรุปไม่สำเร็จ');
       app.toast('อ่านยอดสรุปไม่สำเร็จ', '', false);
     }
   };

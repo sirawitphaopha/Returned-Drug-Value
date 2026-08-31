@@ -32,6 +32,8 @@ export function pricesVals(app, d) {
   const shown = matched.slice(0, st.priceShown);
 
   return {
+    priceFail: (!st.priceLoading && !(st.priceItems || []).length) ? (st.loadErr.price || '') : '',
+    priceRetry: () => app.loadPrices(true),
     isPrices: st.screen === 'prices',
     // ความกว้างเท่ากับหน้าอื่นทั้งเว็บ (พี่กันสั่ง 27 ส.ค. 2569)
     // เดิม 820px ทำให้หน้านี้แคบกว่าเพื่อนจนดูเหมือนคนละเว็บ
