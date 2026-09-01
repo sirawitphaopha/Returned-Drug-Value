@@ -112,25 +112,38 @@ export function renderRecordNarrow(V) {
   return (
     <div style={s('width:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column;min-height:100%;flex:1 0 auto')}>
       {renderParked(V)}
-      <div style={s('padding:16px 20px 14px;background:#fff;border-bottom:1px solid rgba(30,36,32,.07)')}>
+      {/* ── หัวเว็บฝั่งมือถือ ตรึงไว้บนสุด (พี่กันสั่ง 1 ก.ย. 2569) ──────────────
+          "ทำไมตรงกดส่งยามันตรึงได้ล่ะ อันนี้ยังทำได้เลย"
+
+          แถบบันทึกกับแถบเมนูตรึงได้เพราะมันอยู่ "นอก" พื้นที่เลื่อน (เป็นพี่น้องกัน)
+          ส่วนหัวเว็บอยู่ "ใน" พื้นที่เลื่อน จึงไถลไปกับเนื้อหา
+          ย้าย DOM ออกไปข้างนอกก็ได้ แต่จะรื้อโครงทั้งหน้า — ใช้ position:sticky แทน
+          ซึ่งตรึงกับขอบบนของพื้นที่เลื่อนได้โดยไม่ต้องย้ายอะไรเลย
+
+          🚨 z-index ต้องสูงกว่าเนื้อหาที่เลื่อนผ่านใต้มัน แต่ต่ำกว่าหน้าต่างซ้อนทุกตัว
+             (ต่ำสุดคือป๊อปใส่จำนวนที่ 20 — ตรงนี้จึงใช้ 6)
+          🚨 พื้นต้องทึบ ไม่งั้นเห็นรายการยาไหลผ่านทะลุหลังชื่อเว็บ
+          ⚠️ ฝั่งคอมไม่ได้ตรึงตรงนี้ หน้าบันทึกคอมล็อกความสูงเท่าจออยู่แล้ว (กฎข้อ 3.2) */}
+      <div style={s('position:sticky;top:0;z-index:6;padding:16px 20px 14px;background:#fff;border-bottom:1px solid rgba(30,36,32,.07)')}>
         <div style={s('display:flex;justify-content:space-between;align-items:center;margin-bottom:10px')}>
-          <div style={s('display:flex;align-items:center;gap:10px;min-width:0')}>
-            <div style={s('width:34px;height:34px;border-radius:9px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;position:relative;flex:none')}>
-              <div style={s('position:absolute;inset:5px;border:1.7px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
-              <span style={s("font:700 15px Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
+          {/* ── หัวเว็บฝั่งมือถือ เหลือแค่ชื่อเว็บ (พี่กันสั่ง 1 ก.ย. 2569) ──────────
+              "เอาโลโก้ออก กินที่ · เอากลุ่มงานบลา ๆ ออก เหลือแค่ชื่อเว็บ"
+
+              🚨 ฝั่งคอม (renderNavWide) ยังมีทั้งโลโก้และชื่อหน่วยงานครบเหมือนเดิม
+                 ห้ามเอากฎนี้ไปใช้ที่นั่น จอคอมมีที่เหลือเฟือ
+              ⚠️ ชื่อหน่วยงานเต็มยศยังอยู่ที่ท้ายเว็บและหน้าเกี่ยวกับ ไม่ได้หายจากระบบ
+                 (บนหัวมือถือมันโดนตัดเหลือ "กลุ่มงานเภสัชก…" อ่านไม่จบอยู่แล้ว)
+
+              🚨 Charmonman ลากหางลงมายาวเกินกรอบบรรทัดของตัวเอง
+                 padding-bottom กันที่ใต้ตัวอักษรไว้ ห้ามตัดออก ไม่งั้นหางไปแตะของข้างล่าง */}
+          <div style={s('display:flex;align-items:center;gap:9px;min-width:0')}>
+            {/* โลโก้กลับมาแล้วตามที่พี่กันสั่ง — ย่อจาก 34 เหลือ 30 จุดให้พอดีกับแถวที่เตี้ยลง */}
+            <div style={s('width:30px;height:30px;border-radius:8px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;position:relative;flex:none')}>
+              <div style={s('position:absolute;inset:4px;border:1.6px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
+              <span style={s("font:700 13px Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
             </div>
-            <div style={s('min-width:0')}>
-              {/* 🚨 Charmonman ลากหางสระลงมายาวมาก เกินกรอบบรรทัดของตัวเอง
-                  ระยะบรรทัด 1.5 ยังไม่พอ (พี่กันเจอทับ 2 รอบ) ต้องกันที่ใต้ตัวอักษรเพิ่ม
-                  ใช้ padding-bottom แทนการเพิ่มระยะบรรทัด เพราะระยะบรรทัดดันตัวอักษรลงด้วย
-                  ทำให้ชื่อไม่อยู่กลางแถบ ส่วน padding ดันเฉพาะของที่อยู่ข้างล่าง */}
-              {/* กดชื่อเว็บแล้วกลับหน้าแรก (พี่กันสั่ง 26 ส.ค. 2569)
-                  ที่นี่ให้กดเฉพาะบรรทัดชื่อ ไม่รวมชื่อหน่วยงานข้างล่าง
-                  เพราะชื่อหน่วยงานเป็นข้อความอ่านอย่างเดียว ไม่ใช่ปุ่ม */}
-              <div {...kb(V.goHome)} aria-label="กลับไปหน้าบันทึก" className="hv-home"
-                style={s('font:700 18px/1.95 Charmonman,cursive;cursor:pointer;display:inline-block;border-radius:8px;margin:0 -7px;padding:0 7px')}>มูลค่ายาคืน</div>
-              <div title={V.orgName} style={s('font:400 11.5px/1.2 Sarabun,sans-serif;color:#6b746e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px')}>{V.orgName}</div>
-            </div>
+            <div {...kb(V.goHome)} aria-label="กลับไปหน้าบันทึก" className="hv-home"
+              style={s('font:700 19px/1.3 Charmonman,cursive;cursor:pointer;display:inline-block;border-radius:8px;margin:0 -7px;padding:1px 7px 9px;white-space:nowrap')}>มูลค่ายาคืน</div>
           </div>
           <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
             <div {...kb(V.toggleMore)} className="hv-bg-f6" style={s("display:flex;align-items:center;gap:6px;min-height:44px;padding:6px 13px;border:1px solid rgba(30,36,32,.14);border-radius:9px;font:500 12.5px Sarabun,sans-serif;cursor:pointer")}>{V.dateLabel} <span style={s('color:#6f7873')}>▾</span></div>
@@ -169,9 +182,13 @@ export function renderRecordNarrow(V) {
           </div>
         )}
 
-        <div style={s('display:flex;gap:7px;margin-top:10px;flex-wrap:wrap')}>
+        {/* ชิปแหล่งที่มาฝั่งมือถือ — ชื่อสั้นและลงแถวเดียวเสมอ (พี่กันสั่ง 1 ก.ย. 2569)
+            🚨 ห้ามใส่ flex-wrap — ตกแถวที่สองเมื่อไหร่คือกินที่ของรายการยาทันที
+               ชิปยืดหดตามที่ว่างแทน (flex:1) และห้ามให้ตัวอักษรตัดบรรทัด
+            🚨 ฝั่งเดสก์ท็อปห้ามแตะ ยังใช้ชื่อเต็มกับ flex-wrap เหมือนเดิม */}
+        <div style={s('display:flex;gap:5px;margin-top:10px')}>
           {V.sources.map((src) => (
-            <div key={src.label} {...kb(src.pick)} className={src.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('display:flex;align-items:center;min-height:44px;padding:7px 15px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: src.bg, color: src.fg })}>{src.label}</div>
+            <div key={src.label} {...kb(src.pick)} className={src.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('flex:1;min-width:0;display:flex;align-items:center;justify-content:center;min-height:44px;padding:7px 4px;border-radius:999px;font:500 12px Sarabun,sans-serif;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', { background: src.bg, color: src.fg })}>{src.short}</div>
           ))}
         </div>
 
@@ -257,8 +274,12 @@ export function renderRecordNarrow(V) {
               </div>
               <div style={s('display:flex;align-items:center;justify-content:space-between;gap:8px')}>
                 <div style={sx('display:flex;padding:2px;border-radius:7px;flex:none', { background: row.pillBg })}>
-                  <div {...kb(row.setReuse)} className={(row.reuseOn ? 'hv-seg-on' : 'hv-txt') + ' tap'} style={sx('padding:5px 10px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.reuseBg, color: row.reuseFg })}>ใช้ต่อ</div>
-                  <div {...kb(row.setDestroy)} className={(row.reuseOn ? 'hv-des-off' : 'hv-des-on') + ' tap'} style={sx('padding:5px 10px;border-radius:5px;cursor:pointer;font:600 11px Sarabun,sans-serif', { background: row.destroyBg, color: row.destroyFg })}>ทำลาย</div>
+                  {/* 🔴 ห้ามใส่คลาส .tap กับสองปุ่มนี้ (กฎข้อ 3.55)
+                      อยู่ติดกันสนิท พื้นที่กดที่ขยายออกด้านละ 11px จะซ้อนกันเต็ม ๆ
+                      เล็งกด "ใช้ต่อ" แล้วโดน "ทำลาย" = ยาดีถูกบันทึกว่าทำลาย
+                      แก้ด้วยการขยายตัวปุ่มเองให้ถึงเกณฑ์นิ้ว 44px แทน */}
+                  <div {...kb(row.setReuse)} className={row.reuseOn ? 'hv-seg-on' : 'hv-txt'} style={sx('min-height:44px;min-width:56px;display:flex;align-items:center;justify-content:center;padding:5px 12px;border-radius:5px;cursor:pointer;font:600 11.5px Sarabun,sans-serif', { background: row.reuseBg, color: row.reuseFg })}>ใช้ต่อ</div>
+                  <div {...kb(row.setDestroy)} className={row.reuseOn ? 'hv-des-off' : 'hv-des-on'} style={sx('min-height:44px;min-width:56px;display:flex;align-items:center;justify-content:center;padding:5px 12px;border-radius:5px;cursor:pointer;font:600 11.5px Sarabun,sans-serif', { background: row.destroyBg, color: row.destroyFg })}>ทำลาย</div>
                 </div>
                 <div style={s('display:flex;align-items:center;gap:8px;min-width:0')}>
                   <div style={sx("font:600 15px Sarabun,sans-serif;font-variant-numeric:tabular-nums;text-align:right", { color: row.color })}>{row.valueLabel}</div>
@@ -703,10 +724,13 @@ export function renderSaveBar(V) {
   return (
     <div ref={V.saveBarRef} style={s('flex:none;background:#fff;border-top:1px solid rgba(30,36,32,.08);box-shadow:0 -6px 20px rgba(30,36,32,.06);order:1;position:relative;z-index:5')}>
       <div style={s('max-width:520px;margin:0 auto')}>
-        <div style={s('display:flex;align-items:center;justify-content:space-between;padding:5px 20px;background:#f6f7f4;border-bottom:1px solid rgba(30,36,32,.06)')}>
-          <span style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e')}>สะสมปีงบ {V.fyLabel}</span>
-          <span style={s("font:600 13.5px Sarabun,sans-serif;color:#414a44;font-variant-numeric:tabular-nums")}>{V.cumulativeLabel} <span style={s('color:#2f7d5d')}>▲</span></span>
-        </div>
+        {/* ── ไม่มีแถวยอดสะสมปีงบแล้ว (พี่กันสั่ง 1 ก.ย. 2569) ────────────────────
+            สั่งเป็น 2 จังหวะ — รอบแรกเอาคำว่า "สะสมปีงบ" ออก รอบนี้เอาตัวเลขออกด้วย
+            จอมือถือเตี้ย แถบล่างกินที่ไปแล้วเกือบหนึ่งในสี่ของจอ ทุกบรรทัดต้องคุ้มที่จริง ๆ
+            และยอดทั้งปีไม่ใช่ของที่ต้องเห็นตอนกำลังนับยาคืนอยู่หน้าเคาน์เตอร์
+
+            ⚠️ ยอดสะสมปีงบยังอยู่ครบที่หน้าสรุปและแผงขวาฝั่งคอม ไม่ได้หายจากระบบ
+            🚨 แถบนี้เป็นของมือถือเท่านั้น ห้ามเอาไปแตะ renderRecordWide ของคอม */}
         <div style={s('padding:8px 20px 10px')}>
           <div style={s('display:flex;gap:8px;margin-bottom:7px')}>
             <div style={s('flex:1;background:#eef6f1;border-radius:10px;padding:6px 11px')}>
@@ -722,7 +746,11 @@ export function renderSaveBar(V) {
             <div style={{ width: V.savedBarW, background: '#2f7d5d' }}></div>
             <div style={{ width: V.lostBarW, background: '#c2543c' }}></div>
           </div>
-          <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;margin-bottom:8px;font-variant-numeric:tabular-nums')}>{V.proportionLabel}</div>
+          {/* ยังไม่มีมูลค่า = ไม่มีอะไรให้บอก ซ่อนทั้งบรรทัด (พี่กันสั่ง 1 ก.ย. 2569)
+              มีมูลค่าแล้วยังบอก "ใช้ต่อได้ N% จาก ..." เหมือนเดิม */}
+          {V.hasGross && (
+            <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;margin-bottom:8px;font-variant-numeric:tabular-nums')}>{V.proportionLabel}</div>
+          )}
 
           {V.saveFailed && (
             <div style={s('border:1px solid rgba(194,84,60,.28);background:#fdf1ed;border-radius:11px;padding:11px 12px;margin-bottom:10px')}>

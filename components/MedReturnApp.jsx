@@ -188,6 +188,16 @@ export default class MedReturnApp extends React.Component {
       // 🚨 จอเตี้ยแล้วยังล็อกอยู่ = กรอบรายการยาโดนบีบจนเหลือ 2 แถว
       //    พี่กันเจอเองตอนเปิดโครมสูง 577px แล้วทัก "อันนี้บีบมากกก"
       vh: 900,
+      // ── ความกว้างของ "ขอบจอจริง" ที่วัดได้จากเครื่อง (พี่กันสั่ง 1 ก.ย. 2569) ──
+      //   "ให้มัน detect ขอบมือถือ แล้ว fix เลย และปรับใช้กับทุกมือถือได้"
+      // 0 = ยังไม่ได้วัด (ตอนเซิร์ฟเวอร์วาดจอ) ให้ใช้ 100% ไปก่อน
+      lockW: 0,
+      // ── ดึงหน้าลงเพื่อโหลดใหม่ (พี่กันสั่ง 1 ก.ย. 2569) ────────────────────
+      // pullY = ระยะที่นิ้วลากลงมาแล้ว (หน่วยพิกเซล · 0 คือยังไม่ได้ลาก)
+      // pullBusy = ปล่อยนิ้วแล้วกำลังโหลดอยู่
+      // 🚨 ทั้งคู่ต้องเป็น 0/false เสมอบนเดสก์ท็อป — ตัวจับนิ้วไม่ทำงานที่นั่นเลย
+      pullY: 0,
+      pullBusy: false,
       // มีเมาส์จริงไหม — วัดตอน componentDidMount ด้วย (pointer: fine)
       // ใช้กันสวิตช์ "คอม/มือถือ" ไม่ให้โผล่บนเครื่องสัมผัสจริง (พี่กันสั่ง — ขึ้นมาแล้วบังจอ)
       // ความกว้างอย่างเดียวไม่พอ แท็บเล็ตแนวนอนกว้าง 1024 จะหลุดขึ้นมา
@@ -317,6 +327,8 @@ export default class MedReturnApp extends React.Component {
     // วาดใหม่เฉพาะตอนความกว้างเปลี่ยนจริง — ลากขอบหน้าต่างจะยิง event รัวมาก
     // แต่ละครั้งวิ่ง renderVals ใหม่ทั้งก้อน (กรองยา 417 ตัว) เครื่องเก่าจะกระตุก
     this._onResize = () => {
+      this.syncMobileClass();
+      this.lockWidth();
       if (window.innerWidth !== this.state.vw || window.innerHeight !== this.state.vh) {
         this.setState({ vw: window.innerWidth, vh: window.innerHeight });
       }
@@ -344,6 +356,10 @@ export default class MedReturnApp extends React.Component {
   // ทำที่นี่แทนที่จะทำใน ref callback เพราะ ref ถูกเรียกทุกครั้งที่วาดจอ
   // ซึ่งจะดึงกรอบกลับตอนผู้ใช้เลื่อนดูเองด้วยเมาส์
   componentDidUpdate(prevProps, prevState) {
+    // สลับปุ่มมุมมองมือถือ/คอม ต้องอัปเดตคลาสที่ body ตามทันที
+    if (prevState.vw !== this.state.vw || prevState.forceNarrow !== this.state.forceNarrow) {
+      this.syncMobileClass();
+    }
     if (prevState.hi !== this.state.hi && this.hiRef.current) {
       this.hiRef.current.scrollIntoView({ block: 'nearest' });
     }
@@ -499,7 +515,33 @@ export default class MedReturnApp extends React.Component {
       //    ชื่อเครื่องจึงยังว่าง แล้วตัวดึงร่างจะออกจากฟังก์ชันไปเลยโดยไม่ทำอะไร
       this.loadServerDrafts();
     });
+    // วัดขอบจอจริงทันทีที่เปิดเว็บ แล้ววัดซ้ำทุกครั้งที่กรอบจอขยับ
+    // 🚨 ต้องผูกกับ visualViewport ด้วย — แป้นพิมพ์เด้ง หมุนจอ หรือแถบเบราว์เซอร์ยืดหด
+    //    ล้วนเปลี่ยนขอบจอโดยไม่ยิง resize ของหน้าต่างเสมอไป
+    this.lockWidth();
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', this.lockWidth);
+      window.visualViewport.addEventListener('scroll', this.lockWidth);
+    }
+    // ตรึงตำแหน่งเลื่อนแนวนอนไว้ที่ 0 (ดู _pinLeft)
+    // ดักทั้งตอนกำลังเลื่อนและตอนนิ้วขยับ เพราะบางเบราว์เซอร์ไม่ยิง scroll ระหว่างลาก
+    document.addEventListener('scroll', this._pinLeft, { passive: true, capture: true });
+    window.addEventListener('scroll', this._pinLeft, { passive: true });
+    window.addEventListener('touchmove', this._pinLeft, { passive: true });
+    window.addEventListener('touchend', this._pinLeft, { passive: true });
     window.addEventListener('resize', this._onResize);
+    // ดึงหน้าลงเพื่อโหลดใหม่ — ผูกที่หน้าต่าง ไม่ใช่ที่พื้นที่เลื่อน
+    // 🚨 พื้นที่เลื่อนถูกสร้างหลัง componentDidMount ในบางจังหวะ (ตอนยังโหลดอยู่)
+    //    ผูกที่หน้าต่างแล้วเช็ค scrollRef เอาข้างในจึงไม่มีทางพลาด
+    // 🚨 passive:false ที่ touchmove เท่านั้น — ตัวอื่นปล่อย passive ไว้ให้เลื่อนลื่น
+    // ห้ามซูมด้วยนิ้วบนมือถือ (ดู _onGesture)
+    document.addEventListener('gesturestart', this._onGesture, { passive: false });
+    document.addEventListener('gesturechange', this._onGesture, { passive: false });
+    document.addEventListener('gestureend', this._onGesture, { passive: false });
+    window.addEventListener('touchstart', this._onTouchStart, { passive: true });
+    window.addEventListener('touchmove', this._onTouchMove, { passive: false });
+    window.addEventListener('touchend', this._onTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', this._onTouchEnd, { passive: true });
     window.addEventListener('keydown', this._onKey);
     // แป้นเครื่องคิดเลขต้องปิดเมื่อกดที่อื่น — ป๊อปตัวเล็กที่ไม่มีฉากหลังคลุมจอ
     // ถ้าไม่ปิดจะค้างบังตารางรายการอยู่ตลอด ต้องย้อนกลับมากดปุ่มเดิม
@@ -632,6 +674,160 @@ export default class MedReturnApp extends React.Component {
   //
   // 🚨 โหมดดูตัวอย่างไม่ต้องถาม ของในนั้นเป็นข้อมูลปลอมที่หายได้ไม่เสียหาย
   // 🚨 ระหว่างกำลังส่งอยู่ (saving) ก็ต้องถาม ยังไม่รู้ผลว่าเข้าฐานหรือยัง
+  // ── ธงบอก CSS ว่าตอนนี้เป็นฝั่งมือถือ (พี่กันสั่ง 1 ก.ย. 2569) ─────────────
+  //
+  // 🚨 ต้องผูกกับธง wide ตัวเดียวกับที่ใช้เลือกว่าจะวาดหน้าจอแบบไหน
+  //    ใช้ @media (max-width) ใน CSS แทนไม่ได้ เพราะกดปุ่ม "มือถือ" บนคอมได้
+  //    (forceNarrow) ซึ่งตอนนั้นจอยังกว้าง 1366px อยู่ แต่หน้าจอเป็นแบบมือถือแล้ว
+  //
+  // 🚨 เงื่อนไขต้องตรงกับ vals/derive.js → wide เป๊ะ ๆ ห้ามเขียนคนละแบบ
+  //    แก้ที่หนึ่งต้องแก้อีกที่เสมอ ไม่งั้น CSS กับ JSX จะไม่ตรงกันแบบเงียบ ๆ
+  // ── ดึงหน้าลงเพื่อโหลดใหม่ (พี่กันสั่ง 1 ก.ย. 2569) ─────────────────────────
+  //
+  // ทำไมต้องมี: เว็บนี้ถามเซิร์ฟเวอร์เองทุก 20 วินาทีอยู่แล้ว (ดูข้อ 3.62)
+  // แต่คนใช้มือถือไม่มีทางรู้ว่าของบนจอสดหรือเก่า และไม่มีปุ่มโหลดใหม่ให้กด
+  // การดึงลงเป็นท่ามาตรฐานที่ทุกแอปใช้ตรงกัน จึงไม่ต้องสอน
+  //
+  // 🚨 ทำงานเฉพาะฝั่งมือถือ — ผูกกับคลาส .mrv-mobile ตัวเดียวกับ mobile.css
+  //    เดสก์ท็อปไม่มี touch event และถึงมีก็ถูกด่านนี้ตีกลับก่อน
+  // 🚨 ต้องอยู่บนสุดของพื้นที่เลื่อนเท่านั้น (scrollTop === 0)
+  //    ไม่งั้นเลื่อนดูตารางประวัติกลางหน้าแล้วหน้าถูกดึงลงมั่ว
+  // 🚨 ระยะที่นิ้วลากถูกหารครึ่ง — ให้รู้สึกฝืดเหมือนดึงยางยืด
+  //    ลากเท่าไหร่ขยับเท่านั้น จะรู้สึกลื่นเกินจนเผลอสั่งโหลดใหม่บ่อย
+  PULL_MAX = 92;
+  PULL_FIRE = 62;
+
+  _onTouchStart = (e) => {
+    if (typeof document === 'undefined') return;
+    if (!document.body.classList.contains('mrv-mobile')) return;
+    if (this.state.pullBusy) return;
+    const sc = this.scrollRef.current;
+    if (!sc || sc.scrollTop > 0) { this._pullFrom = null; return; }
+    this._pullFrom = e.touches && e.touches[0] ? e.touches[0].clientY : null;
+  };
+
+  _onTouchMove = (e) => {
+    if (this._pullFrom == null) return;
+    const sc = this.scrollRef.current;
+    // เลื่อนขึ้นไปแล้ว = เลิกนับว่าเป็นการดึง ปล่อยให้เลื่อนตามปกติ
+    if (!sc || sc.scrollTop > 0) { this._pullFrom = null; if (this.state.pullY) this.setState({ pullY: 0 }); return; }
+    const y = e.touches && e.touches[0] ? e.touches[0].clientY : 0;
+    const dy = y - this._pullFrom;
+    if (dy <= 0) { if (this.state.pullY) this.setState({ pullY: 0 }); return; }
+    // 🚨 ต้องห้ามการเลื่อนของเบราว์เซอร์ ไม่งั้นเด้งของมันเองสู้กับของเรา ภาพกระตุก
+    //    ทำได้เพราะตัวจับนี้ผูกแบบ passive:false (ดู componentDidMount)
+    if (e.cancelable) e.preventDefault();
+    const next = Math.min(this.PULL_MAX, dy * 0.5);
+    if (Math.abs(next - this.state.pullY) >= 1) this.setState({ pullY: next });
+  };
+
+  _onTouchEnd = () => {
+    if (this._pullFrom == null) return;
+    this._pullFrom = null;
+    const y = this.state.pullY;
+    if (y >= this.PULL_FIRE) { this.pullRefresh(); return; }
+    if (y) this.setState({ pullY: 0 });
+  };
+
+  // 🚨 ต้องคืนหน้าจอให้เร็วแม้เซิร์ฟเวอร์ช้า — ค้างที่ตัวหมุนนาน ๆ คนจะกดซ้ำ
+  //    ตั้งเวลาขั้นต่ำ 420 มิลลิวินาที ไม่งั้นเน็ตเร็ว ๆ ตัวหมุนแวบเดียวจนดูเหมือนไม่ได้ทำอะไร
+  pullRefresh = async () => {
+    if (this.state.pullBusy) return;
+    this.setState({ pullBusy: true, pullY: this.PULL_FIRE });
+    const t0 = Date.now();
+    try {
+      // ถามลายเซ็นก่อน (คลังยา · การตั้งค่า · รายการยาคืน) แล้วโหลดเฉพาะหน้าที่เปิดอยู่
+      await this.pulse({ quiet: true });
+      this.refreshCurrent();
+      if (this.loadServerDrafts) this.loadServerDrafts();
+    } catch (e) {}
+    const left = 420 - (Date.now() - t0);
+    const done = () => this.setState({ pullBusy: false, pullY: 0 });
+    if (left > 0) setTimeout(done, left); else done();
+  };
+
+  // ── ห้ามซูมด้วยนิ้ว (พี่กันสั่ง 1 ก.ย. 2569) ───────────────────────────────
+  //
+  // Safari บน iPhone มีท่าซูมของตัวเองชื่อ gesture ซึ่งไม่ผ่านระบบ touch ปกติ
+  // ปิดด้วย CSS อย่างเดียวจึงไม่พอ ต้องดักท่านี้ตรง ๆ ด้วย
+  //
+  // 🚨 ฝั่งคอมต้องไม่โดน — ตรวจคลาส .mrv-mobile ก่อนเสมอ
+  //    (เบราว์เซอร์บนคอมไม่ยิง gesture อยู่แล้ว แต่กันไว้เผื่อจอสัมผัสบนคอม)
+  // 🚨 ห้ามดักการแตะสองครั้งด้วยตัวนี้ — ปุ่มทั้งเว็บใช้ touch-action: manipulation
+  //    ซึ่งปิดการซูมจากการแตะสองครั้งให้แล้ว
+  _onGesture = (e) => {
+    if (typeof document === 'undefined') return;
+    if (!document.body.classList.contains('mrv-mobile')) return;
+    if (e.cancelable) e.preventDefault();
+  };
+
+  // ── วัดขอบจอจริงแล้วล็อกความกว้างของแอปเท่านั้นเป๊ะ ๆ ───────────────────
+  //
+  // พี่กันสั่ง 1 ก.ย. 2569 หลังบ่นเรื่องหน้าไถลซ้ายขวา 7 รอบ
+  //   "ให้มัน fix ซ้ายขวาไม่ได้เหรอ และให้มัน detect ขอบมือถือ แล้ว fix เลย
+  //    และปรับใช้กับทุกมือถือได้"
+  //
+  // ทำไมกฎ CSS ทั้งหมดก่อนหน้าไม่พอ:
+  //   iPhone มีกรอบหน้าเว็บ 2 ชั้น — กรอบผัง (layout viewport) กับกรอบที่ตาเห็น
+  //   (visual viewport) ถ้ามีอะไรกว้างเกินแม้แต่ครั้งเดียว กรอบผังจะกว้างกว่าจอ
+  //   แล้ว iOS ยอมให้ลากกรอบที่ตาเห็นไปมาภายในกรอบผังได้เสมอ
+  //   position:fixed ก็ยึดกับกรอบผัง ไม่ใช่ขอบจอ จึงถูกลากไปด้วย
+  //
+  // วิธีนี้จึงไม่พึ่งกรอบผังเลย — ถามเครื่องตรง ๆ ว่าขอบจอจริงกว้างเท่าไหร่
+  // แล้วบังคับตัวแอปให้กว้างเท่านั้น ใช้ได้กับมือถือทุกรุ่นโดยไม่ต้องรู้จักรุ่นเลย
+  //
+  // 🚨 เอาค่าที่น้อยที่สุดในสามตัวเสมอ — visualViewport คือของที่ตาเห็นจริง
+  //    ส่วน innerWidth กับ clientWidth จะโตตามกรอบผังเมื่อมีของล้น
+  // 🚨 ปัดลงด้วย Math.floor ห้ามปัดขึ้น — เกินไปแม้ครึ่งจุดก็ลากได้แล้ว
+  lockWidth = () => {
+    if (typeof window === 'undefined') return;
+    const vv = window.visualViewport;
+    const cands = [
+      vv && vv.width ? vv.width : 0,
+      window.innerWidth || 0,
+      document.documentElement ? document.documentElement.clientWidth : 0
+    ].filter((x) => x > 0);
+    if (!cands.length) return;
+    const w = Math.floor(Math.min.apply(null, cands));
+    if (w > 0 && w !== this.state.lockW) this.setState({ lockW: w });
+  };
+
+  // ── ตรึงตำแหน่งเลื่อนแนวนอนไว้ที่ 0 (พี่กันชี้ทางเอง 1 ก.ย. 2569) ──────────
+  //
+  // พี่กันถามว่า "ทำไมกรอบแสดงค่ายา และกรอบปุ่มกดส่งยา ทำไมมันไม่เลื่อน
+  //              ทำไมเอาระบบนั้นมาไม่ได้"
+  //
+  // คำตอบคือแถบพวกนั้นอยู่ "นอก" พื้นที่เลื่อน จึงไม่มีอะไรมาลากมันได้เลย
+  // และคลิปที่พี่กันถ่ายมาก็ยืนยัน — แถบล่างนิ่งสนิททุกเฟรมขณะที่ส่วนบนไถล
+  // แปลว่าไม่ใช่ทั้งหน้าถูกลาก แต่เป็น "พื้นที่เลื่อน" ตัวเดียวที่เลื่อนแนวนอนได้
+  //
+  // กฎ CSS ทุกข้อที่ลองมา (overflow hidden/clip · touch-action · max-width)
+  // ได้ผลบนคอมแต่ไม่ได้ผลบนมือถือของพี่กัน จึงเลิกพึ่ง CSS แล้วดักที่ตัวเหตุการณ์ตรง ๆ
+  // มีอะไรมาดันให้เลื่อนก็ดันไป — ดีดกลับเป็น 0 ทันทีทุกครั้ง
+  //
+  // 🚨 ผูกแบบ passive ได้ เพราะไม่ได้ห้ามเหตุการณ์ แค่ตั้งค่ากลับ
+  //    จึงไม่ถ่วงการเลื่อนขึ้นลงเลยแม้แต่นิดเดียว
+  // 🚨 ฝั่งคอมต้องไม่โดน — ตรวจคลาส .mrv-mobile ก่อนเสมอ
+  //    (หน้าคลังยาฝั่งคอมมีตารางกว้างที่ต้องเลื่อนดูข้าง ๆ ได้จริง)
+  // 🚨 ต้องดักที่ window ด้วย เผื่อสิ่งที่เลื่อนคือทั้งหน้าไม่ใช่กล่องข้างใน
+  _pinLeft = () => {
+    if (typeof document === 'undefined') return;
+    if (!document.body.classList.contains('mrv-mobile')) return;
+    const sc = this.scrollRef && this.scrollRef.current;
+    if (sc && sc.scrollLeft !== 0) sc.scrollLeft = 0;
+    const de = document.documentElement;
+    if (de && de.scrollLeft !== 0) de.scrollLeft = 0;
+    if (document.body.scrollLeft !== 0) document.body.scrollLeft = 0;
+    if (window.scrollX !== 0) window.scrollTo(0, window.scrollY);
+  };
+
+  syncMobileClass = () => {
+    if (typeof document === 'undefined') return;
+    const st = this.state;
+    const wide = (st.vw || 0) >= 1180 && !st.forceNarrow;
+    document.body.classList.toggle('mrv-mobile', !wide);
+  };
+
   _onBeforeUnload = (e) => {
     const st = this.state;
     // 🚨 กำลังออกจากระบบเอง = ตั้งใจออกและยืนยันมาแล้วหนึ่งชั้น ห้ามถามซ้ำ
@@ -727,8 +923,23 @@ export default class MedReturnApp extends React.Component {
     if (this._revTimer) clearInterval(this._revTimer);
     if (this._ownTimer) clearTimeout(this._ownTimer);
     if (this._catMoreObs) { this._catMoreObs.disconnect(); this._catMoreObs = null; }
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', this.lockWidth);
+      window.visualViewport.removeEventListener('scroll', this.lockWidth);
+    }
+    document.removeEventListener('scroll', this._pinLeft, true);
+    window.removeEventListener('scroll', this._pinLeft);
+    window.removeEventListener('touchmove', this._pinLeft);
+    window.removeEventListener('touchend', this._pinLeft);
     window.removeEventListener('resize', this._onResize);
     window.removeEventListener('keydown', this._onKey);
+    document.removeEventListener('gesturestart', this._onGesture);
+    document.removeEventListener('gesturechange', this._onGesture);
+    document.removeEventListener('gestureend', this._onGesture);
+    window.removeEventListener('touchstart', this._onTouchStart);
+    window.removeEventListener('touchmove', this._onTouchMove);
+    window.removeEventListener('touchend', this._onTouchEnd);
+    window.removeEventListener('touchcancel', this._onTouchEnd);
     document.removeEventListener('mousedown', this._onDocDown);
     document.removeEventListener('visibilitychange', this._onVisible);
     window.removeEventListener('online', this._onOnline);

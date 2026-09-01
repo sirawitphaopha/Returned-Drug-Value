@@ -2,6 +2,16 @@
 import { thaiDate, money } from '@/lib/format';
 
 
+// ── แท็บที่ไม่เอาลงแถบล่างฝั่งมือถือ (พี่กันสั่ง 1 ก.ย. 2569) ────────────────
+//
+// "เอาแท็บคลังยาออก ไม่ใส่ ให้ดูในเดสเท่านั้น"
+// หน้าคลังยาเป็นตาราง 14 คอลัมน์ที่ต้องเลื่อนซ้ายขวา ใช้บนจอมือถือไม่ไหวจริง ๆ
+// และเป็นงานแก้ข้อมูลกลางที่ทำจากเครื่องห้องยา ไม่ใช่งานหน้าเคาน์เตอร์
+//
+// 🚨 กรองด้วย key ไม่ใช่ตำแหน่งในรายการ — เพิ่มแท็บใหม่แล้วไม่ต้องมาแก้เลขตรงนี้
+// ⚠️ หน้าคลังยายังเปิดได้อยู่ทุกทางเหมือนเดิม แค่ไม่มีแท็บให้กดบนมือถือ
+const MOBILE_HIDE = ['catalog'];
+
 export function shellVals(app, d) {
   const st = d.st;
   // goScreen เปลี่ยนหน้าแล้วสั่งโหลดข้อมูลของหน้านั้นให้ด้วย (มอคอัปไม่ต้อง เพราะข้อมูลอยู่ในเครื่องหมดแล้ว)
@@ -13,7 +23,19 @@ export function shellVals(app, d) {
   // ธงดูโครงจางค้างไว้ — ทุกหน้าอ่านตัวนี้ตัวเดียว (ดู handlers/ui.js → toggleSkelDemo)
   const skelDemo = !!st.skelDemo;
 
-  return {
+  const V = {
+    // ── ดึงหน้าลงเพื่อโหลดใหม่ (พี่กันสั่ง 1 ก.ย. 2569) ──────────────────────
+    // 🚨 บนเดสก์ท็อป pullY เป็น 0 เสมอ ตัวจับนิ้วตีกลับตั้งแต่ด่านแรก
+    //    ของทุกชิ้นจึงอยู่ตำแหน่งเดิมเป๊ะ ไม่มีอะไรถูกเลื่อนแม้แต่พิกเซลเดียว
+    pullY: st.pullY || 0,
+    pullBusy: !!st.pullBusy,
+    pullReady: (st.pullY || 0) >= 62,
+    pullLabel: st.pullBusy ? 'กำลังโหลดข้อมูลใหม่' : ((st.pullY || 0) >= 62 ? 'ปล่อยเพื่อโหลดใหม่' : 'ดึงลงเพื่อโหลดใหม่'),
+
+
+    // ความกว้างของขอบจอจริงที่วัดได้ (0 = ยังไม่ได้วัด ให้ใช้ 100%)
+    lockW: st.lockW || 0,
+
     shellBg: st.screen === 'summary' ? (d.dark ? '#151a17' : '#f6f7f4') : '#f6f7f4',
     wide: d.wide,
     narrow: !d.wide,
@@ -31,12 +53,12 @@ export function shellVals(app, d) {
     goHome: goHome,
     skelDemo: skelDemo,
     tabs: [
-      { label: 'บันทึก', radius: '5px', on: st.screen === 'record', cls: st.screen === 'record' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'record' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'record' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'record' ? '#2f7d5d' : '#6b746e', pick: pickScreen('record') },
-      { label: 'ประวัติ', radius: '50%', on: st.screen === 'history', cls: st.screen === 'history' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'history' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'history' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'history' ? '#2f7d5d' : '#6b746e', pick: pickScreen('history') },
-      { label: 'สรุป', radius: '3px', on: st.screen === 'summary', cls: st.screen === 'summary' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'summary' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'summary' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'summary' ? '#2f7d5d' : '#6b746e', pick: pickScreen('summary') },
+      { label: 'บันทึก', key: 'record', radius: '5px', on: st.screen === 'record', cls: st.screen === 'record' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'record' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'record' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'record' ? '#2f7d5d' : '#6b746e', pick: pickScreen('record') },
+      { label: 'ประวัติ', key: 'history', radius: '50%', on: st.screen === 'history', cls: st.screen === 'history' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'history' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'history' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'history' ? '#2f7d5d' : '#6b746e', pick: pickScreen('history') },
+      { label: 'สรุป', key: 'summary', radius: '3px', on: st.screen === 'summary', cls: st.screen === 'summary' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'summary' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'summary' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'summary' ? '#2f7d5d' : '#6b746e', pick: pickScreen('summary') },
       // คลังยา — ตาราง drugs ของกลาง ใช้ร่วมกันทุกเว็บห้องยา (พี่กันสั่งให้เป็นแท็บ 13 ส.ค. 2569)
       // ต้องเรียก openCatalog ไม่ใช่ pickScreen เฉย ๆ เพราะต้องสั่งโหลดคลังยาดิบด้วย
-      { label: 'คลังยา', radius: '8px', on: st.screen === 'catalog', cls: st.screen === 'catalog' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'catalog' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'catalog' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'catalog' ? '#2f7d5d' : '#6b746e', pick: app.openCatalog }
+      { label: 'คลังยา', key: 'catalog', radius: '8px', on: st.screen === 'catalog', cls: st.screen === 'catalog' ? 'tab-btn on' : 'tab-btn', fg: st.screen === 'catalog' ? '#2f7d5d' : '#6b746e', navBg: st.screen === 'catalog' ? '#e3f0e8' : 'transparent', navFg: st.screen === 'catalog' ? '#2f7d5d' : '#6b746e', pick: app.openCatalog }
     ],
 
     // ปุ่มออกจากระบบ — โผล่เฉพาะตอนเว็บล็อกด้วยรหัสผ่านห้องยาอยู่จริง
@@ -102,4 +124,9 @@ export function shellVals(app, d) {
     toastDot: st.toast && st.toast.ok ? '#2f7d5d' : '#c2543c',
     toastValueColor: st.toast && st.toast.ok ? '#7fd6ab' : '#f0a68f'
   };
+
+  // แท็บชุดมือถือ — ต้องประกอบหลัง V เสร็จ เพราะกรองจากรายการเดียวกัน
+  V.tabsNarrow = V.tabs.filter((t) => MOBILE_HIDE.indexOf(t.key) < 0);
+  return V;
+
 }

@@ -79,7 +79,19 @@ export function renderParked(V) {
   const c = parkedTone(hot);
 
   // ── ล็อตเดียว แสดงรายละเอียดไปเลย ไม่ต้องให้กดอะไรเพิ่ม ──
-  const single = items.length === 1 ? items[0] : null;
+  //
+  // 🚨🔴 เฉพาะฝั่งคอมเท่านั้น (พี่กันเจอเอง 1 ก.ย. 2569 "มันยังเลื่อนไปมาได้อยู่")
+  //
+  //    แบบล็อตเดียวมีของ 4 ชิ้นในบรรทัดเดียว — ชื่อเครื่องเต็ม (อย่างน้อย 180px)
+  //    กับปุ่ม ดูรายละเอียด · เอามาทำต่อ · ทิ้ง รวมแล้วกว้างราว 507px
+  //    บนจอมือถือ 390px จึงล้นออกไป 117px แล้วลากทั้งหน้าให้เลื่อนซ้ายขวาตามไปด้วย
+  //
+  //    ย่อชื่อปุ่มให้สั้นลงแก้ไม่ได้ — พี่กันสั่งไว้ว่า "ไม่ย่อ เอากลับเหมือนเดิม" (กฎข้อ 3.52)
+  //    มือถือจึงใช้ปุ่ม "ดูทั้งหมด" ปุ่มเดียวเหมือนตอนมีหลายล็อต
+  //    แล้วไปกด เอากลับมา/ทิ้ง ในหน้าต่างซ้อนซึ่งมีปุ่มครบอยู่แล้ว
+  //
+  // ⚠️ เทสตอนมีหลายล็อตอย่างเดียวจะไม่เจอบั๊กนี้เลย เพราะคนละเส้นทางกัน
+  const single = (items.length === 1 && V.wide) ? items[0] : null;
 
   // ทุกอย่างอยู่บรรทัดเดียว — จำนวนรวม แยกเครื่อง และคำเตือนใกล้ถูกล้าง
   const head = single
@@ -94,7 +106,9 @@ export function renderParked(V) {
       style={sx('flex:none;margin-bottom:8px;display:flex;align-items:center;gap:9px;padding:6px 8px 6px 12px;border-radius:10px', {
         background: c.bg, border: '1px solid ' + c.bd
       })}>
-      <div style={sx('flex:1;min-width:180px;font:700 12.5px/1.35 Sarabun,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', { color: c.fg })}>
+      {/* 🚨 min-width บนมือถือต้องเป็น 0 — ตั้ง 180px ไว้แล้วกล่องนี้จะไม่ยอมหด
+          ต่อให้ที่ไม่พอ มันก็ดันปุ่มให้ล้นออกนอกจอแทนที่จะบีบตัวเอง */}
+      <div style={sx('flex:1;font:700 12.5px/1.35 Sarabun,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', { color: c.fg, minWidth: V.wide ? '180px' : 0 })}>
         {head}
       </div>
 

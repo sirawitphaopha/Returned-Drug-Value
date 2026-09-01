@@ -78,8 +78,30 @@ export function uiActions(app) {
 
   // สลับแท็บ — หน้าประวัติกับหน้าสรุปดึงข้อมูลจากเซิร์ฟเวอร์ เลยต้องสั่งโหลดตอนเข้า
   // (มอคอัปไม่มีขั้นนี้เพราะข้อมูลอยู่ในเครื่องอยู่แล้ว)
+  // ── เปลี่ยนหน้าแบบไล่จาง เฉพาะฝั่งมือถือ (พี่กันเคาะ 1 ก.ย. 2569 ชุดที่ 4) ──
+  //
+  // 🚨 เฉพาะมือถือเท่านั้น ห้ามลามไปเดสก์ท็อป (พี่กันสั่ง "ห้ามขยับเดสแม้แต่ 1px")
+  //    ตัวตัดสินคือคลาส .mrv-mobile ที่ body ตัวเดียวกับที่ mobile.css ใช้
+  //    ไม่ได้เช็คความกว้างจอ เพราะกดปุ่ม "มือถือ" บนคอมได้
+  //
+  // 🚨 เครื่องที่ไม่รองรับต้องทำงานปกติ ไม่ใช่ค้าง
+  //    Safari รองรับตั้งแต่รุ่น 18 · เครื่องเก่ากว่านั้นเปลี่ยนหน้าแบบเดิมเป๊ะ
+  //
+  // 🚨 ห้ามใช้ตอนเปิดหน้าต่างซ้อน (ป๊อป) — ภาพนิ่งที่เบราว์เซอร์ถ่ายไว้จะกินคลิกไปด้วย
+  //    ที่นี่ใช้กับการสลับแท็บอย่างเดียวจึงปลอดภัย
+  app.viewSwap = (run) => {
+    const canFade = typeof document !== 'undefined' &&
+      typeof document.startViewTransition === 'function' &&
+      document.body.classList.contains('mrv-mobile') &&
+      !(typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    if (!canFade) { run(); return; }
+    try { document.startViewTransition(run); } catch (e) { run(); }
+  };
+
   app.goScreen = (name) => {
-    app.setState({ screen: name }, () => {
+    // ไม่ได้เปลี่ยนหน้าจริง ไม่ต้องไล่จาง (กดแท็บเดิมซ้ำ)
+    if (app.state.screen === name) { app.toTop(); return; }
+    app.viewSwap(() => app.setState({ screen: name }, () => {
       // 🚨 เด้งกลับบนสุดทุกครั้งที่สลับแท็บ (พี่กันแจ้งบั๊ก)
       // พื้นที่เลื่อนเป็นก้อนเดียวใช้ร่วมกันทุกหน้า ไม่ได้ถูกสร้างใหม่ตอนสลับ
       // ตำแหน่งที่เลื่อนค้างจากหน้าเดิมเลยติดมาด้วย เปิดหน้าสรุปมาแล้วอยู่กลางหน้า
@@ -92,7 +114,7 @@ export function uiActions(app) {
 
       if (name === 'history') app.loadHistory();
       if (name === 'summary') { app.loadSummary(); app.loadTopReturned(); }
-    });
+    }));
   };
 
   // เด้งพื้นที่เลื่อนหลักกลับบนสุด — เรียกซ้ำในเฟรมถัดไปด้วยเผื่อเนื้อหายังวาดไม่เสร็จ

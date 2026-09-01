@@ -32,12 +32,46 @@ function renderLoading() {
   );
 }
 
+// ── แถบ "ดึงลงเพื่อโหลดใหม่" ───────────────────────────────────────────────
+//
+// 🚨 ความสูงของกล่องเป็น 0 เสมอ (position:absolute) ผังหน้าจึงไม่ขยับเลย
+//    ใช้ absolute แทนการแทรกกล่องจริง เพราะกล่องจริงจะดันทุกอย่างลงตลอดเวลา
+// 🚨 ตัวหมุนหมุนเฉพาะตอนกำลังโหลด ระหว่างลากเป็นวงกลมนิ่งที่ค่อย ๆ เข้มขึ้น
+//    ของที่หมุนตลอดเวลาบอกอะไรไม่ได้ว่าตอนนี้ถึงจุดที่ปล่อยได้หรือยัง
+function renderPull(V) {
+  if (!V.pullY && !V.pullBusy) return null;
+  const k = Math.min(1, V.pullY / 62);
+  return (
+    <div role="status" aria-live="polite" style={s('position:relative;z-index:2;height:0;overflow:visible')}>
+      <div style={sx('position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;pointer-events:none', { height: V.pullY + 'px', opacity: Math.max(0.25, k) })}>
+        <div style={sx('width:22px;height:22px;border-radius:50%;border:2.2px solid rgba(47,125,93,.22)', V.pullBusy
+          ? { borderTopColor: '#2f7d5d', animation: 'mrspin .7s linear infinite' }
+          : { borderTopColor: '#2f7d5d', transform: 'rotate(' + Math.round(k * 300) + 'deg)' })}></div>
+        <span style={s('font:600 11.5px Sarabun,sans-serif;color:#2f7d5d')}>{V.pullLabel}</span>
+      </div>
+    </div>
+  );
+}
+
 export function renderShell(app) {
   if (app.state.loading) return renderLoading();
   const V = renderVals(app);
 
   return (
-    <div style={sx('height:100dvh;display:flex;flex-direction:column;overflow:hidden;font-family:Sarabun,sans-serif;color:#1e2420', { background: V.shellBg })}>
+    /* ── ฝั่งมือถือตรึงทั้งแอปติดกับจอ (พี่กันบ่นเรื่องเดิม 6 รอบ) ────────────
+
+       ก่อนหน้านี้กล่องนอกสุดเป็นกล่องธรรมดาที่สูงเท่าจอ ซึ่งยัง "ลอยอยู่ในหน้าเว็บ"
+       ถ้ามีอะไรทำให้หน้าเว็บกว้างกว่าจอ ตัวมันก็ถูกลากไปมาตามหน้าได้
+
+       position:fixed + inset:0 ทำให้มันยึดกับกรอบจอโดยตรง ไม่ใช่ยึดกับหน้าเว็บ
+       ต่อให้หน้าเว็บกว้างแค่ไหน หรือมีอะไรมาแทรกจากนอกเว็บ ตัวแอปก็ไม่ขยับตาม
+       เป็นท่าเดียวกับที่แอปบนมือถือทำกัน
+
+       🚨 ฝั่งคอมห้ามใช้เด็ดขาด — fixed จะถอนกล่องออกจากผังหน้า
+          หน้าที่ต้องเลื่อนทั้งหน้าบนคอมจะพังทันที */
+    <div style={V.narrow
+      ? sx('position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;overflow:hidden;font-family:Sarabun,sans-serif;color:#1e2420', { background: V.shellBg, width: V.lockW ? V.lockW + 'px' : '100%', maxWidth: V.lockW ? V.lockW + 'px' : '100%' })
+      : sx('height:100dvh;display:flex;flex-direction:column;overflow:hidden;font-family:Sarabun,sans-serif;color:#1e2420', { background: V.shellBg })}>
       {/* แถบเตือนโหมดดูตัวอย่าง — ต้องเห็นตลอดเวลาที่เปิดโหมด
           จะได้ไม่มีใครเผลอคิดว่าตัวเลขบนจอคือของจริง */}
       {V.demo && (
@@ -66,7 +100,14 @@ export function renderShell(app) {
       {/* role="main" = บอกโปรแกรมอ่านหน้าจอว่าตรงนี้คือเนื้อหาหลักของหน้า (ผลตรวจข้อ ต-14)
           🚨 เติม role บน div เดิม ไม่เปลี่ยนเป็นแท็ก <main> เพราะ <main> มีสไตล์ตั้งต้นของเบราว์เซอร์
              เปลี่ยนแท็กเมื่อไหร่หน้าตาขยับทันที · เติม role อย่างเดียวไม่แตะ CSS เลยสักพิกเซล */}
-      <div ref={app.scrollRef} role="main" style={s('flex:1;overflow-y:auto;overflow-anchor:none;min-height:0;position:relative;display:flex;flex-direction:column')}>
+      {/* ── ดึงหน้าลงเพื่อโหลดใหม่ (พี่กันสั่ง 1 ก.ย. 2569) ──────────────────────
+          🚨 วางไว้นอกพื้นที่เลื่อน แล้วให้พื้นที่เลื่อนขยับทับมันลงมา
+             ถ้าวางข้างใน มันจะเลื่อนหนีไปกับเนื้อหาแล้วมองไม่เห็นตอนดึง
+          🚨 บนเดสก์ท็อป V.pullY เป็น 0 เสมอ กล่องนี้จึงสูง 0 และไม่มีอะไรขยับ */}
+      {renderPull(V)}
+      {/* transform ตามนิ้ว — ใช้ translate ไม่ใช่ margin/padding
+          เพราะ translate ไม่ทำให้เบราว์เซอร์คำนวณผังหน้าใหม่ทุกเฟรม ภาพจึงลื่น */}
+      <div ref={app.scrollRef} role="main" style={sx('flex:1;overflow-y:auto;overflow-anchor:none;min-height:0;position:relative;display:flex;flex-direction:column', V.pullY ? { transform: 'translateY(' + V.pullY + 'px)', transition: V.pullBusy ? undefined : 'none' } : null)}>
         {/* กล่องครอบเนื้อหา — ยืดเต็มพื้นที่ที่เหลือ ท้ายเว็บเลยถูกดันลงล่างสุดเอง
             ไม่ต้องพึ่ง margin-top:auto
 

@@ -20,11 +20,19 @@ export function renderFooter(V) {
         ? { alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }
         : { flexDirection: 'column', alignItems: 'center', textAlign: 'center' })}>
 
-        <div style={sx('display:flex;align-items:center;gap:8px;min-width:0', wide ? {} : { justifyContent: 'center' })}>
+        {/* 🚨 maxWidth:100% ขาดไม่ได้ในโหมดมือถือ (พี่กันเจอเอง 1 ก.ย. 2569)
+            พ่อเป็น flex คอลัมน์ที่ align-items:center ลูกจึงไม่ถูกยืดเต็มความกว้าง
+            แต่กว้างเท่าเนื้อหาแทน — บรรทัดนี้ยาว 539px บนจอ 390px จึงยื่นออกไปทั้งสองข้าง
+            แล้วพื้นที่เลื่อนกลายเป็นเลื่อนซ้ายขวาได้ทั้งหน้า ("ไม่อยากให้มันเลื่อนไปมาแบบนี้") */}
+        <div style={sx('display:flex;align-items:center;gap:8px;min-width:0', wide ? {} : { justifyContent: 'center', maxWidth: '100%' })}>
           <span style={s('width:18px;height:18px;border-radius:5px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;flex:none')}>
             <span style={s("font:700 9px Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
           </span>
-          <span style={sx('font:500 11.5px Sarabun,sans-serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', { color: muted })}>
+          {/* คอมตัดท้ายด้วยจุดไข่ปลา · มือถือขึ้นบรรทัดใหม่แทน
+              🚨 มือถือห้ามตัดด้วยจุดไข่ปลา ชื่อหน่วยงานจะเหลือครึ่งเดียวตลอด (พี่กันเคยทักเรื่อง ...) */}
+          <span style={sx('font:500 11.5px Sarabun,sans-serif;min-width:0', wide
+            ? { color: muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+            : { color: muted, textAlign: 'center' })}>
             มูลค่ายาคืน v{V.appVersion} · {V.orgName}
           </span>
         </div>

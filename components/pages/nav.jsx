@@ -1,6 +1,63 @@
 // แถบเมนู — คัดจากมอคอัป มือถืออยู่ล่างจอ (บรรทัด 478–489) คอมอยู่บนจอ (490–511)
 import { s, sx, kb } from '../helpers';
 
+// ── ไอคอนแท็บฝั่งมือถือ ────────────────────────────────────────────────────
+//
+// พี่กันทัก 1 ก.ย. 2569 ว่าควรเกลาจุดนี้ — ของเดิมยกมาจากมอคอัปตรง ๆ
+// เป็นกรอบเปล่า 20×20 ที่ต่างกันแค่ความมนของมุม (สี่เหลี่ยมมน · วงกลม · สี่เหลี่ยม)
+// ไม่ได้สื่ออะไรเลย ต้องอ่านตัวหนังสือใต้ไอคอนอย่างเดียว = ไอคอนกินที่ฟรี ๆ
+//
+// 🚨 เส้นวาดล้วน ไม่มีสีทึบ ใช้ currentColor ทั้งหมด สีจึงตามสถานะแท็บเอง
+//    ไม่ต้องมีชุดสีแยกให้ลืมอัปเดตวันหลัง
+// 🚨 แท็บที่เปิดอยู่เส้นหนาขึ้น (2.3 จาก 1.7) นอกจากสีที่เข้มขึ้น
+//    บนจอกลางแดดที่สีจางลงจนแยกยาก ความหนายังบอกได้ว่าอยู่หน้าไหน
+// 🚨 ฝั่งคอมเป็นตัวหนังสือล้วน ห้ามเอาชุดนี้ไปใส่ (renderNavWide)
+function navIcon(key, on) {
+  const p = {
+    fill: 'none', stroke: 'currentColor', strokeWidth: on ? 2.3 : 1.7,
+    strokeLinecap: 'round', strokeLinejoin: 'round'
+  };
+  const box = { width: 22, height: 22, viewBox: '0 0 24 24', style: { display: 'block' }, 'aria-hidden': 'true' };
+
+  // บันทึก — แคปซูลยาวางเอียง มีเส้นแบ่งครึ่งเม็ดตรงกลาง
+  //
+  // 🚨 ห้ามใช้รูปถุง/ขวดที่มีหูจับด้านบน — หน้าตาเหมือนถังขยะจนแยกไม่ออก
+  //    ถังขยะแปลว่า "ลบ" ทั้งเว็บ เอามาเป็นแท็บหลักแล้วอันตราย
+  //    (เจอจากการถ่ายภาพดูจริง ไม่ใช่จากการอ่านโค้ด — กฎข้อ 3.65)
+  if (key === 'record') return (
+    <svg {...box}>
+      <path {...p} d="M8.4 15.6 15.6 8.4a3.7 3.7 0 0 1 5.2 5.2l-7.2 7.2a3.7 3.7 0 0 1-5.2-5.2Z" />
+      <path {...p} d="M11 12.6 17 18.6" />
+      <path {...p} d="M4.4 6.6h5.2M7 4v5.2" />
+    </svg>
+  );
+
+  // ประวัติ — นาฬิกาพร้อมลูกศรย้อนกลับ (ของที่ผ่านไปแล้ว)
+  if (key === 'history') return (
+    <svg {...box}>
+      <path {...p} d="M3.6 12a8.4 8.4 0 1 0 2.7-6.2" />
+      <path {...p} d="M3.4 4.6v4.2h4.2" />
+      <path {...p} d="M12 7.8V12l3 1.8" />
+    </svg>
+  );
+
+  // สรุป — กราฟแท่งบนเส้นฐาน (หน้าที่เอาไปเสนอผู้บริหาร)
+  if (key === 'summary') return (
+    <svg {...box}>
+      <path {...p} d="M4 19.6h16" />
+      <path {...p} d="M7.6 19.6v-4.8M12 19.6V7.4M16.4 19.6v-8.2" />
+    </svg>
+  );
+
+  // คลังยา — ชั้นวางของ (ไม่ได้ใช้ในแถบมือถือแล้ว เก็บไว้เผื่อวันหน้า)
+  return (
+    <svg {...box}>
+      <path {...p} d="M4.2 5.4h15.6v13.2H4.2Z" />
+      <path {...p} d="M4.2 9.8h15.6M4.2 14.2h15.6" />
+    </svg>
+  );
+}
+
 export function renderNavNarrow(V) {
   return (
     <div role="navigation" aria-label="เมนูหลัก" ref={V.navBarRef} style={s('flex:none;background:#fff;border-top:1px solid rgba(30,36,32,.08);padding:8px 0 max(14px,env(safe-area-inset-bottom));order:2')}>
@@ -15,10 +72,12 @@ export function renderNavNarrow(V) {
           </div>
         </div>
       )}
+      {/* 🚨 ใช้ V.tabsNarrow ไม่ใช่ V.tabs — ฝั่งมือถือไม่มีแท็บคลังยา (พี่กันสั่ง 1 ก.ย. 2569) */}
       <div style={s('max-width:520px;margin:0 auto;display:flex;justify-content:space-around')}>
-        {V.tabs.map((t) => (
-          <div key={t.label} {...kb(t.pick)} className="hv-txt" style={sx('display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px 18px;cursor:pointer;font:600 11px Sarabun,sans-serif', { color: t.fg })}>
-            <span style={{ width: '20px', height: '20px', border: '2px solid ' + t.fg, borderRadius: t.radius }}></span>{t.label}
+        {V.tabsNarrow.map((t) => (
+          <div key={t.label} {...kb(t.pick)} className="hv-txt" style={sx('display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:76px;min-height:52px;border-radius:12px;cursor:pointer;font:600 11px Sarabun,sans-serif', { color: t.fg })}>
+            {navIcon(t.key, t.on)}
+            {t.label}
           </div>
         ))}
       </div>
