@@ -703,26 +703,26 @@ export function renderSaveBar(V) {
   return (
     <div ref={V.saveBarRef} style={s('flex:none;background:#fff;border-top:1px solid rgba(30,36,32,.08);box-shadow:0 -6px 20px rgba(30,36,32,.06);order:1;position:relative;z-index:5')}>
       <div style={s('max-width:520px;margin:0 auto')}>
-        <div style={s('display:flex;align-items:center;justify-content:space-between;padding:8px 20px;background:#f6f7f4;border-bottom:1px solid rgba(30,36,32,.06)')}>
+        <div style={s('display:flex;align-items:center;justify-content:space-between;padding:5px 20px;background:#f6f7f4;border-bottom:1px solid rgba(30,36,32,.06)')}>
           <span style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e')}>สะสมปีงบ {V.fyLabel}</span>
           <span style={s("font:600 13.5px Sarabun,sans-serif;color:#414a44;font-variant-numeric:tabular-nums")}>{V.cumulativeLabel} <span style={s('color:#2f7d5d')}>▲</span></span>
         </div>
-        <div style={s('padding:12px 20px 16px')}>
-          <div style={s('display:flex;gap:9px;margin-bottom:10px')}>
-            <div style={s('flex:1;background:#eef6f1;border-radius:11px;padding:9px 12px')}>
+        <div style={s('padding:8px 20px 10px')}>
+          <div style={s('display:flex;gap:8px;margin-bottom:7px')}>
+            <div style={s('flex:1;background:#eef6f1;border-radius:10px;padding:6px 11px')}>
               <div style={s('font:500 11px Sarabun,sans-serif;color:#2f7d5d')}>ประหยัดครั้งนี้</div>
-              <div style={s("font:700 25px/1.15 Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums;letter-spacing:-.025em")}>{V.animSavedLabel}</div>
+              <div style={s("font:700 21px/1.1 Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums;letter-spacing:-.025em")}>{V.animSavedLabel}</div>
             </div>
-            <div style={s('flex:1;background:#fdf1ed;border-radius:11px;padding:9px 12px')}>
+            <div style={s('flex:1;background:#fdf1ed;border-radius:10px;padding:6px 11px')}>
               <div style={s('font:500 11px Sarabun,sans-serif;color:#c2543c')}>สูญเสีย</div>
-              <div style={s("font:700 25px/1.15 Sarabun,sans-serif;color:#c2543c;font-variant-numeric:tabular-nums;letter-spacing:-.025em")}>{V.lostLabel}</div>
+              <div style={s("font:700 21px/1.1 Sarabun,sans-serif;color:#c2543c;font-variant-numeric:tabular-nums;letter-spacing:-.025em")}>{V.lostLabel}</div>
             </div>
           </div>
-          <div style={s('display:flex;height:8px;border-radius:99px;overflow:hidden;margin-bottom:5px;background:#eef1ee')}>
+          <div style={s('display:flex;height:6px;border-radius:99px;overflow:hidden;margin-bottom:4px;background:#eef1ee')}>
             <div style={{ width: V.savedBarW, background: '#2f7d5d' }}></div>
             <div style={{ width: V.lostBarW, background: '#c2543c' }}></div>
           </div>
-          <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:10px;font-variant-numeric:tabular-nums')}>{V.proportionLabel}</div>
+          <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;margin-bottom:8px;font-variant-numeric:tabular-nums')}>{V.proportionLabel}</div>
 
           {V.saveFailed && (
             <div style={s('border:1px solid rgba(194,84,60,.28);background:#fdf1ed;border-radius:11px;padding:11px 12px;margin-bottom:10px')}>
@@ -731,7 +731,7 @@ export function renderSaveBar(V) {
             </div>
           )}
 
-          <div {...kb(V.onSave)} className={V.saveOn ? 'hv-teal' : 'hv-wait'} style={sx('height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font:600 17px Sarabun,sans-serif;cursor:pointer', { background: V.saveBg, color: V.saveFg, border: V.saveBorder, boxSizing: 'border-box' })}>{V.saveLabel}</div>
+          <div {...kb(V.onSave)} className={V.saveOn ? 'hv-teal' : 'hv-wait'} style={sx('height:48px;border-radius:11px;display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;cursor:pointer', { background: V.saveBg, color: V.saveFg, border: V.saveBorder, boxSizing: 'border-box' })}>{V.saveLabel}</div>
         </div>
       </div>
     </div>

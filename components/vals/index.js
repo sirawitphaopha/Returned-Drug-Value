@@ -68,7 +68,11 @@ export function renderVals(app) {
   const stt = app.state;
   const sc = stt.screen;
   const need = {
-    history: sc === 'history',
+    // 🚨🔴 ต้องคำนวณเมื่อมีป๊อปยืนยันเปิดอยู่ด้วย ไม่ใช่เฉพาะตอนอยู่หน้าประวัติ
+    //    confirmRun (ตัวสั่งทำงานของปุ่มยืนยัน) อยู่ในไฟล์นี้ แต่ป๊อปถูกใช้ข้ามหน้า
+    //    ข้ามการคำนวณเมื่อไหร่ = ปุ่มยืนยันไม่มีฟังก์ชันผูก กดแล้วเงียบสนิท
+    //    พี่กันเจอเอง 1 ก.ย. 2569 — กดบันทึกทั้งบนคอมและมือถือแล้วไม่บันทึกเลย
+    history: sc === 'history' || !!stt.confirm,
     summary: sc === 'summary',
     prices: sc === 'prices',
     catalog: sc === 'catalog',
