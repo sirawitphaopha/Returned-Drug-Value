@@ -187,8 +187,12 @@ export function renderRecordNarrow(V) {
                ชิปยืดหดตามที่ว่างแทน (flex:1) และห้ามให้ตัวอักษรตัดบรรทัด
             🚨 ฝั่งเดสก์ท็อปห้ามแตะ ยังใช้ชื่อเต็มกับ flex-wrap เหมือนเดิม */}
         <div style={s('display:flex;gap:5px;margin-top:10px')}>
+          {/* 🚨 ชิปเตี้ย 30px (พี่กันสั่ง 1 ก.ย. 2569 "บีบตรงนี้โว้ย")
+              เดิม min-height 44px ตามเกณฑ์นิ้ว แต่พี่กันเห็นแล้วว่ากินที่มากเกินไป
+              ยังกดง่ายอยู่เพราะกว้างเต็มหนึ่งในห้าของจอ (ราว 70px) ซึ่งเกินเกณฑ์ในแนวกว้าง
+              และไม่มีปุ่มอื่นวางติดกันในแนวตั้งให้กดพลาด */}
           {V.sources.map((src) => (
-            <div key={src.label} {...kb(src.pick)} className={src.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('flex:1;min-width:0;display:flex;align-items:center;justify-content:center;min-height:44px;padding:7px 4px;border-radius:999px;font:500 12px Sarabun,sans-serif;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', { background: src.bg, color: src.fg })}>{src.short}</div>
+            <div key={src.label} {...kb(src.pick)} className={src.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('flex:1;min-width:0;display:flex;align-items:center;justify-content:center;height:30px;padding:0 4px;border-radius:999px;font:500 11.5px Sarabun,sans-serif;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', { background: src.bg, color: src.fg })}>{src.short}</div>
           ))}
         </div>
 
@@ -196,20 +200,34 @@ export function renderRecordNarrow(V) {
             ไม่ใช่ซ่อนไว้จนต้องกดเปิดหา ซึ่งจะทำให้ลืมกรอกได้ง่ายมาก */}
         {renderPcuField(V, { required: true })}
 
+        {/* ── วันที่กับ HN อยู่แถวเดียว ป้ายอยู่ข้างช่อง (พี่กันสั่ง 1 ก.ย. 2569) ──
+            "วันที่ HN ย้ายงี้หน่อยเป็นเเถวเดียว"
+
+            เดิมป้ายอยู่บนช่อง กินความสูงช่องละสองบรรทัด รวมสี่บรรทัด
+            ย้ายป้ายมาไว้ข้างซ้ายในกรอบเดียวกัน เหลือบรรทัดเดียว
+
+            🚨 กรอบอยู่ที่กล่องนอก ช่องกรอกจึงไม่มีขอบของตัวเอง
+               ปล่อยให้มีทั้งคู่จะเห็นเส้นซ้อนสองชั้น
+            🚨 ช่องกรอกยังต้องเป็น 16px ไม่งั้น iPhone ซูมเองตอนแตะ
+
+            ⚠️ ช่องผู้บันทึกย้ายไปอยู่ในแถบบันทึกล่างจอแล้ว (พี่กันสั่ง
+               "ผู้บันทึก เอาตรึงไว้ตรงกดส่ง") — มันต้องเลือกก่อนกดส่ง
+               อยู่ติดปุ่มส่งจึงเห็นพร้อมกันโดยไม่ต้องเลื่อนหา */}
         {V.showMore && (
-          <div style={s('margin-top:11px;padding-top:11px;border-top:1px solid rgba(30,36,32,.08);display:flex;flex-direction:column;gap:9px')}>
-            <div style={s('display:flex;gap:9px')}>
-              <div style={s('flex:1')}>
-                <div style={s('font:500 11px Sarabun,sans-serif;color:#6b746e;margin-bottom:4px')}>วันที่</div>
-                <input type="date" value={V.dateIso} onChange={V.onDate} max={V.dateMax} style={s("width:100%;height:42px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 16px Sarabun,sans-serif")} />
-              </div>
-              <div style={s('flex:1')}>
-                <div style={s('font:500 11px Sarabun,sans-serif;color:#6b746e;margin-bottom:4px')}>HN (ไม่บังคับ)</div>
-                <input value={V.hn} onChange={V.onHn} inputMode="numeric" placeholder="ปล่อยว่างได้" style={s("width:100%;height:42px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 16px Sarabun,sans-serif")} />
-              </div>
+          <div style={s('margin-top:11px;padding-top:11px;border-top:1px solid rgba(30,36,32,.08);display:flex;gap:9px')}>
+
+            <div style={s('flex:1;min-width:0;display:flex;align-items:center;gap:7px;height:40px;padding:0 10px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4')}>
+              <span style={s('font:500 11px Sarabun,sans-serif;color:#6b746e;flex:none')}>วันที่</span>
+              <input type="date" value={V.dateIso} onChange={V.onDate} max={V.dateMax}
+                style={s("flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0;font:400 16px Sarabun,sans-serif")} />
             </div>
-            {/* ผู้บันทึกล็อต — ต่อจากวันที่/HN ตามที่พี่กันสั่ง */}
-            {renderRecorderField(V)}
+
+            <div style={s('flex:1;min-width:0;display:flex;align-items:center;gap:7px;height:40px;padding:0 10px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4')}>
+              <span style={s('font:500 11px Sarabun,sans-serif;color:#6b746e;flex:none')}>HN</span>
+              <input value={V.hn} onChange={V.onHn} inputMode="numeric" placeholder="ไม่บังคับ"
+                style={s("flex:1;min-width:0;height:100%;border:none;background:transparent;padding:0;font:400 16px Sarabun,sans-serif")} />
+            </div>
+
           </div>
         )}
       </div>
@@ -732,6 +750,14 @@ export function renderSaveBar(V) {
             ⚠️ ยอดสะสมปีงบยังอยู่ครบที่หน้าสรุปและแผงขวาฝั่งคอม ไม่ได้หายจากระบบ
             🚨 แถบนี้เป็นของมือถือเท่านั้น ห้ามเอาไปแตะ renderRecordWide ของคอม */}
         <div style={s('padding:8px 20px 10px')}>
+          {/* ── ผู้บันทึกตรึงไว้ติดปุ่มส่ง (พี่กันสั่ง 1 ก.ย. 2569) ──────────────────
+              "ผู้บันทึก เอาตรึงไว้ตรงกดส่ง"
+
+              เดิมซ่อนอยู่ในตัวเลือกเพิ่มเติม ต้องกดเปิดแล้วเลื่อนขึ้นไปหา
+              ทั้งที่เป็นช่องบังคับที่ต้องเลือกก่อนกดส่งทุกครั้ง (กฎข้อ 3.24)
+              ย้ายมาอยู่เหนือปุ่มส่งพอดี เห็นพร้อมกันโดยไม่ต้องเลื่อนหา */}
+          {renderRecorderField(V)}
+
           <div style={s('display:flex;gap:8px;margin-bottom:7px')}>
             <div style={s('flex:1;background:#eef6f1;border-radius:10px;padding:6px 11px')}>
               <div style={s('font:500 11px Sarabun,sans-serif;color:#2f7d5d')}>ประหยัดครั้งนี้</div>
@@ -742,15 +768,9 @@ export function renderSaveBar(V) {
               <div style={s("font:700 21px/1.1 Sarabun,sans-serif;color:#c2543c;font-variant-numeric:tabular-nums;letter-spacing:-.025em")}>{V.lostLabel}</div>
             </div>
           </div>
-          <div style={s('display:flex;height:6px;border-radius:99px;overflow:hidden;margin-bottom:4px;background:#eef1ee')}>
-            <div style={{ width: V.savedBarW, background: '#2f7d5d' }}></div>
-            <div style={{ width: V.lostBarW, background: '#c2543c' }}></div>
-          </div>
-          {/* ยังไม่มีมูลค่า = ไม่มีอะไรให้บอก ซ่อนทั้งบรรทัด (พี่กันสั่ง 1 ก.ย. 2569)
-              มีมูลค่าแล้วยังบอก "ใช้ต่อได้ N% จาก ..." เหมือนเดิม */}
-          {V.hasGross && (
-            <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e;margin-bottom:8px;font-variant-numeric:tabular-nums')}>{V.proportionLabel}</div>
-          )}
+          {/* ── ไม่มีแถบสัดส่วนกับบรรทัด "ใช้ต่อได้ N%" แล้ว (พี่กันสั่ง 1 ก.ย. 2569) ──
+              จอมือถือเตี้ย แถบล่างกินที่ไปมากแล้ว · ตัวเลขประหยัด/สูญเสียบอกครบอยู่แล้ว
+              ⚠️ แผงขวาฝั่งคอมยังมีทั้งแถบและบรรทัดนี้ครบเหมือนเดิม ห้ามแตะ */}
 
           {V.saveFailed && (
             <div style={s('border:1px solid rgba(194,84,60,.28);background:#fdf1ed;border-radius:11px;padding:11px 12px;margin-bottom:10px')}>

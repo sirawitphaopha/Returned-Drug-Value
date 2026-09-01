@@ -107,7 +107,16 @@ export function renderShell(app) {
       {renderPull(V)}
       {/* transform ตามนิ้ว — ใช้ translate ไม่ใช่ margin/padding
           เพราะ translate ไม่ทำให้เบราว์เซอร์คำนวณผังหน้าใหม่ทุกเฟรม ภาพจึงลื่น */}
-      <div ref={app.scrollRef} role="main" style={sx('flex:1;overflow-y:auto;overflow-anchor:none;min-height:0;position:relative;display:flex;flex-direction:column', V.pullY ? { transform: 'translateY(' + V.pullY + 'px)', transition: V.pullBusy ? undefined : 'none' } : null)}>
+      {/* ── ฉากหลังห้ามเลื่อนเมื่อมีหน้าต่างซ้อนเปิดอยู่ (พี่กันสั่ง 1 ก.ย. 2569) ──
+          "เราบอกเเล้วว่าพอมี popup เเล้วฉากหลังห้ามเลื่อน"
+
+          🚨 ต้องปิดที่ overflow ของพื้นที่เลื่อนเอง ไม่ใช่แค่ที่ body
+             เว็บนี้ล็อกความสูงเท่าจอ ตัวที่เลื่อนจริงคือ div ตัวนี้ ไม่ใช่ body
+          🚨 ตำแหน่งที่เลื่อนค้างไว้ไม่หาย เพราะแค่ปิด overflow ไม่ได้รีเซ็ต scrollTop
+             ปิดหน้าต่างแล้วกลับมาที่เดิมพอดี */}
+      <div ref={app.scrollRef} role="main" style={sx('flex:1;overflow-anchor:none;min-height:0;position:relative;display:flex;flex-direction:column', Object.assign(
+        { overflowY: V.anyModalOpen ? 'hidden' : 'auto' },
+        V.pullY ? { transform: 'translateY(' + V.pullY + 'px)', transition: V.pullBusy ? undefined : 'none' } : null))}>
         {/* กล่องครอบเนื้อหา — ยืดเต็มพื้นที่ที่เหลือ ท้ายเว็บเลยถูกดันลงล่างสุดเอง
             ไม่ต้องพึ่ง margin-top:auto
 
@@ -119,15 +128,32 @@ export function renderShell(app) {
         <div style={V.fitScreen
           ? s('flex:1;min-height:0;display:flex;flex-direction:column')
           : s('flex:1 0 auto;display:flex;flex-direction:column')}>
-          {V.isRecord && (V.narrow ? renderRecordNarrow(V) : renderRecordWide(V))}
-          {V.isHistory && (V.narrow ? renderHistoryNarrow(V) : renderHistoryWide(V))}
-          {V.isSummary && (V.narrow ? renderSummaryNarrow(V) : renderSummaryWide(V))}
-          {V.isPrices && renderPrices(V)}
-          {V.isLots && renderLots(V)}
-          {V.isCatalog && renderCatalog(V)}
-          {V.isAbout && renderAbout(V)}
+          {/* ── หน้าตั้งค่าแทนที่หน้าอื่นทั้งหมด (พี่กันสั่ง 1 ก.ย. 2569) ─────────────
+              "ตั้งค่า เกี่ยวกับ เอาให้เหมือนรายละเอียดเว้บ คือมีปุ่มกลับ"
+
+              🚨 ต้องเป็น "แทนที่" ไม่ใช่ "วาดเพิ่ม" — ถ้าวาดคู่กับหน้าบันทึก
+                 ของสองหน้าจะอยู่ใน DOM พร้อมกัน ปุ่มซ้ำกัน โปรแกรมอ่านจอสับสน
+                 และตัวตรวจก็นับของเจอสองเท่า (เจอตอนวัดชิปแล้วได้ 10 อันแทนที่จะเป็น 5)
+              ⚠️ ไม่ได้เปลี่ยนเป็น screen เพราะปิดแล้วต้องกลับหน้าเดิมที่ค้างอยู่
+                 ถ้าใช้ screen จะต้องจำหน้าเดิมไว้เองซึ่งยุ่งกว่า */}
+          {V.settingsOpen ? renderSettings(V) : (
+            <>
+              {V.isRecord && (V.narrow ? renderRecordNarrow(V) : renderRecordWide(V))}
+              {V.isHistory && (V.narrow ? renderHistoryNarrow(V) : renderHistoryWide(V))}
+              {V.isSummary && (V.narrow ? renderSummaryNarrow(V) : renderSummaryWide(V))}
+              {V.isPrices && renderPrices(V)}
+              {V.isLots && renderLots(V)}
+              {V.isCatalog && renderCatalog(V)}
+              {V.isAbout && renderAbout(V)}
+            </>
+          )}
         </div>
-        {renderFooter(V)}
+        {/* ── ท้ายเว็บโผล่เฉพาะฝั่งคอม (พี่กันสั่ง 1 ก.ย. 2569) ────────────────────
+            บนมือถือมันกินที่ไปสามบรรทัดโดยที่ไม่มีใครอ่าน และชื่อหน่วยงานก็ยาว
+            จนตกบรรทัดเป็นสองแถว
+            ⚠️ เลขเวอร์ชัน ชื่อหน่วยงาน และลิขสิทธิ์ ยังอยู่ครบในหน้าเกี่ยวกับ
+               (ปุ่ม ℹ บนหัวเว็บ) ไม่ได้หายจากระบบ */}
+        {V.wide && renderFooter(V)}
       </div>
 
       {V.narrow && renderNavNarrow(V)}
@@ -135,7 +161,6 @@ export function renderShell(app) {
       {renderSheet(V)}
       {V.recordNarrow && renderSaveBar(V)}
       {V.isPrices && renderPriceBar(V)}
-      {renderSettings(V)}
       {renderHisImport(V)}
       {renderLotSlip(V)}
       {renderLotEdit(V)}

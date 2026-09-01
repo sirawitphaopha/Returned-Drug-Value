@@ -16,7 +16,7 @@ import { skelLotEdit } from './skeleton';
 export function renderLotEdit(V) {
   if (!V.lotEditOpen) return null;
   return (
-    <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;background:rgba(20,26,22,.45);display:flex;align-items:flex-start;justify-content:center;padding:26px 16px;z-index:36;overflow:auto')}>
+    <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;background:rgba(20,26,22,.45);display:flex;align-items:flex-start;justify-content:center;padding:26px 16px;z-index:32;overflow:auto')}>
       <div style={s('background:#fff;border-radius:16px;width:100%;max-width:960px;box-shadow:0 24px 60px rgba(20,26,22,.28);overflow:hidden')}>
 
         <div style={s('padding:15px 20px;border-bottom:1px solid #eef1ee;display:flex;align-items:center;gap:11px')}>
@@ -187,7 +187,7 @@ export function renderLotEdit(V) {
 
       {/* ── หน้าต่างยืนยัน — สรุปให้เห็นก่อนว่าจะเปลี่ยนอะไร ── */}
       {V.lotEditConfirm && (
-        <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;background:rgba(20,26,22,.5);display:flex;align-items:center;justify-content:center;padding:18px;z-index:40')}>
+        <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;background:rgba(20,26,22,.5);display:flex;align-items:center;justify-content:center;padding:18px;z-index:85')}>
           <div style={s('background:#fff;border-radius:14px;width:100%;max-width:460px;padding:20px;box-shadow:0 20px 50px rgba(20,26,22,.3)')}>
             <div style={s('font:700 15px Sarabun,sans-serif;margin-bottom:5px')}>ยืนยันการแก้ไขล็อต {V.lotEditLot}</div>
             <div style={s('font:400 12px/1.7 Sarabun,sans-serif;color:#6b746e;margin-bottom:13px')}>

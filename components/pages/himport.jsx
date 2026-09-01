@@ -10,9 +10,9 @@ export function renderHisImport(V) {
   return (
     <>
       {/* กดพื้นหลังไม่ปิด — ตรวจทานมาตั้งเยอะ เผลอกดแล้วหายหมดคงเสียใจ */}
-      <div style={s('position:fixed;inset:0;background:rgba(21,26,23,.46);z-index:34')}></div>
+      <div style={s('position:fixed;inset:0;background:rgba(21,26,23,.46);z-index:32')}></div>
 
-      <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;z-index:35;display:flex;align-items:center;justify-content:center;padding:16px')}>
+      <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;z-index:33;display:flex;align-items:center;justify-content:center;padding:16px')}>
         <div style={s('width:100%;max-width:900px;max-height:100%;background:#f6f7f4;border-radius:16px;box-shadow:0 24px 60px -18px rgba(30,36,32,.5);display:flex;flex-direction:column;overflow:hidden')}>
 
           {/* ── หัวหน้าต่าง ─────────────────────────────────────────────── */}

@@ -15,7 +15,7 @@ import { s } from '../helpers';
 export function renderToast(V) {
   if (!V.toastOpen) return null;
   return (
-    <div role="status" aria-live="polite" style={s('position:fixed;left:0;right:0;bottom:calc(var(--bottombar, 96px) + 14px);z-index:30;display:flex;justify-content:center;pointer-events:none;padding:0 14px')}>
+    <div role="status" aria-live="polite" style={s('position:fixed;left:0;right:0;bottom:calc(var(--bottombar, 96px) + 14px);z-index:95;display:flex;justify-content:center;pointer-events:none;padding:0 14px')}>
       <div style={s('display:flex;align-items:center;gap:10px;max-width:460px;background:#1e2420;color:#fff;border-radius:12px;padding:11px 11px 11px 15px;box-shadow:0 10px 30px rgba(30,36,32,.28);pointer-events:auto')}>
         <span style={{ ...s("width:20px;height:20px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font:700 11px Sarabun,sans-serif;flex:none"), background: V.toastDot }}>{V.toastIcon}</span>
         <span style={s('font:500 13.5px/1.45 Sarabun,sans-serif;flex:1;min-width:0;overflow-wrap:anywhere')}>{V.toastText}</span>

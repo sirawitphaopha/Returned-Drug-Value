@@ -18,8 +18,11 @@ export function settingsVals(app, d) {
     settingsMaxW: d.wide ? '600px' : '520px',
     settingsMaxH: d.wide ? '84vh' : '88vh',
 
+    // 🚨 ต้องส่งชื่อย่อไปด้วย — ฝั่งมือถือใช้ชื่อย่อให้ชิปอยู่แถวเดียว
+    //    (พี่กันสั่ง 1 ก.ย. 2569 "ย่ออันนี้ด้วยสิ" · ทำแบบเดียวกับชิปในหน้าบันทึก)
     defaultSources: SOURCES.map((sc) => ({
       label: sc.label,
+      short: sc.short || sc.label,
       on: st.defaultSource === sc.key,
       bg: st.defaultSource === sc.key ? '#2f7d5d' : '#f0f1ee',
       fg: st.defaultSource === sc.key ? '#fff' : '#414a44',

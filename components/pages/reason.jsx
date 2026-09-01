@@ -24,9 +24,9 @@ export function renderReasonPick(V) {
 
   return (
     <>
-      <div {...kb(V.closeReason)} style={s('position:fixed;inset:0;background:rgba(21,26,23,.42);z-index:42')}></div>
+      <div {...kb(V.closeReason)} style={s('position:fixed;inset:0;background:rgba(21,26,23,.42);z-index:70')}></div>
       <div role="dialog" aria-modal="true" aria-label="เลือกเหตุผลที่ต้องทำลาย"
-        style={s('position:fixed;inset:0;z-index:43;display:flex;align-items:center;justify-content:center;padding:20px;pointer-events:none')}>
+        style={s('position:fixed;inset:0;z-index:71;display:flex;align-items:center;justify-content:center;padding:20px;pointer-events:none')}>
         <div style={s('pointer-events:auto;width:100%;max-width:470px;max-height:calc(100dvh - 40px);overflow-y:auto;background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(30,36,32,.28);padding:20px 20px 16px')}>
 
           <div style={s('display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:3px')}>

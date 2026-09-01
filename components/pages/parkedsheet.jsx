@@ -68,7 +68,7 @@ export function renderParkedSheet(V) {
 
   return (
     <div role="dialog" aria-modal="true" {...kb(V.toggleOtherDrafts)}
-      style={s('position:fixed;inset:0;background:rgba(20,26,22,.45);display:flex;align-items:center;justify-content:center;padding:22px 16px;z-index:60;overflow:auto')}>
+      style={s('position:fixed;inset:0;background:rgba(20,26,22,.45);display:flex;align-items:center;justify-content:center;padding:22px 16px;z-index:52;overflow:auto')}>
       {/* กล่องข้างในต้องกินการกดไว้เอง ไม่งั้นกดอะไรก็ปิดหน้าต่าง */}
       <div onClick={(e) => e.stopPropagation()}
         style={s('background:#fff;border-radius:14px;width:100%;max-width:620px;height:min(76vh,640px);display:flex;flex-direction:column;box-shadow:0 8px 30px rgba(20,26,22,.2)')}>

@@ -10,24 +10,40 @@ const FIELD = 'width:100%;height:46px;padding:0 13px;border:1px solid rgba(30,36
 export function renderSettings(V) {
   if (!V.settingsOpen) return null;
   return (
-    <>
-      <div {...kb(V.closeSettings)} style={s('position:fixed;inset:0;background:rgba(21,26,23,.42);z-index:24')}></div>
-      <div role="dialog" aria-modal="true" style={sx('position:fixed;inset:0;z-index:25;display:flex;justify-content:center;pointer-events:none', { alignItems: V.settingsAlign })}>
-        <div style={sx('pointer-events:auto;width:100%;overflow-y:auto;background:#fff;box-shadow:0 -14px 44px rgba(30,36,32,.28);padding:14px 20px max(22px,env(safe-area-inset-bottom))', { maxWidth: V.settingsMaxW, maxHeight: V.settingsMaxH, borderRadius: V.settingsRadius })}>
+    // ── หน้าตั้งค่า — หน้าเต็มจอมีปุ่มกลับ เหมือนหน้าเกี่ยวกับ ─────────────────
+    //   พี่กันสั่ง 1 ก.ย. 2569: "ตั้งค่า เกี่ยวกับ เอาให้เหมือนรายละเอียดเว้บ คือมีปุ่มกลับ"
+    //
+    //   ของเดิมตั้งค่าเป็นหน้าต่างซ้อนที่เลื่อนขึ้นจากล่าง ส่วนเกี่ยวกับเป็นหน้าเต็มจอ
+    //   ทั้งที่ปุ่มสองอันอยู่ข้างกันบนหัวเว็บและเป็นของประเภทเดียวกัน
+    //   กดแล้วได้หน้าตาคนละแบบทำให้มือจำไม่ได้ว่าปิดยังไง
+    //
+    // 🚨 เป็นหน้าเต็มจอแล้วห้ามอยู่ในรายการ anyModalOpen อีก
+    //    ไม่งั้นฉากหลังถูกล็อกทั้งที่ไม่มีอะไรซ้อนอยู่ = เลื่อนดูเนื้อหาข้างในไม่ได้
+    <div style={s('width:100%;max-width:640px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column')}>
 
-          <div style={s('display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px')}>
-            <div role="heading" aria-level="1" style={s('font:700 18px Sarabun,sans-serif')}>ตั้งค่า และเกี่ยวกับ</div>
-            <div {...kb(V.closeSettings)} aria-label="ปิดหน้าต่างตั้งค่า" className="hv-bg-e6e" style={s('width:32px;height:32px;border-radius:8px;background:#f0f1ee;display:flex;align-items:center;justify-content:center;font:400 14px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>✕</div>
-          </div>
+      <div {...kb(V.closeSettings)} className="hv-bg-f6 tap" aria-label="กลับไปหน้าก่อนหน้า"
+        style={s('align-self:flex-start;display:flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid rgba(30,36,32,.14);border-radius:9px;background:#fff;font:500 13px Sarabun,sans-serif;color:#414a44;cursor:pointer;margin-bottom:16px')}>
+        <span aria-hidden="true">←</span> กลับ
+      </div>
+
+      {/* 🚨 หัวเรื่องกึ่งกลาง ใช้ฟอนต์ลายมือแบบเดียวกับหน้าเกี่ยวกับ
+          (พี่กันสั่ง 1 ก.ย. 2569 "เอาไว้ตรงกลาง เเละใส่ฟ้อน")
+          สองหน้านี้เป็นคู่กัน เปิดจากปุ่มที่อยู่ข้างกัน หน้าตาหัวเรื่องจึงต้องเหมือนกัน
+          🚨 ต้องมี padding-bottom กันหางฟอนต์ Charmonman ที่ลากลงมาทับของข้างล่าง */}
+      <div role="heading" aria-level="1" style={s('text-align:center;font:700 26px/1.05 Charmonman,cursive;color:#24614a;padding-bottom:8px;margin-bottom:2px')}>ตั้งค่า และเกี่ยวกับ</div>
 
           <div style={s(LABEL + ';margin-bottom:7px')}>หน่วยงาน</div>
           <input value={V.orgName} onChange={V.onOrgName} placeholder="ชื่อห้องยา / โรงพยาบาล" style={s(FIELD)} />
           <div style={s(HINT)}>ชื่อนี้แสดงบน header และเป็นหัวไฟล์ตอน Export Excel</div>
 
           <div style={s(LABEL + ';margin-bottom:7px')}>แหล่งที่มาเริ่มต้น</div>
-          <div style={s('display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px')}>
+          {/* 🚨 ฝั่งมือถือใช้ชื่อย่อ อยู่แถวเดียว และเตี้ยลง (พี่กันสั่ง 1 ก.ย. 2569)
+              "ย่ออันนี้ด้วยสิ" แล้วตามด้วย "บีบความสูงได้มั้ย"
+              ของเดิมชื่อเต็มทำให้ "รพ.สต." ตกไปอยู่บรรทัดที่สองตัวเดียวโดด ๆ
+              ฝั่งคอมยังใช้ชื่อเต็มและขึ้นบรรทัดใหม่ได้เหมือนเดิม */}
+          <div style={sx('display:flex;gap:5px;margin-bottom:6px', V.wide ? { flexWrap: 'wrap' } : null)}>
             {V.defaultSources.map((ds) => (
-              <div key={ds.label} {...kb(ds.pick)} className={ds.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: ds.bg, color: ds.fg })}>{ds.label}</div>
+              <div key={ds.label} {...kb(ds.pick)} className={ds.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('border-radius:999px;font:500 11.5px Sarabun,sans-serif;cursor:pointer;text-align:center;white-space:nowrap;display:flex;align-items:center;justify-content:center', { background: ds.bg, color: ds.fg, padding: V.wide ? '8px 14px' : '0 5px', height: V.wide ? 'auto' : '27px', flex: V.wide ? '0 0 auto' : '1 1 0' })}>{V.wide ? ds.label : ds.short}</div>
             ))}
           </div>
           <div style={s(HINT)}>เปิดแอปมาจะเลือกชิปนี้ให้เลย ตั้งเป็นแหล่งที่คืนบ่อยที่สุดของห้องยาท่าน</div>
@@ -215,9 +231,15 @@ export function renderSettings(V) {
           </div>
 
           <div style={s('border-top:1px solid rgba(30,36,32,.08);padding-top:16px;display:flex;flex-direction:column;gap:8px')}>
-            <div {...kb(V.openPrices)} className="hv-bg-e3f" style={s('height:46px;border-radius:10px;background:#eef6f1;display:flex;align-items:center;justify-content:center;gap:9px;font:600 14px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>
-              ตั้งราคายา <span style={s("font:500 12px Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums")}>{V.priceProgressLabel}</span>
-            </div>
+            {/* ── ปุ่มตั้งราคายาโผล่เฉพาะฝั่งคอม (พี่กันสั่ง 1 ก.ย. 2569 "เอาระบบตั้งราคาออก") ──
+                หน้าจัดการราคาเป็นตารางยาที่ต้องเลื่อนดูหลายคอลัมน์ ใช้บนจอมือถือไม่ไหว
+                เหตุผลเดียวกับที่เอาแท็บคลังยาออกจากมือถือไปแล้ว
+                ⚠️ หน้ายังเปิดได้ทุกทางเหมือนเดิม แค่ไม่มีปุ่มให้กดบนมือถือ */}
+            {V.wide && (
+              <div {...kb(V.openPrices)} className="hv-bg-e3f" style={s('height:46px;border-radius:10px;background:#eef6f1;display:flex;align-items:center;justify-content:center;gap:9px;font:600 14px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>
+                ตั้งราคายา <span style={s("font:500 12px Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums")}>{V.priceProgressLabel}</span>
+              </div>
+            )}
 
             {/* ออกจากระบบ — โผล่เฉพาะตอนเว็บล็อกด้วยรหัสผ่านห้องยาอยู่ (พี่กันขอ)
                 วางไว้ล่างสุด สีจางกว่าปุ่มอื่น เพราะเป็นของที่นาน ๆ ใช้ที ไม่ใช่ปุ่มประจำวัน */}
@@ -233,8 +255,6 @@ export function renderSettings(V) {
             )}
           </div>
 
-        </div>
-      </div>
-    </>
+    </div>
   );
 }

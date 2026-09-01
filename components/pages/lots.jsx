@@ -285,7 +285,7 @@ export function renderLotSlip(V) {
   if (typeof document === 'undefined') return null;
 
   const sheet = (
-    <div className="slip-backdrop" role="dialog" aria-modal="true" style={s('position:fixed;inset:0;z-index:60;background:rgba(30,36,32,.45);display:flex;flex-direction:column;align-items:center;padding:20px 16px;overflow-y:auto')}>
+    <div className="slip-backdrop" role="dialog" aria-modal="true" style={s('position:fixed;inset:0;z-index:52;background:rgba(30,36,32,.45);display:flex;flex-direction:column;align-items:center;padding:20px 16px;overflow-y:auto')}>
 
       <div className="slip-hide" style={s('width:100%;max-width:210mm;display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px 12px 0 0;background:#f6f7f4;border:1px solid rgba(30,36,32,.12)')}>
         <div style={s('font:700 15px Sarabun,sans-serif;flex:1;min-width:0')}>ใบสรุป Lot</div>

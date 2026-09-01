@@ -28,7 +28,7 @@ export function renderDeviceAsk(V) {
 
   return (
     <div role="dialog" aria-modal="true"
-      style={s('position:fixed;inset:0;background:rgba(20,26,22,.45);display:flex;align-items:center;justify-content:center;padding:22px 16px;z-index:60;overflow:auto')}>
+      style={s('position:fixed;inset:0;background:rgba(20,26,22,.45);display:flex;align-items:center;justify-content:center;padding:22px 16px;z-index:52;overflow:auto')}>
       <div style={s('background:#fff;border-radius:14px;width:100%;max-width:470px;padding:20px 22px;box-shadow:0 8px 30px rgba(20,26,22,.2)')}>
 
         <div role="heading" aria-level="2" style={s('font:700 16px Sarabun,sans-serif;margin-bottom:5px')}>

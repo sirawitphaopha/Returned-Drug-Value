@@ -25,15 +25,20 @@ const supaLogo = (size) => (
 
 export function renderAbout(V) {
   return (
-    <div style={s('max-width:640px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column;gap:15px')}>
+    <div style={s('width:100%;max-width:640px;margin:0 auto;padding:14px 16px 60px;display:flex;flex-direction:column;gap:13px')}>
 
       <div {...kb(V.closeAbout)} className="hv-bg-f6 tap" style={s('align-self:flex-start;display:flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid rgba(30,36,32,.14);border-radius:9px;background:#fff;font:500 13px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>
         <span aria-hidden="true">←</span> กลับ
       </div>
 
       {/* หัวเรื่อง */}
-      <div style={s('text-align:center;padding:6px 0 2px')}>
-        <div style={s('font:700 30px/1.95 Charmonman,cursive;color:#24614a')}>มูลค่ายาคืน</div>
+      {/* 🚨 ไม่มีช่องไฟด้านบน (พี่กันสั่ง "สูงกว่านี้") — ชื่อเว็บลอยต่ำเกินไป
+          ตัวการคือหางฟอนต์ Charmonman ที่ลากลงมา ทำให้ดูเหมือนมีที่ว่างข้างบนเยอะกว่าจริง */}
+      <div style={s('text-align:center;padding:0 0 2px;margin-top:-4px')}>
+        {/* 🚨 ระยะบรรทัด 1.2 ไม่ใช่ 1.95 (พี่กันทัก "รูปสองชื่อเว้บต่ำจัง")
+            Charmonman ลากหางลงมายาว ระยะบรรทัดกว้าง ๆ จึงดันตัวอักษรลอยต่ำกลางกล่อง
+            ใช้ padding-bottom กันที่ให้หางแทน ซึ่งดันเฉพาะของที่อยู่ข้างล่าง */}
+        <div style={s('font:700 30px/1.05 Charmonman,cursive;color:#24614a;padding-bottom:10px')}>มูลค่ายาคืน</div>
         <div style={s('font:400 12.5px/1.55 Sarabun,sans-serif;color:#6b746e;margin-top:5px')}>
           ระบบแปลงยาที่ผู้ป่วยคืนมาให้เป็นตัวเลขมูลค่า พร้อมสรุปเป็นตัวชี้วัดรายปีงบประมาณ · {V.orgName}
         </div>
@@ -93,54 +98,53 @@ export function renderAbout(V) {
       {/* สร้างด้วยอะไร */}
       <div style={s(CARD)}>
         <div style={s(TITLE)}>🛠️ สร้างด้วยเทคโนโลยี</div>
-        <div style={s('display:flex;flex-direction:column;gap:8px;align-items:center')}>
-          <div style={s('display:flex;gap:8px;flex-wrap:wrap;justify-content:center')}>
-            <div style={s(CHIP)}>
-              <svg width="19" height="19" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="12" fill="#000" />
-                <text x="12" y="16.5" fontSize="11" fontWeight="700" fill="#fff" textAnchor="middle" fontFamily="Arial">N</text>
-              </svg>
-              <span style={s(CHIP_TX)}>Next.js 15</span>
-            </div>
-            <div style={s(CHIP)}>
-              <svg width="21" height="21" viewBox="-11.5 -10.23 23 20.46">
-                <circle r="2.05" fill="#61DAFB" />
-                <g stroke="#61DAFB" strokeWidth="1.1" fill="none">
-                  <ellipse rx="11" ry="4.2" />
-                  <ellipse rx="11" ry="4.2" transform="rotate(60)" />
-                  <ellipse rx="11" ry="4.2" transform="rotate(120)" />
-                </g>
-              </svg>
-              <span style={s(CHIP_TX)}>React 19</span>
-            </div>
-            <div style={s(CHIP)}>
-              <svg width="18" height="18" viewBox="0 0 24 24">
-                <rect width="24" height="24" rx="4" fill="#F7DF1E" />
-                <text x="12" y="16.5" fontSize="10" fontWeight="700" fill="#000" textAnchor="middle" fontFamily="Arial">JS</text>
-              </svg>
-              <span style={s(CHIP_TX)}>JavaScript</span>
-            </div>
+        {/* 🚨 เรียงเป็นตารางสองคอลัมน์ (พี่กันสั่ง "เรียงสวยๆหน่อย เอาสองคอลัม")
+            ของเดิมเป็นแถวที่ปล่อยให้ตกบรรทัดเอง ได้ 3-2-1-2 ชิปต่อแถวไม่เท่ากันเลย
+            ตารางทำให้ทุกใบกว้างเท่ากันและขอบตรงกันทั้งบล็อก */}
+        <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:8px')}>
+          <div style={s(CHIP)}>
+            <svg width="19" height="19" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="12" fill="#000" />
+              <text x="12" y="16.5" fontSize="11" fontWeight="700" fill="#fff" textAnchor="middle" fontFamily="Arial">N</text>
+            </svg>
+            <span style={s(CHIP_TX)}>Next.js 15</span>
           </div>
-          <div style={s('display:flex;gap:8px;flex-wrap:wrap;justify-content:center')}>
-            <div style={s(CHIP)}>
-              {supaLogo(17)}
-              <span style={s(CHIP_TX)}>Supabase</span>
-            </div>
-            {/* three.js — ใช้กับฉากหลังแคปซูลยาลอยในหน้าเข้าสู่ระบบ (เพิ่ม 26 ส.ค. 2569)
-                🚨 โหลดเฉพาะหน้านั้นหน้าเดียว ไม่ถ่วงหน้าบันทึกที่ใช้งานจริงทุกวัน */}
-            <div style={s(CHIP)}>
-              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 2.2 21.4 19.6 12 17.2 2.6 19.6z" fill="none" stroke="#1e2420" strokeWidth="1.5" strokeLinejoin="round" />
-                <path d="M12 2.2 12 17.2" stroke="#1e2420" strokeWidth="1.1" opacity=".45" />
-              </svg>
-              <span style={s(CHIP_TX)}>three.js</span>
-            </div>
-            <div style={s(CHIP)}>
-              <svg width="24" height="17" viewBox="0 0 48 30">
-                <path d="M33 27H12.5A9 9 0 1 1 15 9.5 12 12 0 0 1 37.5 22.5c3.5.2 4.5 4.5-4.5 4.5z" fill="#F38020" />
-              </svg>
-              <span style={s(CHIP_TX)}>Cloudflare</span>
-            </div>
+          <div style={s(CHIP)}>
+            <svg width="21" height="21" viewBox="-11.5 -10.23 23 20.46">
+              <circle r="2.05" fill="#61DAFB" />
+              <g stroke="#61DAFB" strokeWidth="1.1" fill="none">
+                <ellipse rx="11" ry="4.2" />
+                <ellipse rx="11" ry="4.2" transform="rotate(60)" />
+                <ellipse rx="11" ry="4.2" transform="rotate(120)" />
+              </g>
+            </svg>
+            <span style={s(CHIP_TX)}>React 19</span>
+          </div>
+          <div style={s(CHIP)}>
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <rect width="24" height="24" rx="4" fill="#F7DF1E" />
+              <text x="12" y="16.5" fontSize="10" fontWeight="700" fill="#000" textAnchor="middle" fontFamily="Arial">JS</text>
+            </svg>
+            <span style={s(CHIP_TX)}>JavaScript</span>
+          </div>
+          <div style={s(CHIP)}>
+            {supaLogo(17)}
+            <span style={s(CHIP_TX)}>Supabase</span>
+          </div>
+          {/* three.js — ใช้กับฉากหลังแคปซูลยาลอยในหน้าเข้าสู่ระบบ (เพิ่ม 26 ส.ค. 2569)
+              🚨 โหลดเฉพาะหน้านั้นหน้าเดียว ไม่ถ่วงหน้าบันทึกที่ใช้งานจริงทุกวัน */}
+          <div style={s(CHIP)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2.2 21.4 19.6 12 17.2 2.6 19.6z" fill="none" stroke="#1e2420" strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M12 2.2 12 17.2" stroke="#1e2420" strokeWidth="1.1" opacity=".45" />
+            </svg>
+            <span style={s(CHIP_TX)}>three.js</span>
+          </div>
+          <div style={s(CHIP)}>
+            <svg width="24" height="17" viewBox="0 0 48 30">
+              <path d="M33 27H12.5A9 9 0 1 1 15 9.5 12 12 0 0 1 37.5 22.5c3.5.2 4.5 4.5-4.5 4.5z" fill="#F38020" />
+            </svg>
+            <span style={s(CHIP_TX)}>Cloudflare</span>
           </div>
         </div>
         <div style={s('margin-top:15px;padding-top:14px;border-top:1px solid rgba(47,125,93,.12);display:flex;align-items:center;justify-content:center;gap:8px;font:400 12.5px/1.5 Sarabun,sans-serif;color:#6b746e')}>

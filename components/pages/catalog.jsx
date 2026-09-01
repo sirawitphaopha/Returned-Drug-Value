@@ -240,7 +240,7 @@ function renderCatEdit(V) {
   );
 
   return (
-    <div style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:80;display:flex;align-items:center;justify-content:center;padding:18px')}>
+    <div style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:32;display:flex;align-items:center;justify-content:center;padding:18px')}>
       <div style={s('background:#fff;border-radius:16px;width:560px;max-width:100%;max-height:90vh;overflow:auto;box-shadow:0 24px 60px rgba(30,36,32,.3)')}>
         <div style={s('background:#2f7d5d;color:#fff;padding:14px 18px;font:700 16px Sarabun,sans-serif')}>
           {V.catEditNew ? 'เพิ่มยาเข้าคลัง' : 'แก้ไขยา'}
@@ -321,7 +321,7 @@ function renderCatEdit(V) {
         </div>
 
         {V.catConfirmClose && (
-          <div style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:82;display:flex;align-items:center;justify-content:center;padding:18px')}>
+          <div style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:34;display:flex;align-items:center;justify-content:center;padding:18px')}>
             <div style={s('background:#fff;border-radius:14px;width:340px;max-width:100%;padding:18px')}>
               <div style={s('font:700 15px Sarabun,sans-serif;color:#1e2420;margin-bottom:7px')}>ปิดโดยไม่บันทึกการแก้ไข</div>
               <div style={s('font:400 13px/1.6 Sarabun,sans-serif;color:#6b746e;margin-bottom:16px')}>สิ่งที่แก้ไว้จะหายไปทั้งหมด</div>
@@ -340,7 +340,7 @@ function renderCatEdit(V) {
 // ── ป๊อปยืนยันซ่อน ───────────────────────────────────────────────────────────
 function renderCatHide(V) {
   return (
-    <div style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:80;display:flex;align-items:center;justify-content:center;padding:18px')}>
+    <div style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:32;display:flex;align-items:center;justify-content:center;padding:18px')}>
       <div style={s('background:#fff;border-radius:14px;width:400px;max-width:100%;padding:18px')}>
         <div style={s('font:700 15px Sarabun,sans-serif;color:#1e2420;margin-bottom:8px')}>
           {V.catHideIsBack ? 'เอายากลับมาแสดง' : 'ซ่อนยาออกจากช่องค้นหา'}
@@ -365,7 +365,7 @@ function renderCatHide(V) {
 // ── ป๊อปประวัติการแก้ ─────────────────────────────────────────────────────────
 function renderCatLog(V) {
   return (
-    <div {...kb(V.closeCatLog)} style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:80;display:flex;align-items:center;justify-content:center;padding:18px')}>
+    <div {...kb(V.closeCatLog)} style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:32;display:flex;align-items:center;justify-content:center;padding:18px')}>
       <div onClick={(e) => e.stopPropagation()} style={s('background:#fff;border-radius:16px;width:540px;max-width:100%;max-height:84vh;overflow:auto;box-shadow:0 24px 60px rgba(30,36,32,.3)')}>
         <div style={s('background:#2f7d5d;color:#fff;padding:14px 18px')}>
           <div style={s('font:700 15px Sarabun,sans-serif')}>ประวัติการแก้ไข</div>
@@ -419,8 +419,8 @@ function renderCatLog(V) {
 function renderPriceFix(V) {
   return (
     <>
-      <div style={s('position:fixed;inset:0;background:rgba(21,26,23,.42);z-index:44')}></div>
-      <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:20px')}>
+      <div style={s('position:fixed;inset:0;background:rgba(21,26,23,.42);z-index:32')}></div>
+      <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;z-index:33;display:flex;align-items:center;justify-content:center;padding:20px')}>
         <div style={s('width:100%;max-width:470px;max-height:calc(100vh - 40px);overflow-y:auto;background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(30,36,32,.28);padding:20px')}>
           <div style={s('font:700 17px/1.3 Sarabun,sans-serif;margin-bottom:4px')}>พบรายการเก่าที่ใช้ราคาอื่น</div>
           <div style={s('font:400 12.5px/1.55 Sarabun,sans-serif;color:#6b746e;margin-bottom:12px')}>

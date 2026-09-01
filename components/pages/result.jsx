@@ -45,7 +45,7 @@ function line(label, value) {
 function renderFail(V) {
   return (
     <div role="dialog" aria-modal="true" aria-label="ส่งข้อมูลไม่สำเร็จ"
-      style={s('position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:24px 20px;text-align:center;background:linear-gradient(180deg,#fdf5f2,#f9e4dd)')}>
+      style={s('position:fixed;inset:0;z-index:52;display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:24px 20px;text-align:center;background:linear-gradient(180deg,#fdf5f2,#f9e4dd)')}>
 
       <div style={s('flex:1 0 0;min-height:0')}></div>
 
@@ -102,7 +102,7 @@ export function renderResult(V) {
 
   return (
     <div role="dialog" aria-modal="true" aria-label="ผลการบันทึก"
-      style={s('position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:24px 20px;text-align:center;background:linear-gradient(180deg,#f4faf7,#e3f0e8)')}>
+      style={s('position:fixed;inset:0;z-index:52;display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:24px 20px;text-align:center;background:linear-gradient(180deg,#f4faf7,#e3f0e8)')}>
 
       {/* เนื้อหาสั้นให้ลอยกลางจอ เนื้อหายาวให้เลื่อนตามปกติ ไม่โดนตัดหัว
           ใช้ที่ว่างยืดหยุ่นสองก้อนแทน justify-content:center ซึ่งตัดหัวเมื่อเนื้อหาล้น */}

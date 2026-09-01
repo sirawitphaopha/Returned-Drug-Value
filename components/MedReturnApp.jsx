@@ -196,6 +196,10 @@ export default class MedReturnApp extends React.Component {
       // pullY = ระยะที่นิ้วลากลงมาแล้ว (หน่วยพิกเซล · 0 คือยังไม่ได้ลาก)
       // pullBusy = ปล่อยนิ้วแล้วกำลังโหลดอยู่
       // 🚨 ทั้งคู่ต้องเป็น 0/false เสมอบนเดสก์ท็อป — ตัวจับนิ้วไม่ทำงานที่นั่นเลย
+      // มีหน้าต่างซ้อนเปิดอยู่ไหม — ตัวดักการเลื่อนอ่านค่านี้
+      // 🚨 ตัวจริงคำนวณใน vals/shell.js · ตรงนี้เป็นสำเนาที่ componentDidUpdate เขียนให้
+      //    เพราะตัวดักเป็นเหตุการณ์นอก React จะเรียก renderVals เองไม่ได้
+      anyModalOpen: false,
       pullY: 0,
       pullBusy: false,
       // มีเมาส์จริงไหม — วัดตอน componentDidMount ด้วย (pointer: fine)
@@ -342,6 +346,12 @@ export default class MedReturnApp extends React.Component {
     // (ดู componentDidUpdate ด้านล่าง)
     this.hiRef = React.createRef();
 
+    // ── ผูกตัวกันลาก/กันซูมตั้งแต่วินาทีแรก ────────────────────────────────
+    // 🚨 componentDidMount เกิดช้ากว่านี้หลายวินาทีบนมือถือ
+    //    ผูกที่นี่จึงกันได้ตั้งแต่ก่อนหน้าจอถูกวาดครั้งแรกด้วยซ้ำ
+    //    (ตัวถอดยังอยู่ที่ componentWillUnmount เหมือนเดิม)
+    this._bindEarlyGuards();
+
     installHandlers(this);
   }
 
@@ -355,7 +365,20 @@ export default class MedReturnApp extends React.Component {
   //
   // ทำที่นี่แทนที่จะทำใน ref callback เพราะ ref ถูกเรียกทุกครั้งที่วาดจอ
   // ซึ่งจะดึงกรอบกลับตอนผู้ใช้เลื่อนดูเองด้วยเมาส์
+  // ทวนธง "มีหน้าต่างซ้อนเปิดอยู่ไหม" ให้ตรงกับของจริงทุกครั้งที่วาดจอ
+  // 🚨 รายชื่อต้องตรงกับ vals/shell.js → anyModalOpen เป๊ะ ๆ แก้ที่หนึ่งต้องแก้อีกที่
+  _syncModalFlag = () => {
+    const st = this.state;
+    const now = !!(
+      st.confirm || st.sheet || st.result ||
+      st.hisOpen || st.slipLot || st.lotEdit || st.showOtherDrafts ||
+      st.deviceAsk || st.reasonAsk || st.catEdit || st.catLog || st.priceFix
+    );
+    if (now !== st.anyModalOpen) this.setState({ anyModalOpen: now });
+  };
+
   componentDidUpdate(prevProps, prevState) {
+    this._syncModalFlag();
     // สลับปุ่มมุมมองมือถือ/คอม ต้องอัปเดตคลาสที่ body ตามทันที
     if (prevState.vw !== this.state.vw || prevState.forceNarrow !== this.state.forceNarrow) {
       this.syncMobileClass();
@@ -523,21 +546,11 @@ export default class MedReturnApp extends React.Component {
       window.visualViewport.addEventListener('resize', this.lockWidth);
       window.visualViewport.addEventListener('scroll', this.lockWidth);
     }
-    // ตรึงตำแหน่งเลื่อนแนวนอนไว้ที่ 0 (ดู _pinLeft)
-    // ดักทั้งตอนกำลังเลื่อนและตอนนิ้วขยับ เพราะบางเบราว์เซอร์ไม่ยิง scroll ระหว่างลาก
-    document.addEventListener('scroll', this._pinLeft, { passive: true, capture: true });
-    window.addEventListener('scroll', this._pinLeft, { passive: true });
-    window.addEventListener('touchmove', this._pinLeft, { passive: true });
-    window.addEventListener('touchend', this._pinLeft, { passive: true });
     window.addEventListener('resize', this._onResize);
     // ดึงหน้าลงเพื่อโหลดใหม่ — ผูกที่หน้าต่าง ไม่ใช่ที่พื้นที่เลื่อน
     // 🚨 พื้นที่เลื่อนถูกสร้างหลัง componentDidMount ในบางจังหวะ (ตอนยังโหลดอยู่)
     //    ผูกที่หน้าต่างแล้วเช็ค scrollRef เอาข้างในจึงไม่มีทางพลาด
     // 🚨 passive:false ที่ touchmove เท่านั้น — ตัวอื่นปล่อย passive ไว้ให้เลื่อนลื่น
-    // ห้ามซูมด้วยนิ้วบนมือถือ (ดู _onGesture)
-    document.addEventListener('gesturestart', this._onGesture, { passive: false });
-    document.addEventListener('gesturechange', this._onGesture, { passive: false });
-    document.addEventListener('gestureend', this._onGesture, { passive: false });
     window.addEventListener('touchstart', this._onTouchStart, { passive: true });
     window.addEventListener('touchmove', this._onTouchMove, { passive: false });
     window.addEventListener('touchend', this._onTouchEnd, { passive: true });
@@ -698,8 +711,7 @@ export default class MedReturnApp extends React.Component {
   PULL_FIRE = 62;
 
   _onTouchStart = (e) => {
-    if (typeof document === 'undefined') return;
-    if (!document.body.classList.contains('mrv-mobile')) return;
+    if (!this._isNarrowNow()) return;
     if (this.state.pullBusy) return;
     const sc = this.scrollRef.current;
     if (!sc || sc.scrollTop > 0) { this._pullFrom = null; return; }
@@ -756,8 +768,7 @@ export default class MedReturnApp extends React.Component {
   // 🚨 ห้ามดักการแตะสองครั้งด้วยตัวนี้ — ปุ่มทั้งเว็บใช้ touch-action: manipulation
   //    ซึ่งปิดการซูมจากการแตะสองครั้งให้แล้ว
   _onGesture = (e) => {
-    if (typeof document === 'undefined') return;
-    if (!document.body.classList.contains('mrv-mobile')) return;
+    if (!this._isNarrowNow()) return;
     if (e.cancelable) e.preventDefault();
   };
 
@@ -811,14 +822,65 @@ export default class MedReturnApp extends React.Component {
   //    (หน้าคลังยาฝั่งคอมมีตารางกว้างที่ต้องเลื่อนดูข้าง ๆ ได้จริง)
   // 🚨 ต้องดักที่ window ด้วย เผื่อสิ่งที่เลื่อนคือทั้งหน้าไม่ใช่กล่องข้างใน
   _pinLeft = () => {
-    if (typeof document === 'undefined') return;
-    if (!document.body.classList.contains('mrv-mobile')) return;
+    if (!this._isNarrowNow()) return;
     const sc = this.scrollRef && this.scrollRef.current;
     if (sc && sc.scrollLeft !== 0) sc.scrollLeft = 0;
     const de = document.documentElement;
     if (de && de.scrollLeft !== 0) de.scrollLeft = 0;
     if (document.body.scrollLeft !== 0) document.body.scrollLeft = 0;
     if (window.scrollX !== 0) window.scrollTo(0, window.scrollY);
+  };
+
+  // ── ตอนนี้เป็นฝั่งมือถือไหม (ไม่พึ่งคลาสที่โค้ดเป็นคนใส่) ─────────────────
+  //
+  // 🔴 พี่กันเจอเอง 1 ก.ย. 2569: "ตอนรีเฟรชหน้าเเล้วเข้ามา ตอนนี้คือเราขยับซ้ายขวาได้อยู่"
+  //
+  //    ต้นเหตุคือทุกอย่างเช็คคลาส .mrv-mobile ก่อนทำงาน แต่คลาสนั้นถูกใส่ใน
+  //    componentDidMount ซึ่งเกิดหลังหน้าโหลดเสร็จหลายวินาที
+  //    ช่วงก่อนหน้านั้นจึงไม่มีการป้องกันอะไรเลย — ลากทีเดียวก็ค้างไปทั้งรอบ
+  //
+  // 🚨 ความกว้างจอใช้ได้ตั้งแต่วินาทีแรก ไม่ต้องรออะไรเลย
+  //    เอามาเป็นด่านสำรอง คู่กับคลาสที่ยังใช้เป็นตัวหลักเมื่อโหลดเสร็จแล้ว
+  // 🚨 1180 = จุดสลับเดียวกับธง wide · เดสก์ท็อปจริงจึงไม่มีทางเข้าเงื่อนไขนี้
+  // ⚠️ ถ้ากดปุ่ม "มือถือ" บนคอม (forceNarrow) จอยังกว้างอยู่ ตัวนี้จะตอบว่าไม่ใช่มือถือ
+  //    ซึ่งถูกต้อง — กรณีนั้นไม่มีนิ้วมาลากอยู่แล้ว และคลาสก็ทำงานแทนให้
+  // ผูกตัวกันลากกับกันซูมทันที ไม่รอให้หน้าจอวาดเสร็จ
+  // 🚨 ต้องกันการผูกซ้ำ เพราะ React โหมดเข้มงวดสร้างคอมโพเนนต์สองรอบตอนพัฒนา
+  _bindEarlyGuards = () => {
+    if (typeof window === 'undefined' || this._earlyBound) return;
+    this._earlyBound = true;
+    // ฉากหลังห้ามเลื่อนเมื่อมีหน้าต่างซ้อน (ดู _blockBgScroll)
+    document.addEventListener('touchmove', this._blockBgScroll, { passive: false });
+    document.addEventListener('wheel', this._blockBgScroll, { passive: false });
+    document.addEventListener('scroll', this._pinLeft, { passive: true, capture: true });
+    window.addEventListener('scroll', this._pinLeft, { passive: true });
+    window.addEventListener('touchmove', this._pinLeft, { passive: true });
+    window.addEventListener('touchend', this._pinLeft, { passive: true });
+    document.addEventListener('gesturestart', this._onGesture, { passive: false });
+    document.addEventListener('gesturechange', this._onGesture, { passive: false });
+    document.addEventListener('gestureend', this._onGesture, { passive: false });
+  };
+
+  // ── ฉากหลังห้ามเลื่อนเมื่อมีหน้าต่างซ้อน (พี่กันสั่ง 1 ก.ย. 2569) ──────────
+  //
+  // การปิด overflow ที่พื้นที่เลื่อน (ดู shell.jsx) พอสำหรับคอม
+  // แต่บนมือถือนิ้วยังลากได้อยู่ เพราะเบราว์เซอร์ส่งการเลื่อนต่อไปให้ตัวที่อยู่ข้างนอก
+  //
+  // 🚨 ต้องห้ามที่เหตุการณ์ตรง ๆ และต้องเป็น passive:false ถึงจะห้ามได้
+  // 🚨 ต้องปล่อยให้เลื่อนได้ถ้านิ้วอยู่ "ในตัวหน้าต่างซ้อนเอง"
+  //    ไม่งั้นหน้าต่างที่มีเนื้อหายาว (รายการล็อต · ตั้งค่า) เลื่อนดูข้างในไม่ได้เลย
+  //    ตัวชี้วัดคือ element ที่นิ้วแตะอยู่ในกล่องที่มี role="dialog" หรือไม่
+  _blockBgScroll = (e) => {
+    if (!this.state.anyModalOpen) return;
+    const t = e.target;
+    if (t && t.closest && t.closest('[role="dialog"], [data-scrollable="1"]')) return;
+    if (e.cancelable) e.preventDefault();
+  };
+
+  _isNarrowNow = () => {
+    if (typeof document === 'undefined') return false;
+    if (document.body.classList.contains('mrv-mobile')) return true;
+    return (window.innerWidth || 0) < 1180;
   };
 
   syncMobileClass = () => {
@@ -927,6 +989,8 @@ export default class MedReturnApp extends React.Component {
       window.visualViewport.removeEventListener('resize', this.lockWidth);
       window.visualViewport.removeEventListener('scroll', this.lockWidth);
     }
+    document.removeEventListener('touchmove', this._blockBgScroll);
+    document.removeEventListener('wheel', this._blockBgScroll);
     document.removeEventListener('scroll', this._pinLeft, true);
     window.removeEventListener('scroll', this._pinLeft);
     window.removeEventListener('touchmove', this._pinLeft);
