@@ -66,8 +66,13 @@ export function renderParkedSheet(V) {
   const other = items.some((x) => !x.mine);
   const open = V.parkedSeen || '';
 
+    {/* 🚨🔴 kb() คืน role="button" มาด้วย ต้องวางก่อน role="dialog" เสมอ
+        ถ้าวางทีหลัง role จะถูกทับเป็น button แล้วตัวกันเลื่อนฉากหลัง
+        (_blockBgScroll ใน MedReturnApp) จะมองไม่เห็นว่านี่คือหน้าต่างซ้อน
+        แล้วบล็อกการเลื่อนในหน้าต่างเองไปด้วย — พี่กันเจอ 1 ก.ย. 2569
+        "ทำไมเราสโครเมาส์ลงไม่ได้วะ" */}
   return (
-    <div role="dialog" aria-modal="true" {...kb(V.toggleOtherDrafts)}
+    <div {...kb(V.toggleOtherDrafts)} role="dialog" aria-modal="true"
       style={s('position:fixed;inset:0;background:rgba(20,26,22,.45);display:flex;align-items:center;justify-content:center;padding:22px 16px;z-index:52;overflow:auto')}>
       {/* กล่องข้างในต้องกินการกดไว้เอง ไม่งั้นกดอะไรก็ปิดหน้าต่าง */}
       <div onClick={(e) => e.stopPropagation()}
@@ -90,7 +95,8 @@ export function renderParkedSheet(V) {
           </div>
         </div>
 
-        <div style={s('flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:10px 14px')}>
+        {/* data-scrollable="1" บอกตัวกันเลื่อนฉากหลังว่ากล่องนี้เลื่อนได้ */}
+        <div data-scrollable="1" style={s('flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:10px 14px')}>
           {items.map((it) => {
             const c = parkedTone(it.hot);
             const seen = open === it.key;
@@ -107,15 +113,15 @@ export function renderParkedSheet(V) {
                   <div {...kb(() => V.seeParked(seen ? '' : it.key))}
                     aria-label={seen ? 'ซ่อนรายการยาในล็อตนี้' : 'ดูรายการยาในล็อตนี้'}
                     className="hv-bg-f6 tap"
-                    style={sx('justify-content:center;padding:8px 0;border-radius:8px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#414a44;font:600 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none')}>
+                    style={sx('justify-content:center;padding:8px 12px;min-width:76px;white-space:nowrap;border-radius:8px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#414a44;font:600 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none')}>
                     {seen ? 'ซ่อนยา' : 'ดูยา'}
                   </div>
                   <div {...kb(it.take)} aria-label="เอาล็อตที่กรอกค้างไว้มาทำต่อ" className={c.hv + ' tap'}
-                    style={sx('justify-content:center;padding:8px 14px;border-radius:8px;color:#fff;font:700 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none;min-width:112px;white-space:nowrap', { background: c.btn })}>
+                    style={sx('justify-content:center;padding:8px 14px;min-width:112px;white-space:nowrap;border-radius:8px;color:#fff;font:700 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none;min-width:112px;white-space:nowrap', { background: c.btn })}>
                     {it.takeLabel}
                   </div>
                   <div {...kb(it.drop)} aria-label="ทิ้งล็อตที่กรอกค้างไว้" className="hv-del tap"
-                    style={sx('justify-content:center;padding:8px 0;border-radius:8px;border:1px solid rgba(176,42,91,.28);background:#fff;color:#b02a5b;font:600 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none')}>
+                    style={sx('justify-content:center;padding:8px 12px;min-width:58px;white-space:nowrap;border-radius:8px;border:1px solid rgba(176,42,91,.28);background:#fff;color:#b02a5b;font:600 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none')}>
                     ทิ้ง
                   </div>
                 </div>

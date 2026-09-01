@@ -377,6 +377,44 @@ export default class MedReturnApp extends React.Component {
       st.deviceAsk || st.reasonAsk || st.catEdit || st.catLog || st.priceFix
     );
     if (now !== st.anyModalOpen) this.setState({ anyModalOpen: now });
+    this._lockBody(now);
+  };
+
+  // ── ฉากหลังห้ามเลื่อนเมื่อมีหน้าต่างซ้อน — ฝั่งมือถือต้องตรึงทั้งใบ ────────
+  //
+  //   พี่กันเจอเอง 1 ก.ย. 2569: "ทำไมเราเปิด popup แล้วเราสามารถเลื่อนเพจลงล่างได้"
+  //
+  //   การดักเหตุการณ์ touchmove อย่างเดียวไม่พอบนมือถือ — เบราว์เซอร์บนมือถือ
+  //   ส่งการเลื่อนต่อไปให้หน้าเว็บทั้งใบได้อยู่ดี ต้องตรึงตัวหน้าเว็บเองด้วย
+  //
+  // 🚨 ต้องจำตำแหน่งที่เลื่อนค้างไว้ แล้วคืนตอนปิดหน้าต่าง
+  //    ไม่งั้นปิดหน้าต่างแล้วเด้งกลับไปบนสุด เสียตำแหน่งที่กำลังดูอยู่
+  // 🚨 ทำเฉพาะฝั่งมือถือ ฝั่งคอมปิด overflow ที่พื้นที่เลื่อนก็พอแล้ว
+  //    (ตรึงทั้งใบบนคอมจะทำให้แถบเลื่อนหายแล้วหน้ากระตุกตอนเปิดปิด)
+  _lockBody = (on) => {
+    if (typeof document === 'undefined') return;
+    if (!this._isNarrowNow()) {
+      // เผื่อกรณีสลับจากมือถือมาคอมทั้งที่หน้าต่างยังเปิดอยู่
+      if (document.body.style.position === 'fixed') this._lockBody(false);
+      return;
+    }
+    const b = document.body;
+    if (on) {
+      if (b.style.position === 'fixed') return;
+      const sc = this.scrollRef && this.scrollRef.current;
+      this._lockTop = sc ? sc.scrollTop : (window.scrollY || 0);
+      b.style.position = 'fixed';
+      b.style.width = '100%';
+      b.style.overflow = 'hidden';
+    } else {
+      if (b.style.position !== 'fixed') return;
+      b.style.position = '';
+      b.style.width = '';
+      b.style.overflow = '';
+      const sc = this.scrollRef && this.scrollRef.current;
+      if (sc && this._lockTop != null) sc.scrollTop = this._lockTop;
+      this._lockTop = null;
+    }
   };
 
   componentDidUpdate(prevProps, prevState) {
