@@ -17,12 +17,12 @@ export function renderSheet(V) {
           <div style={s('display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px')}>
             <div style={s('min-width:0')}>
               <div style={s('font:600 17px/1.25 Sarabun,sans-serif;overflow-wrap:anywhere')}>{V.sheetName}</div>
-              <div style={s('font:400 12.5px Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums')}>{V.sheetPriceLabel}</div>
+              <div style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums')}>{V.sheetPriceLabel}</div>
             </div>
             <div style={s('display:flex;align-items:center;gap:8px;flex:none')}>
               <div style={sx('display:flex;padding:2px;border-radius:8px', { background: V.sheetPillBg })}>
-                <div {...kb(V.sheetSetReuse)} className={V.sheetReuseOn ? 'hv-seg-on' : 'hv-txt'} style={sx('min-height:44px;min-width:70px;display:flex;align-items:center;justify-content:center;padding:6px 13px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.sheetReuseBg, color: V.sheetReuseFg })}>ใช้ต่อได้</div>
-                <div {...kb(V.sheetSetDestroy)} className={V.sheetReuseOn ? 'hv-des-off' : 'hv-des-on'} style={sx('min-height:44px;min-width:70px;display:flex;align-items:center;justify-content:center;padding:6px 13px;border-radius:6px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: V.sheetDestroyBg, color: V.sheetDestroyFg })}>ทำลาย</div>
+                <div {...kb(V.sheetSetReuse)} className={V.sheetReuseOn ? 'hv-seg-on' : 'hv-txt'} style={sx('min-height:44px;min-width:70px;display:flex;align-items:center;justify-content:center;padding:6px 13px;border-radius:6px;cursor:pointer;font:600 12px/1.75 Sarabun,sans-serif', { background: V.sheetReuseBg, color: V.sheetReuseFg })}>ใช้ต่อได้</div>
+                <div {...kb(V.sheetSetDestroy)} className={V.sheetReuseOn ? 'hv-des-off' : 'hv-des-on'} style={sx('min-height:44px;min-width:70px;display:flex;align-items:center;justify-content:center;padding:6px 13px;border-radius:6px;cursor:pointer;font:600 12px/1.75 Sarabun,sans-serif', { background: V.sheetDestroyBg, color: V.sheetDestroyFg })}>ทำลาย</div>
               </div>
               <div {...kb(V.closeSheet)} aria-label="ปิดหน้าต่างใส่จำนวน" className="hv-bg-f6" style={s('width:32px;height:32px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>✕</div>
             </div>
@@ -32,7 +32,7 @@ export function renderSheet(V) {
               คนไข้เอายาจาก รพ.อื่น หรือคลินิกมาคืน เดิมบันทึกไม่ได้เลย มูลค่าหายทั้งก้อน */}
           {V.sheetIsOff && (
             <div style={s('background:#f6f7f4;border-radius:11px;padding:11px 12px;margin-bottom:13px')}>
-              <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:7px')}>ยานอกบัญชีโรงพยาบาล — กรอกเอง</div>
+              <div style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:7px')}>ยานอกบัญชีโรงพยาบาล — กรอกเอง</div>
               <input value={V.offName} onChange={V.onOffName} placeholder="ชื่อยา" style={s('width:100%;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 16px Sarabun,sans-serif;margin-bottom:7px')} />
               <div style={s('display:flex;gap:7px')}>
                 <input value={V.offUnit} onChange={V.onOffUnit} placeholder="หน่วย เช่น เม็ด" style={s('flex:1;min-width:0;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 16px Sarabun,sans-serif')} />
@@ -45,17 +45,17 @@ export function renderSheet(V) {
               ผู้บริหารถามว่าที่ทำลายไปเป็นเพราะอะไร ตอนนี้ตอบได้แล้ว */}
           {V.sheetIsDestroy && (
             <div style={s('margin-bottom:13px')}>
-              <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:6px')}>เหตุผลที่ต้องทำลาย</div>
+              <div style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:6px')}>เหตุผลที่ต้องทำลาย</div>
               <div style={s('display:flex;flex-wrap:wrap;gap:6px')}>
                 {V.sheetReasons.map((r) => (
                   <div key={r.label} {...kb(r.pick)} className={r.on ? 'hv-des-off' : 'hv-seg-off'} title={r.help}
-                    style={sx('padding:9px 12px;border-radius:999px;cursor:pointer;font:500 12px Sarabun,sans-serif', { background: r.bg, color: r.fg })}>{r.label}</div>
+                    style={sx('padding:9px 12px;border-radius:999px;cursor:pointer;font:500 12px/1.75 Sarabun,sans-serif', { background: r.bg, color: r.fg })}>{r.label}</div>
                 ))}
               </div>
               {/* 🚨 คำอธิบายโผล่ใต้แถวชิปของตัวที่เลือกอยู่ ไม่ยัดลงในชิปทุกอัน
                   ชิป 12 อันพร้อมคำอธิบายจะยาวจนล้นจอมือถือ และอ่านไม่ทันอยู่ดี */}
               {V.sheetReasonHelp && (
-                <div style={s('font:400 11.5px/1.5 Sarabun,sans-serif;color:#6b746e;background:#f6f7f4;border-radius:8px;padding:8px 10px;margin-top:7px')}>{V.sheetReasonHelp}</div>
+                <div style={s('font:400 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;background:#f6f7f4;border-radius:8px;padding:8px 10px;margin-top:7px')}>{V.sheetReasonHelp}</div>
               )}
             </div>
           )}
@@ -66,11 +66,11 @@ export function renderSheet(V) {
             <div {...kb(V.sheetInc)} className="hv-teal" style={s("width:52px;height:52px;border-radius:12px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;font:400 26px Sarabun,sans-serif;color:#fff;cursor:pointer;flex:none")}>+</div>
           </div>
 
-          <div style={s('text-align:center;font:400 12px Sarabun,sans-serif;color:#6b746e;margin-bottom:12px')}>{V.sheetUnit}</div>
+          <div style={s('text-align:center;font:400 12px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:12px')}>{V.sheetUnit}</div>
 
           <div style={s('display:flex;gap:7px;margin-bottom:14px')}>
             {V.sheetPresets.map((p) => (
-              <div key={p.label} {...kb(p.pick)} className="hv-bg-f6" style={sx("flex:1;text-align:center;padding:10px 0;border-radius:9px;cursor:pointer;font:600 13.5px Sarabun,sans-serif", { background: p.bg, color: p.fg })}>{p.label}</div>
+              <div key={p.label} {...kb(p.pick)} className="hv-bg-f6" style={sx("flex:1;text-align:center;padding:10px 0;border-radius:9px;cursor:pointer;font:600 13.5px/1.75 Sarabun,sans-serif", { background: p.bg, color: p.fg })}>{p.label}</div>
             ))}
           </div>
 

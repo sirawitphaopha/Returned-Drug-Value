@@ -136,7 +136,7 @@ export default function LoginPage() {
 // เพราะโหลดก่อนผ่านประตูรหัสผ่าน จึงตั้งใจไม่ให้พึ่งไฟล์อื่นในโปรเจกต์เกินจำเป็น
 // 🚨 ชื่อฟอนต์ต้องเขียนตัวแปร var(--font-xxx) เต็ม ๆ เอง เพราะไม่มี s() มาแปลงให้
 const SARABUN = 'var(--font-sarabun),Sarabun,"Leelawadee UI",Tahoma,sans-serif';
-const CHARM = 'var(--font-charmonman),Charmonman,cursive';
+const CHARM = 'var(--font-charmonman),Krub,sans-serif';
 
 const S = {
   page: {

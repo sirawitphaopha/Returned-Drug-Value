@@ -19,7 +19,7 @@ import { parkedItems, parkedTone } from './parked';
 function rowsTable(rows) {
   if (!rows.length) {
     return (
-      <div style={s('padding:11px 13px;font:400 12px Sarabun,sans-serif;color:#6b746e')}>
+      <div style={s('padding:11px 13px;font:400 12px/1.75 Sarabun,sans-serif;color:#6b746e')}>
         ล็อตนี้ไม่มีรายการยาเหลือแล้ว
       </div>
     );
@@ -33,18 +33,18 @@ function rowsTable(rows) {
             style={sx('display:flex;align-items:center;gap:10px;padding:7px 13px;flex-wrap:wrap', {
               background: destroy ? '#fdf7f5' : 'transparent'
             })}>
-            <div style={s('flex:1;min-width:150px;font:500 12.5px/1.4 Sarabun,sans-serif;color:#1e2420;overflow-wrap:anywhere')}>
+            <div style={s('flex:1;min-width:150px;font:500 12.5px/1.75 Sarabun,sans-serif;color:#1e2420;overflow-wrap:anywhere')}>
               {r.name}
             </div>
-            <div style={s('font:500 12px Sarabun,sans-serif;color:#6b746e;flex:none;font-variant-numeric:tabular-nums')}>
+            <div style={s('font:500 12px/1.75 Sarabun,sans-serif;color:#6b746e;flex:none;font-variant-numeric:tabular-nums')}>
               {r.qty} {r.unit}
             </div>
-            <div style={sx('font:700 12.5px Sarabun,sans-serif;flex:none;min-width:74px;text-align:right;font-variant-numeric:tabular-nums', {
+            <div style={sx('font:700 12.5px/1.75 Sarabun,sans-serif;flex:none;min-width:74px;text-align:right;font-variant-numeric:tabular-nums', {
               color: destroy ? '#b02a5b' : '#2f7d5d'
             })}>
               {money((r.price || 0) * (r.qty || 0))}
             </div>
-            <div style={sx('font:600 11px Sarabun,sans-serif;flex:none;min-width:46px;text-align:center;padding:3px 7px;border-radius:6px', {
+            <div style={sx('font:600 11px/1.75 Sarabun,sans-serif;flex:none;min-width:46px;text-align:center;padding:3px 7px;border-radius:6px', {
               background: destroy ? '#fbe9ec' : '#e6f2ec',
               color: destroy ? '#b02a5b' : '#2f7d5d'
             })}>
@@ -79,7 +79,7 @@ export function renderParkedSheet(V) {
               <div role="heading" aria-level="2" style={s('font:700 16px Sarabun,sans-serif;margin-bottom:4px')}>
                 ล็อตที่กรอกค้างไว้ {items.length} ล็อต
               </div>
-              <div style={s('font:400 12px/1.6 Sarabun,sans-serif;color:#6b746e')}>
+              <div style={s('font:400 12px/1.75 Sarabun,sans-serif;color:#6b746e')}>
                 ยังไม่ได้บันทึกเข้าระบบ กดดูรายละเอียดเพื่อเช็คว่ามียาอะไรก่อนตัดสินใจ
               </div>
             </div>
@@ -99,23 +99,23 @@ export function renderParkedSheet(V) {
                 style={sx('border-radius:11px;margin-bottom:9px;overflow:hidden', { border: '1px solid ' + c.bd })}>
                 <div style={sx('display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 13px', { background: c.bg })}>
                   <div style={s('flex:1;min-width:160px')}>
-                    <div style={sx('font:700 13px Sarabun,sans-serif;margin-bottom:2px', { color: it.hot ? '#b02a5b' : '#1e2420' })}>
+                    <div style={sx('font:700 13px/1.75 Sarabun,sans-serif;margin-bottom:2px', { color: it.hot ? '#b02a5b' : '#1e2420' })}>
                       {it.title}
                     </div>
-                    <div style={sx('font:500 11.5px Sarabun,sans-serif', { color: c.sub })}>{it.detail}</div>
+                    <div style={sx('font:500 11.5px/1.75 Sarabun,sans-serif', { color: c.sub })}>{it.detail}</div>
                   </div>
                   <div {...kb(() => V.seeParked(seen ? '' : it.key))}
                     aria-label={seen ? 'ซ่อนรายการยาในล็อตนี้' : 'ดูรายการยาในล็อตนี้'}
                     className="hv-bg-f6 tap"
-                    style={s('padding:8px 13px;border-radius:8px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#414a44;font:600 12px Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none')}>
+                    style={sx('justify-content:center;padding:8px 0;border-radius:8px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#414a44;font:600 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none')}>
                     {seen ? 'ซ่อนยา' : 'ดูยา'}
                   </div>
                   <div {...kb(it.take)} aria-label="เอาล็อตที่กรอกค้างไว้มาทำต่อ" className={c.hv + ' tap'}
-                    style={sx('padding:8px 14px;border-radius:8px;color:#fff;font:700 12px Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none', { background: c.btn })}>
+                    style={sx('justify-content:center;padding:8px 14px;border-radius:8px;color:#fff;font:700 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none;min-width:112px;white-space:nowrap', { background: c.btn })}>
                     {it.takeLabel}
                   </div>
                   <div {...kb(it.drop)} aria-label="ทิ้งล็อตที่กรอกค้างไว้" className="hv-del tap"
-                    style={s('padding:8px 12px;border-radius:8px;border:1px solid rgba(176,42,91,.28);background:#fff;color:#b02a5b;font:600 12px Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none')}>
+                    style={sx('justify-content:center;padding:8px 0;border-radius:8px;border:1px solid rgba(176,42,91,.28);background:#fff;color:#b02a5b;font:600 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none')}>
                     ทิ้ง
                   </div>
                 </div>
@@ -130,7 +130,7 @@ export function renderParkedSheet(V) {
         </div>
 
         {other && (
-          <div style={s('flex:none;padding:11px 18px;border-top:1px solid #eef1ef;background:#fbfcfb;font:400 11.5px/1.6 Sarabun,sans-serif;color:#6b746e')}>
+          <div style={s('flex:none;padding:11px 18px;border-top:1px solid #eef1ef;background:#fbfcfb;font:400 11.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>
             ล็อตจากเครื่องอื่นใช้ตอนเครื่องนั้นเสียแล้วต้องเอางานมาทำต่อ ·
             เอามาทำต่อแล้วเครื่องเดิมจะไม่เห็นอีก เพื่อไม่ให้สองเครื่องบันทึกของชุดเดียวกันซ้ำ
           </div>

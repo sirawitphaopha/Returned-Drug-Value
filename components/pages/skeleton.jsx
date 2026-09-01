@@ -46,7 +46,7 @@ export function skelTable(cols, rows, opts) {
              หัวจะลอยไปติดขอบบนของกรอบ แล้วไปโผล่กลางแถวจาง (พี่กันเห็นแล้วทัก 27 ส.ค. 2569)
           🚨 หน้าไหนวาดหัวตารางของตัวเองอยู่แล้ว (หน้าประวัติ · หน้าคลังยา)
              ต้องส่ง noHead:true มาด้วย ไม่งั้นหัวจะซ้อนกันสองแถว */}
-      {!o.noHead && <div className="col-head" style={s('display:flex;padding:11px 15px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);font:600 11.5px Sarabun,sans-serif;letter-spacing:.04em;color:#414a44;position:static')}>
+      {!o.noHead && <div className="col-head" style={s('display:flex;padding:11px 15px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);font:600 11.5px/1.75 Sarabun,sans-serif;letter-spacing:.04em;color:#414a44;position:static')}>
         {cols.map((c, i) => (
           <span key={c.key || i}
             style={sx('display:flex;align-items:center;gap:4px;user-select:none',
@@ -95,7 +95,7 @@ export function skelTableTag(cols, rows, opts) {
         <thead>
           <tr>
             {cols.map((c) => (
-              <th key={c.key} style={s("padding:9px 10px;text-align:left;font:600 12px Sarabun,sans-serif;color:#fff;background:#2f7d5d;white-space:nowrap")}>{c.label}</th>
+              <th key={c.key} style={s("padding:9px 10px;text-align:left;font:600 12px/1.75 Sarabun,sans-serif;color:#fff;background:#2f7d5d;white-space:nowrap")}>{c.label}</th>
             ))}
             {o.extraCols ? o.extraCols.map((w, i) => (
               <th key={"x" + i} style={s("padding:9px 10px;background:#2f7d5d")} />

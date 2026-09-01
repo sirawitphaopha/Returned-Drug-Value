@@ -12,11 +12,11 @@ export function renderPrices(V) {
           <div {...kb(V.closePrices)} aria-label="กลับไปหน้าก่อน" className="hv-bg-f6" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:400 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>←</div>
           <div style={s('min-width:0;flex:1')}>
             <div style={s('font:700 17px/1.2 Sarabun,sans-serif')}>ตั้งราคายา</div>
-            <div style={s('font:400 11.5px/1.2 Sarabun,sans-serif;color:#6b746e')}>ราคาต่อหน่วยที่ใช้คิดมูลค่ายาคืน</div>
+            <div style={s('font:400 11.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>ราคาต่อหน่วยที่ใช้คิดมูลค่ายาคืน</div>
           </div>
           <div style={s('text-align:right;flex:none')}>
             <div style={s("font:600 14px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{V.priceProgress}</div>
-            <div style={s('font:400 11px Sarabun,sans-serif;color:#6b746e')}>ใส่ราคาแล้ว</div>
+            <div style={s('font:400 11px/1.75 Sarabun,sans-serif;color:#6b746e')}>ใส่ราคาแล้ว</div>
           </div>
         </div>
 
@@ -37,15 +37,15 @@ export function renderPrices(V) {
 
         <div style={s('display:flex;gap:6px;margin-top:10px;flex-wrap:wrap')}>
           {V.priceFilters.map((f) => (
-            <div key={f.key} {...kb(f.pick)} className={f.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('padding:7px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: f.bg, color: f.fg })}>{f.label}</div>
+            <div key={f.key} {...kb(f.pick)} className={f.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('padding:7px 14px;border-radius:999px;font:500 12.5px/1.75 Sarabun,sans-serif;cursor:pointer', { background: f.bg, color: f.fg })}>{f.label}</div>
           ))}
         </div>
       </div>
 
       <div style={s('padding:14px 20px 18px;flex:1')}>
         <div style={s('display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px')}>
-          <span style={s("font:600 11px Sarabun,sans-serif;letter-spacing:.08em;color:rgba(30,36,32,.45)")}>{V.priceCountLabel}</span>
-          <span style={s('font:400 11px Sarabun,sans-serif;color:rgba(30,36,32,.4)')}>ปล่อยช่องหน่วยว่างไว้ = ใช้หน่วยเริ่มต้น</span>
+          <span style={s("font:600 11px/1.75 Sarabun,sans-serif;letter-spacing:.08em;color:rgba(30,36,32,.45)")}>{V.priceCountLabel}</span>
+          <span style={s('font:400 11px/1.75 Sarabun,sans-serif;color:rgba(30,36,32,.4)')}>ปล่อยช่องหน่วยว่างไว้ = ใช้หน่วยเริ่มต้น</span>
         </div>
 
         {(V.priceLoading || V.skelDemo) && (
@@ -62,7 +62,7 @@ export function renderPrices(V) {
         {!V.priceFail && V.priceEmpty && (
           <div style={s('text-align:center;padding:24px 12px;border:1px dashed rgba(30,36,32,.16);border-radius:12px')}>
             <div style={s('font:600 15px Sarabun,sans-serif;margin-bottom:4px')}>ไม่พบยาตามที่ค้น</div>
-            <div style={s('font:400 12.5px/1.6 Sarabun,sans-serif;color:#6b746e')}>ลองพิมพ์ชื่อสามัญ เช่น amlo, metf, insu</div>
+            <div style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>ลองพิมพ์ชื่อสามัญ เช่น amlo, metf, insu</div>
           </div>
         )}
 
@@ -82,16 +82,16 @@ export function renderPrices(V) {
                     {/* ชื่อการค้าในวงเล็บสีเทล เฉพาะยาที่มี (แบบเดียวกับ ME-DRP) */}
                     {p.hasBrand && <span style={s('color:#2f7d5d;margin-left:6px;white-space:nowrap')}>({p.brand})</span>}
                   </div>
-                  <div style={sx('font:400 11.5px/1.3 Sarabun,sans-serif', { color: p.subColor })}>{p.sub}{p.warnLabel}</div>
+                  <div style={sx('font:400 11.5px/1.75 Sarabun,sans-serif', { color: p.subColor })}>{p.sub}{p.warnLabel}</div>
                   {/* ที่มาของราคา — บอกว่าไปหยิบมาจากบรรทัดไหนในไฟล์ HIS
                       สำคัญมาก เพราะเภสัชกรต้องดูออกว่าจับคู่ถูกตัวหรือเปล่า */}
                   {p.note && (
-                    <div style={s('font:400 11px/1.4 Sarabun,sans-serif;color:#6f7873;margin-top:2px;overflow-wrap:anywhere')}>{p.note}</div>
+                    <div style={s('font:400 11px/1.75 Sarabun,sans-serif;color:#6f7873;margin-top:2px;overflow-wrap:anywhere')}>{p.note}</div>
                   )}
                 </div>
                 <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
                   <input value={p.priceValue} onChange={p.onPrice} inputMode="decimal" placeholder="0.00" style={s("width:96px;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:600 15px Sarabun,sans-serif;font-variant-numeric:tabular-nums;text-align:right;color:#1e2420")} />
-                  <span style={s("font:500 13px Sarabun,sans-serif;color:#6b746e;flex:none")}>฿ /</span>
+                  <span style={s("font:500 13px/1.75 Sarabun,sans-serif;color:#6b746e;flex:none")}>฿ /</span>
                   <input value={p.unitValue} onChange={p.onUnit} placeholder={p.unitPlaceholder} style={s('width:82px;height:40px;padding:0 11px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#f6f7f4;font:400 14px Sarabun,sans-serif;color:#1e2420')} />
                 </div>
               </div>
@@ -100,7 +100,7 @@ export function renderPrices(V) {
                   ยังไม่บันทึกจนกว่าจะกดปุ่มบันทึกที่แถบล่างจอ */}
               {p.suggests.length > 0 && (
                 <div style={s('margin-top:9px;padding-top:9px;border-top:1px dashed rgba(30,36,32,.12)')}>
-                  <div style={s("font:600 10.5px Sarabun,sans-serif;letter-spacing:.06em;color:rgba(30,36,32,.45);margin-bottom:6px")}>เลือกราคาที่ถูกต้อง</div>
+                  <div style={s("font:600 10.5px/1.75 Sarabun,sans-serif;letter-spacing:.06em;color:rgba(30,36,32,.45);margin-bottom:6px")}>เลือกราคาที่ถูกต้อง</div>
                   <div style={s('display:flex;flex-direction:column;gap:5px')}>
                     {p.suggests.map((sg) => (
                       <div key={sg.key} {...kb(sg.pick)} className={(sg.on ? 'hv-bg-e3f' : 'hv-bg-f6') + ' tap'} style={sx('display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;cursor:pointer', {
@@ -111,8 +111,8 @@ export function renderPrices(V) {
                           border: '1.6px solid ' + (sg.on ? '#2f7d5d' : 'rgba(30,36,32,.3)'),
                           background: sg.on ? '#2f7d5d' : '#fff'
                         })}></span>
-                        <span style={s('flex:1;min-width:0;font:400 12px/1.4 Sarabun,sans-serif;overflow-wrap:anywhere')}>{sg.name}</span>
-                        <span style={s("flex:none;font:600 12.5px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{sg.priceLabel}</span>
+                        <span style={s('flex:1;min-width:0;font:400 12px/1.75 Sarabun,sans-serif;overflow-wrap:anywhere')}>{sg.name}</span>
+                        <span style={s("flex:none;font:600 12.5px/1.75 Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{sg.priceLabel}</span>
                       </div>
                     ))}
                   </div>
@@ -123,7 +123,7 @@ export function renderPrices(V) {
         </div>
 
         {V.priceHasMore && (
-          <div {...kb(V.morePrices)} className="hv-bg-f6" style={s('margin-top:10px;height:44px;border-radius:11px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 13.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>{V.priceMoreLabel}</div>
+          <div {...kb(V.morePrices)} className="hv-bg-f6" style={s('margin-top:10px;height:44px;border-radius:11px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 13.5px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer')}>{V.priceMoreLabel}</div>
         )}
       </div>
     </div>

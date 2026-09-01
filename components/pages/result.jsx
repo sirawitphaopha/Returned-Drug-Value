@@ -18,7 +18,7 @@ function stat(label, value, tone) {
     <div style={sx('flex:1;min-width:0;border-radius:11px;padding:9px 12px', {
       background: red ? '#fdf1ed' : '#eef6f1'
     })}>
-      <div style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e;margin-bottom:2px')}>{label}</div>
+      <div style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:2px')}>{label}</div>
       <div style={sx('font:700 19px Sarabun,sans-serif', { color: red ? '#c2543c' : '#2f7d5d' })}>{value}</div>
     </div>
   );
@@ -27,8 +27,8 @@ function stat(label, value, tone) {
 function line(label, value) {
   return (
     <div style={s('display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid rgba(30,36,32,.08)')}>
-      <span style={s('font:400 13px Sarabun,sans-serif;color:#6b746e;flex:none')}>{label}</span>
-      <span style={s('font:600 13px Sarabun,sans-serif;color:#1e2420;text-align:right')}>{value}</span>
+      <span style={s('font:400 13px/1.75 Sarabun,sans-serif;color:#6b746e;flex:none')}>{label}</span>
+      <span style={s('font:600 13px/1.75 Sarabun,sans-serif;color:#1e2420;text-align:right')}>{value}</span>
     </div>
   );
 }
@@ -54,13 +54,13 @@ function renderFail(V) {
       </div>
 
       <div role="heading" aria-level="1" style={s('margin-top:14px;font:800 23px Sarabun,sans-serif;color:#a8452f;letter-spacing:-.3px')}>ส่งขึ้นระบบไม่สำเร็จ</div>
-      <div style={s('margin-top:7px;font:600 13.5px/1.6 Sarabun,sans-serif;color:#8a4030')}>ข้อมูลถูกเก็บไว้ในเครื่องนี้แล้ว ยังไม่ขึ้นระบบส่วนกลาง</div>
+      <div style={s('margin-top:7px;font:600 13.5px/1.75 Sarabun,sans-serif;color:#8a4030')}>ข้อมูลถูกเก็บไว้ในเครื่องนี้แล้ว ยังไม่ขึ้นระบบส่วนกลาง</div>
 
       {/* สถานะการลองส่งเอง — ตัวเลขต้องเดินจริงทุกวินาที ไม่ใช่ข้อความลอย ๆ */}
       <div role="status" aria-live="polite" style={s('width:100%;max-width:360px;margin-top:15px;padding:11px 14px;border-radius:12px;background:#fff;border:1px solid rgba(194,84,60,.22)')}>
         <div style={s('font:700 14px Sarabun,sans-serif;color:#1e2420')}>{V.resultNext}</div>
         {V.resultTriesText && (
-          <div style={s('margin-top:3px;font:400 12px Sarabun,sans-serif;color:#6f7873')}>{V.resultTriesText}</div>
+          <div style={s('margin-top:3px;font:400 12px/1.75 Sarabun,sans-serif;color:#6f7873')}>{V.resultTriesText}</div>
         )}
       </div>
 
@@ -70,14 +70,14 @@ function renderFail(V) {
         {line('ผู้บันทึก', V.resultBy)}
         {line('แหล่งที่มา', V.resultSrc)}
         <div style={s('display:flex;justify-content:space-between;gap:12px;padding:7px 0')}>
-          <span style={s('font:400 13px Sarabun,sans-serif;color:#6b746e;flex:none')}>วันที่รับคืน</span>
-          <span style={s('font:600 13px Sarabun,sans-serif;color:#1e2420;text-align:right')}>{V.resultDate}</span>
+          <span style={s('font:400 13px/1.75 Sarabun,sans-serif;color:#6b746e;flex:none')}>วันที่รับคืน</span>
+          <span style={s('font:600 13px/1.75 Sarabun,sans-serif;color:#1e2420;text-align:right')}>{V.resultDate}</span>
         </div>
       </div>
 
       {/* สาเหตุจากเซิร์ฟเวอร์ — ตัวเล็กสุดเพราะเป็นภาษาช่าง คนอ่านหลักคือแคลร์ตอนตามหาสาเหตุ */}
       {V.resultError && (
-        <div style={s('width:100%;max-width:360px;margin-top:9px;font:400 11.5px/1.55 Sarabun,sans-serif;color:#8a4030;text-align:left;word-break:break-word')}>
+        <div style={s('width:100%;max-width:360px;margin-top:9px;font:400 11.5px/1.75 Sarabun,sans-serif;color:#8a4030;text-align:left;word-break:break-word')}>
           สาเหตุ {V.resultError}
         </div>
       )}
@@ -116,7 +116,7 @@ export function renderResult(V) {
 
       {V.resultHasLot && (
         <div style={s('margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;background:#fff;border:1px solid rgba(47,125,93,.28)')}>
-          <span style={s('font:500 12px Sarabun,sans-serif;color:#6b746e')}>เลข Lot</span>
+          <span style={s('font:500 12px/1.75 Sarabun,sans-serif;color:#6b746e')}>เลข Lot</span>
           <span style={s('font:700 17px Sarabun,sans-serif;color:#24614a;letter-spacing:.4px')}>{V.resultLot}</span>
         </div>
       )}
@@ -132,15 +132,15 @@ export function renderResult(V) {
           {line('แหล่งที่มา', V.resultSrc)}
           {/* บรรทัดสุดท้ายไม่มีเส้นคั่นใต้ ใช้กล่องของตัวเองแทนตัวช่วย line() */}
           <div style={s('display:flex;justify-content:space-between;gap:12px;padding:7px 0')}>
-            <span style={s('font:400 13px Sarabun,sans-serif;color:#6b746e;flex:none')}>วันที่รับคืน</span>
-            <span style={s('font:600 13px Sarabun,sans-serif;color:#1e2420;text-align:right')}>{V.resultDate}</span>
+            <span style={s('font:400 13px/1.75 Sarabun,sans-serif;color:#6b746e;flex:none')}>วันที่รับคืน</span>
+            <span style={s('font:600 13px/1.75 Sarabun,sans-serif;color:#1e2420;text-align:right')}>{V.resultDate}</span>
           </div>
         </div>
       </div>
 
       {/* แถวที่เคยเข้าฐานไปแล้วจากการกดลองส่งใหม่ — ต้องบอก ไม่ใช่เงียบว่าบันทึกครบ */}
       {V.resultNote && (
-        <div style={s('width:100%;max-width:360px;margin-top:11px;padding:10px 13px;border-radius:11px;background:#fbeed4;border:1px solid rgba(150,101,15,.28);font:500 12.5px/1.6 Sarabun,sans-serif;color:#96650f;text-align:left')}>
+        <div style={s('width:100%;max-width:360px;margin-top:11px;padding:10px 13px;border-radius:11px;background:#fbeed4;border:1px solid rgba(150,101,15,.28);font:500 12.5px/1.75 Sarabun,sans-serif;color:#96650f;text-align:left')}>
           {V.resultNote}
         </div>
       )}

@@ -66,7 +66,10 @@ export function parkedTone(hot) {
     ? { bg: '#fdf3f5', bd: 'rgba(176,42,91,.24)', fg: '#b02a5b', sub: '#8a6470',
         btn: '#b02a5b', hv: 'hv-crim' }
     : { bg: '#fdf8ec', bd: 'rgba(150,101,15,.26)', fg: '#96650f', sub: '#7a6033',
-        btn: '#2f7d5d', hv: 'hv-teal' };
+        // 🚨 ปุ่มต้องอยู่ในโทนของแถบ (พี่กันทัก 1 ก.ย. 2569 "สีมันไม่เข้าโทนเลย")
+        //    แถบอำพันแล้วปุ่มเขียวคือคนละเรื่องกัน ตาสะดุดทันที
+        //    ใช้อำพันเข้มกว่าตัวหนังสือหนึ่งระดับ ตัวหนังสือขาวบนปุ่มจึงยังอ่านชัด
+        btn: '#8a5d0e', hv: 'hv-amber' };
 }
 
 export function renderParked(V) {
@@ -101,14 +104,22 @@ export function renderParked(V) {
        other.length ? 'เครื่องอื่น ' + other.length : '',
        hot ? 'บางล็อตใกล้ถูกล้าง' : ''].filter(Boolean).join(' · ');
 
+      // 🚨 แนบชิดขอบจอ ไม่มีมุมมน — เฉพาะฝั่งมือถือ (พี่กันสั่ง 1 ก.ย. 2569)
+  //    ฝั่งคอมยังเป็นกรอบขอบมนเหมือนเดิม ห้ามแตะ (โดนด่ามาแล้วเพราะแก้ทั้งสองฝั่ง)
+  // "ไม่เอากรอบสี่เหลี่ยมขอบมน เอาเป้นกรอบสี่เหลี่ยมที่เเนบชิดกับขอบเลย"
+  // แถบนี้เป็นแถบแจ้งเตือนระดับหน้า ไม่ใช่การ์ดที่ลอยอยู่ในเนื้อหา
+  // แนบขอบแล้วอ่านเป็นแถบสถานะทันที ไม่ปนกับการ์ดรายการยาที่มีมุมมน
+  // 🚨 เส้นขอบเหลือเฉพาะด้านล่าง — ด้านบนกับข้างชนขอบจออยู่แล้ว ไม่ต้องมีเส้น
   return (
     <div role="status"
-      style={sx('flex:none;margin-bottom:8px;display:flex;align-items:center;gap:9px;padding:6px 8px 6px 12px;border-radius:10px', {
-        background: c.bg, border: '1px solid ' + c.bd
-      })}>
+      style={sx(V.wide
+        ? 'flex:none;margin-bottom:8px;display:flex;align-items:center;gap:9px;padding:6px 8px 6px 12px;border-radius:10px'
+        : 'flex:none;display:flex;align-items:center;gap:9px;padding:7px 12px', V.wide
+        ? { background: c.bg, border: '1px solid ' + c.bd }
+        : { background: c.bg, borderBottom: '1px solid ' + c.bd })}>
       {/* 🚨 min-width บนมือถือต้องเป็น 0 — ตั้ง 180px ไว้แล้วกล่องนี้จะไม่ยอมหด
           ต่อให้ที่ไม่พอ มันก็ดันปุ่มให้ล้นออกนอกจอแทนที่จะบีบตัวเอง */}
-      <div style={sx('flex:1;font:700 12.5px/1.35 Sarabun,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', { color: c.fg, minWidth: V.wide ? '180px' : 0 })}>
+      <div style={sx('flex:1;font:700 12.5px/1.8 Sarabun,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', { color: c.fg, minWidth: V.wide ? '180px' : 0 })}>
         {head}
       </div>
 
@@ -116,21 +127,21 @@ export function renderParked(V) {
         <>
           {/* ล็อตเดียวก็ยังต้องดูได้ว่ามียาอะไรบ้าง ก่อนตัดสินใจว่าจะเอาหรือทิ้ง */}
           <div {...kb(V.toggleOtherDrafts)} aria-label="ดูรายละเอียดล็อตที่กรอกค้างไว้" className="hv-bg-f6 tap"
-            style={s('padding:6px 12px;border-radius:8px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#414a44;font:600 12.5px Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none')}>
+            style={s('padding:6px 12px;border-radius:8px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#414a44;font:600 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none')}>
             ดูรายละเอียด
           </div>
           <div {...kb(single.take)} aria-label="เอาล็อตที่กรอกค้างไว้กลับมา" className={c.hv + ' tap'}
-            style={sx('padding:6px 14px;border-radius:8px;color:#fff;font:700 12.5px Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none', { background: c.btn })}>
+            style={sx('padding:6px 14px;border-radius:8px;color:#fff;font:700 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none', { background: c.btn })}>
             {single.takeLabel}
           </div>
           <div {...kb(single.drop)} aria-label="ทิ้งล็อตที่กรอกค้างไว้" className="hv-del tap"
-            style={s('padding:6px 12px;border-radius:8px;border:1px solid rgba(176,42,91,.28);background:#fff;color:#b02a5b;font:600 12.5px Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none')}>
+            style={s('padding:6px 12px;border-radius:8px;border:1px solid rgba(176,42,91,.28);background:#fff;color:#b02a5b;font:600 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none')}>
             ทิ้ง
           </div>
         </>
       ) : (
         <div {...kb(V.toggleOtherDrafts)} aria-label="ดูรายการล็อตที่กรอกค้างไว้" className={c.hv + ' tap'}
-          style={sx('padding:6px 14px;border-radius:8px;color:#fff;font:700 12.5px Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none', { background: c.btn })}>
+          style={sx('padding:6px 14px;border-radius:8px;color:#fff;font:700 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:32px;display:flex;align-items:center;flex:none', { background: c.btn })}>
           ดูทั้งหมด
         </div>
       )}

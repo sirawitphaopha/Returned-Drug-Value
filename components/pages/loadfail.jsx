@@ -21,12 +21,12 @@ export function renderLoadFail(o) {
   return (
     <div role="status" style={sx('width:100%;border-radius:12px;padding:18px 16px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:9px', { background: bg, border: '1px solid ' + bd })}>
       <div style={sx('font:700 14.5px Sarabun,sans-serif', { color: fg })}>{o.title || 'โหลดข้อมูลไม่สำเร็จ'}</div>
-      <div style={sx('font:500 12.5px Sarabun,sans-serif;line-height:1.55;max-width:420px', { color: sub })}>
+      <div style={sx('font:500 12.5px/1.75 Sarabun,sans-serif;line-height:1.55;max-width:420px', { color: sub })}>
         {o.detail || 'ข้อมูลที่ควรแสดงตรงนี้ยังมาไม่ถึง ตัวเลขที่เห็นอาจไม่ครบ ตรวจสอบการเชื่อมต่อแล้วกดลองอีกครั้ง'}
       </div>
       {o.retry && (
         <div {...kb(o.retry)} aria-label="ลองโหลดข้อมูลอีกครั้ง" className="hv-teal tap"
-          style={s('margin-top:2px;padding:9px 20px;border-radius:9px;background:#2f7d5d;color:#fff;font:700 13px Sarabun,sans-serif;cursor:pointer;min-height:40px;display:flex;align-items:center')}>
+          style={s('margin-top:2px;padding:9px 20px;border-radius:9px;background:#2f7d5d;color:#fff;font:700 13px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:40px;display:flex;align-items:center')}>
           ลองอีกครั้ง
         </div>
       )}

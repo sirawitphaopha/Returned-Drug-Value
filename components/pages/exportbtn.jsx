@@ -31,7 +31,7 @@ export function renderExportBtn(onClick, label, opt) {
   const o = opt || {};
   const shape = o.block
     ? 'height:46px;border-radius:12px;font:600 14.5px Sarabun,sans-serif'
-    : 'height:38px;padding:0 16px;border-radius:9px;font:600 13px Sarabun,sans-serif';
+    : 'height:38px;padding:0 16px;border-radius:9px;font:600 13px/1.75 Sarabun,sans-serif';
 
   return (
     <div

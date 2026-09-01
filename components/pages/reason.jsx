@@ -35,7 +35,7 @@ export function renderReasonPick(V) {
               style={s('flex:none;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>✕</div>
           </div>
 
-          <div style={s('font:400 12.5px/1.6 Sarabun,sans-serif;color:#6b746e;margin-bottom:13px;overflow-wrap:anywhere')}>{V.reasonDrugLabel}</div>
+          <div style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:13px;overflow-wrap:anywhere')}>{V.reasonDrugLabel}</div>
 
           {/* รายการเหตุผล — แต่ละแถวมีชื่อกับคำอธิบายอยู่ด้วยกัน
               🚨 คำอธิบายต้องอยู่ในแถวเลย ไม่ใช่ซ่อนไว้ให้เอาเมาส์ไปชี้
@@ -45,13 +45,13 @@ export function renderReasonPick(V) {
               <div key={r.label} {...kb(r.pick)} className="tap hv-reason"
                 style={sx('text-align:left;border-radius:11px;padding:11px 13px;cursor:pointer;transition:background .12s',
                   { background: r.bg, border: '1px solid ' + r.border })}>
-                <div style={sx('font:600 13.5px/1.35 Sarabun,sans-serif', { color: r.fg })}>{r.label}</div>
-                <div style={s('font:400 11.5px/1.5 Sarabun,sans-serif;color:#6b746e;margin-top:2px')}>{r.help}</div>
+                <div style={sx('font:600 13.5px/1.75 Sarabun,sans-serif', { color: r.fg })}>{r.label}</div>
+                <div style={s('font:400 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-top:2px')}>{r.help}</div>
               </div>
             ))}
           </div>
 
-          <div style={s('font:400 11.5px/1.6 Sarabun,sans-serif;color:#6f7873;margin-top:12px;text-align:center')}>
+          <div style={s('font:400 11.5px/1.75 Sarabun,sans-serif;color:#6f7873;margin-top:12px;text-align:center')}>
             เลือกแล้วรายการจะถูกตั้งเป็นทำลายทันที · ปิดหน้าต่างนี้เพื่อยกเลิก
           </div>
         </div>

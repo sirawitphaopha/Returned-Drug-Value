@@ -11,15 +11,48 @@
 // แล้ว iOS จะตัดเหลือ 2 บรรทัดจนอ่านไม่ออก (ME-DRP เคยเจอปัญหานี้มาแล้ว)
 import { s, sx, kb } from '../helpers';
 
-export function renderRecorderField(V) {
+export function renderRecorderField(V, opt) {
+  opt = opt || {};
   const open = V.recorderMenuOpen;
   const has = !!V.recorderName;
 
+  // ── แบบบรรทัดเดียว ให้เหมือนช่อง รพ.สต. (พี่กันสั่ง 1 ก.ย. 2569) ──────────
+  //   "เปลี่ยนอันนี้ด้วยละกัน ให้เหมือน รพ สต เเละเอาไว้กึ่งกลาง"
+  //
+  //   ป้ายอยู่ซ้ายในกรอบเดียวกัน เส้นคั่นแล้วต่อด้วยชื่อ เหลือบรรทัดเดียว
+  //   สามช่องบังคับของหน้าบันทึกมือถือจึงหน้าตาเป็นชุดเดียวกันหมด
+  //
+  // 🚨 ใช้เฉพาะฝั่งมือถือ แผงขวาฝั่งคอมยังเป็นแบบเดิม ห้ามแตะ
+  // 🚨 ยังเป็นเมนูที่ทำเอง ไม่ใช่ <select> เพราะชื่อยาว (ภก. ธีร์ธวัช รัตนวรวิเศษ)
+  //    iOS จะตัดเหลือสองบรรทัดจนอ่านไม่ออก (ปัญหาเดิมจาก ME-DRP)
+  const inline = !!opt.inline;
+  const ibd = has ? 'rgba(47,125,93,.34)' : 'rgba(194,84,60,.55)';
+  const ifg = has ? '#2f7d5d' : '#c2543c';
+
   return (
     <div style={s('position:relative')}>
+      {inline ? (
+        <div {...kb(V.toggleRecorderMenu)} className={has ? 'hv-bg-f6' : 'hv-bg-red-l'}
+          style={sx('display:flex;align-items:center;height:40px;padding:0;border-radius:9px;background:#fff;cursor:pointer', { border: '1px solid ' + (open ? '#2f7d5d' : ibd) })}>
+          <span style={sx('font:500 11px/1.75 Sarabun,sans-serif;flex:none;width:62px;align-self:stretch;display:flex;align-items:center;justify-content:center;white-space:nowrap', { color: ifg, borderRight: '1px solid ' + ibd })}>ผู้บันทึก</span>
+          {/* 🚨 ขนาดกับน้ำหนักตัวอักษรต้องเท่ากับช่อง รพ.สต. เป๊ะ (พี่กันทัก 1 ก.ย. 2569)
+              16px · เลือกแล้วหนา 600 · ยังไม่เลือกหนา 500
+              สองช่องอยู่ในชุดเดียวกัน ตัวหนังสือหนาไม่เท่ากันเห็นได้ทันที */}
+          <span style={sx('flex:1;min-width:0;font:400 16px/1.7 Sarabun,sans-serif;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', { color: has ? '#1e2420' : '#c2543c', fontWeight: has ? 600 : 500 })}>
+            {V.recorderName || '— เลือกผู้บันทึก ก่อนบันทึก —'}
+          </span>
+          {/* 🚨 ลูกศรลอยทับขอบขวา ไม่กินที่ในแถว
+              ถ้าปล่อยให้กินที่ ข้อความที่จัดกึ่งกลางจะถูกดันไปทางซ้ายเท่าความกว้างลูกศร
+              ซึ่งเป็นจุดที่พี่กันทักว่ายังไม่กลาง */}
+          <span style={sx('position:absolute;right:9px;top:0;bottom:0;display:flex;align-items:center;color:#414a44;transition:transform .15s;pointer-events:none', { transform: 'rotate(' + (open ? '180deg' : '0') + ')' })}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9.5 12 15.5 18 9.5" /></svg>
+          </span>
+        </div>
+      ) : (
+      <>
       <div style={s('display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px')}>
-        <span style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e')}>ผู้บันทึก</span>
-        {!has && <span style={s('font:500 11px Sarabun,sans-serif;color:#c2543c')}>ต้องเลือกก่อนบันทึก</span>}
+        <span style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>ผู้บันทึก</span>
+        {!has && <span style={s('font:500 11px/1.75 Sarabun,sans-serif;color:#c2543c')}>ต้องเลือกก่อนบันทึก</span>}
       </div>
 
       {/* ปุ่มเปิดเมนู — โครงเดียวกับ ME-DRP: ขอบ 1.5px เปลี่ยนสีตอนเปิด · ลูกศรหมุน 180° */}
@@ -34,8 +67,8 @@ export function renderRecorderField(V) {
           color: has ? '#1e2420' : '#6f7873'
         })}
       >
-        <span style={s('font:500 15px Sarabun,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>
-          {V.recorderName || '— เลือกผู้บันทึก —'}
+        <span style={s('font:500 15px/1.75 Sarabun,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>
+          {V.recorderName || '— เลือกผู้บันทึก ก่อนบันทึก —'}
         </span>
         <span style={sx('flex:none;display:flex;align-items:center;color:#414a44;transition:transform .15s', {
           transform: 'rotate(' + (open ? '180deg' : '0') + ')'
@@ -46,6 +79,9 @@ export function renderRecorderField(V) {
           </svg>
         </span>
       </div>
+
+      </>
+      )}
 
       {open && (
         <>
@@ -107,7 +143,7 @@ export function renderRecorderField(V) {
                 <div
                   {...kb(V.addRecorder)}
                   className={V.canAddRecorder ? 'hv-teal' : ''}
-                  style={sx('height:38px;padding:0 14px;border-radius:9px;display:flex;align-items:center;font:600 13px Sarabun,sans-serif;flex:none', {
+                  style={sx('height:38px;padding:0 14px;border-radius:9px;display:flex;align-items:center;font:600 13px/1.75 Sarabun,sans-serif;flex:none', {
                     background: V.canAddRecorder ? '#2f7d5d' : '#e9ebe8',
                     color: V.canAddRecorder ? '#fff' : '#6f7873',
                     cursor: V.canAddRecorder ? 'pointer' : 'default'

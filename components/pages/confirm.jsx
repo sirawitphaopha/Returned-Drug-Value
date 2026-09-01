@@ -41,7 +41,7 @@ export function renderConfirm(V) {
 
           {/* แบบบรรทัดเดียว — ใช้กับป๊อปลบ */}
           {V.confirmDetail && (
-            <div style={s('font:500 13.5px/1.5 Sarabun,sans-serif;color:#1e2420;background:#f6f7f4;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-variant-numeric:tabular-nums')}>{V.confirmDetail}</div>
+            <div style={s('font:500 13.5px/1.75 Sarabun,sans-serif;color:#1e2420;background:#f6f7f4;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-variant-numeric:tabular-nums')}>{V.confirmDetail}</div>
           )}
 
           {/* แบบตาราง — ใช้กับป๊อปยืนยันส่ง ให้เห็นทุกอย่างก่อนตัดสินใจ
@@ -51,9 +51,9 @@ export function renderConfirm(V) {
               {V.confirmLines.map((ln, i) => (
                 <div key={i} style={sx('display:flex;align-items:baseline;gap:10px;padding:3px 0',
                   ln.sep ? { borderTop: '1px dashed rgba(30,36,32,.16)', marginTop: '7px', paddingTop: '9px' } : {})}>
-                  <span style={sx('font:400 12.5px Sarabun,sans-serif;color:#6b746e;flex:none;width:96px',
+                  <span style={sx('font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e;flex:none;width:96px',
                     ln.indent ? { paddingLeft: '11px' } : {})}>{ln.label}</span>
-                  <span style={sx('font:600 13.5px Sarabun,sans-serif;color:#1e2420;flex:1;min-width:0;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere',
+                  <span style={sx('font:600 13.5px/1.75 Sarabun,sans-serif;color:#1e2420;flex:1;min-width:0;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere',
                     ln.tone === 'green' ? { color: '#2f7d5d' } : ln.tone === 'red' ? { color: '#c2543c' } : ln.tone === 'soft' ? { color: '#6b746e', fontWeight: 400 } : {})}>{ln.value}</span>
                 </div>
               ))}
@@ -61,7 +61,7 @@ export function renderConfirm(V) {
           )}
 
           {V.confirmNote && (
-            <div style={sx('font:400 12.5px/1.6 Sarabun,sans-serif;margin-bottom:16px',
+            <div style={sx('font:400 12.5px/1.75 Sarabun,sans-serif;margin-bottom:16px',
               { color: danger ? '#c2543c' : '#6b746e' })}>{V.confirmNote}</div>
           )}
 

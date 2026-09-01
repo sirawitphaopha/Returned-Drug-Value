@@ -17,16 +17,16 @@ function rowButtons(l) {
   return (
     <div style={s('display:flex;gap:6px;justify-content:center;width:100%')}>
       <div {...kb(l.openEdit)} aria-label={'แก้ไข Lot ' + l.lot} title="แก้ไขล็อตนี้" className="hv-cream tap"
-        style={s('height:34px;padding:0 11px;border-radius:9px;border:1px solid rgba(150,101,15,.30);background:#fdf6e9;color:#96650f;display:flex;align-items:center;gap:5px;font:600 12.5px Sarabun,sans-serif;cursor:pointer;flex:none')}>
+        style={s('height:34px;padding:0 11px;border-radius:9px;border:1px solid rgba(150,101,15,.30);background:#fdf6e9;color:#96650f;display:flex;align-items:center;gap:5px;font:600 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;flex:none')}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
           <path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
         </svg>
         แก้ไข
       </div>
       <div {...kb(l.openHistory)} aria-label={'ดูรายการยาใน Lot ' + l.lot} title="ดูรายการยาข้างใน" className="hv-bg-f6 tap"
-        style={s('height:34px;padding:0 12px;border-radius:9px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#414a44;display:flex;align-items:center;font:600 12.5px Sarabun,sans-serif;cursor:pointer;flex:none')}>ดูรายการ</div>
+        style={s('height:34px;padding:0 12px;border-radius:9px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#414a44;display:flex;align-items:center;font:600 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;flex:none')}>ดูรายการ</div>
       <div {...kb(l.openSlip)} className="hv-teal tap"
-        style={s('height:34px;padding:0 13px;border-radius:9px;background:#2f7d5d;color:#fff;display:flex;align-items:center;gap:6px;font:600 12.5px Sarabun,sans-serif;cursor:pointer;flex:none')}>
+        style={s('height:34px;padding:0 13px;border-radius:9px;background:#2f7d5d;color:#fff;display:flex;align-items:center;gap:6px;font:600 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;flex:none')}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
           <path d="M6 9V3h12v6" /><path d="M6 18H4v-7h16v7h-2" /><path d="M6 14h12v7H6z" />
         </svg>
@@ -40,9 +40,9 @@ function rowButtons(l) {
 // 🚨 ล็อตที่มาจาก รพ.สต. แต่ไม่ได้เลือกว่าแห่งไหน ต้องเห็นว่าข้อมูลไม่ครบ ไม่ใช่ปล่อยว่าง
 //    ส่วนล็อตที่ไม่ได้มาจาก รพ.สต. เลย ขีดกลางจาง ๆ พอ ไม่ใช่ข้อมูลขาด
 function siteCell(l) {
-  if (l.siteLabel) return <span style={s('font:600 12.5px Sarabun,sans-serif;color:#2f7d5d;overflow-wrap:anywhere')}>{l.siteLabel}</span>;
-  if (l.siteMissing) return <span style={s('font:500 11.5px Sarabun,sans-serif;color:#c2543c')}>ยังไม่ได้ระบุ</span>;
-  return <span style={s('font:400 12.5px Sarabun,sans-serif;color:#c9cdc9')}>—</span>;
+  if (l.siteLabel) return <span style={s('font:600 12.5px/1.75 Sarabun,sans-serif;color:#2f7d5d;overflow-wrap:anywhere')}>{l.siteLabel}</span>;
+  if (l.siteMissing) return <span style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#c2543c')}>ยังไม่ได้ระบุ</span>;
+  return <span style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#c9cdc9')}>—</span>;
 }
 
 export function renderLots(V) {
@@ -60,7 +60,7 @@ export function renderLots(V) {
             (พี่กันสั่ง 26 ส.ค. 2569 "ปุ่มกลับ ขอสวยกว่านี้ และเอาเมาส์ไปชี้แล้วเปลี่ยนสี")
             🚨 สีตอนชี้อยู่ในคลาส .btn-back ของ globals.css ห้ามเขียน onMouseEnter */}
         <div {...kb(V.closeLots)} aria-label="กลับไปหน้าประวัติ" className="btn-back tap"
-          style={s('height:38px;padding:0 15px 0 11px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background:#fff;display:flex;align-items:center;gap:7px;font:600 13px Sarabun,sans-serif;color:#414a44;cursor:pointer;flex:none')}>
+          style={s('height:38px;padding:0 15px 0 11px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background:#fff;display:flex;align-items:center;gap:7px;font:600 13px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer;flex:none')}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
             <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
           </svg>
@@ -68,20 +68,20 @@ export function renderLots(V) {
         </div>
         <div style={s('min-width:0')}>
           <div style={s('font:700 19px/1.2 Sarabun,sans-serif')} role="heading" aria-level="1">รายการ Lot</div>
-          <div style={s('font:400 12px/1.3 Sarabun,sans-serif;color:#6b746e')}>หนึ่งรอบกดบันทึก = หนึ่ง Lot · กดหัวคอลัมน์เพื่อเรียงลำดับ</div>
+          <div style={s('font:400 12px/1.75 Sarabun,sans-serif;color:#6b746e')}>หนึ่งรอบกดบันทึก = หนึ่ง Lot · กดหัวคอลัมน์เพื่อเรียงลำดับ</div>
         </div>
         {/* ช่วงวันที่ที่เลือกเอง อยู่แถวเดียวกับปุ่มช่วงเวลา (พี่กันสั่ง 26 ส.ค. 2569)
             ทำเหมือนหน้าประวัติทุกอย่าง ทั้งลำดับ ขนาด และขอบเขียวตอนกำลังใช้อยู่ */}
         <div style={s('margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap')}>
-          <span style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e')}>ตั้งแต่</span>
+          <span style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>ตั้งแต่</span>
           <input type="date" value={V.lotsFrom} onChange={V.onLotsFrom} aria-label="ตั้งแต่วันที่"
-            style={sx('height:38px;padding:0 9px;border-radius:8px;background-color:#fff;font:400 12.5px Sarabun,sans-serif', { border: '1px solid ' + (V.lotsCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
-          <span style={s('font:500 11.5px Sarabun,sans-serif;color:#6b746e')}>ถึง</span>
+            style={sx('height:38px;padding:0 9px;border-radius:8px;background-color:#fff;font:400 12.5px/1.75 Sarabun,sans-serif', { border: '1px solid ' + (V.lotsCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
+          <span style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>ถึง</span>
           <input type="date" value={V.lotsTo} onChange={V.onLotsTo} aria-label="ถึงวันที่"
-            style={sx('height:38px;padding:0 9px;border-radius:8px;background-color:#fff;font:400 12.5px Sarabun,sans-serif', { border: '1px solid ' + (V.lotsCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
+            style={sx('height:38px;padding:0 9px;border-radius:8px;background-color:#fff;font:400 12.5px/1.75 Sarabun,sans-serif', { border: '1px solid ' + (V.lotsCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
           <div style={s('width:6px;flex:none')}></div>
           {V.lotsRanges.map((r) => (
-            <div key={r.key} {...kb(r.pick)} className={(r.on ? 'hv-seg-on' : 'hv-seg-off') + ' tap'} style={sx('padding:7px 14px;border-radius:999px;font:500 12.5px Sarabun,sans-serif;cursor:pointer', { background: r.bg, color: r.fg })}>{r.label}</div>
+            <div key={r.key} {...kb(r.pick)} className={(r.on ? 'hv-seg-on' : 'hv-seg-off') + ' tap'} style={sx('padding:7px 14px;border-radius:999px;font:500 12.5px/1.75 Sarabun,sans-serif;cursor:pointer', { background: r.bg, color: r.fg })}>{r.label}</div>
           ))}
         </div>
       </div>
@@ -95,10 +95,10 @@ export function renderLots(V) {
           </svg>
           <input value={V.lotsQuery} onChange={V.onLotsQuery} placeholder="ค้นเลข Lot ชื่อผู้บันทึก หรือชื่อ รพ.สต."
             aria-label="ค้นหาในรายการ Lot"
-            style={s('width:100%;height:38px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background:#fff;padding:0 34px;font:400 13px Sarabun,sans-serif;color:#1e2420;outline:none;box-sizing:border-box')} />
+            style={s('width:100%;height:38px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background:#fff;padding:0 34px;font:400 13px/1.75 Sarabun,sans-serif;color:#1e2420;outline:none;box-sizing:border-box')} />
           {V.lotsHasSearch && (
             <div {...kb(V.clearLotsQuery)} aria-label="ล้างคำค้น" className="hv-bg-f6"
-              style={s('position:absolute;right:7px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font:400 13px Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>✕</div>
+              style={s('position:absolute;right:7px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font:400 13px/1.75 Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>✕</div>
           )}
         </div>
 
@@ -113,7 +113,7 @@ export function renderLots(V) {
                (ตระกูลเดียวกับบั๊ก border-color เดี่ยวใน hover)
                ต้องเขียน background-color แยกเสมอ */}
         <select value={V.lotsSrcFilter} onChange={V.setLotsSrc} aria-label="กรองตามแหล่งที่มา"
-          style={s('height:38px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background-color:#fff;padding:0 34px 0 12px;font:500 12.5px Sarabun,sans-serif;color:#414a44;cursor:pointer;flex:none;max-width:100%')}>
+          style={s('height:38px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background-color:#fff;padding:0 34px 0 12px;font:500 12.5px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer;flex:none;max-width:100%')}>
           <option value="" style={{ font: '400 13px Sarabun, sans-serif' }}>ทุกแหล่งที่มา</option>
           {V.lotsSrcOptions.map((o) => (
             <option key={o.value} value={o.value} style={{ font: '400 13px Sarabun, sans-serif' }}>{o.label}</option>
@@ -123,7 +123,7 @@ export function renderLots(V) {
         {/* ช่องที่สอง โผล่เฉพาะตอนเลือกแหล่งที่มาเป็น รพ.สต. */}
         {V.lotsSiteOn && (
           <select value={V.lotsSiteFilter} onChange={V.setLotsSite} aria-label="กรองตาม รพ.สต. ต้นทาง"
-            style={s('height:38px;border-radius:10px;border:1px solid rgba(47,125,93,.34);background-color:#f2f8f4;padding:0 34px 0 12px;font:600 12.5px Sarabun,sans-serif;color:#2f7d5d;cursor:pointer;flex:none;max-width:100%')}>
+            style={s('height:38px;border-radius:10px;border:1px solid rgba(47,125,93,.34);background-color:#f2f8f4;padding:0 34px 0 12px;font:600 12.5px/1.75 Sarabun,sans-serif;color:#2f7d5d;cursor:pointer;flex:none;max-width:100%')}>
             <option value="" style={{ font: '400 13px Sarabun, sans-serif' }}>ทุกแห่ง</option>
             {V.lotsSiteOptions.map((o) => (
               <option key={o.value} value={o.value} style={{ font: '400 13px Sarabun, sans-serif' }}>{o.label}</option>
@@ -135,7 +135,7 @@ export function renderLots(V) {
             ล้างครบทั้งสามอย่างในคราวเดียว คำค้น แหล่งที่มา และ รพ.สต. */}
         {V.lotsHasFilter && (
           <div {...kb(V.clearLotsFilters)} aria-label="ล้างตัวกรองทั้งหมด" className="btn-back tap"
-            style={s('height:38px;padding:0 13px 0 11px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background-color:#fff;display:flex;align-items:center;gap:6px;font:600 12.5px Sarabun,sans-serif;color:#414a44;cursor:pointer;flex:none')}>
+            style={s('height:38px;padding:0 13px 0 11px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background-color:#fff;display:flex;align-items:center;gap:6px;font:600 12.5px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer;flex:none')}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
               <path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" />
             </svg>
@@ -144,9 +144,9 @@ export function renderLots(V) {
         )}
 
         <div style={s('margin-left:auto;display:flex;align-items:baseline;gap:12px;flex:none')}>
-          <div style={s('font:600 11px Sarabun,sans-serif;letter-spacing:.06em;color:rgba(30,36,32,.45)')}>{V.lotsCountLabel}</div>
+          <div style={s('font:600 11px/1.75 Sarabun,sans-serif;letter-spacing:.06em;color:rgba(30,36,32,.45)')}>{V.lotsCountLabel}</div>
           {/* ยอดรวมของที่เห็นอยู่ตอนนี้ — กรอง รพ.สต. แห่งหนึ่งแล้วรู้ทันทีว่าเป็นเงินเท่าไร */}
-          <div style={s('font:600 13.5px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{V.lotsSumLabel}</div>
+          <div style={s('font:600 13.5px/1.75 Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{V.lotsSumLabel}</div>
           {/* ปุ่มส่งออกตัวเดียวกับที่ใช้ทั้งเว็บ แก้ที่ exportbtn.jsx เปลี่ยนครบทุกจอ
               ส่งออกเฉพาะแถวที่กรองอยู่บนจอ ไม่ใช่ทั้งหมดที่โหลดมา */}
           {renderExportBtn(V.doExportLots, 'ส่งออก CSV', {})}
@@ -172,7 +172,7 @@ export function renderLots(V) {
       {!V.lotsFail && V.lotsEmpty && !V.lotsFilteredOut && (
         <div style={s('text-align:center;padding:34px 12px;border:1px dashed rgba(30,36,32,.16);border-radius:12px')}>
           <div style={s('font:600 15px Sarabun,sans-serif;margin-bottom:4px')}>ยังไม่มี Lot ในช่วงเวลานี้</div>
-          <div style={s('font:400 12.5px/1.6 Sarabun,sans-serif;color:#6b746e')}>ลองเปลี่ยนช่วงเวลาด้านบน หรือบันทึกยาคืนสักรอบก่อน</div>
+          <div style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>ลองเปลี่ยนช่วงเวลาด้านบน หรือบันทึกยาคืนสักรอบก่อน</div>
         </div>
       )}
 
@@ -181,14 +181,14 @@ export function renderLots(V) {
       {V.lotsFilteredOut && (
         <div style={s('text-align:center;padding:34px 12px;border:1px dashed rgba(30,36,32,.16);border-radius:12px')}>
           <div style={s('font:600 15px Sarabun,sans-serif;margin-bottom:4px')}>ไม่พบ Lot ที่ตรงกับที่ค้น</div>
-          <div style={s('font:400 12.5px/1.6 Sarabun,sans-serif;color:#6b746e')}>ลองล้างคำค้น หรือเปลี่ยนตัวกรองแหล่งที่มาเป็นทุกแหล่ง</div>
+          <div style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>ลองล้างคำค้น หรือเปลี่ยนตัวกรองแหล่งที่มาเป็นทุกแหล่ง</div>
         </div>
       )}
 
       {/* ── ตาราง (จอกว้าง) ──────────────────────────────────────────────── */}
       {V.lotsWide && !V.lotsEmpty && !V.lotsLoading && !V.skelDemo && (
         <div className="col-tab" style={s('border:1px solid rgba(30,36,32,.10);border-radius:11px;background:#fff')}>
-          <div className="col-head" style={s('display:flex;padding:11px 15px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);border-radius:10px 10px 0 0;font:600 11.5px Sarabun,sans-serif;letter-spacing:.04em')}>
+          <div className="col-head" style={s('display:flex;padding:11px 15px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);border-radius:10px 10px 0 0;font:600 11.5px/1.75 Sarabun,sans-serif;letter-spacing:.04em')}>
             {V.lotCols.map((c) => (
               <span key={c.key}
                 {...(c.pick ? kb(c.pick) : {})}
@@ -207,17 +207,17 @@ export function renderLots(V) {
 
           {V.lotRows.map((l, i) => (
             <div key={l.key} className="col-row" style={sx('display:flex;align-items:center;padding:9px 15px;border-top:1px solid rgba(30,36,32,.06)', { background: i % 2 ? '#fbfcfb' : '#fff' })}>
-              <span style={s('width:116px;flex:none;font:400 12.5px Sarabun,sans-serif;color:#414a44')}>{l.dateLabel}</span>
-              <span style={s('width:108px;flex:none;font:700 13.5px Sarabun,sans-serif;color:#2f7d5d')}>{l.lot}</span>
+              <span style={s('width:116px;flex:none;font:400 12.5px/1.75 Sarabun,sans-serif;color:#414a44')}>{l.dateLabel}</span>
+              <span style={s('width:108px;flex:none;font:700 13.5px/1.75 Sarabun,sans-serif;color:#2f7d5d')}>{l.lot}</span>
               {/* ชื่อผู้บันทึกยาวให้ขึ้นบรรทัดใหม่ ห้ามตัดทิ้ง เป็นข้อมูลสืบกลับ */}
-              <span style={s('flex:1;min-width:120px;font:500 12.5px Sarabun,sans-serif;color:#1e2420;overflow-wrap:anywhere')}>{l.by}</span>
-              <span style={s('width:108px;flex:none;font:500 12.5px Sarabun,sans-serif;color:#414a44')}>{l.srcText}</span>
+              <span style={s('flex:1;min-width:120px;font:500 12.5px/1.75 Sarabun,sans-serif;color:#1e2420;overflow-wrap:anywhere')}>{l.by}</span>
+              <span style={s('width:108px;flex:none;font:500 12.5px/1.75 Sarabun,sans-serif;color:#414a44')}>{l.srcText}</span>
               <span style={s('width:120px;flex:none')}>{siteCell(l)}</span>
-              <span style={s('width:88px;flex:none;text-align:center;justify-content:center;font:500 12.5px Sarabun,sans-serif;color:#414a44;font-variant-numeric:tabular-nums')}>{l.itemsCount}</span>
-              <span style={s('width:116px;flex:none;text-align:right;justify-content:flex-end;font:600 13px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{l.savedLabel}</span>
+              <span style={s('width:88px;flex:none;text-align:center;justify-content:center;font:500 12.5px/1.75 Sarabun,sans-serif;color:#414a44;font-variant-numeric:tabular-nums')}>{l.itemsCount}</span>
+              <span style={s('width:116px;flex:none;text-align:right;justify-content:flex-end;font:600 13px/1.75 Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{l.savedLabel}</span>
               {/* มีตัวเลข = ชิดขวาให้หลักตรงกับคอลัมน์ใช้ต่อได้ · ไม่มี = ขีดอยู่กึ่งกลางช่อง
                   ของเดิมขีดชิดขวาจนไปแนบปุ่มแก้ไข ดูเหมือนเศษที่ห้อยอยู่หน้าปุ่ม ไม่ใช่ข้อมูลของช่อง */}
-              <span style={sx('width:100px;flex:none;font:600 12.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums', {
+              <span style={sx('width:100px;flex:none;font:600 12.5px/1.75 Sarabun,sans-serif;font-variant-numeric:tabular-nums', {
                 color: l.hasLost ? '#c2543c' : '#c9cdc9',
                 textAlign: l.hasLost ? 'right' : 'center',
                 justifyContent: l.hasLost ? 'flex-end' : 'center'
@@ -235,16 +235,16 @@ export function renderLots(V) {
             <div key={l.key} style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:11px;padding:12px 13px')}>
               <div style={s('display:flex;align-items:baseline;gap:8px;flex-wrap:wrap')}>
                 <div style={s('font:700 15px Sarabun,sans-serif;color:#2f7d5d')}>{l.lot}</div>
-                <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e')}>{l.dateLabel}</div>
+                <div style={s('font:400 11.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>{l.dateLabel}</div>
                 <div style={s('margin-left:auto;font:600 15px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{l.savedLabel}</div>
               </div>
               <div style={s('display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:3px')}>
-                <div style={s('font:500 12px Sarabun,sans-serif;color:#414a44;overflow-wrap:anywhere')}>{l.by}</div>
-                <div style={s('font:400 11.5px Sarabun,sans-serif;color:#6b746e')}>· {l.srcText}{l.siteLabel ? ' ' + l.siteLabel : ''}</div>
-                <div style={s('margin-left:auto;font:400 11.5px Sarabun,sans-serif;color:#6f7873')}>{l.itemsLabel}</div>
+                <div style={s('font:500 12px/1.75 Sarabun,sans-serif;color:#414a44;overflow-wrap:anywhere')}>{l.by}</div>
+                <div style={s('font:400 11.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>· {l.srcText}{l.siteLabel ? ' ' + l.siteLabel : ''}</div>
+                <div style={s('margin-left:auto;font:400 11.5px/1.75 Sarabun,sans-serif;color:#6f7873')}>{l.itemsLabel}</div>
               </div>
               {l.hasLost && (
-                <div style={s('font:600 12px Sarabun,sans-serif;color:#c2543c;margin-top:3px')}>ทำลาย {l.lostLabel}</div>
+                <div style={s('font:600 12px/1.75 Sarabun,sans-serif;color:#c2543c;margin-top:3px')}>ทำลาย {l.lostLabel}</div>
               )}
               <div style={s('margin-top:9px')}>{rowButtons(l)}</div>
             </div>
@@ -253,7 +253,7 @@ export function renderLots(V) {
       )}
 
       {V.lotsHasMore && !V.skelDemo && (
-        <div {...kb(V.moreLots)} className="hv-bg-f6 tap" style={s('margin-top:10px;height:44px;border-radius:11px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 13.5px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>{V.lotsMoreLabel}</div>
+        <div {...kb(V.moreLots)} className="hv-bg-f6 tap" style={s('margin-top:10px;height:44px;border-radius:11px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 13.5px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer')}>{V.lotsMoreLabel}</div>
       )}
     </div>
   );
@@ -289,14 +289,14 @@ export function renderLotSlip(V) {
 
       <div className="slip-hide" style={s('width:100%;max-width:210mm;display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px 12px 0 0;background:#f6f7f4;border:1px solid rgba(30,36,32,.12)')}>
         <div style={s('font:700 15px Sarabun,sans-serif;flex:1;min-width:0')}>ใบสรุป Lot</div>
-        <div {...kb(V.printLotSlip)} className="hv-teal tap" style={s('height:38px;padding:0 16px;border-radius:9px;background:#2f7d5d;color:#fff;display:flex;align-items:center;gap:7px;font:600 13px Sarabun,sans-serif;cursor:pointer')}>
+        <div {...kb(V.printLotSlip)} className="hv-teal tap" style={s('height:38px;padding:0 16px;border-radius:9px;background:#2f7d5d;color:#fff;display:flex;align-items:center;gap:7px;font:600 13px/1.75 Sarabun,sans-serif;cursor:pointer')}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
             <path d="M6 9V3h12v6" /><path d="M6 18H4v-7h16v7h-2" /><path d="M6 14h12v7H6z" />
           </svg>
           พิมพ์
         </div>
         <div {...kb(V.savePdf)} className="hv-bg-f6 tap"
-          style={s('height:38px;padding:0 14px;border-radius:9px;border:1px solid rgba(30,36,32,.16);background:#fff;color:#2f7d5d;display:flex;align-items:center;gap:7px;font:600 13px Sarabun,sans-serif;cursor:pointer')}>
+          style={s('height:38px;padding:0 14px;border-radius:9px;border:1px solid rgba(30,36,32,.16);background:#fff;color:#2f7d5d;display:flex;align-items:center;gap:7px;font:600 13px/1.75 Sarabun,sans-serif;cursor:pointer')}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" />
           </svg>

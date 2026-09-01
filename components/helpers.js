@@ -18,7 +18,7 @@ function fontify(css) {
     //    ถ้ามีจุดไหนหลุดรอด หรือมีคนเผลอเขียนกลับมาใหม่ ก็ยังได้ฟอนต์มีหัวอยู่ดี
     .replace(/'IBM Plex Sans Thai'/g, "Sarabun")
     // ฟอนต์ของ "ชื่อเว็บ" ต้องแปลงก่อน Sarabun เพราะเป็นคนละตัวกัน
-    .replace(/\bCharmonman\b/g, 'var(--font-charmonman),Charmonman')
+    .replace(/\bKrub\b/g, 'var(--font-charmonman),Krub')
     // 🚨 หน้าเว็บใช้ Sarabun · TH Sarabun New ใช้เฉพาะตอนพิมพ์เอกสารเท่านั้น
     //    พี่กันเคาะ 26 ส.ค. 2569: "หน้าเว็บทั้งหมด เอากลับเป็น Sarabun จาก Google และฝังเลย
     //    ส่วน Sarabun New ยังเอาอยู่ แต่จะฝังใน PDF แค่จุดเดียวเท่านั้น"
@@ -654,6 +654,6 @@ export const Z = {
   toast: 95      // ข้อความเด้ง — เหนือทุกอย่าง
 };
 
-export const APP_VERSION = '0.16.1.0';
+export const APP_VERSION = '0.16.2.0';
 export const APP_FIRST_RELEASE = '4 สิงหาคม 2569';
 export const APP_LAST_UPDATE = '1 กันยายน 2569';

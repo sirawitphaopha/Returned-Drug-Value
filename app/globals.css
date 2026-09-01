@@ -612,3 +612,7 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
 nextjs-portal {
   display: none !important;
 }
+
+/* ปุ่มพื้นอำพันเข้ม — ใช้ในแถบล็อตที่กรอกค้างไว้ (โทนอำพัน)
+   🚨 สีตอนชี้ต้องอยู่ในโทนเดียวกับปุ่ม เข้มขึ้นหนึ่งระดับ ไม่ใช่เปลี่ยนเป็นสีอื่น */
+.hv-amber:hover { background: #6e4a0b !important; }

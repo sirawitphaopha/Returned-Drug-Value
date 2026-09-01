@@ -251,6 +251,8 @@ export default class MedReturnApp extends React.Component {
     };
 
     this.searchRef = React.createRef();
+    // ชั้นที่วาดตัวอักษรของช่องค้นยาฝั่งมือถือ — ต้องเลื่อนตามช่องกรอกจริง
+    this.searchDrawRef = React.createRef();
     this.qtyRef = React.createRef();
     this.qtyLayerRef = React.createRef();   // ชั้นที่วาดสูตรในช่องจำนวน — เลื่อนตาม input
     this.sheetQtyRef = React.createRef();

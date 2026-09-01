@@ -218,7 +218,22 @@ export function recordVals(app, d) {
   // สีความแรงในตารางรายการครั้งนี้ — ทายาชื่อเดียวกันคนละความแรงให้คนละสี
   // (Morphine 10 · 20 · 30 mg อยู่ในล็อตเดียวกันแล้วหยิบสลับกันได้)
   // 🚨 ต้องคิดจาก "แถวที่กองอยู่" ไม่ใช่จากผลค้นหา — คนละชุดข้อมูลกัน
-  const rowStColorOf = makeStColorOf(st.rows.map((r) => ({ id: r.drugId, name: r.name })));
+  // ── สีความแรงในรายการ ต้องนับจาก "คลังยาทั้งหมด" ไม่ใช่จาก "รายการในครั้งนี้" ──
+  //
+  // พี่กันชี้ให้เห็นเอง 1 ก.ย. 2569 พร้อมภาพผลค้นหา
+  //   "MFM 500 ต้องเป็นสีเทา · ส่วน acyclovir 400 มันสีฟ้า ก็ต้องสีฟ้าสิ"
+  //
+  // ของเดิมนับจาก st.rows ซึ่งให้ผลผิดทั้งสองทาง
+  //   · กรอก Metformin 500 ซ้ำสองแถว → ระบบเห็นชื่อเดียวกัน 2 รายการ แล้วทาสีให้
+  //     ทั้งที่ความแรงเท่ากันเป๊ะ ไม่มีอะไรให้แยก (คนไข้คนละคนคืนยาตัวเดียวกัน เกิดบ่อยมาก)
+  //   · กรอก Acyclovir 400 แถวเดียว → ระบบเห็นแค่ 1 รายการ เลยไม่ทาสี
+  //     ทั้งที่ในคลังมี 400 กับ 500 ซึ่งเป็นคู่ที่ต้องแยกให้ออกจริง ๆ
+  //
+  // นับจากคลังยาแทน สีจึงคงที่และตรงกับตอนค้นหาเสมอ ไม่ว่าในรายการจะมีกี่แถว
+  //
+  // 🚨 ต้องเป็นคลังยาชุดเดียวกับที่ช่องค้นหาใช้ (st.drugs) ไม่งั้นสีสองที่ไม่ตรงกัน
+  // 🚨 ยาที่พิมพ์ชื่อเองไม่มีรหัส จะไม่ได้สี ซึ่งถูกแล้ว — ไม่มีคู่ให้เทียบ
+  const rowStColorOf = makeStColorOf(st.drugs || []);
 
   const applyRowDisp = (rid, disp, reason) => {
     const rows = st.rows.map((x) => (x.rid === rid
@@ -287,6 +302,20 @@ export function recordVals(app, d) {
     // ── ช่องค้นยา ────────────────────────────────────────────────────────────
     query: st.query,
     searchRef: app.searchRef,
+    searchDrawRef: app.searchDrawRef,
+    // 🚨 ช่องกรอกโปร่งใส ตัวอักษรที่เห็นวาดด้วยกล่องธรรมดา จึงต้องเลื่อนตามกัน
+    //    ไม่งั้นพิมพ์ยาวเกินช่องแล้วตัวอักษรค้างที่เดิม ขีดกะพริบวิ่งหนีไปคนละที่
+    onSearchScroll: (e) => {
+      const d = app.searchDrawRef && app.searchDrawRef.current;
+      if (d) d.scrollLeft = e.target.scrollLeft;
+    },
+    // เลิกโฟกัสแล้วเลื่อนกลับไปต้นข้อความ ให้เห็นชื่อยาตั้งแต่ตัวแรก
+    onSearchBlur: () => {
+      const i = app.searchRef && app.searchRef.current;
+      const d = app.searchDrawRef && app.searchDrawRef.current;
+      if (i) i.scrollLeft = 0;
+      if (d) d.scrollLeft = 0;
+    },
     searchPlaceholder: 'ค้นชื่อยา (' + st.drugs.length + ' รายการ)',
     // พิมพ์ใหม่ = เด้งไฮไลต์กลับไปแถวแรกเสมอ
     onQuery: (e) => app.setState({ query: e.target.value, hi: 0 }),

@@ -10,10 +10,10 @@ import { s, sx, kb } from '../helpers';
 const CARD = 'background:#fff;border:1px solid rgba(47,125,93,.16);border-radius:16px;padding:20px 22px';
 const TITLE = 'font:700 15px Sarabun,sans-serif;color:#24614a;margin-bottom:14px';
 const KV_ROW = 'display:flex;justify-content:space-between;gap:12px;padding:5px 0';
-const KV_L = 'font:400 13.5px Sarabun,sans-serif;color:#6b746e';
-const KV_R = 'font:600 13.5px Sarabun,sans-serif;color:#1e2420';
+const KV_L = 'font:400 13.5px/1.75 Sarabun,sans-serif;color:#6b746e';
+const KV_R = 'font:600 13.5px/1.75 Sarabun,sans-serif;color:#1e2420';
 const CHIP = 'display:flex;align-items:center;gap:8px;background:#f6faf9;border:1px solid rgba(47,125,93,.16);border-radius:10px;padding:8px 13px';
-const CHIP_TX = 'font:600 12.5px Sarabun,sans-serif;color:#414a44';
+const CHIP_TX = 'font:600 12.5px/1.75 Sarabun,sans-serif;color:#414a44';
 
 // โลโก้ Supabase (สามเหลี่ยมเขียว) — ฝังเป็น SVG ไม่ต้องโหลดรูปจากอินเทอร์เน็ต
 const supaLogo = (size) => (
@@ -27,7 +27,7 @@ export function renderAbout(V) {
   return (
     <div style={s('width:100%;max-width:640px;margin:0 auto;padding:14px 16px 60px;display:flex;flex-direction:column;gap:13px')}>
 
-      <div {...kb(V.closeAbout)} className="hv-bg-f6 tap" style={s('align-self:flex-start;display:flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid rgba(30,36,32,.14);border-radius:9px;background:#fff;font:500 13px Sarabun,sans-serif;color:#414a44;cursor:pointer')}>
+      <div {...kb(V.closeAbout)} className="hv-bg-f6 tap" style={s('align-self:flex-start;display:flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid rgba(30,36,32,.14);border-radius:9px;background:#fff;font:500 13px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer')}>
         <span aria-hidden="true">←</span> กลับ
       </div>
 
@@ -38,8 +38,8 @@ export function renderAbout(V) {
         {/* 🚨 ระยะบรรทัด 1.2 ไม่ใช่ 1.95 (พี่กันทัก "รูปสองชื่อเว้บต่ำจัง")
             Charmonman ลากหางลงมายาว ระยะบรรทัดกว้าง ๆ จึงดันตัวอักษรลอยต่ำกลางกล่อง
             ใช้ padding-bottom กันที่ให้หางแทน ซึ่งดันเฉพาะของที่อยู่ข้างล่าง */}
-        <div style={s('font:700 30px/1.05 Charmonman,cursive;color:#24614a;padding-bottom:10px')}>มูลค่ายาคืน</div>
-        <div style={s('font:400 12.5px/1.55 Sarabun,sans-serif;color:#6b746e;margin-top:5px')}>
+        <div style={s('font:700 30px/1.3 Krub,sans-serif;color:#24614a;padding-bottom:2px')}>มูลค่ายาคืน</div>
+        <div style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-top:5px')}>
           ระบบแปลงยาที่ผู้ป่วยคืนมาให้เป็นตัวเลขมูลค่า พร้อมสรุปเป็นตัวชี้วัดรายปีงบประมาณ · {V.orgName}
         </div>
       </div>
@@ -48,11 +48,11 @@ export function renderAbout(V) {
       <div style={s(CARD + ';text-align:center')}>
         <div style={s(TITLE)}>👤 ผู้พัฒนา</div>
         <div style={s('font:800 22px/1.25 Sarabun,sans-serif;color:#24614a;margin-top:6px;letter-spacing:-.2px')}>เภสัชกร สิรวิชญ์ เผ่าผา</div>
-        <div style={s('font:400 12.5px Sarabun,sans-serif;color:#6b746e;margin-top:5px')}>เลขที่ใบประกอบวิชาชีพเภสัชกรรม 47186</div>
-        <div style={s('font:400 12.5px/1.55 Sarabun,sans-serif;color:#6b746e;margin-top:3px')}>
+        <div style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-top:5px')}>เลขที่ใบประกอบวิชาชีพเภสัชกรรม 47186</div>
+        <div style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-top:3px')}>
           กลุ่มงานเภสัชกรรมและคุ้มครองผู้บริโภค<br />โรงพยาบาลปรางค์กู่
         </div>
-        <a href="mailto:siravitphoapha9928@hotmail.com" className="hv-bg-e3f" style={s('display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:#e3f0e8;color:#24614a;font:600 13px Sarabun,sans-serif;padding:9px 15px;border-radius:10px;text-decoration:none')}>
+        <a href="mailto:siravitphoapha9928@hotmail.com" className="hv-bg-e3f" style={s('display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:#e3f0e8;color:#24614a;font:600 13px/1.75 Sarabun,sans-serif;padding:9px 15px;border-radius:10px;text-decoration:none')}>
           ✉️ siravitphoapha9928@hotmail.com
         </a>
       </div>
@@ -62,7 +62,7 @@ export function renderAbout(V) {
         <div style={s(TITLE)}>📱 ข้อมูลแอป</div>
         <div style={s(KV_ROW)}>
           <span style={s(KV_L)}>เวอร์ชันปัจจุบัน</span>
-          <span style={s('font:700 13.5px Sarabun,sans-serif;color:#24614a')}>v{V.appVersion}</span>
+          <span style={s('font:700 13.5px/1.75 Sarabun,sans-serif;color:#24614a')}>v{V.appVersion}</span>
         </div>
         <div style={s(KV_ROW)}>
           <span style={s(KV_L)}>เผยแพร่ครั้งแรก</span>
@@ -81,16 +81,16 @@ export function renderAbout(V) {
           {supaLogo(34)}
           <div>
             <div style={s('font:700 15px Sarabun,sans-serif;color:#1e2420')}>Supabase</div>
-            <div style={s('font:400 12px/1.4 Sarabun,sans-serif;color:#6b746e')}>ฐานข้อมูล PostgreSQL บนคลาวด์ · เข้ารหัส · สำรองข้อมูลอัตโนมัติ</div>
+            <div style={s('font:400 12px/1.75 Sarabun,sans-serif;color:#6b746e')}>ฐานข้อมูล PostgreSQL บนคลาวด์ · เข้ารหัส · สำรองข้อมูลอัตโนมัติ</div>
           </div>
         </div>
         <div style={s('margin-top:15px;padding-top:14px;border-top:1px solid rgba(47,125,93,.12);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap')}>
-          <span style={sx('font:600 13px Sarabun,sans-serif', { color: V.demo ? '#8a5a12' : '#2f7d5d' })}>
+          <span style={sx('font:600 13px/1.75 Sarabun,sans-serif', { color: V.demo ? '#8a5a12' : '#2f7d5d' })}>
             ● {V.demo ? 'กำลังดูข้อมูลตัวอย่าง (ไม่ได้อยู่ในฐานข้อมูล)' : 'เชื่อมต่อฐานข้อมูลแล้ว'}
           </span>
-          <span style={s('font:400 12.5px Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums')}>{V.aboutStat}</span>
+          <span style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e;font-variant-numeric:tabular-nums')}>{V.aboutStat}</span>
         </div>
-        <div style={s('margin-top:12px;padding:11px 13px;border-radius:10px;background:#eef6f1;font:400 12px/1.6 Sarabun,sans-serif;color:#414a44')}>
+        <div style={s('margin-top:12px;padding:11px 13px;border-radius:10px;background:#eef6f1;font:400 12px/1.75 Sarabun,sans-serif;color:#414a44')}>
           กุญแจฐานข้อมูลอยู่ฝั่งเซิร์ฟเวอร์เท่านั้น เบราว์เซอร์ไม่เคยถือกุญแจ · ทุกตารางเปิดระบบกั้นสิทธิ์ข้อมูล (RLS) แบบปฏิเสธทุกคำขอจากภายนอก
         </div>
       </div>
@@ -147,7 +147,7 @@ export function renderAbout(V) {
             <span style={s(CHIP_TX)}>Cloudflare</span>
           </div>
         </div>
-        <div style={s('margin-top:15px;padding-top:14px;border-top:1px solid rgba(47,125,93,.12);display:flex;align-items:center;justify-content:center;gap:8px;font:400 12.5px/1.5 Sarabun,sans-serif;color:#6b746e')}>
+        <div style={s('margin-top:15px;padding-top:14px;border-top:1px solid rgba(47,125,93,.12);display:flex;align-items:center;justify-content:center;gap:8px;font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>
           <svg width="17" height="17" viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
             <g stroke="#D97757" strokeWidth="11" strokeLinecap="round">
               <line x1="50" y1="13" x2="50" y2="87" />
@@ -162,8 +162,8 @@ export function renderAbout(V) {
 
       {/* PDPA */}
       <div style={s('background:#fef7ec;border:1px solid #f6d89a;border-radius:16px;padding:16px 20px')}>
-        <div style={s('font:700 13px Sarabun,sans-serif;color:#b45309;margin-bottom:6px')}>🔒 ความปลอดภัยข้อมูล (PDPA)</div>
-        <div style={s('font:400 12.5px/1.65 Sarabun,sans-serif;color:#92400e')}>
+        <div style={s('font:700 13px/1.75 Sarabun,sans-serif;color:#b45309;margin-bottom:6px')}>🔒 ความปลอดภัยข้อมูล (PDPA)</div>
+        <div style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#92400e')}>
           ข้อมูลผู้ป่วย (HN) ใช้เฉพาะงานบริบาลเภสัชกรรมภายในโรงพยาบาล จัดเก็บอย่างปลอดภัยตามหลักคุ้มครองข้อมูลส่วนบุคคล (PDPA) ห้ามเผยแพร่นอกวัตถุประสงค์
         </div>
       </div>

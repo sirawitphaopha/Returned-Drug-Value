@@ -7,9 +7,9 @@ import './mobile.css';
 // เว็บเสิร์ฟฟอนต์เอง ไม่พึ่ง Google ตอนใช้งาน (ขึ้นชัวร์ทุกเครื่อง ไม่กระพริบ เน็ตโรงพยาบาลก็ไม่สะดุด)
 // 📌 กฎโปรเจกต์: ฟอนต์ใหม่ทุกตัวต้องฝังแบบนี้ ห้ามใช้ <link> ไป CDN
 //    มอคอัปโหลด 2 ตัวนี้ (บรรทัด 12): Sarabun 300–700 + IBM Plex Sans Thai 400–700
-// ฟอนต์ของ "ชื่อเว็บ" อย่างเดียว — พี่กันเลือกเอง 26 ส.ค. 2569 (ลอง Charm → Charmonman → Charmonman)
+// ฟอนต์ของ "ชื่อเว็บ" อย่างเดียว — พี่กันเลือกเอง (ลอง Charm → Thasadith → Charmonman → Krub)
 // 🚨 ฝังมากับเว็บผ่าน next/font/google ไม่ได้ลิงก์ CDN — เน็ตโรงพยาบาลบล็อก Google Fonts ได้
-import { IBM_Plex_Sans_Thai, Sarabun, Charmonman, Roboto_Mono } from 'next/font/google';
+import { IBM_Plex_Sans_Thai, Sarabun, Krub, Roboto_Mono } from 'next/font/google';
 
 const sarabun = Sarabun({
   subsets: ['thai', 'latin'],
@@ -18,12 +18,18 @@ const sarabun = Sarabun({
   display: 'swap',
 });
 
-// ใช้กับตัวเลขเงิน — มี tabular-nums ทำให้หลักไม่ขยับตอนตัวเลขวิ่ง
-// Charmonman มีแค่ 2 น้ำหนัก (400 กับ 700) — ต่างจาก Sarabun ที่มี 5 ระดับ
+// ── ฟอนต์ชื่อเว็บ — Krub (พี่กันเลือกเอง 1 ก.ย. 2569) ──────────────────────
+//
+//    ไล่มาแล้วสามตัว Charm → Thasadith → Charmonman ก่อนมาลงที่ Krub
+//    Krub เป็นฟอนต์ไทยมีหัวแบบไม่มีเชิง เส้นสม่ำเสมอ ต่างจาก Charmonman
+//    ที่เป็นลายมือเส้นบางและลากหางยาว
+//
 // 🚨 ใช้กับชื่อเว็บเท่านั้น ห้ามลามไปที่อื่น — ตัวเลขกับชื่อยาต้องอ่านง่ายที่สุด
-const charm = Charmonman({
+// 🚨 ตัวแปรยังชื่อ charm เหมือนเดิมโดยตั้งใจ จะได้ไม่ต้องไล่แก้ทุกไฟล์
+//    ตอนพี่กันเปลี่ยนฟอนต์ชื่อเว็บอีกรอบ (เปลี่ยนมาสี่ครั้งแล้ว)
+const charm = Krub({
   subsets: ['thai', 'latin'],
-  weight: ['400', '700'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-charmonman',
   display: 'swap'
 });

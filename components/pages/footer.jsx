@@ -26,11 +26,11 @@ export function renderFooter(V) {
             แล้วพื้นที่เลื่อนกลายเป็นเลื่อนซ้ายขวาได้ทั้งหน้า ("ไม่อยากให้มันเลื่อนไปมาแบบนี้") */}
         <div style={sx('display:flex;align-items:center;gap:8px;min-width:0', wide ? {} : { justifyContent: 'center', maxWidth: '100%' })}>
           <span style={s('width:18px;height:18px;border-radius:5px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;flex:none')}>
-            <span style={s("font:700 9px Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
+            <span style={s("font:700 9px/1.75 Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
           </span>
           {/* คอมตัดท้ายด้วยจุดไข่ปลา · มือถือขึ้นบรรทัดใหม่แทน
               🚨 มือถือห้ามตัดด้วยจุดไข่ปลา ชื่อหน่วยงานจะเหลือครึ่งเดียวตลอด (พี่กันเคยทักเรื่อง ...) */}
-          <span style={sx('font:500 11.5px Sarabun,sans-serif;min-width:0', wide
+          <span style={sx('font:500 11.5px/1.75 Sarabun,sans-serif;min-width:0', wide
             ? { color: muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
             : { color: muted, textAlign: 'center' })}>
             มูลค่ายาคืน v{V.appVersion} · {V.orgName}
@@ -38,10 +38,10 @@ export function renderFooter(V) {
         </div>
 
         <div style={sx('display:flex;align-items:center;gap:10px;flex-wrap:wrap', wide ? {} : { justifyContent: 'center' })}>
-          <span style={sx('font:400 11px Sarabun,sans-serif', { color: muted })}>
+          <span style={sx('font:400 11px/1.75 Sarabun,sans-serif', { color: muted })}>
             © {V.footerYear} ภก. สิรวิชญ์ เผ่าผา · กลุ่มงานเภสัชกรรม รพ.ปรางค์กู่
           </span>
-          <span {...kb(V.openAbout)} className="hv-link tap" style={sx('font:600 11px Sarabun,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px', { color: V.isSummary ? V.sumMuted : '#2f7d5d' })}>
+          <span {...kb(V.openAbout)} className="hv-link tap" style={sx('font:600 11px/1.75 Sarabun,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:3px', { color: V.isSummary ? V.sumMuted : '#2f7d5d' })}>
             เกี่ยวกับ
           </span>
         </div>

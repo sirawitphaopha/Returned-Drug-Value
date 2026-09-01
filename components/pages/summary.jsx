@@ -1,7 +1,7 @@
 // หน้าสรุปภาพรวม — คัดจากมอคอัป (คอม 317–386 · มือถือ 388–473)
 // ต่างจากต้นฉบับอย่างเดียวคือข้อความบนปุ่มส่งออกเปลี่ยนเป็น "กำลังสร้างไฟล์" ตอนกำลังทำงาน
 // เพราะของจริงต้องรอเซิร์ฟเวอร์ส่งรายการทั้งปีงบกลับมาก่อน
-import { s, sx, kb } from '../helpers';
+import { s, sx, kb, Z } from '../helpers';
 import { renderDrugName } from './drugname';
 import { renderExportBtn } from './exportbtn';
 import { skelSummary } from './skeleton';
@@ -13,7 +13,7 @@ import { renderLoadFail } from './loadfail';
 function renderSumBanner(V) {
   if (V.sumLoading) {
     return (
-      <div style={sx('display:flex;align-items:center;gap:9px;border-radius:11px;padding:11px 14px;margin-bottom:14px;font:500 13px Sarabun,sans-serif', { background: V.sumPanel, border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>
+      <div style={sx('display:flex;align-items:center;gap:9px;border-radius:11px;padding:11px 14px;margin-bottom:14px;font:500 13px/1.75 Sarabun,sans-serif', { background: V.sumPanel, border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>
         <span style={s('width:15px;height:15px;border-radius:50%;border:2px solid rgba(47,125,93,.25);border-top-color:#2f7d5d;animation:mrspin .7s linear infinite;flex:none')}></span>
         {V.sumLoadingLabel}
       </div>
@@ -34,10 +34,10 @@ function renderSumBanner(V) {
   return (
     <>
       {V.sumEmpty && (
-        <div style={sx('border-radius:11px;padding:14px;margin-bottom:14px;text-align:center;font:500 13px Sarabun,sans-serif', { border: '1px dashed ' + V.sumBorder, color: V.sumMuted })}>{V.sumEmptyLabel}</div>
+        <div style={sx('border-radius:11px;padding:14px;margin-bottom:14px;text-align:center;font:500 13px/1.75 Sarabun,sans-serif', { border: '1px dashed ' + V.sumBorder, color: V.sumMuted })}>{V.sumEmptyLabel}</div>
       )}
       {V.zeroPriced > 0 && (
-        <div style={s('border-radius:11px;padding:11px 14px;margin-bottom:14px;background:#fdf3e7;border:1px solid rgba(214,138,42,.28);font:500 12.5px/1.5 Sarabun,sans-serif;color:#8a5a12')}>{V.zeroPricedLabel}</div>
+        <div style={s('border-radius:11px;padding:11px 14px;margin-bottom:14px;background:#fdf3e7;border:1px solid rgba(214,138,42,.28);font:500 12.5px/1.75 Sarabun,sans-serif;color:#8a5a12')}>{V.zeroPricedLabel}</div>
       )}
     </>
   );
@@ -48,9 +48,9 @@ function renderFyPicks(V) {
   if (V.fyPicks.length < 2) return null;
   return (
     <div style={s('display:flex;align-items:center;gap:6px;flex-wrap:wrap')}>
-      <span style={sx('font:500 11.5px Sarabun,sans-serif', { color: V.sumMuted })}>ปีงบ</span>
+      <span style={sx('font:500 11.5px/1.75 Sarabun,sans-serif', { color: V.sumMuted })}>ปีงบ</span>
       {V.fyPicks.map((y) => (
-        <div key={y.key} {...kb(y.pick)} className={(y.on ? 'hv-seg-on' : 'hv-seg-off') + ' tap'} style={sx('padding:6px 13px;border-radius:999px;cursor:pointer;font:600 12px Sarabun,sans-serif', { background: y.on ? '#2f7d5d' : V.sumTrack, color: y.on ? '#fff' : V.sumMuted })}>{y.label}</div>
+        <div key={y.key} {...kb(y.pick)} className={(y.on ? 'hv-seg-on' : 'hv-seg-off') + ' tap'} style={sx('padding:6px 13px;border-radius:999px;cursor:pointer;font:600 12px/1.75 Sarabun,sans-serif', { background: y.on ? '#2f7d5d' : V.sumTrack, color: y.on ? '#fff' : V.sumMuted })}>{y.label}</div>
       ))}
     </div>
   );
@@ -60,19 +60,19 @@ function renderTopReturned(V) {
   if (!V.hasTopReturned) return null;
   return (
     <div style={sx('border-radius:12px;padding:15px 16px;margin-top:14px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
-      <div style={s('font:600 13.5px Sarabun,sans-serif;margin-bottom:2px')}>ยาที่ถูกคืนบ่อยที่สุด</div>
-      <div style={sx('font:400 11px/1.5 Sarabun,sans-serif;margin-bottom:12px', { color: V.sumMuted, opacity: .8 })}>{V.topReturnedHint}</div>
+      <div style={s('font:600 13.5px/1.75 Sarabun,sans-serif;margin-bottom:2px')}>ยาที่ถูกคืนบ่อยที่สุด</div>
+      <div style={sx('font:400 11px/1.75 Sarabun,sans-serif;margin-bottom:12px', { color: V.sumMuted, opacity: .8 })}>{V.topReturnedHint}</div>
       <div style={s('display:flex;flex-direction:column;gap:9px')}>
         {V.topReturned.map((t) => (
           <div key={t.key}>
             <div style={s('display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:4px')}>
-              <span style={s('min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}><span style={s('font:500 12.5px Sarabun,sans-serif')}>{t.rank}. </span>{renderDrugName(t.parts, { size: '12.5px', dark: V.sumDark })}</span>
-              <span style={sx("font:600 12.5px Sarabun,sans-serif;flex:none;font-variant-numeric:tabular-nums", { color: V.sumMuted })}>{t.timesLabel}</span>
+              <span style={s('min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}><span style={s('font:500 12.5px/1.75 Sarabun,sans-serif')}>{t.rank}. </span>{renderDrugName(t.parts, { size: '12.5px', dark: V.sumDark })}</span>
+              <span style={sx("font:600 12.5px/1.75 Sarabun,sans-serif;flex:none;font-variant-numeric:tabular-nums", { color: V.sumMuted })}>{t.timesLabel}</span>
             </div>
             <div style={sx('height:7px;border-radius:99px;overflow:hidden', { background: V.sumTrack })}>
               <div style={sx('height:100%;border-radius:99px;background:#2f7d5d', { width: t.w })}></div>
             </div>
-            <div style={sx('font:400 10.5px Sarabun,sans-serif;margin-top:3px;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>{t.qtyLabel} · {t.valueLabel}</div>
+            <div style={sx('font:400 10.5px/1.75 Sarabun,sans-serif;margin-top:3px;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>{t.qtyLabel} · {t.valueLabel}</div>
           </div>
         ))}
       </div>
@@ -103,11 +103,11 @@ export function renderSummaryWide(V) {
             <div style={sx('display:flex;padding:3px;border-radius:10px;gap:3px', { background: V.togTrack })}>
               <div {...kb(V.setLight)} className={V.togLightOn ? 'hv-bg-f6' : 'hv-txt'} style={sx('display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;cursor:pointer', { background: V.togLightBg })}>
                 <span style={s('width:12px;height:12px;border-radius:50%;background:#fff;border:1px solid rgba(30,36,32,.28)')}></span>
-                <span style={sx('font:600 13.5px Sarabun,sans-serif', { color: V.togLightFg })}>สว่าง</span>
+                <span style={sx('font:600 13.5px/1.75 Sarabun,sans-serif', { color: V.togLightFg })}>สว่าง</span>
               </div>
               <div {...kb(V.setDark)} className={V.togDarkOn ? 'hv-seg-on' : 'hv-txt'} style={sx('display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:8px;cursor:pointer', { background: V.togDarkBg })}>
                 <span style={s('width:12px;height:12px;border-radius:50%;background:#151a17;border:1px solid rgba(255,255,255,.3)')}></span>
-                <span style={sx('font:600 13.5px Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
+                <span style={sx('font:600 13.5px/1.75 Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
               </div>
             </div>
             {/* 🚨 ไม่มีปุ่ม ℹ ⚙ ตรงนี้แล้ว — ซ้ำกับแถบบนสุด (nav.jsx) ที่โผล่ทุกหน้าฝั่งคอม
@@ -150,9 +150,9 @@ export function renderSummaryWide(V) {
             <div style={s('display:flex;align-items:flex-end;gap:6px;height:190px')}>
               {V.months.map((m) => (
                 <div key={m.key} style={s('flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:5px;min-width:0')}>
-                  <div style={sx("font:600 10.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: m.labelColor })}>{m.short}</div>
+                  <div style={sx("font:600 10.5px/1.75 Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: m.labelColor })}>{m.short}</div>
                   <div style={sx('width:100%;border-radius:4px 4px 0 0;min-height:3px', { height: m.h, background: m.bg })}></div>
-                  <div style={sx('font:500 12px Sarabun,sans-serif', { color: m.nameColor })}>{m.name}</div>
+                  <div style={sx('font:500 12px/1.75 Sarabun,sans-serif', { color: m.nameColor })}>{m.name}</div>
                 </div>
               ))}
             </div>
@@ -161,8 +161,8 @@ export function renderSummaryWide(V) {
                 ย้ายมาจากกล่องขวา (พี่กันเลือกแบบ ค) เดิมกล่องซ้ายเหลือที่ว่างใต้กราฟเยอะ
                 ส่วนกล่องขวายาวเกิน · ย้ายมาแล้วสองกล่องสูงพอ ๆ กัน ไม่ต้องหาข้อมูลใหม่ */}
             <div style={sx('margin-top:16px;padding-top:14px', { borderTop: '1px solid ' + V.sumBorder })}>
-              <div style={sx('font:500 12.5px Sarabun,sans-serif;margin-bottom:2px', { color: V.sumMuted })}>สัดส่วนตามแหล่งที่มา</div>
-              <div style={sx('font:400 11px Sarabun,sans-serif;margin-bottom:12px', { color: V.sumMuted, opacity: .75 })}>{V.srcBaseLabel}</div>
+              <div style={sx('font:500 12.5px/1.75 Sarabun,sans-serif;margin-bottom:2px', { color: V.sumMuted })}>สัดส่วนตามแหล่งที่มา</div>
+              <div style={sx('font:400 11px/1.75 Sarabun,sans-serif;margin-bottom:12px', { color: V.sumMuted, opacity: .75 })}>{V.srcBaseLabel}</div>
 
               <div style={s('display:flex;align-items:center;gap:18px;flex-wrap:wrap')}>
                 {/* รัศมี 15.9 = เส้นรอบวง ~100 พอดี ใส่เปอร์เซ็นต์ลง dasharray ได้ตรง ๆ
@@ -178,7 +178,7 @@ export function renderSummaryWide(V) {
 
                 <div style={s('flex:1;min-width:150px;display:grid;grid-template-columns:1fr 1fr;gap:8px 12px')}>
                   {V.srcShares.map((sh) => (
-                    <span key={sh.key} style={sx('display:flex;align-items:center;gap:6px;font:400 12.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>
+                    <span key={sh.key} style={sx('display:flex;align-items:center;gap:6px;font:400 12.5px/1.75 Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>
                       <span style={sx('width:9px;height:9px;border-radius:3px;flex:none', { background: sh.bg })}></span>
                       {sh.label}
                     </span>
@@ -198,7 +198,7 @@ export function renderSummaryWide(V) {
             <div style={s('flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:9px')}>
               {V.topDrugs.map((t) => (
                 <div key={t.key}>
-                  <div style={s('display:flex;justify-content:space-between;gap:12px;font:400 13.5px Sarabun,sans-serif;margin-bottom:3px')}>
+                  <div style={s('display:flex;justify-content:space-between;gap:12px;font:400 13.5px/1.75 Sarabun,sans-serif;margin-bottom:3px')}>
                     <span style={s('overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{renderDrugName(t.parts, { dark: V.sumDark })}</span>
                     <span style={s('font-weight:600;font-variant-numeric:tabular-nums;flex:none')}>{t.value}</span>
                   </div>
@@ -218,6 +218,29 @@ export function renderSummaryWide(V) {
   );
 }
 
+// ── ปุ่มลอยขึ้นบนสุด/ลงล่างสุด (พี่กันสั่ง 1 ก.ย. 2569) ─────────────────────
+//   "เอาปุ่มขึ้นสุดลงสุดไปใส่หน่อย" · "ใส่เฉพาะหน้ารายงาน เเดช ไม่ใส่หน้ากรอก"
+//
+// 🚨 ต้องลอยเหนือแถบเมนูล่างจอ ไม่ใช่ทับมัน
+//    --bottombar คือความสูงจริงของแถบล่าง วัดด้วย ResizeObserver (ดูข้อ 3.11)
+//    ตั้งเลขตายตัวไม่ได้ เพราะแถบสูงไม่เท่ากันในแต่ละหน้า
+// 🚨 z-index ต้องเป็น Z.float (15) ต่ำกว่าหน้าต่างซ้อนทุกตัว (ต่ำสุดคือ 20)
+//    ไม่งั้นปุ่มลอยทับป๊อปแล้วกดโดนแทน (บทเรียนข้อ ต-11)
+// 🚨 ห้ามใส่คลาส .tap — ปุ่มสองอันวางห่างกัน 8px ส่วน .tap ขยายพื้นที่กด
+//    ออกด้านละ 11px จะทับกันจนกดขึ้นแล้วโดนลง (กฎข้อ 3.55)
+//    ตัวปุ่มเอง 44px ผ่านเกณฑ์นิ้วอยู่แล้ว
+function renderScrollBtns(V) {
+  const btn = 'width:44px;height:44px;border-radius:50%;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(30,36,32,.28);font:700 17px Sarabun,sans-serif';
+  return (
+    <div style={sx('position:fixed;right:16px;display:flex;flex-direction:column;gap:8px', {
+      bottom: 'calc(var(--bottombar, 0px) + 16px)', zIndex: Z.float
+    })}>
+      <div {...kb(V.sumToTop)} className="hv-teal" title="ขึ้นบนสุด" aria-label="เลื่อนขึ้นบนสุด" style={s(btn)}>↑</div>
+      <div {...kb(V.sumToBottom)} className="hv-teal" title="ลงล่างสุด" aria-label="เลื่อนลงล่างสุด" style={s(btn)}>↓</div>
+    </div>
+  );
+}
+
 export function renderSummaryNarrow(V) {
   return (
     <div style={sx('width:100%;min-height:100%;flex:1 0 auto', { background: V.sumBg, color: V.sumFg })}>
@@ -229,21 +252,21 @@ export function renderSummaryNarrow(V) {
           <div style={s('display:flex;align-items:center;gap:9px;min-width:0')}>
             <div style={sx('width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;flex:none', { background: V.sumGreen })}>
               <div style={s('position:absolute;inset:4px;border:1.6px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
-              <span style={sx("font:700 13px Sarabun,sans-serif;line-height:1", { color: V.sumMarkFg })}>฿</span>
+              <span style={sx("font:700 13px/1.75 Sarabun,sans-serif;line-height:1", { color: V.sumMarkFg })}>฿</span>
             </div>
             <div style={s('min-width:0')}>
               <div style={s('font:700 15px/1.2 Sarabun,sans-serif')}>มูลค่ายาคืน</div>
-              <div style={sx('font:400 11px/1.2 Sarabun,sans-serif', { color: V.sumMuted })}>ปีงบประมาณ {V.fyLabel}</div>
+              <div style={sx('font:400 11px/1.75 Sarabun,sans-serif', { color: V.sumMuted })}>ปีงบประมาณ {V.fyLabel}</div>
             </div>
           </div>
           <div style={sx('display:flex;padding:2px;border-radius:9px;gap:2px;flex:none', { background: V.togTrack })}>
             <div {...kb(V.setLight)} className={V.togLightOn ? 'hv-bg-f6' : 'hv-txt'} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togLightBg })}>
               <span style={s('width:11px;height:11px;border-radius:50%;background:#fff;border:1px solid rgba(30,36,32,.28)')}></span>
-              <span style={sx('font:600 12px Sarabun,sans-serif', { color: V.togLightFg })}>สว่าง</span>
+              <span style={sx('font:600 12px/1.75 Sarabun,sans-serif', { color: V.togLightFg })}>สว่าง</span>
             </div>
             <div {...kb(V.setDark)} className={V.togDarkOn ? 'hv-seg-on' : 'hv-txt'} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togDarkBg })}>
               <span style={s('width:11px;height:11px;border-radius:50%;background:#151a17;border:1px solid rgba(255,255,255,.3)')}></span>
-              <span style={sx('font:600 12px Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
+              <span style={sx('font:600 12px/1.75 Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
             </div>
           </div>
           <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-ico" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 14px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>ℹ</div>
@@ -252,14 +275,14 @@ export function renderSummaryNarrow(V) {
 
         {V.sumFail ? null : (<>
         <div style={sx('border-radius:14px;padding:16px 17px 15px;margin-bottom:10px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
-          <div style={sx('font:500 12.5px Sarabun,sans-serif;margin-bottom:3px', { color: V.sumMuted })}>มูลค่ายาที่ประหยัดได้สะสม</div>
+          <div style={sx('font:500 12.5px/1.75 Sarabun,sans-serif;margin-bottom:3px', { color: V.sumMuted })}>มูลค่ายาที่ประหยัดได้สะสม</div>
           <div style={sx("font:700 clamp(34px,10.6vw,50px)/1.02 Sarabun,sans-serif;letter-spacing:-.04em;font-variant-numeric:tabular-nums;word-break:break-all", { color: V.sumGreen })}>{V.fySavedBig}</div>
-          <div style={s('font:500 15px Sarabun,sans-serif;margin-top:3px')}>฿ <span style={sx('font:400 12px Sarabun,sans-serif', { color: V.sumMuted })}>· {V.fyRangeLabel}</span></div>
+          <div style={s('font:500 15px Sarabun,sans-serif;margin-top:3px')}>฿ <span style={sx('font:400 12px/1.75 Sarabun,sans-serif', { color: V.sumMuted })}>· {V.fyRangeLabel}</span></div>
           <div style={sx('display:flex;height:9px;border-radius:99px;overflow:hidden;margin:13px 0 7px', { background: V.sumTrack })}>
             <div style={sx('', { width: V.fySavedPct, background: V.sumGreen })}></div>
             <div style={sx('background:#c2543c', { width: V.fyLostPct })}></div>
           </div>
-          <div style={sx('font:400 12px/1.55 Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>ยาที่คืนมา <strong style={sx('font-weight:600', { color: V.sumFg })}>{V.fyGrossLabel}</strong> · ใช้ต่อได้ {V.fyReusePct}</div>
+          <div style={sx('font:400 12px/1.75 Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>ยาที่คืนมา <strong style={sx('font-weight:600', { color: V.sumFg })}>{V.fyGrossLabel}</strong> · ใช้ต่อได้ {V.fyReusePct}</div>
         </div>
 
         {/* ปุ่มส่งออกย้ายขึ้นมาไว้ใต้ตัวเลขใหญ่ (พี่กันสั่ง)
@@ -269,39 +292,39 @@ export function renderSummaryNarrow(V) {
 
         <div style={s('display:flex;gap:9px;margin-bottom:10px')}>
           <div style={sx('flex:1;border-radius:12px;padding:11px 13px;min-width:0', { background: V.sumLostPanel, border: '1px solid ' + V.sumBorder })}>
-            <div style={sx('font:500 11px Sarabun,sans-serif', { color: V.sumRed })}>สูญเสีย (ทำลาย)</div>
+            <div style={sx('font:500 11px/1.75 Sarabun,sans-serif', { color: V.sumRed })}>สูญเสีย (ทำลาย)</div>
             <div style={sx("font:700 21px/1.2 Sarabun,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.03em;word-break:break-all", { color: V.sumRed })}>{V.fyLostShort}</div>
           </div>
           <div style={sx('flex:1;border-radius:12px;padding:11px 13px;min-width:0', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
-            <div style={sx('font:500 11px Sarabun,sans-serif', { color: V.sumMuted })}>รายการบันทึก</div>
-            <div style={s("font:700 21px/1.2 Sarabun,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em")}>{V.fyCount} <span style={sx('font:400 11.5px Sarabun,sans-serif', { color: V.sumMuted })}>· ยา {V.fyDrugCount}</span></div>
+            <div style={sx('font:500 11px/1.75 Sarabun,sans-serif', { color: V.sumMuted })}>รายการบันทึก</div>
+            <div style={s("font:700 21px/1.2 Sarabun,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:-.02em")}>{V.fyCount} <span style={sx('font:400 11.5px/1.75 Sarabun,sans-serif', { color: V.sumMuted })}>· ยา {V.fyDrugCount}</span></div>
           </div>
         </div>
 
         <div style={sx('border-radius:12px;padding:14px 14px 10px;margin-bottom:10px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
           <div style={s('display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px')}>
-            <span style={s('font:600 13.5px Sarabun,sans-serif')}>มูลค่าประหยัดรายเดือน (฿)</span>
-            <span style={sx('font:400 10.5px Sarabun,sans-serif', { color: V.sumMuted })}>ต.ค.–ก.ย.</span>
+            <span style={s('font:600 13.5px/1.75 Sarabun,sans-serif')}>มูลค่าประหยัดรายเดือน (฿)</span>
+            <span style={sx('font:400 10.5px/1.75 Sarabun,sans-serif', { color: V.sumMuted })}>ต.ค.–ก.ย.</span>
           </div>
           <div style={s('display:flex;align-items:flex-end;gap:3px;height:132px')}>
             {V.months.map((m) => (
               <div key={m.key} style={s('flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:4px;min-width:0')}>
-                <div style={sx("font:600 8.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: m.labelColor })}>{m.short}</div>
+                <div style={sx("font:600 8.5px/1.75 Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: m.labelColor })}>{m.short}</div>
                 <div style={sx('width:100%;border-radius:3px 3px 0 0;min-height:3px', { height: m.h, background: m.bg })}></div>
-                <div style={sx('font:500 9.5px Sarabun,sans-serif;white-space:nowrap', { color: m.nameColor })}>{m.nameShort}</div>
+                <div style={sx('font:500 9.5px/1.75 Sarabun,sans-serif;white-space:nowrap', { color: m.nameColor })}>{m.nameShort}</div>
               </div>
             ))}
           </div>
         </div>
 
         <div style={sx('border-radius:12px;padding:14px 14px;margin-bottom:10px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
-          <div style={s('font:600 13.5px Sarabun,sans-serif;margin-bottom:12px')}>ยาที่คืนมูลค่าสูงสุด 10 อันดับ (฿)</div>
+          <div style={s('font:600 13.5px/1.75 Sarabun,sans-serif;margin-bottom:12px')}>ยาที่คืนมูลค่าสูงสุด 10 อันดับ (฿)</div>
           <div style={s('display:flex;flex-direction:column;gap:9px')}>
             {V.topDrugs.map((t) => (
               <div key={t.key} style={s('display:flex;align-items:center;gap:9px')}>
-                <span style={sx("width:16px;flex:none;font:600 10.5px Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: V.sumMuted })}>{t.rank}</span>
+                <span style={sx("width:16px;flex:none;font:600 10.5px/1.75 Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: V.sumMuted })}>{t.rank}</span>
                 <div style={s('flex:1;min-width:0')}>
-                  <div style={s('display:flex;justify-content:space-between;gap:8px;font:400 12.5px Sarabun,sans-serif;margin-bottom:3px')}>
+                  <div style={s('display:flex;justify-content:space-between;gap:8px;font:400 12.5px/1.75 Sarabun,sans-serif;margin-bottom:3px')}>
                     <span style={s('overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{renderDrugName(t.parts, { dark: V.sumDark })}</span>
                     <span style={s('font-weight:600;font-variant-numeric:tabular-nums;flex:none')}>{t.value}</span>
                   </div>
@@ -315,8 +338,8 @@ export function renderSummaryNarrow(V) {
         </div>
 
         <div style={sx('border-radius:12px;padding:14px 14px;margin-bottom:14px', { background: V.sumPanel, border: '1px solid ' + V.sumBorder })}>
-          <div style={s('font:600 13.5px Sarabun,sans-serif;margin-bottom:2px')}>สัดส่วนตามแหล่งที่มา</div>
-          <div style={sx('font:400 11px/1.4 Sarabun,sans-serif;margin-bottom:11px', { color: V.sumMuted, opacity: .75 })}>{V.srcBaseLabel}</div>
+          <div style={s('font:600 13.5px/1.75 Sarabun,sans-serif;margin-bottom:2px')}>สัดส่วนตามแหล่งที่มา</div>
+          <div style={sx('font:400 11px/1.75 Sarabun,sans-serif;margin-bottom:11px', { color: V.sumMuted, opacity: .75 })}>{V.srcBaseLabel}</div>
           <div style={sx('display:flex;height:9px;border-radius:99px;overflow:hidden;margin-bottom:11px', { background: V.sumTrack })}>
             {V.srcShares.map((sh) => (
               <div key={sh.key} style={sx('', { width: sh.w, background: sh.bg })}></div>
@@ -324,7 +347,7 @@ export function renderSummaryNarrow(V) {
           </div>
           <div style={s('display:grid;grid-template-columns:1fr 1fr;gap:8px')}>
             {V.srcShares.map((sh) => (
-              <div key={sh.key} style={sx('display:flex;align-items:center;gap:7px;font:400 12px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>
+              <div key={sh.key} style={sx('display:flex;align-items:center;gap:7px;font:400 12px/1.75 Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>
                 <span style={sx('width:9px;height:9px;border-radius:3px;flex:none', { background: sh.bg })}></span>{sh.label}
               </div>
             ))}
@@ -335,6 +358,7 @@ export function renderSummaryNarrow(V) {
         </>)}
 
       </div>
+      {renderScrollBtns(V)}
     </div>
   );
 }

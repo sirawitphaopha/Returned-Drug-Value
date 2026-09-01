@@ -48,6 +48,10 @@ const grab = (page, src) => page.evaluate((x) => {
     await page.goto(BASE + '/login', { waitUntil: 'domcontentloaded' });
     await wait(900);
     if (page.url().indexOf('/login') >= 0) {
+      // 🚨 ต้องรอช่องรหัสโผล่จริง ห้ามรอเป็นเวลาตายตัว
+      //    หน้าเข้าสู่ระบบโหลดฉากหลัง three.js (~600 KB) ก่อน ช้ากว่า 900 มิลลิวินาทีบ่อย
+      //    รอไม่ทันแล้วสคริปต์พังทั้งตัวว่า No element found ทั้งที่เว็บปกติดี
+      await page.waitForSelector('#mrv-pw', { timeout: 20000 });
       await page.type('#mrv-pw', pw);
       await Promise.all([page.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {}),
         page.click('button[type="submit"]')]);
