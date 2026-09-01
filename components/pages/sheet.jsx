@@ -11,7 +11,7 @@ export function renderSheet(V) {
           ใส่ปุ่ม ✕ ให้แทน */}
       <div style={s('position:fixed;inset:0;background:rgba(21,26,23,.42);z-index:20')}></div>
       <div role="dialog" aria-modal="true" style={s('position:fixed;left:0;right:0;bottom:0;z-index:21;display:flex;justify-content:center;transform:translateY(calc(var(--kb) * -1));transition:transform .12s ease-out')}>
-        <div style={s('width:100%;max-width:520px;max-height:88dvh;overflow-y:auto;background:#fff;border-radius:22px 22px 0 0;box-shadow:0 -14px 44px rgba(30,36,32,.24);padding:14px 20px max(22px,env(safe-area-inset-bottom))')}>
+        <div className="mrv-pop" style={s('width:100%;max-width:520px;max-height:88dvh;overflow-y:auto;background:#fff;border-radius:22px 22px 0 0;box-shadow:0 -14px 44px rgba(30,36,32,.24);padding:14px 20px max(22px,env(safe-area-inset-bottom))')}>
           <div style={s('width:42px;height:4px;border-radius:99px;background:rgba(30,36,32,.16);margin:0 auto 14px')}></div>
 
           <div style={s('display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px')}>

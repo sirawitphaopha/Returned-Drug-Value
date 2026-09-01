@@ -76,7 +76,7 @@ export function renderParkedSheet(V) {
       style={s('position:fixed;inset:0;background:rgba(20,26,22,.45);display:flex;align-items:center;justify-content:center;padding:22px 16px;z-index:52;overflow:auto')}>
       {/* กล่องข้างในต้องกินการกดไว้เอง ไม่งั้นกดอะไรก็ปิดหน้าต่าง */}
       <div onClick={(e) => e.stopPropagation()}
-        style={s('background:#fff;border-radius:14px;width:100%;max-width:620px;height:min(76vh,640px);display:flex;flex-direction:column;box-shadow:0 8px 30px rgba(20,26,22,.2)')}>
+        style={s('background:#fff;border-radius:14px;overflow:hidden;width:100%;max-width:620px;height:min(76vh,640px);display:flex;flex-direction:column;box-shadow:0 8px 30px rgba(20,26,22,.2)')}>
 
         <div style={s('flex:none;padding:18px 22px 12px;border-bottom:1px solid #eef1ef')}>
           <div style={s('display:flex;align-items:flex-start;gap:12px')}>
@@ -103,26 +103,57 @@ export function renderParkedSheet(V) {
             return (
               <div key={it.key}
                 style={sx('border-radius:11px;margin-bottom:9px;overflow:hidden', { border: '1px solid ' + c.bd })}>
-                <div style={sx('display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 13px', { background: c.bg })}>
-                  <div style={s('flex:1;min-width:160px')}>
+                {/* ── แถวหัวการ์ด — คอมเรียงแถวเดียว มือถือแยกสองแถว ─────────────────
+                
+                    พี่กันสั่ง 1 ก.ย. 2569 "แทรก จุดนี้ เกลาให้มันสวยหน่อย ของมือถือ"
+                
+                    ของเดิมใช้ flex-wrap ให้ปุ่มตกบรรทัดเอง ผลคือบนมือถือ
+                    ปุ่มดูยาค้างอยู่บรรทัดบน ส่วนอีกสองปุ่มตกลงมา ดูไม่เป็นระเบียบ
+                
+                    🚨 มือถือ — ชื่อกับรายละเอียดเต็มความกว้าง ปุ่มสามอันอยู่แถวล่าง
+                       แบ่งพื้นที่เท่า ๆ กัน (flex:1) ขอบซ้ายขวาตรงแนวกับข้อความ
+                    🚨 คอม — เหมือนเดิมทุกอย่าง ปุ่มอยู่ขวาแถวเดียวกับชื่อ
+                       ความกว้างขั้นต่ำ 76/112/58 ให้ทุกแถวตรงแนวกัน */}
+                <div style={sx(V.wide
+                  ? 'display:flex;align-items:center;gap:10px;padding:11px 13px'
+                  : 'padding:11px 13px', { background: c.bg })}>
+                  <div style={s(V.wide ? 'flex:1;min-width:0' : '')}>
                     <div style={sx('font:700 13px/1.75 Sarabun,sans-serif;margin-bottom:2px', { color: it.hot ? '#b02a5b' : '#1e2420' })}>
                       {it.title}
                     </div>
-                    <div style={sx('font:500 11.5px/1.75 Sarabun,sans-serif', { color: c.sub })}>{it.detail}</div>
+                    {/* 🚨 แต่ละก้อนห้ามขาดกลาง (กฎข้อ 3.19 ของโปรเจกต์)
+                        "เหลืออีก 7 วัน" เคยขาดเป็น "เหลืออีก 7" กับ "วัน" คนละบรรทัด
+                        ขึ้นบรรทัดใหม่ระหว่างก้อนได้ แต่ในก้อนเดียวกันต้องอยู่ด้วยกัน */}
+                    <div style={sx('font:500 11.5px/1.75 Sarabun,sans-serif;display:flex;flex-wrap:wrap;gap:0 5px', { color: c.sub })}>
+                      {String(it.detail || '').split(' · ').map((part, i, arr) => (
+                        <span key={i} style={s('white-space:nowrap')}>{part}{i < arr.length - 1 ? ' ·' : ''}</span>
+                      ))}
+                    </div>
                   </div>
-                  <div {...kb(() => V.seeParked(seen ? '' : it.key))}
-                    aria-label={seen ? 'ซ่อนรายการยาในล็อตนี้' : 'ดูรายการยาในล็อตนี้'}
-                    className="hv-bg-f6 tap"
-                    style={sx('justify-content:center;padding:8px 12px;min-width:76px;white-space:nowrap;border-radius:8px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#414a44;font:600 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none')}>
-                    {seen ? 'ซ่อนยา' : 'ดูยา'}
-                  </div>
-                  <div {...kb(it.take)} aria-label="เอาล็อตที่กรอกค้างไว้มาทำต่อ" className={c.hv + ' tap'}
-                    style={sx('justify-content:center;padding:8px 14px;min-width:112px;white-space:nowrap;border-radius:8px;color:#fff;font:700 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none;min-width:112px;white-space:nowrap', { background: c.btn })}>
-                    {it.takeLabel}
-                  </div>
-                  <div {...kb(it.drop)} aria-label="ทิ้งล็อตที่กรอกค้างไว้" className="hv-del tap"
-                    style={sx('justify-content:center;padding:8px 12px;min-width:58px;white-space:nowrap;border-radius:8px;border:1px solid rgba(176,42,91,.28);background:#fff;color:#b02a5b;font:600 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px;display:flex;align-items:center;flex:none')}>
-                    ทิ้ง
+                
+                  <div style={s(V.wide ? 'display:flex;gap:10px;flex:none' : 'display:flex;gap:8px;margin-top:10px')}>
+                    <div {...kb(() => V.seeParked(seen ? '' : it.key))}
+                      aria-label={seen ? 'ซ่อนรายการยาในล็อตนี้' : 'ดูรายการยาในล็อตนี้'}
+                      className="hv-bg-f6 tap"
+                      style={sx('display:flex;align-items:center;justify-content:center;padding:8px 12px;white-space:nowrap;border-radius:8px;border:1px solid rgba(30,36,32,.14);background:#fff;color:#414a44;font:600 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px', {
+                        flex: V.wide ? 'none' : '1', minWidth: V.wide ? '76px' : 0
+                      })}>
+                      {seen ? 'ซ่อนยา' : 'ดูยา'}
+                    </div>
+                
+                    <div {...kb(it.take)} aria-label="เอาล็อตที่กรอกค้างไว้มาทำต่อ" className={c.hv + ' tap'}
+                      style={sx('display:flex;align-items:center;justify-content:center;padding:8px 14px;white-space:nowrap;border-radius:8px;color:#fff;font:700 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px', {
+                        background: c.btn, flex: V.wide ? 'none' : '1.4', minWidth: V.wide ? '112px' : 0
+                      })}>
+                      {it.takeLabel}
+                    </div>
+                
+                    <div {...kb(it.drop)} aria-label="ทิ้งล็อตที่กรอกค้างไว้" className="hv-del tap"
+                      style={sx('display:flex;align-items:center;justify-content:center;padding:8px 12px;white-space:nowrap;border-radius:8px;border:1px solid rgba(176,42,91,.28);background:#fff;color:#b02a5b;font:600 12px/1.75 Sarabun,sans-serif;cursor:pointer;min-height:38px', {
+                        flex: V.wide ? 'none' : '0.8', minWidth: V.wide ? '58px' : 0
+                      })}>
+                      ทิ้ง
+                    </div>
                   </div>
                 </div>
                 {seen && (

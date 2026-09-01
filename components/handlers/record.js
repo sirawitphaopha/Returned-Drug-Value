@@ -48,7 +48,9 @@ export function recordActions(app) {
     // 🚨 ย้ายมาเป็นของหน้าต่างนี้แล้วต้องลบต้นทางทิ้ง ไม่งั้นหน้าต่างที่สาม
     //    ที่เปิดขึ้นมาทีหลังจะเห็นล็อตเดียวกันอีก แล้วกดเอากลับมาได้อีกคน
     clearLS(box.key);
-    app.setState({ parked: app.state.parked.filter((x) => x.id !== id) }, () => {
+    // 🚨 ปิดหน้าต่างล็อตค้างด้วย ไม่งั้นเอาของมาแล้วหน้าต่างยังค้างอยู่
+    //    เห็นล็อตที่เพิ่งหยิบไปแล้วในรายการ (พี่กันเจอ 1 ก.ย. 2569)
+    app.setState({ showOtherDrafts: false, parked: app.state.parked.filter((x) => x.id !== id) }, () => {
       app.persist({
         rows: rows,
         batchId: v.batchId || null,
@@ -110,6 +112,7 @@ export function recordActions(app) {
 
     await app.dropServerDraft(deviceId, tabId);
     app.setState({
+      showOtherDrafts: false,
       serverDrafts: (app.state.serverDrafts || []).filter(
         (d) => !(d.device_id === deviceId && d.tab_id === tabId)
       )

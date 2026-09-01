@@ -280,3 +280,46 @@ html:has(body.mrv-mobile) {
 .mrv-mobile textarea::placeholder {
   line-height: inherit !important;
 }
+
+
+/* ── ป๊อปเลื่อนขึ้นจากขอบล่างแบบมีน้ำหนัก (พี่กันเลือกแบบ ก · 1 ก.ย. 2569) ───
+
+   ของเดิมป๊อปเด้งโผล่กลางจอทันที ซึ่งเป็นวิธีของเว็บ
+   แอปมือถือทั่วไปเลื่อนขึ้นมาจากขอบล่างแล้วชะลอตอนใกล้หยุด
+   เหมือนของมีน้ำหนักจริง — พี่กันเลือกจังหวะนี้จากมอคอัปสามแบบ
+
+   จังหวะ 0.42 วินาที · cubic-bezier(.16,1.16,.3,1)
+   ค่า 1.16 ที่เกิน 1 คือตัวที่ทำให้เลยจุดหมายนิดหนึ่งแล้วค่อยกลับมา
+
+   🚨 ใส่ที่กล่องขาวข้างใน ไม่ใช่ที่ฉากซ้อน
+      ป๊อปใส่จำนวนขยับตัวเองตามความสูงแป้นพิมพ์อยู่แล้ว (--kb)
+      ถ้าใส่ที่ฉากซ้อน แอนิเมชันจะไปทับการขยับนั้นจนกระตุก
+   🚨 ต้องเคารพการตั้งค่า "ลดการเคลื่อนไหว" ของเครื่อง
+      เจ้าหน้าที่บางคนเวียนหัวกับภาพเคลื่อนไหว (กฎเดียวกับฉากหลังหน้าเข้าสู่ระบบ)
+   🚨 ฝั่งคอมไม่แตะ — ยังเด้งกลางจอเหมือนเดิม
+*/
+@media (max-width: 1179px) {
+  .mrv-mobile .mrv-pop {
+    animation: mrv-pop-up .42s cubic-bezier(.16, 1.16, .3, 1) both;
+  }
+
+  /* ป๊อปที่เคยลอยกลางจอ ให้มาชิดขอบล่างแทน มุมมนเฉพาะด้านบน */
+  .mrv-mobile .mrv-pop-wrap {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .mrv-mobile .mrv-pop-wrap > .mrv-pop {
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+@keyframes mrv-pop-up {
+  from { transform: translateY(110%); }
+  to   { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mrv-mobile .mrv-pop { animation: none; }
+}

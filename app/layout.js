@@ -59,7 +59,23 @@ const FAVICON =
 export const metadata = {
   title: 'มูลค่ายาคืน · ห้องยา รพ.ปรางค์กู่',
   description: 'บันทึกยาที่ผู้ป่วยคืน แปลงเป็นมูลค่าเงินที่ประหยัดได้ พร้อมสรุปรายปีงบประมาณ',
-  icons: { icon: FAVICON },
+  // ── เปิดเป็นแอปบนหน้าจอโฮม (พี่กันสั่ง 1 ก.ย. 2569 · ชุด 5) ──────────────
+  //
+  //   ไฟล์ประกาศตัวตนของแอปอยู่ที่ app/manifest.js
+  //   แต่ iPhone ไม่อ่านไฟล์นั้นครบทุกช่อง ต้องบอกซ้ำตรงนี้ด้วย
+  //
+  // 🚨 apple ต้องเป็นไฟล์ PNG จริง iOS ไม่รับ SVG หรือ data URI
+  //    ไอคอนสร้างจาก FAVICON ตัวเดียวกันด้านบน แปลงเป็น PNG ไว้ใน public/
+  //    (สร้างใหม่ด้วย puppeteer ถ้าเปลี่ยนไอคอน — ดูวิธีในสกิล mobile-web-app)
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'มูลค่ายาคืน'
+  },
+  icons: {
+    icon: FAVICON,
+    apple: '/icon-180.png'
+  },
 };
 
 export const viewport = {
