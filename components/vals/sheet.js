@@ -1,6 +1,6 @@
 // ค่าของป๊อปอัปใส่จำนวน — คัดจากมอคอัป (บรรทัด 1414–1441)
 import { PRESETS, money } from '@/lib/format';
-import { cleanQty, qtyNum, DESTROY_REASONS, destroyReasonHelp } from '../helpers';
+import { cleanQty, qtyNum, DESTROY_REASONS, destroyReasonHelp, MAX_QTY } from '../helpers';
 
 export function sheetVals(app, d) {
   const st = d.st;
@@ -29,6 +29,11 @@ export function sheetVals(app, d) {
     onSheetQty: (e) => app.setState({ sheetQty: cleanQty(e.target.value) }),
     onSheetKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); app.confirmSheet(); } },
     sheetDec: () => app.setState({ sheetQty: String(Math.max(0, Math.round((qty - 1) * 100) / 100)) }),
+    // 🚨 ปุ่มบวกยังไม่ให้เกินเพดาน เพราะเป็นการกดทีละครั้ง ไม่ใช่การพิมพ์พลาด
+    //    ส่วนการพิมพ์เองปล่อยให้เกินได้ แล้วเตือนแทน (พี่กันเลือกแบบ ก)
+    // ข้อความเตือนตอนพิมพ์เกินเพดาน — ว่างเปล่าเมื่อไม่เกิน
+    sheetOverMsg: qty > MAX_QTY ? ('จำนวนสูงสุด ' + MAX_QTY.toLocaleString('th-TH')) : '',
+    sheetOverMax: qty > MAX_QTY,
     sheetInc: () => app.setState({ sheetQty: String(Math.min(100000, Math.round((qty + 1) * 100) / 100)) }),
     sheetPresets: PRESETS.map((p) => ({
       label: String(p),

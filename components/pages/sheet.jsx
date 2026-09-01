@@ -66,7 +66,14 @@ export function renderSheet(V) {
             <div {...kb(V.sheetInc)} className="hv-teal" style={s("width:52px;height:52px;border-radius:12px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;font:400 26px Sarabun,sans-serif;color:#fff;cursor:pointer;flex:none")}>+</div>
           </div>
 
-          <div style={s('text-align:center;font:400 12px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:12px')}>{V.sheetUnit}</div>
+          {/* 🚨 เกินเพดานแล้วต้องบอก ไม่ใช่แอบตัดค่าให้ (พี่กันเลือกแบบ ก · 1 ก.ย. 2569)
+              พี่กันพิมพ์ 3000000000 แล้วมันกลายเป็น 100000 เงียบ ๆ
+              ถ้าเป็นการกรอกจริงอาจไม่ทันสังเกตว่าเลขเปลี่ยน แล้วยอดรายงานเพี้ยน */}
+          {V.sheetOverMsg ? (
+            <div role="alert" style={s('text-align:center;font:600 12px/1.75 Sarabun,sans-serif;color:#c2543c;margin-bottom:12px')}>{V.sheetOverMsg}</div>
+          ) : (
+            <div style={s('text-align:center;font:400 12px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:12px')}>{V.sheetUnit}</div>
+          )}
 
           <div style={s('display:flex;gap:7px;margin-bottom:14px')}>
             {V.sheetPresets.map((p) => (
@@ -74,7 +81,8 @@ export function renderSheet(V) {
             ))}
           </div>
 
-          <div {...kb(V.sheetConfirm)} className="hv-teal" style={s('height:54px;border-radius:12px;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;font:600 17px Sarabun,sans-serif;cursor:pointer')}>
+          <div {...kb(V.sheetOverMax ? (() => {}) : V.sheetConfirm)} className={V.sheetOverMax ? '' : 'hv-teal'}
+            style={sx('height:54px;border-radius:12px;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;font:600 17px Sarabun,sans-serif;cursor:pointer', V.sheetOverMax ? { background: '#e9ebe8', color: '#8a938d', cursor: 'default' } : null)}>
             {V.sheetCta} <span style={s("font:700 17px Sarabun,sans-serif;font-variant-numeric:tabular-nums")}>{V.sheetValueLabel}</span>
           </div>
         </div>

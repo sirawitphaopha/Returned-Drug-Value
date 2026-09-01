@@ -3,7 +3,8 @@
 // · ยอดสะสมปีงบมาจากฐานข้อมูล ไม่ได้นับจากรายการในเครื่อง
 import { SOURCES, money, thaiDate, COMPUTERS, MOBILE_PREFIX } from '@/lib/format';
 import { cleanQty, qtyNum, qtyText, splitDrugName, splitPercent, splitRelease, markMatch,
-  cleanQtyExpr, evalQty, isQtyExpr, exprText, isResolvedQty, splitResolved, DESTROY_REASONS } from '../helpers';
+  cleanQtyExpr, evalQty, isQtyExpr, exprText, isResolvedQty, splitResolved, DESTROY_REASONS,
+  qtyOver, MAX_QTY } from '../helpers';
 import { moveHi } from '@/lib/drugSearch';
 import { pillColorOf } from '@/lib/drugPillColors';
 
@@ -210,7 +211,9 @@ export function recordVals(app, d) {
   //    qtyNum ใช้ parseFloat ซึ่งอ่าน "25+25" ได้แค่ 25 แล้วทิ้งที่เหลือเงียบ ๆ
   //    (ป๊อปอัปฝั่งมือถือใน vals/sheet.js ยังใช้ qtyNum เหมือนเดิม พี่กันสั่งไม่ให้แตะมือถือ)
   const pendQty = evalQty(st.qtyInput);
-  const canAdd = !!pending && pendQty > 0;
+  // 🚨 เกินเพดานแล้วต้องเตือนกับปิดปุ่ม ไม่ใช่แอบตัดให้ (พี่กันเลือกแบบ ก)
+  const pendOver = qtyOver(pendQty);
+  const canAdd = !!pending && pendQty > 0 && !pendOver;
   const fySaved = st.fy.saved;
   const pendValue = pending ? pending.price * pendQty : 0;
   const showExpr = isQtyExpr(st.qtyInput) && pendQty > 0;
@@ -615,6 +618,9 @@ export function recordVals(app, d) {
     addHintFg: canAdd ? 'rgba(255,255,255,.5)' : 'rgba(125,156,141,.6)',
     addBorder: canAdd ? '1px solid transparent' : '1px solid rgba(47,125,93,.16)',
     addOn: canAdd,
+    // ข้อความเตือนใต้ช่องจำนวน — ว่างเปล่าเมื่อไม่เกินเพดาน
+    qtyOverMsg: pendOver ? ('จำนวนสูงสุด ' + MAX_QTY.toLocaleString('th-TH') + ' ต่อรายการ') : '',
+    qtyOverMax: pendOver,
     searchBorder: pending ? '#2f7d5d' : 'rgba(30,36,32,.16)',
     pendingUnit: pending ? ' (' + pending.unit + ')' : '',
     pendReuseBg: pendReuse ? '#e3f0e8' : 'transparent',
