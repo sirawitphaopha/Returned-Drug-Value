@@ -6,10 +6,15 @@ import './mobile.css';
 // 🔤 ฟอนต์ฝังในเว็บผ่าน next/font/google — ดาวน์โหลดและฝังตอน build
 // เว็บเสิร์ฟฟอนต์เอง ไม่พึ่ง Google ตอนใช้งาน (ขึ้นชัวร์ทุกเครื่อง ไม่กระพริบ เน็ตโรงพยาบาลก็ไม่สะดุด)
 // 📌 กฎโปรเจกต์: ฟอนต์ใหม่ทุกตัวต้องฝังแบบนี้ ห้ามใช้ <link> ไป CDN
-//    มอคอัปโหลด 2 ตัวนี้ (บรรทัด 12): Sarabun 300–700 + IBM Plex Sans Thai 400–700
+//    มอคอัปโหลด 2 ตัว (Sarabun + IBM Plex Sans Thai) แต่เว็บนี้เลิกใช้ตัวไม่มีหัวแล้ว
+// 🚨 ถอด IBM Plex Sans Thai ออก 2 ก.ย. 2569 — ไม่มีจุดไหนเรียกใช้ตั้งแต่ v0.13.0.0
+//    (พี่กันสั่งเปลี่ยนเป็นฟอนต์มีหัวทั้งเว็บ ดู CLAUDE.md ข้อ 3.43)
+//    โหลดค้างไว้เปล่า ๆ = ดาวน์โหลดฟอนต์ 4 น้ำหนักที่ไม่มีใครใช้ทุกครั้งที่เปิดเว็บ
+// 🚨 บรรทัดแปลงใน components/helpers.js -> fontify() ต้องคงไว้เป็นตาข่ายกันตกหล่น
+//    ถ้ามีจุดไหนหลุดรอด หรือมีคนเผลอเขียนกลับมาใหม่ ก็ยังได้ฟอนต์มีหัวอยู่ดี
 // ฟอนต์ของ "ชื่อเว็บ" อย่างเดียว — พี่กันเลือกเอง (ลอง Charm → Thasadith → Charmonman → Krub)
 // 🚨 ฝังมากับเว็บผ่าน next/font/google ไม่ได้ลิงก์ CDN — เน็ตโรงพยาบาลบล็อก Google Fonts ได้
-import { IBM_Plex_Sans_Thai, Sarabun, Krub, Roboto_Mono } from 'next/font/google';
+import { Sarabun, Krub, Roboto_Mono } from "next/font/google";
 
 const sarabun = Sarabun({
   subsets: ['thai', 'latin'],
@@ -43,13 +48,6 @@ const mono = Roboto_Mono({
   weight: ['400', '500', '600', '700'],
   variable: '--font-mono',
   display: 'swap'
-});
-
-const plex = IBM_Plex_Sans_Thai({
-  subsets: ['thai', 'latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-plex',
-  display: 'swap',
 });
 
 // ไอคอนเว็บ — คัดจากมอคอัปบรรทัด 13 ตัวต่อตัว (วงกลมเขียว + สัญลักษณ์บาท)
@@ -106,7 +104,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="th" className={`${sarabun.variable} ${plex.variable} ${charm.variable} ${mono.variable}`}>
+    <html lang="th" className={`${sarabun.variable} ${charm.variable} ${mono.variable}`}>
       <body>{children}</body>
     </html>
   );

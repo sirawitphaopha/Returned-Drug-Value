@@ -207,8 +207,10 @@ export function renderRecordNarrow(V) {
           )}
         </div>
 
+        {/* 🚨 overscroll-behavior:contain — เลื่อนดูยาจนสุดกรอบแล้วหน้าเว็บข้างหลังต้องไม่ไหลตาม
+            (กฎกลาง pharmacy-web-logic ข้อ 28) ไม่เปลี่ยนหน้าตาสักพิกเซล เปลี่ยนแค่พฤติกรรมการเลื่อน */}
         {V.hasResults && (
-          <div style={s('margin-top:8px;border:1px solid rgba(30,36,32,.10);border-radius:12px;background:#fff;box-shadow:0 10px 26px rgba(30,36,32,.12);overflow:hidden;max-height:264px;overflow-y:auto')}>
+          <div style={s('margin-top:8px;border:1px solid rgba(30,36,32,.10);border-radius:12px;background:#fff;box-shadow:0 10px 26px rgba(30,36,32,.12);overflow:hidden;max-height:264px;overflow-y:auto;overscroll-behavior:contain')}>
             {V.results.map((r) => renderDrugOption(r, true))}
           </div>
         )}
@@ -450,7 +452,7 @@ export function renderRecordWide(V) {
               </div>
             )}
             {V.hasResults && (
-              <div style={s('position:absolute;left:0;right:0;top:100%;margin-top:6px;z-index:9;border:1px solid rgba(30,36,32,.10);border-radius:10px;background:#fff;box-shadow:0 12px 30px rgba(30,36,32,.14);overflow:hidden;max-height:290px;overflow-y:auto')}>
+              <div style={s('position:absolute;left:0;right:0;top:100%;margin-top:6px;z-index:9;border:1px solid rgba(30,36,32,.10);border-radius:10px;background:#fff;box-shadow:0 12px 30px rgba(30,36,32,.14);overflow:hidden;max-height:290px;overflow-y:auto;overscroll-behavior:contain')}>
                 {V.results.map((r) => renderDrugOption(r, false))}
               </div>
             )}
@@ -639,7 +641,7 @@ export function renderRecordWide(V) {
 
           {/* 🎯 จุดเดียวในหน้าบันทึกแบบคอมที่เลื่อนได้ (พี่กันสั่ง)
               ช่องกรอกยา · ยาที่คืนบ่อย · หัวตาราง · แผงขวา ถูกตรึงหมด ไม่ขยับตามการเลื่อน */}
-          <div style={s('flex:1;min-height:0;overflow-y:auto')}>
+          <div style={s('flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain')}>
           {/* แถบล็อตค้างอยู่ในนี้ ไม่ใช่ข้างนอก — พี่กันสั่งว่าไม่ต้องตรึงตัวนี้
               เลื่อนดูยาแล้วแถบเลื่อนหายไปเอง กรอบตารางได้ที่คืนเต็ม */}
           <div style={s('padding:8px 8px 0')}>{renderParked(V)}</div>

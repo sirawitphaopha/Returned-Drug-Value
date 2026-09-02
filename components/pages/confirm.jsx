@@ -18,10 +18,15 @@ export function renderConfirm(V) {
   if (!V.confirmOpen) return null;
   const danger = V.confirmKind !== 'normal';
 
+  // 🚨 ป๊อปที่ขอชื่อผู้ทำ ปุ่มยืนยันต้องกดไม่ได้จนกว่าจะเลือก (ผลตรวจข้อ ต-6)
+  //    บทเรียนจากหน้าต่างแก้ไขล็อต — เดิมกดได้แล้วโดนตีกลับเงียบ ดูเหมือนปุ่มเสีย
+  const okOn = V.confirmWhoOk;
   const okBtn = (
-    <div {...kb(V.confirmRun)} className={danger ? 'hv-red' : 'hv-teal'}
-      style={sx('flex:1;height:46px;border-radius:11px;color:#fff;display:flex;align-items:center;justify-content:center;font:600 14.5px Sarabun,sans-serif;cursor:pointer',
-        { background: danger ? '#c2543c' : '#2f7d5d' })}>
+    <div {...(okOn ? kb(V.confirmRun) : {})} className={okOn ? (danger ? 'hv-red' : 'hv-teal') : ''}
+      title={okOn ? '' : 'เลือกชื่อก่อนจึงจะกดได้'}
+      style={sx('flex:1;height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;font:600 14.5px Sarabun,sans-serif',
+        okOn ? { background: danger ? '#c2543c' : '#2f7d5d', color: '#fff', cursor: 'pointer' }
+             : { background: '#e9ebe8', color: '#b8bdb9', cursor: 'not-allowed' })}>
       {V.confirmOkLabel}
     </div>
   );
@@ -57,6 +62,24 @@ export function renderConfirm(V) {
                     ln.tone === 'green' ? { color: '#2f7d5d' } : ln.tone === 'red' ? { color: '#c2543c' } : ln.tone === 'soft' ? { color: '#6b746e', fontWeight: 400 } : {})}>{ln.value}</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* 🚨 ช่องเลือกชื่อผู้ทำ — โผล่เฉพาะป๊อปที่ตั้ง who ไว้
+              ต้องเลือกตรงนี้ ไม่ใช่ไปเลือกในหน้าบันทึก เพราะคนละงานกัน
+              คนที่มาลบรายการอาจไม่ใช่คนที่กรอกล็อตนั้น (บทเรียนข้อ 3.26)
+              🚨 background-color แยก ห้ามเขียน background รวบ ไม่งั้นลูกศร v หายทั้งช่อง */}
+          {V.confirmWhoLabel && (
+            <div style={s('margin-bottom:14px')}>
+              <div style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:5px')}>
+                {V.confirmWhoLabel} {!V.confirmWhoOk && <span style={s('color:#c2543c;font-weight:600')}>ต้องเลือกก่อนยืนยัน</span>}
+              </div>
+              <select value={V.confirmWho} onChange={V.onConfirmWho}
+                style={sx('width:100%;height:42px;padding:0 11px;border-radius:9px;background-color:#fff;font:400 14px/1.75 Sarabun,sans-serif;color:#1e2420;outline:none;cursor:pointer',
+                  { border: '1px solid ' + (V.confirmWhoOk ? 'rgba(30,36,32,.16)' : '#c2543c') })}>
+                <option value={''}>— เลือก{V.confirmWhoLabel} —</option>
+                {V.confirmStaff.map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
             </div>
           )}
 

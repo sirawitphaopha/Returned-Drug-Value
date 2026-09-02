@@ -303,12 +303,24 @@ export function historyVals(app, d) {
     // รายการสรุปแบบตาราง สำหรับป๊อปที่ต้องให้เห็นหลายอย่างก่อนตัดสินใจ
     confirmLines: st.confirm ? (st.confirm.lines || null) : null,
     confirmCancelLabel: st.confirm ? (st.confirm.cancelLabel || 'ยกเลิก') : 'ยกเลิก',
+    // ── ช่องเลือกชื่อผู้ทำ — ใช้กับป๊อปที่ต้องตอบผู้ตรวจได้ว่าใครกด (ผลตรวจข้อ ต-6)
+    //    ป๊อปไหนไม่ได้ตั้ง who ไว้ ช่องนี้จะไม่โผล่และไม่กั้นอะไรเลย
+    //    ยกแพตเทิร์นมาจากหน้าต่างแก้ไขล็อตทั้งดุ้น (ข้อ 3.26) ให้มือจำที่เดียว
+    confirmWhoLabel: st.confirm ? (st.confirm.who || '') : '',
+    confirmWho: st.confirmWho || '',
+    confirmWhoOk: !st.confirm || !st.confirm.who || !!String(st.confirmWho || '').trim(),
+    confirmStaff: st.staff || [],
+    onConfirmWho: (e) => app.setState({ confirmWho: e.target.value }),
     confirmRun: () => {
       const c = app.state.confirm;
       if (!c) return;
+      // 🚨 ป๊อปที่ขอชื่อผู้ทำ ต้องเลือกก่อนถึงกดได้ (ผลตรวจข้อ ต-6)
+      //    ปุ่มถูกปิดไว้อยู่แล้ว ตรงนี้เป็นด่านที่สองกันเรียกจากที่อื่น
+      const who = String(app.state.confirmWho || '').trim();
+      if (c.who && !who) return;
       // ปิดป๊อปก่อนเสมอ แล้วค่อยทำงาน — ไม่งั้นป๊อปค้างบังจอ
       // (handler บางตัวปิดเอง บางตัวลืม ทำให้พฤติกรรมไม่เหมือนกัน)
-      app.setState({ confirm: null }, () => c.run());
+      app.setState({ confirm: null }, () => c.run(who));
     },
     closeConfirm: app.closeConfirm
   };

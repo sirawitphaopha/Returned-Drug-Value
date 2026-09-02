@@ -77,6 +77,11 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       ]);
     }
 
+    // 🚨 ตั้งชื่อเครื่องก่อน ไม่งั้นหน้าต่างถามชื่อเครื่องบังจอทุกภาพ
+    //    ต้องเป็นชื่อเครื่องทดสอบ ห้ามใช้ชื่อ 8 เครื่องจริง (กฎข้อ 3.64)
+    await page.evaluate(() => {
+      try { localStorage.setItem('mrv.device', JSON.stringify('เครื่องทดสอบอัตโนมัติ')); } catch (e) {}
+    });
     await page.goto(BASE + '/', { waitUntil: 'networkidle2' });
     await wait(2500);
 
@@ -124,6 +129,12 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     } else if (where === 'history') {
       await clickText('ประวัติ');
       await wait(2200);
+    } else if (where === 'summary') {
+      await clickText('สรุป');
+      await wait(2400);
+    } else if (where === 'record') {
+      await wait(600);
+
     }
 
     const file = path.join(OUT, where + '-' + width + '.png');

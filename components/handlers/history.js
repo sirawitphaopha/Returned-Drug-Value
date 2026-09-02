@@ -309,7 +309,10 @@ export function historyActions(app) {
 
   // ต่างจากมอคอัปโดยตั้งใจ: มอคอัปกดลบแล้วหายเลย ของจริงต้องยืนยันก่อน 1 ชั้น
   app.askDeleteRecord = (r) => {
+    // 🚨 ตั้งค่าเริ่มต้นจากคนที่กำลังทำงานอยู่ตอนนี้ ไม่ใช่คนล่าสุดที่จำไว้ในฐาน
+    //    st.recorder ว่างเปล่าเสมอตอนเปิดเว็บ (กฎข้อ 3.24) จึงไม่มีทางเซ็นในชื่อคนก่อน
     app.setState({
+      confirmWho: app.state.recorder || '',
       confirm: {
         title: 'ยืนยันลบรายการนี้',
         detail: r.name + ' · ' + r.qty + ' ' + r.unit + ' · ' + money(Number(r.price) * r.qty),
@@ -319,14 +322,15 @@ export function historyActions(app) {
         //    เขียนให้กลัวเกินจริงแล้วเภสัชกรไม่กล้าลบรายการที่กรอกผิด
         note: 'รายการจะถูกย้ายไปถังขยะ · มูลค่าสะสมปีงบลดลงทันที · กู้คืนได้ที่ปุ่มถังขยะ',
         okLabel: 'ยืนยันลบ',
-        run: () => app.deleteRecord(r)
+        who: 'ผู้ที่ลบ',
+        run: (by) => app.deleteRecord(r, by)
       }
     });
   };
 
   app.closeConfirm = () => app.setState({ confirm: null });
 
-  app.deleteRecord = async (r) => {
+  app.deleteRecord = async (r, by) => {
     if (app._busyRow === r.id) return;
     app._busyRow = r.id;
 
@@ -344,12 +348,12 @@ export function historyActions(app) {
     try {
       // ส่งชื่อผู้ลบไปด้วย (ผลตรวจข้อ ต-6) — หลังบ้านรับ `by` มาตั้งแต่แรกแต่ไม่เคยมีใครส่ง
       // `deleted_by` เลยเป็นค่าว่างทุกแถว ตอบผู้ตรวจไม่ได้ว่าใครลบ
-      // ⚠️ ยังไม่บังคับกรอก — ถ้ายังไม่ได้เลือกชื่อในหน้าบันทึกจะได้ค่าว่างเหมือนเดิม
-      //    การบังคับเลือกต้องเพิ่มช่องในหน้าต่างยืนยัน = แตะหน้าตา รอพี่กันเคาะ
+      // ✅ บังคับเลือกแล้ว 2 ก.ย. 2569 — ป๊อปยืนยันมีช่อง 'ผู้ที่ลบ' และปุ่มปิดจนกว่าจะเลือก
+      //    ค่าที่ส่งมาทาง by คือชื่อที่เลือกในป๊อปนั้น ไม่ใช่ช่องผู้บันทึกในหน้าบันทึก
       const res = await app.fetchT('/api/returns/' + r.id, {
         method: 'DELETE',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ by: app.state.recorder || '' })
+        body: JSON.stringify({ by: String(by || app.state.recorder || '').trim() })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'ลบไม่สำเร็จ');

@@ -50,7 +50,7 @@ function renderFyPicks(V) {
     <div style={s('display:flex;align-items:center;gap:6px;flex-wrap:wrap')}>
       <span style={sx('font:500 11.5px/1.75 Sarabun,sans-serif', { color: V.sumMuted })}>ปีงบ</span>
       {V.fyPicks.map((y) => (
-        <div key={y.key} {...kb(y.pick)} className={(y.on ? 'hv-seg-on' : 'hv-seg-off') + ' tap'} style={sx('padding:6px 13px;border-radius:999px;cursor:pointer;font:600 12px/1.75 Sarabun,sans-serif', { background: y.on ? '#2f7d5d' : V.sumTrack, color: y.on ? '#fff' : V.sumMuted })}>{y.label}</div>
+        <div key={y.key} {...kb(y.pick)} className={(y.on ? 'hv-seg-on' : 'hv-seg-off') + ' mrv-hit'} style={sx('padding:6px 13px;border-radius:999px;cursor:pointer;font:600 12px/1.75 Sarabun,sans-serif', { background: y.on ? '#2f7d5d' : V.sumTrack, color: y.on ? '#fff' : V.sumMuted })}>{y.label}</div>
       ))}
     </div>
   );
@@ -260,17 +260,17 @@ export function renderSummaryNarrow(V) {
             </div>
           </div>
           <div style={sx('display:flex;padding:2px;border-radius:9px;gap:2px;flex:none', { background: V.togTrack })}>
-            <div {...kb(V.setLight)} className={V.togLightOn ? 'hv-bg-f6' : 'hv-txt'} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togLightBg })}>
+            <div {...kb(V.setLight)} className={(V.togLightOn ? 'hv-bg-f6' : 'hv-txt') + ' mrv-hit'} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togLightBg })}>
               <span style={s('width:11px;height:11px;border-radius:50%;background:#fff;border:1px solid rgba(30,36,32,.28)')}></span>
               <span style={sx('font:600 12px/1.75 Sarabun,sans-serif', { color: V.togLightFg })}>สว่าง</span>
             </div>
-            <div {...kb(V.setDark)} className={V.togDarkOn ? 'hv-seg-on' : 'hv-txt'} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togDarkBg })}>
+            <div {...kb(V.setDark)} className={(V.togDarkOn ? 'hv-seg-on' : 'hv-txt') + ' mrv-hit'} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togDarkBg })}>
               <span style={s('width:11px;height:11px;border-radius:50%;background:#151a17;border:1px solid rgba(255,255,255,.3)')}></span>
               <span style={sx('font:600 12px/1.75 Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
             </div>
           </div>
-          <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-ico" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 14px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>ℹ</div>
-          <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" className="hv-ico" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 15px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⚙</div>
+          <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-ico mrv-hit" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 14px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>ℹ</div>
+          <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" className="hv-ico mrv-hit" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 15px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⚙</div>
         </div>
 
         {V.sumFail ? null : (<>
