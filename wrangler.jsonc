@@ -5,5 +5,26 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2025-03-25",
   "compatibility_flags": ["nodejs_compat"],
-  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" }
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+
+  // ── บันทึกของเซิร์ฟเวอร์ (กฎกลาง pharmacy-web-logic ข้อ 31) ──────────────
+  //
+  //   ไม่มีบันทึก = เว็บพังบนเครื่องคนอื่นแล้วได้แต่เดา
+  //   เคยเสียเวลาทั้งบ่ายเดาผิด 6 รอบติด พอได้ดูข้อมูลจริงจบใน 1 นาที
+  //
+  // 🚨 ค่าตรงนี้ต้องตรงกับที่ตั้งไว้ในหน้า Cloudflare เสมอ
+  //    ถ้าไฟล์เป็น false แต่หน้าเว็บเปิดไว้ พอ deploy จากเครื่องรอบหน้าจะทับกลับเป็นปิด
+  //    แล้วบันทึกจะหายไปเงียบ ๆ โดยไม่มีใครรู้ว่าหยุดเก็บตั้งแต่เมื่อไหร่
+  //
+  // 🚨 เว็บนี้มีช่องรับ HN (mr_return.hn · mr_draft.hn) และชื่อเจ้าหน้าที่
+  //    ทุกอย่างที่เขียนลงบันทึกต้องผ่าน lib/maskHn.js ก่อนเสมอ
+  //    ตรวจด้วย  node scripts/mask-hn-test.mjs  และ  node scripts/api-log-check.mjs
+  //
+  //    แผนฟรีเก็บได้ 200,000 เหตุการณ์ต่อวัน — ห้องยามีผู้ใช้ไม่กี่คน ใช้ไม่ถึงเศษเสี้ยว
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    }
+  }
 }

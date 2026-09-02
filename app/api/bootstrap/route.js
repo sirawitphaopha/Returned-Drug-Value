@@ -1,6 +1,7 @@
 // โหลดครั้งเดียวตอนเปิดเว็บ: รายการยา + การตั้งค่าห้องยา + ยอดสะสมปีงบปัจจุบัน
 // รวม 3 อย่างไว้คำขอเดียว เพราะเน็ตโรงพยาบาลช้า ยิงทีละเส้นจะเห็นหน้าจอกระตุก
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 import { loadCatalog } from '@/lib/catalog';
 import { todayISO, fyOf, fyRange } from '@/lib/format';
@@ -71,7 +72,6 @@ export async function GET() {
       }
     });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'โหลดข้อมูลตั้งต้นไม่สำเร็จ' }, { status: 500 });
+    return apiFail("bootstrap.GET", e, "โหลดข้อมูลตั้งต้นไม่สำเร็จ");
   }
 }

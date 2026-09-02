@@ -5,6 +5,7 @@
 // ถ้ายาตัวหนึ่งถูกคืนบ่อยมาก แปลว่าอาจสั่งเกินจำเป็น
 // เอาไปคุยกับแพทย์เพื่อลดการสั่งได้ ประหยัดได้มากกว่าการเก็บยาคืนหลายเท่า
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 import { todayISO, fyRange, fyOf } from '@/lib/format';
 
@@ -37,7 +38,6 @@ export async function GET(req) {
 
     return NextResponse.json({ fyYear: fy, items: res.data || [] });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'อ่านรายการยาที่คืนบ่อยไม่สำเร็จ' }, { status: 500 });
+    return apiFail("top-returned.GET", e, "อ่านรายการยาที่คืนบ่อยไม่สำเร็จ");
   }
 }

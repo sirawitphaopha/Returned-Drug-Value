@@ -5,6 +5,7 @@
 // เดิมคำนวณปีงบจากวันนี้ตายตัว พอขึ้นปีงบใหม่ ตัวเลขปีเก่าหายหมด
 // ผู้บริหารขอดูสรุปปีที่เพิ่งจบไม่ได้เลย (ฝั่งฐานข้อมูลรองรับอยู่แล้ว แค่ API ไม่ส่งให้)
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 import { todayISO, fyRange, fyOf } from '@/lib/format';
 
@@ -56,7 +57,6 @@ export async function GET(req) {
       topDrugs: s.topDrugs || []
     });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'อ่านยอดสรุปไม่สำเร็จ' }, { status: 500 });
+    return apiFail("summary.GET", e, "อ่านยอดสรุปไม่สำเร็จ");
   }
 }

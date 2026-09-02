@@ -1,5 +1,6 @@
 // การตั้งค่าห้องยา — มีแถวเดียวเสมอ (mr_setting.id = 1) เพราะยังไม่มีระบบผู้ใช้
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 import { SOURCES } from '@/lib/format';
 
@@ -36,8 +37,7 @@ export async function GET() {
     if (error) throw new Error(error.message);
     return NextResponse.json({ setting: shape(data) });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'อ่านการตั้งค่าไม่สำเร็จ' }, { status: 500 });
+    return apiFail("settings.GET", e, "อ่านการตั้งค่าไม่สำเร็จ");
   }
 }
 
@@ -113,7 +113,6 @@ export async function PUT(req) {
 
     return NextResponse.json({ setting: shape(data) });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'บันทึกการตั้งค่าไม่สำเร็จ' }, { status: 500 });
+    return apiFail("settings.PUT", e, "บันทึกการตั้งค่าไม่สำเร็จ");
   }
 }

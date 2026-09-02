@@ -3,6 +3,7 @@
 // GET คืนข้อมูลละเอียดกว่า /api/drugs เพราะหน้านี้ต้องให้เภสัชกรดูออกว่าเป็นยาตัวไหน
 // (มี form กับหน่วยเริ่มต้นของกลุ่ม ไว้เทียบตอนจะแก้หน่วยรายตัว)
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 import { resolveUnit, FORM_UNIT, UNIT_FALLBACK } from '@/lib/units';
 import { buildDrugNames } from '@/lib/drugName';
@@ -56,8 +57,7 @@ export async function GET() {
       priced: items.filter((x) => x.hasPrice).length
     });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'โหลดราคายาไม่สำเร็จ' }, { status: 500 });
+    return apiFail("prices.GET", e, "โหลดราคายาไม่สำเร็จ");
   }
 }
 
@@ -161,7 +161,6 @@ export async function PUT(req) {
 
     return NextResponse.json({ ok: true, saved: rows.length, backfilled: backfilled });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'บันทึกราคาไม่สำเร็จ' }, { status: 500 });
+    return apiFail("prices.PUT", e, "บันทึกราคาไม่สำเร็จ");
   }
 }

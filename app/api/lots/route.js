@@ -1,6 +1,7 @@
 // รายการล็อต — 1 รอบกดบันทึก = 1 ล็อต มีเลขล็อตของตัวเอง (เช่น L690805-01)
 // ใช้ทำหน้า "แยกดูรายล็อต" เหมือนคลังสินค้าที่ดูของเข้าเป็นล็อต ๆ
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 import { todayISO, fyRange, isoOf } from '@/lib/format';
 
@@ -44,7 +45,6 @@ export async function GET(req) {
 
     return NextResponse.json({ lots: res.data || [], limit: LOT_LIMIT });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'อ่านรายการล็อตไม่สำเร็จ' }, { status: 500 });
+    return apiFail("lots.GET", e, "อ่านรายการล็อตไม่สำเร็จ");
   }
 }

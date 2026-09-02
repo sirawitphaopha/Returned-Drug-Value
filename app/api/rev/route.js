@@ -12,6 +12,7 @@
 // คำขอนี้เบามาก — ค่าสูงสุด 3 ตัวกับนับแถว 1 ครั้ง ไม่แตะข้อมูลจริงเลย
 // รวมลายเซ็นคลังยามาด้วยในเส้นเดียว จะได้ไม่ต้องยิงสองรอบทุกครั้ง
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
@@ -49,7 +50,6 @@ export async function GET() {
     });
   } catch (e) {
     // 🚨 ห้ามส่งข้อความผิดพลาดดิบกลับเบราว์เซอร์ (ผลตรวจข้อ ต-16)
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'อ่านลายเซ็นข้อมูลไม่สำเร็จ' }, { status: 500 });
+    return apiFail("rev.GET", e, "อ่านลายเซ็นข้อมูลไม่สำเร็จ");
   }
 }

@@ -4,6 +4,7 @@
 // trigger เป็น SECURITY DEFINER จึง **จับได้แม้แก้ตรงในหน้า Supabase**
 // = ไม่มีทางแก้ยาแล้วไม่ทิ้งร่องรอย
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +25,6 @@ export async function GET(req) {
 
     return NextResponse.json({ rows: res.data || [] });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'โหลดประวัติไม่สำเร็จ' }, { status: 500 });
+    return apiFail("catalog/audit.GET", e, "โหลดประวัติไม่สำเร็จ");
   }
 }

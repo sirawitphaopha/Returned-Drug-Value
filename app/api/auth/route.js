@@ -1,5 +1,6 @@
 // ตรวจรหัสผ่านร่วมของห้องยา แล้วฝังคุกกี้ไว้ 30 วัน
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { AUTH_COOKIE, AUTH_DAYS, authConfigured, authEnabled, tokenOf, expectedToken, safeEqual, issueAuthCookie } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -38,8 +39,7 @@ export async function POST(req) {
     });
     return res;
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'เข้าสู่ระบบไม่สำเร็จ' }, { status: 500 });
+    return apiFail("auth.POST", e, "เข้าสู่ระบบไม่สำเร็จ");
   }
 }
 

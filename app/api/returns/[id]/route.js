@@ -3,6 +3,7 @@
 // ห้ามแตะ unit_price เด็ดขาด — ราคาถูกแช่ไว้ตั้งแต่วันบันทึก
 // ถ้าปล่อยให้แก้ทีหลังได้ ตัวเลข KPI ย้อนหลังจะขยับตามราคาปัจจุบัน ซึ่งผิดทั้งหมด
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
@@ -58,8 +59,7 @@ export async function PATCH(req, ctx) {
 
     return NextResponse.json({ ok: true, id: id });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'แก้ไขไม่สำเร็จ' }, { status: 500 });
+    return apiFail("returns/id.PATCH", e, "แก้ไขไม่สำเร็จ");
   }
 }
 
@@ -87,7 +87,6 @@ export async function DELETE(req, ctx) {
 
     return NextResponse.json({ ok: true, id: id });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'ลบไม่สำเร็จ' }, { status: 500 });
+    return apiFail("returns/id.DELETE", e, "ลบไม่สำเร็จ");
   }
 }

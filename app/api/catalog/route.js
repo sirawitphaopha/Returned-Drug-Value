@@ -8,6 +8,7 @@
 //    เพราะรายการยาคืนเก่าที่อ้างถึงยาตัวนั้นยังต้องแสดงชื่อได้อยู่
 //    ลบจริงทำได้ทางเดียวคือเข้าไปลบใน Supabase เอง (พี่กันคนเดียว)
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
@@ -71,8 +72,7 @@ export async function GET() {
     }));
     return NextResponse.json({ drugs: drugs });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'โหลดคลังยาไม่สำเร็จ' }, { status: 500 });
+    return apiFail("catalog.GET", e, "โหลดคลังยาไม่สำเร็จ");
   }
 }
 
@@ -96,8 +96,7 @@ export async function PUT(req) {
 
     return NextResponse.json({ ok: true, id: id });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'บันทึกไม่สำเร็จ' }, { status: 500 });
+    return apiFail("catalog.PUT", e, "บันทึกไม่สำเร็จ");
   }
 }
 
@@ -114,7 +113,6 @@ export async function POST(req) {
 
     return NextResponse.json({ ok: true, id: res.data?.[0]?.id || null });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'เพิ่มยาไม่สำเร็จ' }, { status: 500 });
+    return apiFail("catalog.POST", e, "เพิ่มยาไม่สำเร็จ");
   }
 }

@@ -12,6 +12,7 @@
 // 🚨 ทุกการแก้ต้องลง mr_lot_audit — การแก้ชื่อผู้บันทึกย้อนหลังคือการเปลี่ยนหลักฐาน
 //    ว่าใครเซ็นรับล็อตนั้น ถ้าไม่เก็บไว้จะตอบผู้ตรวจไม่ได้ว่าเคยเป็นอะไรมาก่อน
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 import { SOURCES, todayISO } from '@/lib/format';
 
@@ -88,8 +89,7 @@ export async function GET(req, ctx) {
       }))
     });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'อ่านข้อมูลล็อตไม่สำเร็จ' }, { status: 500 });
+    return apiFail("lots/lot.GET", e, "อ่านข้อมูลล็อตไม่สำเร็จ");
   }
 }
 
@@ -236,7 +236,6 @@ export async function PATCH(req, ctx) {
 
     return NextResponse.json({ ok: true, changed: audit.length });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'แก้ไขล็อตไม่สำเร็จ' }, { status: 500 });
+    return apiFail("lots/lot.PATCH", e, "แก้ไขล็อตไม่สำเร็จ");
   }
 }

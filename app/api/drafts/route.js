@@ -9,6 +9,7 @@
 // 🚨 ยังเก็บในเครื่องเหมือนเดิมทุกอย่าง ตรงนี้เป็นสำเนาสำรองอีกชั้น
 //    เน็ตหลุดก็กรอกต่อได้ปกติ แล้วค่อยส่งขึ้นตอนเน็ตกลับมา
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
@@ -35,8 +36,7 @@ export async function GET(req) {
     return NextResponse.json({ drafts: Array.isArray(data) ? data : [], keepDays: KEEP_DAYS });
   } catch (e) {
     // 🚨 ห้ามส่งข้อความผิดพลาดดิบกลับเบราว์เซอร์ (ผลตรวจข้อ ต-16)
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'อ่านร่างที่กรอกค้างไม่สำเร็จ' }, { status: 500 });
+    return apiFail("drafts.GET", e, "อ่านร่างที่กรอกค้างไม่สำเร็จ");
   }
 }
 
@@ -69,8 +69,7 @@ export async function PUT(req) {
 
     return NextResponse.json({ ok: true, rows: rows.length });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'เก็บร่างขึ้นเซิร์ฟเวอร์ไม่สำเร็จ' }, { status: 500 });
+    return apiFail("drafts.PUT", e, "เก็บร่างขึ้นเซิร์ฟเวอร์ไม่สำเร็จ");
   }
 }
 
@@ -88,7 +87,6 @@ export async function DELETE(req) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'ลบร่างไม่สำเร็จ' }, { status: 500 });
+    return apiFail("drafts.DELETE", e, "ลบร่างไม่สำเร็จ");
   }
 }

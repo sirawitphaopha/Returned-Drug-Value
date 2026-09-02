@@ -13,6 +13,7 @@
 // 🚨 ทุกครั้งที่แก้ต้องมีเหตุผลกับชื่อคนแก้ และถูกบันทึกลง mr_price_fix_log
 //    การเปลี่ยนตัวเลขที่รายงานผู้บริหารไปแล้ว ต้องตอบผู้ตรวจได้ว่าใครเปลี่ยนและทำไม
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
@@ -43,8 +44,7 @@ export async function GET(req) {
       lots: Array.isArray(d.lots) ? d.lots : []
     });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'ตรวจสอบไม่สำเร็จ' }, { status: 500 });
+    return apiFail("price-fix.GET", e, "ตรวจสอบไม่สำเร็จ");
   }
 }
 
@@ -83,7 +83,6 @@ export async function POST(req) {
       valueAfter: Number(d.valueAfter || 0)
     });
   } catch (e) {
-    console.error('[api]', e);
-    return NextResponse.json({ error: 'แก้ราคาย้อนหลังไม่สำเร็จ' }, { status: 500 });
+    return apiFail("price-fix.POST", e, "แก้ราคาย้อนหลังไม่สำเร็จ");
   }
 }

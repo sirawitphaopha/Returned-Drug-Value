@@ -3,6 +3,7 @@
 // (เบราว์เซอร์ส่งมาแค่ "ยาตัวไหน กี่หน่วย ใช้ต่อหรือทำลาย")
 // เพราะสามช่องนี้คือตัวเลขที่ไปโผล่ใน KPI ผู้บริหาร ต้องมาจากของกลางเท่านั้น
 import { NextResponse } from 'next/server';
+import { apiFail } from '@/lib/apiError';
 import { getAdmin } from '@/lib/supabaseAdmin';
 import { loadCatalog } from '@/lib/catalog';
 import { SOURCES, todayISO, fyRange, isoOf } from '@/lib/format';
@@ -19,13 +20,6 @@ const EXPORT_LIMIT = 100000;
 
 function bad(message) {
   return NextResponse.json({ error: message }, { status: 400 });
-}
-
-// ข้อความจริงของ Postgres ต้องไม่หลุดถึงหน้าจอเภสัชกร (เผยโครงสร้างฐานให้คนนอก)
-// แต่ต้องโผล่ใน log ของ Cloudflare ไม่งั้นเว็บจริงพังแล้วไล่หาสาเหตุไม่ได้เลย
-function boom(tag, e, message) {
-  console.error('[' + tag + ']', e);
-  return NextResponse.json({ error: message }, { status: 500 });
 }
 
 // regex ตรวจแค่หน้าตา — 2026-02-30 กับ 3026-08-05 ผ่านฉลุย
@@ -120,7 +114,7 @@ export async function GET(req) {
       offset: offset
     });
   } catch (e) {
-    return boom('returns.GET', e, 'อ่านประวัติไม่สำเร็จ');
+    return apiFail("returns.GET", e, "อ่านประวัติไม่สำเร็จ");
   }
 }
 
@@ -253,6 +247,6 @@ export async function POST(req) {
       }
     });
   } catch (e) {
-    return boom('returns.POST', e, 'บันทึกไม่สำเร็จ');
+    return apiFail("returns.POST", e, "บันทึกไม่สำเร็จ");
   }
 }
