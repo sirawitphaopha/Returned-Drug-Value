@@ -63,8 +63,14 @@ export function sheetVals(app, d) {
     })),
     // คำอธิบายของตัวที่เลือกอยู่ — โผล่ใต้แถวชิป ไม่ต้องยัดคำอธิบายลงในชิปทุกอัน
     sheetReasonHelp: destroyReasonHelp(st.sheetReason),
-    sheetCta: sheet && sheet.kind === 'add' ? 'เพิ่ม' : 'บันทึกการแก้ไข',
-    sheetValueLabel: sheet && qty
+    // 🚨 ปุ่มที่กดไม่ได้ต้องบอกเหตุผลในตัวเอง (พี่กันเลือกแบบ ก · 2 ก.ย. 2569)
+    //    เดิมปุ่มเทายังเขียนยอดเงินจากจำนวนที่เกินเพดาน เช่น "เพิ่ม +1,350,000,000.00 ฿"
+    //    ตัวเลขหลักพันล้านสะดุดตากว่าบรรทัดเตือนสีแดงเสียอีก
+    //    คนเห็นแวบแรกตกใจว่าระบบคิดเงินผิด ทั้งที่เป็นยอดที่ไม่มีวันบันทึกได้จริง
+    sheetCta: !sheet ? '' : (qty > MAX_QTY ? 'เกินจำนวนสูงสุด'
+      : (sheet.kind === 'add' ? 'เพิ่ม' : 'บันทึกการแก้ไข')),
+    // 🚨 เกินเพดานแล้วต้องไม่โชว์ยอดเงินเลย ไม่ใช่โชว์ยอดที่ใช้ไม่ได้
+    sheetValueLabel: sheet && qty && qty <= MAX_QTY
       ? (sheet.kind === 'add' ? (reuse ? '+' : '−') : '') + money(sheet.drug.price * qty)
       : '',
     sheetConfirm: app.confirmSheet

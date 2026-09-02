@@ -142,8 +142,12 @@ export function renderRecordNarrow(V) {
               <div style={s('position:absolute;inset:4px;border:1.6px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
               <span style={s("font:700 13px/1.75 Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
             </div>
+            {/* 🚨 ระยะขอบขวาติดลบทำให้กรอบของชื่อเว็บยื่นไปทับช่องวันที่ 5 จุด
+                (ระยะขอบติดลบดึงตัวถัดไปเข้ามาในระยะในของตัวเอง — ยื่นเท่ากับเลขที่ติดลบเสมอ)
+                ถอดออกทั้งระยะขอบขวาและระยะในขวา ความกว้างรวมเท่าเดิมเป๊ะ ตัวอักษรไม่ขยับ
+                สิ่งเดียวที่หายคือแถบไฮไลต์ตอนชี้ที่เคยยื่นไปใต้ปุ่มวันที่ ซึ่งไม่ควรมีอยู่แต่แรก */}
             <div {...kb(V.goHome)} aria-label="กลับไปหน้าบันทึก" className="hv-home"
-              style={s('font:700 19px/1.35 Krub,sans-serif;cursor:pointer;display:inline-block;border-radius:8px;margin:0 -7px;padding:5px 7px 5px;white-space:nowrap')}>มูลค่ายาคืน</div>
+              style={s('font:700 19px/1.35 Krub,sans-serif;cursor:pointer;display:inline-block;border-radius:8px;margin:0 0 0 -7px;padding:5px 0 5px 7px;white-space:nowrap')}>มูลค่ายาคืน</div>
           </div>
           <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
             {/* 🚨 ปุ่มแถวหัวเตี้ยลงเหลือ 38px (พี่กันถาม "บีบได้อีกมั้ย")
