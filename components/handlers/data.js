@@ -1,4 +1,5 @@
 // โหลดข้อมูลตั้งต้นจากเซิร์ฟเวอร์ แล้วทับของที่กู้มาจากเครื่อง
+import { logFail } from '@/lib/clientLog';
 import { LS, SS, writeCache, readSS, writeSS, clearSS, clearAllSS, writeLS, fetchT, myTabId, tabAlive } from '../helpers';
 import { todayISO } from '@/lib/format';
 
@@ -143,7 +144,7 @@ export function dataActions(app) {
       //    ตระกูลเดียวกับบั๊ก "คำตอบเก่าทับสิ่งที่ผู้ใช้กำลังพิมพ์" ในข้อ 3.50
       if (app.state.demo) return;
       app.setState({ serverDrafts: others, keepDays: data.keepDays || 7 });
-    } catch (e) {}
+    } catch (e) { logFail('loadServerDrafts (ร่างที่ค้างบนเซิร์ฟเวอร์)', e); }
   };
 
   // ลบร่างของหน้าต่างนี้ออกจากเซิร์ฟเวอร์ — ใช้ตอนบันทึกสำเร็จหรือกดล้าง
@@ -277,7 +278,7 @@ export function dataActions(app) {
           qty: Number(data.qty || 0)
         }
       });
-    } catch (e) {}
+    } catch (e) { logFail('refreshFy (ยอดสะสมปีงบ ตอนเปิดเว็บ)', e); }
   };
 
   // ── คลังยาซิงก์ข้ามเว็บ ────────────────────────────────────────────────────
@@ -304,7 +305,7 @@ export function dataActions(app) {
       app._drugRev = key;
 
       await app.pullDrugs();
-    } catch (e) {}
+    } catch (e) { logFail('syncDrugs (ถามลายเซ็นคลังยา)', e); }
   };
 
   // ดึงรายการยาชุดใหม่มาทับ — ใช้ร่วมกันระหว่าง syncDrugs กับตัวถามลายเซ็น
@@ -322,7 +323,7 @@ export function dataActions(app) {
       clearSS(SS.catalog);
       app.setState({ drugs: list, catalog: [] });
       app.toast('คลังยามีการแก้ไข อัปเดตให้แล้ว', '', true);
-    } catch (e) {}
+    } catch (e) { logFail('pullDrugs (คลังยาชุดใหม่)', e); }
   };
 
   // ── อัปเดตสดข้ามเครื่อง ──────────────────────────────────────────────────
@@ -402,7 +403,7 @@ export function dataActions(app) {
         pcuFull: g.pcuFull || {},
         defaultSource: g.defaultSource
       });
-    } catch (e) {}
+    } catch (e) { logFail('pullSetting (การตั้งค่ากับรายชื่อ รพ.สต.)', e); }
   };
 
   // โหลดเฉพาะหน้าที่กำลังเปิดอยู่ — หน้าอื่นแคชถูกล้างไปแล้ว เข้าเมื่อไหร่ค่อยโหลด
@@ -435,7 +436,7 @@ export function dataActions(app) {
           zeroPriced: Number(d.zeroPriced || 0)
         }
       });
-    } catch (e) {}
+    } catch (e) { logFail('refreshFy (ยอดสะสมปีงบ)', e); }
   };
 
   // คอมห้องยาเปิดเว็บค้างข้ามคืนเป็นเรื่องปกติ ถ้าไม่ทวนวัน ยาที่คืนเช้าวันใหม่

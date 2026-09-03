@@ -6,7 +6,7 @@
 // ตอนรันในเครื่องที่ยังไม่ตั้ง MRV_PASSWORD ประตูนี้เปิดทิ้งไว้ ไม่ล็อกอะไรเลย
 // แต่เว็บจริงล็อกเสมอ — ลืมตั้งรหัสแล้วปิดตายทั้งเว็บ ไม่ใช่เปิดโล่ง (ดู lib/auth.js)
 import { NextResponse } from 'next/server';
-import { AUTH_COOKIE, authConfigured, authEnabled, authCookieValid } from '@/lib/auth';
+import { AUTH_COOKIE, authConfigured, authEnabled, authCookieValid, authCookieStale, authCookieOpts, issueAuthCookie } from '@/lib/auth';
 
 // ── ตาข่ายกันโค้ดแปลกปลอม (ผลตรวจข้อ ก-14) ────────────────────────────────
 // พี่กันสั่ง 27 ส.ค. 2569: "ก14 ทำ และต้องทำด้วย แต่ทำตอนท้ายก็ได้"
@@ -90,7 +90,21 @@ export async function middleware(req) {
   // ตรวจบัตรผ่านฝั่งเซิร์ฟเวอร์เอง — ทั้งลายเซ็นและอายุ (ผลตรวจข้อ ก-15)
   // 🚨 ห้ามกลับไปเทียบค่าคงที่ตรง ๆ อีก บัตรจะกลายเป็นบัตรตลอดชีพทันที
   const got = req.cookies.get(AUTH_COOKIE);
-  if (got && (await authCookieValid(got.value))) return pass();
+  if (got && (await authCookieValid(got.value))) {
+    // ── ต่ออายุบัตรให้เองเมื่อใช้ไปเกินครึ่งอายุแล้ว (กฎกลางข้อ 24) ──────────
+    //
+    // 🚨 นับจาก "ครั้งสุดท้ายที่ใช้" ไม่ใช่ "วันที่ออกบัตร"
+    //    คอมห้องยาเปิดเว็บทุกวัน แต่เดิมจู่ ๆ วันหนึ่งก็ถูกเด้งออกกลางงาน
+    //    เภสัชกรที่กำลังกรอกยาคืนค้างอยู่ต้องหยุดไปตามหารหัส ซึ่งไม่มีใครจำได้
+    //
+    // 🚨 ต่อเมื่อเกินครึ่งอายุเท่านั้น ไม่ใช่ต่อทุกคำขอ
+    //    ต่อทุกคำขอ = เขียนคุกกี้ใหม่หลายสิบครั้งต่อนาทีโดยไม่ได้อะไรเพิ่ม
+    const res = pass();
+    if (authCookieStale(got.value)) {
+      res.cookies.set(AUTH_COOKIE, await issueAuthCookie(), authCookieOpts());
+    }
+    return res;
+  }
 
   // เส้นทาง API ตอบเป็นรหัส 401 ไม่ใช่พาไปหน้าเข้าสู่ระบบ
   // (ฝั่งจอจะได้รู้ว่าต้องพาไปกรอกรหัสใหม่ ไม่ใช่ได้หน้า HTML มาแล้วแปลง JSON พัง)

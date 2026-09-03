@@ -34,6 +34,12 @@ const ก = await apiFail('returns.POST', new Error(ช่าง), 'บันท
 const ไทยปน = 'ล็อตของ รพ.สต. หนองเชียงทูน ซ้ำกับผู้ป่วย HN 14820 เลข 9999001';
 const ข = await apiFail('lots.PATCH', new Error(ไทยปน), 'แก้ล็อตไม่สำเร็จ');
 
+
+// ③ ก้อนของ supabase-js ที่ไม่ใช่ Error — กับดักที่ 4 ของสกิลข้อ 31
+//    เว็บนี้ทุก route ดึง .message ออกมาก่อนโยนอยู่แล้ว ตัวนี้เป็นตาข่ายกันอนาคต
+const ก้อน = { message: 'duplicate key value violates unique constraint "mr_return_hn_idx"',
+  code: '23505', details: 'Key (hn)=(1482055) already exists.', hint: null };
+const ค = await apiFail('drafts.PUT', ก้อน, 'บันทึกร่างไม่สำเร็จ');
 apiWarn('drafts.PUT', new Error('เขียนร่างไม่สำเร็จ hn 1482055'));
 console.error = เดิม;
 
@@ -75,6 +81,15 @@ const ตรวจ = (ok, ดี, แย่) => {
   'ข้อความไทยที่ตั้งใจเขียนยังส่งถึงผู้ใช้ครบใจความ',
   'ข้อความไทยถูกกลืนหาย ผู้ใช้จะไม่รู้ว่าเกิดอะไรขึ้น');
 
+ตรวจ(ค._body.error === 'บันทึกร่างไม่สำเร็จ',
+  'ก้อนของ supabase-js อ่านออก ไม่ได้ [object Object]',
+  'ก้อนของ supabase-js กลายเป็น — ' + ค._body.error);
+ตรวจ(บันทึก.indexOf('23505') >= 0,
+  'รหัสฐาน 23505 ยังอ่านได้ในบันทึก ไม่โดนปิดบัง',
+  'รหัสฐานโดนปิดบังไปด้วย เปิดบันทึกมาแล้วไล่ต้นเหตุไม่ได้');
+ตรวจ(บันทึก.indexOf('[object Object]') < 0,
+  'ไม่มี [object Object] โผล่ในบันทึกเลย',
+  'เจอ [object Object] ในบันทึก — ร้องแล้วอ่านไม่รู้เรื่อง');
 console.log('');
 console.log(ผิด ? '  ❌ ยังไม่ผ่าน ' + ผิด + ' ข้อ' : '  ✅ ผ่านครบ');
 process.exitCode = ผิด ? 1 : 0;

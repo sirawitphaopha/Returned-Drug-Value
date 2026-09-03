@@ -1,7 +1,7 @@
 // ตรวจรหัสผ่านร่วมของห้องยา แล้วฝังคุกกี้ไว้ 30 วัน
 import { NextResponse } from 'next/server';
 import { apiFail } from '@/lib/apiError';
-import { AUTH_COOKIE, AUTH_DAYS, authConfigured, authEnabled, tokenOf, expectedToken, safeEqual, issueAuthCookie } from '@/lib/auth';
+import { AUTH_COOKIE, AUTH_DAYS, authConfigured, authEnabled, tokenOf, expectedToken, safeEqual, issueAuthCookie, authCookieOpts } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,13 +30,9 @@ export async function POST(req) {
 
     const res = NextResponse.json({ ok: true });
     // ค่าในคุกกี้ไม่ใช่ตัว token ตรง ๆ แล้ว แต่เป็นบัตรที่เซ็นพร้อมวันออกบัตร (ผลตรวจข้อ ก-15)
-    res.cookies.set(AUTH_COOKIE, await issueAuthCookie(), {
-      httpOnly: true,          // จาวาสคริปต์ในหน้าเว็บอ่านค่านี้ไม่ได้
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: AUTH_DAYS * 24 * 60 * 60
-    });
+    // 🚨 ตัวเลือกของคุกกี้อยู่ที่ lib/auth.js ที่เดียว — middleware ก็ใช้ตัวเดียวกันตอนต่ออายุ
+    //    เขียนแยกสองที่แล้วแก้ที่หนึ่งลืมอีกที่ = บัตรที่ออกกับที่ต่ออายุมีคุณสมบัติไม่เหมือนกัน
+    res.cookies.set(AUTH_COOKIE, await issueAuthCookie(), authCookieOpts());
     return res;
   } catch (e) {
     return apiFail("auth.POST", e, "เข้าสู่ระบบไม่สำเร็จ");

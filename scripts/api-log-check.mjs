@@ -48,7 +48,7 @@ console.log('     ' + (catchBad ? '❌' : '✅') + ' catch ทั้งหมด
 
 // ── ② ห้าม console.error นอกตัวช่วยกลาง ───────────────────────────────────
 console.log('');
-console.log('  ② console.error ต้องอยู่ใน lib/apiError.js ที่เดียว');
+console.log('  ② console.error ต้องอยู่ในตัวช่วยกลางเท่านั้น (apiError · clientLog)');
 const src = [].concat(
   walk('app', [], /\.(js|jsx)$/),
   walk('components', [], /\.(js|jsx)$/),
@@ -56,7 +56,11 @@ const src = [].concat(
 );
 let leak = 0;
 for (const f of src) {
-  if (f.endsWith('lib/apiError.js')) continue;
+  // ตัวช่วยกลางมี 2 ตัว — หลังบ้านกับฝั่งเบราว์เซอร์ (กฎกลางข้อ 31)
+  //   lib/apiError.js   ร้องจากเครื่องของ Cloudflare → ไปโผล่ที่ Workers Logs
+  //   lib/clientLog.js  ร้องจากเครื่องของเภสัชกร → ไปโผล่ที่ F12 Console
+  // 🚨 สองตัวนี้เป็นที่เดียวที่เขียน console.error ได้ ที่อื่นต้องเรียกผ่านสองตัวนี้เท่านั้น
+  if (f.endsWith('lib/apiError.js') || f.endsWith('lib/clientLog.js')) continue;
   const lines = fs.readFileSync(f, 'utf8').split(/\r?\n/);
   lines.forEach((l, i) => {
     if (!/console\.error\(/.test(l)) return;
