@@ -2,9 +2,14 @@
 // ตัดออก 2 อย่างตามแผน: ปุ่มล้างข้อมูลเดโม กับปุ่มออกจากระบบ (ยังไม่มีระบบเข้าสู่ระบบ)
 // ช่องที่ว่างตรงนั้นใส่ปุ่มไปหน้าจัดการราคายาแทน โครงกล่องกับความสูงปุ่มเท่าเดิม
 import { s, sx, kb } from '../helpers';
+import { renderSearchBox } from './thaibox';
 
 const LABEL = "font:600 11px/1.75 Sarabun,sans-serif;letter-spacing:.08em;color:rgba(30,36,32,.45)";
 const HINT = 'font:400 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:20px';
+// การ์ดขาว — ชุดเดียวกับหน้าเกี่ยวกับเป๊ะ (พี่กันสั่ง 3 ก.ย. 2569)
+// 'ในเพจตั้งค่า มันสีแปลกๆ ไม่เหมือนในเกี่ยวกับที่มันจะมีช่องกรอบสีขาว'
+// สองหน้านี้เปิดจากปุ่มที่อยู่ข้างกัน หน้าตาจึงต้องเป็นชุดเดียวกัน
+const CARD = 'background:#fff;border:1px solid rgba(47,125,93,.16);border-radius:16px;padding:18px 18px 4px';
 const FIELD = 'width:100%;height:46px;padding:0 13px;border:1px solid rgba(30,36,32,.16);border-radius:10px;background:#f6f7f4;font:400 14.5px Sarabun,sans-serif;margin-bottom:6px';
 
 export function renderSettings(V) {
@@ -21,16 +26,30 @@ export function renderSettings(V) {
     //    ไม่งั้นฉากหลังถูกล็อกทั้งที่ไม่มีอะไรซ้อนอยู่ = เลื่อนดูเนื้อหาข้างในไม่ได้
     <div style={s('width:100%;max-width:640px;margin:0 auto;padding:18px 16px 60px;display:flex;flex-direction:column')}>
 
-      <div {...kb(V.closeSettings)} className="hv-bg-f6 tap" aria-label="กลับไปหน้าก่อนหน้า"
-        style={s('align-self:flex-start;display:flex;align-items:center;gap:7px;padding:8px 14px;border:1px solid rgba(30,36,32,.14);border-radius:9px;background:#fff;font:500 13px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer;margin-bottom:16px')}>
-        <span aria-hidden="true">←</span> กลับ
+      {/* ── ปุ่มกลับกับหัวเรื่องอยู่แถวเดียวกัน (พี่กันสั่ง 3 ก.ย. 2569) ──────────
+          "เอาคำว่า ตั้งค่า กับ เกี่ยวกับ อยู่เสมอปุ่มกดกลับได้ไหม"
+          เดิมหัวเรื่องอยู่กลางหน้าใต้ปุ่มกลับ กินไปอีกแถวโดยไม่ได้อะไรเพิ่ม
+          ตอนนี้กวาดตาแถวเดียวรู้ครบว่าอยู่หน้าไหนและกดกลับตรงไหน
+          🚨 โทนเดียวกับหัวหน้ารายการ Lot ที่พี่กันเคาะไปแล้ว */}
+      <div style={s('display:flex;align-items:center;gap:12px;margin-bottom:14px')}>
+        {/* 🚨 ปุ่มกลับเหลือลูกศรอย่างเดียว ตัดคำว่า กลับ ออก (พี่กันเลือกแบบ ก · 3 ก.ย. 2569)
+            ปุ่มกล่องมีข้อความอยู่ข้างหัวเรื่องตัวใหญ่ สองชิ้นน้ำหนักต่างกันมากจนดูไม่เข้าคู่
+            เหลือลูกศรแล้วหัวเรื่องเป็นตัวเด่นตัวเดียวในแถว
+            🚨 ต้องมี aria-label เพราะไม่มีข้อความให้โปรแกรมอ่านจออ่านแล้ว
+            🚨 ลูกศรวาดด้วย SVG ไม่ใช่ตัวอักษร ← ซึ่งหน้าตาขึ้นกับฟอนต์ของเครื่อง
+            🚨 ปุ่ม 38 จุดเล็กกว่าเกณฑ์นิ้ว แต่คลาส tap ขยายพื้นที่กดออกด้านละ 11 จุด
+               และไม่มีปุ่มอื่นวางติดกัน จึงไม่มีพื้นที่กดทับกัน (กฎข้อ 3.55) */}
+        <div {...kb(V.closeSettings)} className="hv-bg-f6 tap" aria-label="กลับไปหน้าก่อนหน้า"
+          style={s('width:38px;height:38px;border:1px solid rgba(30,36,32,.14);border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;color:#414a44;cursor:pointer;flex:none')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+          </svg>
+        </div>
+        <div role="heading" aria-level="1" style={s('font:700 21px/1.3 Krub,sans-serif;color:#24614a;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>ตั้งค่า</div>
       </div>
 
-      {/* 🚨 หัวเรื่องกึ่งกลาง ใช้ฟอนต์ลายมือแบบเดียวกับหน้าเกี่ยวกับ
-          (พี่กันสั่ง 1 ก.ย. 2569 "เอาไว้ตรงกลาง เเละใส่ฟ้อน")
-          สองหน้านี้เป็นคู่กัน เปิดจากปุ่มที่อยู่ข้างกัน หน้าตาหัวเรื่องจึงต้องเหมือนกัน
-          🚨 ต้องมี padding-bottom กันหางฟอนต์ Charmonman ที่ลากลงมาทับของข้างล่าง */}
-      <div role="heading" aria-level="1" style={s('text-align:center;font:700 26px/1.3 Krub,sans-serif;color:#24614a;padding-bottom:2px;margin-bottom:2px')}>ตั้งค่า และเกี่ยวกับ</div>
+
+      <div style={s(CARD + ';margin-top:13px')}>
 
           <div style={s(LABEL + ';margin-bottom:7px')}>หน่วยงาน</div>
           <input value={V.orgName} onChange={V.onOrgName} placeholder="ชื่อห้องยา / โรงพยาบาล" style={s(FIELD)} />
@@ -68,7 +87,15 @@ export function renderSettings(V) {
           )}
           {V.favNotFull && (
             <>
-              <input value={V.favQuery} onChange={V.onFavQuery} placeholder="ค้นชื่อยาเพื่อเพิ่มเข้าช่อง" style={s('width:100%;height:44px;padding:0 13px;border:1px solid rgba(30,36,32,.16);border-radius:10px;background:#f6f7f4;font:400 14px Sarabun,sans-serif')} />
+              {/* ช่องค้นหามาตรฐานของทั้งเว็บ (thaibox.jsx) */}
+              <div style={s('display:flex')}>
+                {renderSearchBox({
+                  value: V.favQuery, onChange: V.onFavQuery,
+                  placeholder: 'ค้นชื่อยาเพื่อเพิ่มเข้าช่อง',
+                  font: '400 14px/1.75 var(--font-sarabun), Sarabun, sans-serif',
+                  h: 44, bg: '#f6f7f4', ariaLabel: 'ค้นชื่อยาเพื่อเพิ่มเข้าช่อง',
+                })}
+              </div>
               <div style={s('display:flex;flex-direction:column;gap:6px;margin-top:6px;margin-bottom:20px')}>
                 {V.favResults.map((fr) => (
                   <div key={fr.id} {...kb(fr.add)} className="hv-bg-e3f" style={s('display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;background:#eef6f1;cursor:pointer')}>
@@ -255,6 +282,7 @@ export function renderSettings(V) {
             )}
           </div>
 
+      </div>
     </div>
   );
 }

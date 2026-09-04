@@ -6,6 +6,7 @@ import { renderDrugName } from './drugname';
 import { renderExportBtn } from './exportbtn';
 import { skelSummary } from './skeleton';
 import { renderLoadFail } from './loadfail';
+import { renderPageHead, HEAD_PAD } from './pagehead';
 
 // แถบบอกสถานะบนสุดของหน้าสรุป — ไม่มีในมอคอัป (มอคอัปมีข้อมูลอยู่ในเครื่องเลยไม่ต้องรอ)
 // ของจริงต้องรอเซิร์ฟเวอร์ ถ้าไม่บอกอะไรเลย ผู้ใช้จะเห็น 0.00 กราฟว่าง
@@ -245,20 +246,33 @@ export function renderSummaryNarrow(V) {
   return (
     <div style={sx('width:100%;min-height:100%;flex:1 0 auto', { background: V.sumBg, color: V.sumFg })}>
       <div style={s('width:100%;max-width:520px;margin:0 auto;padding:14px 20px 24px')}>
-        {renderSumBanner(V)}
-        <div style={s('margin-bottom:14px')}>{renderFyPicks(V)}</div>
+        {/* 🚨 หัวใช้ตัวกลาง components/pages/pagehead.jsx ตัวเดียวกับหน้าบันทึกและหน้าประวัติ
+            พี่กันวัดด้วยตาแล้วจับได้ว่าปุ่ม ℹ ⚙ ขยับทั้งสามหน้า — ขอบบน 11/18/15
+            ตัวกลางลอกค่าจากหน้าบันทึกมาเป๊ะ จึงตรงกันเองโดยไม่ต้องไล่จำ
+            🚨 ฝั่งคอม (renderSummaryWide) ห้ามแตะเด็ดขาด
+            🚨 บรรทัดล่างเขียนแค่ "สรุป" ปุ่มปีงบอยู่แถวถัดไปแล้ว เขียนซ้ำไม่ได้
+               (พี่กันสั่ง "ไม่เอา ซ้ำ") */}
+        <div style={s(HEAD_PAD + ';margin:-14px -20px 0')}>
+          {renderPageHead({
+            onAbout: V.openAbout, onSettings: V.openSettings,
+            sub: 'สรุป',
+            // 🚨 โหมดสว่างห้ามส่งสีเข้าไป ต้องใช้ค่าเริ่มต้นชุดเดียวกับอีกสองหน้า
+            //    เดิมส่ง V.sumBorder (จางกว่า 0.10 เทียบกับ 0.14) และคลาส hv-ico
+            //    ทำให้ขอบปุ่มจางกว่า และเอาเมาส์ชี้แล้วเป็นสีเขียวคนละแบบกับอีกสองหน้า
+            //    (พี่กันเห็นเองแล้วทัก 4 ก.ย. 2569)
+            //    โหมดมืดยังต้องส่ง ไม่งั้นปุ่มกลืนพื้นมืดจนมองไม่เห็น
+            tone: V.sumDark
+              ? { mark: V.sumGreen, markFg: V.sumMarkFg, muted: V.sumMuted, border: V.sumBorder, ico: 'hv-ico', btnBg: V.sumPanel }
+              : { mark: V.sumGreen, markFg: V.sumMarkFg },
+          })}
+        </div>
 
-        <div style={s('display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px')}>
-          <div style={s('display:flex;align-items:center;gap:9px;min-width:0')}>
-            <div style={sx('width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;flex:none', { background: V.sumGreen })}>
-              <div style={s('position:absolute;inset:4px;border:1.6px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
-              <span style={sx("font:700 13px/1.75 Sarabun,sans-serif;line-height:1", { color: V.sumMarkFg })}>฿</span>
-            </div>
-            <div style={s('min-width:0')}>
-              <div style={s('font:700 15px/1.2 Sarabun,sans-serif')}>มูลค่ายาคืน</div>
-              <div style={sx('font:400 11px/1.75 Sarabun,sans-serif', { color: V.sumMuted })}>ปีงบประมาณ {V.fyLabel}</div>
-            </div>
-          </div>
+        {renderSumBanner(V)}
+
+        {/* แถวสอง — ปุ่มปีงบกับสวิตช์ธีมอยู่ด้วยกัน ทั้งคู่เป็นตัวเลือกมุมมองของหน้านี้
+            เดิมสวิตช์ธีมอยู่แถวหัวคู่กับปุ่มสองตัว จนปุ่ม ⚙ ถูกดันล้นออกนอกขอบจอ */}
+        <div style={s('display:flex;align-items:center;gap:10px;margin-bottom:14px')}>
+          <div style={s('min-width:0;flex:1')}>{renderFyPicks(V)}</div>
           <div style={sx('display:flex;padding:2px;border-radius:9px;gap:2px;flex:none', { background: V.togTrack })}>
             <div {...kb(V.setLight)} className={(V.togLightOn ? 'hv-bg-f6' : 'hv-txt') + ' mrv-hit'} style={sx('padding:6px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px', { background: V.togLightBg })}>
               <span style={s('width:11px;height:11px;border-radius:50%;background:#fff;border:1px solid rgba(30,36,32,.28)')}></span>
@@ -269,8 +283,11 @@ export function renderSummaryNarrow(V) {
               <span style={sx('font:600 12px/1.75 Sarabun,sans-serif', { color: V.togDarkFg })}>เข้ม</span>
             </div>
           </div>
-          <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-ico mrv-hit" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 14px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>ℹ</div>
-          <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" className="hv-ico mrv-hit" style={sx('width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 15px Sarabun,sans-serif;cursor:pointer;flex:none', { border: '1px solid ' + V.sumBorder, color: V.sumMuted })}>⚙</div>
+          {/* ปุ่มส่งออกย่อลงมาอยู่ข้างสวิตช์ธีม (พี่กันสั่ง 4 ก.ย. 2569)
+              เดิมเป็นแถบเขียวเต็มความกว้าง ตัวใหญ่กว่าทุกอย่างในหน้า ทั้งที่ใช้นาน ๆ ครั้ง
+              🚨 ยังต้องมีข้อความกำกับ ห้ามเหลือแต่ไอคอน (กฎข้อ 3.52)
+                 ใช้คำว่า CSV สั้นที่สุดเท่าที่ยังบอกได้ว่ากดแล้วได้อะไร */}
+          {renderExportBtn(V.exportCsv, 'CSV', {})}
         </div>
 
         {V.sumFail ? null : (<>
@@ -285,10 +302,6 @@ export function renderSummaryNarrow(V) {
           <div style={sx('font:400 12px/1.75 Sarabun,sans-serif;font-variant-numeric:tabular-nums', { color: V.sumMuted })}>ยาที่คืนมา <strong style={sx('font-weight:600', { color: V.sumFg })}>{V.fyGrossLabel}</strong> · ใช้ต่อได้ {V.fyReusePct}</div>
         </div>
 
-        {/* ปุ่มส่งออกย้ายขึ้นมาไว้ใต้ตัวเลขใหญ่ (พี่กันสั่ง)
-            เดิมอยู่ล่างสุดของหน้า ต้องเลื่อนผ่านกราฟ + 10 อันดับ + สัดส่วนแหล่งที่มา กว่าจะเจอ
-            ฝั่งคอมปุ่มนี้อยู่แถวหัวเรื่องอยู่แล้ว ตำแหน่งเลยใกล้เคียงกันทั้งสองแบบ */}
-        <div style={s('margin-bottom:10px')}>{renderExportBtn(V.exportCsv, V.exportLabel, { block: true })}</div>
 
         <div style={s('display:flex;gap:9px;margin-bottom:10px')}>
           <div style={sx('flex:1;border-radius:12px;padding:11px 13px;min-width:0', { background: V.sumLostPanel, border: '1px solid ' + V.sumBorder })}>

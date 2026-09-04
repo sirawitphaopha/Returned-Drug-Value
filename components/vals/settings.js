@@ -53,8 +53,11 @@ export function settingsVals(app, d) {
       add: () => app.addFav(dr.id)
     })),
 
+    // 🚨 ปุ่มที่เลือกอยู่ใช้เขียวของเว็บ ไม่ใช่ดำแบบมอคอัป (กฎเดิมของโปรเจกต์นี้)
+    //    ปุ่ม 'เข้ม' ใช้เขียวอยู่แล้ว แต่ปุ่ม 'สว่าง' ยังเป็นดำจากมอคอัป หลุดมาตั้งแต่แรก
+    //    ผลคือสองปุ่มที่ทำหน้าที่คู่กันเป็นคนละสี ดูเหมือนคนละระบบ (พี่กันทัก 3 ก.ย. 2569)
     themeLightOn: !d.dark,
-    themeLightBg: d.dark ? '#f0f1ee' : '#1e2420',
+    themeLightBg: d.dark ? '#f0f1ee' : '#2f7d5d',
     themeLightFg: d.dark ? '#414a44' : '#fff',
     themeDarkBg: d.dark ? '#2f7d5d' : '#f0f1ee',
     themeDarkFg: d.dark ? '#fff' : '#414a44',

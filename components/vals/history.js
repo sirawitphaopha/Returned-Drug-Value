@@ -156,6 +156,16 @@ export function historyVals(app, d) {
   };
 
   return {
+    // ── ช่องค้นหน้าประวัติฝั่งมือถือ — โครงสามชั้นกันวรรณยุกต์โดนตัด ────────
+    //
+    // 🚨 กฎข้อ 3.69 · ช่องกรอกทุกชนิดตัดตัวอักษรที่ล้นออกนอกตัวเองเสมอ ปิดไม่ได้
+    //    "นี้ นั้น" ไม้โทโดนหั่นครึ่ง (พี่กันเห็นเองในเว็บจริง 2 ก.ย. 2569)
+    //    ตอนนั้นแก้แค่ช่องค้นยาในหน้าบันทึก ช่องนี้หลุดไป
+    //
+    // ✅ 3 ก.ย. 2569 ยกเป็นตัวกลาง components/pages/thaibox.jsx ใช้ทุกช่องค้นหาในเว็บ
+    //    ตัวกลางหาชั้นวาดจากกล่องแม่เอง จึงไม่ต้องมี ref คู่ละสองตัวทุกช่องอีก
+    // 🚨 ระยะขอบขวาต้องตรงกับที่ช่องกรอกใช้เป๊ะ ไม่งั้นข้อความที่วาดกับขีดกะพริบเหลื่อมกัน
+    histQPadRight: st.histSwapped ? '150px' : ((st.histQuery || '').trim() ? '44px' : '13px'),
     histQuery: st.histQuery,
     onHistQuery: app.onHistQuery,
     // ลืมสลับแป้นพิมพ์ — ต้องบอกผู้ใช้ว่าระบบค้นด้วยคำว่าอะไรให้
@@ -265,6 +275,15 @@ export function historyVals(app, d) {
     // ── ถังขยะ · ดูรายล็อต · ช่วงวันที่เลือกเอง ─────────────────────────────
     histTrash: st.histTrash,
     openLots: app.openLots,
+
+    // ── แผ่นตัวกรองฝั่งมือถือ (โทนเดียวกับหน้ารายการ Lot) ──────────────
+    histFilterOpen: !!st.histFilterOpen,
+    openHistFilter: app.openHistFilter,
+    closeHistFilter: app.closeHistFilter,
+    // 🚨 ต้องนับถังขยะด้วย — เปิดถังขยะค้างไว้แล้วซ่อนปุ่มไป
+    //    จะงงว่าทำไมรายการที่บันทึกวันนี้หายหมด
+    histFilterCount: (st.histRange === 'custom' ? 1 : 0) + (st.histTrash ? 1 : 0)
+      + (st.histLot ? 1 : 0),
     toggleTrash: app.toggleTrash,
     trashLabel: st.histTrash ? 'กลับไปดูรายการปกติ' : 'ถังขยะ',
     histLot: st.histLot,

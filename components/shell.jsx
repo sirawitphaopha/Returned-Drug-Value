@@ -3,13 +3,13 @@
 import { s, sx, kb } from './helpers';
 import { renderVals } from './vals';
 import { renderRecordNarrow, renderRecordWide, renderSaveBar } from './pages/record';
-import { renderHistoryNarrow, renderHistoryWide } from './pages/history';
+import { renderHistoryNarrow, renderHistoryWide, renderHistFilter } from './pages/history';
 import { renderSummaryNarrow, renderSummaryWide } from './pages/summary';
 import { renderNavNarrow, renderNavWide } from './pages/nav';
 import { renderSheet } from './pages/sheet';
 import { renderSettings } from './pages/settings';
 import { renderPrices, renderPriceBar } from './pages/prices';
-import { renderLots, renderLotSlip } from './pages/lots';
+import { renderLots, renderLotSlip, renderLotsFilter } from './pages/lots';
 import { renderLotEdit } from './pages/lotedit';
 import { renderDeviceAsk } from './pages/device';
 import { renderParkedSheet } from './pages/parkedsheet';
@@ -163,6 +163,10 @@ export function renderShell(app) {
       {V.isPrices && renderPriceBar(V)}
       {renderHisImport(V)}
       {renderLotSlip(V)}
+      {/* แผ่นตัวกรองรายการ Lot ฝั่งมือถือ — วาดนอกหน้าเหมือนหน้าต่างซ้อนตัวอื่น */}
+      {renderLotsFilter(V)}
+      {/* แผ่นตัวกรองหน้าประวัติฝั่งมือถือ */}
+      {renderHistFilter(V)}
       {renderLotEdit(V)}
       {renderParkedSheet(V)}
       {renderDeviceAsk(V)}

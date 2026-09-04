@@ -142,6 +142,16 @@ export function lotsVals(app, d) {
     lotsHasFilter: !!(String(st.lotsQuery || '').trim() || st.lotsSrcFilter || st.lotsSiteFilter),
     clearLotsFilters: app.clearLotsFilters,
 
+    // ── แผ่นตัวกรองฝั่งมือถือ (พี่กันเลือกแบบ ก · 3 ก.ย. 2569) ──────────
+    lotsFilterOpen: !!st.lotsFilterOpen,
+    openLotsFilter: app.openLotsFilter,
+    closeLotsFilter: app.closeLotsFilter,
+    // 🚨 ตัวเลขบนปุ่มเฟืองต้องนับ "ช่วงวันที่ที่กรอกเอง" ด้วย ไม่ใช่แค่สองช่องเลือก
+    //    ของที่ถูกซ่อนไปแล้วไม่มีอะไรบอกว่ายังทำงานอยู่ นอกจากตัวเลขนี้
+    //    ไม่นับคำค้น เพราะช่องค้นยังอยู่นอกแผ่น ตาเห็นอยู่แล้ว
+    lotsFilterCount: (st.lotsSrcFilter ? 1 : 0) + (st.lotsSiteFilter ? 1 : 0)
+      + (st.lotsRange === 'custom' ? 1 : 0),
+
     // ── ช่วงวันที่ที่เลือกเอง ─────────────────────────────────────────
     lotsFrom: st.lotsFrom || '',
     lotsTo: st.lotsTo || '',

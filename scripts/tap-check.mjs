@@ -48,12 +48,22 @@ const MEASURE = (MIN) => {
   const boxes = [];
   for (const el of els) {
     const r = el.getBoundingClientRect();
+    const pr = el.parentElement ? el.parentElement.getBoundingClientRect() : null;
+    const wrapOk = !!(pr && pr.height >= MIN && pr.width >= MIN
+      && Math.abs(pr.top - r.top) <= 4 && Math.abs(pr.left - r.left) <= 4);
     if (r.width === 0 || r.height === 0) continue;
     if (r.bottom < 0 || r.top > window.innerHeight * 4) continue;
     const label = (el.getAttribute('aria-label') || el.textContent || el.tagName).trim().replace(/\s+/g, ' ').slice(0, 30);
-    boxes.push({ label: label, x: r.x, y: r.y, w: r.width, h: r.height, tap: el.className.indexOf('tap') >= 0 });
+    boxes.push({ wrapOk, label: label, x: r.x, y: r.y, w: r.width, h: r.height, tap: el.className.indexOf('tap') >= 0 });
   }
-  const small = boxes.filter((b) => b.h < MIN || b.w < MIN);
+  // 🚨 ช่องกรอกที่อยู่ในกรอบใหญ่ ให้วัดกรอบที่ตาเห็น ไม่ใช่ตัวช่องกรอก
+  //    ช่องค้นหามาตรฐานย้ายขอบไปไว้ที่กล่องนอก ช่องกรอกจึงเตี้ยกว่ากรอบ 2 จุดเสมอ
+  //    นิ้วแตะที่ไหนในกรอบก็โฟกัสช่องกรอก พื้นที่กดจริงคือกรอบนอก
+  //    (ตัวตรวจเคยฟ้องว่าช่องค้นหาเล็กเกิน ทั้งที่กรอบสูง 44 เต็ม — 3 ก.ย. 2569)
+  const small = boxes.filter((b) => {
+    if (b.h >= MIN && b.w >= MIN) return false;
+    return !b.wrapOk;
+  });
 
   // พื้นที่กดที่ขยายแล้ว (.tap ขยายด้านละ 11px) ทับกันไหม
   const hit = (b) => b.tap
@@ -94,6 +104,13 @@ const MEASURE = (MIN) => {
         page.click('button[type="submit"]')
       ]);
     }
+    // 🚨 ตั้งชื่อเครื่องก่อนเสมอ ไม่งั้นหน้าต่างถามชื่อเครื่องบังจอ
+    //    แล้วตัวตรวจจะไปวัดปุ่มในหน้าต่างนั้นแทน แล้วฟ้องว่าปุ่มของหน้าจริงทับกัน
+    //    (เจอ 3 ก.ย. 2569 — ฟ้องผิด 3 คู่ ทั้งที่โค้ดถูก)
+    // 🚨 ต้องเป็นชื่อเครื่องทดสอบ ห้ามใช้ชื่อ 8 เครื่องจริง (กฎข้อ 3.64)
+    await page.evaluate(() => {
+      try { localStorage.setItem('mrv.device', JSON.stringify('เครื่องทดสอบอัตโนมัติ')); } catch (e) {}
+    });
     await page.goto(BASE + '/', { waitUntil: 'networkidle2' });
     await wait(2500);
 

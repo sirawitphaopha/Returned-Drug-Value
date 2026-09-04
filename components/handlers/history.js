@@ -170,6 +170,12 @@ export function historyActions(app) {
   app.onHistTo = (e) => app.setState({ histTo: e.target.value, histRange: 'custom' }, () => app.loadHistory());
 
   // ถังขยะ — ของที่ลบไปแล้วยังอยู่ในฐาน กู้คืนได้
+  // ── แผ่นตัวกรองฝั่งมือถือ — โทนเดียวกับหน้ารายการ Lot (พี่กันสั่ง 3 ก.ย. 2569) ──
+  //    ช่องวันที่ ถังขยะ และป้ายกรอง Lot ย้ายเข้าแผ่นที่เลื่อนขึ้นจากขอบล่าง
+  //    เหลือบนหัวแค่ ช่องค้นหา ชิปช่วงเวลา และปุ่มรายการ Lot ที่พี่กันขอให้เด่น
+  app.openHistFilter = () => app.setState({ histFilterOpen: true });
+  app.closeHistFilter = () => app.setState({ histFilterOpen: false });
+
   app.toggleTrash = () => {
     app.setState({ histTrash: !app.state.histTrash, histLot: '' }, () => app.loadHistory());
   };

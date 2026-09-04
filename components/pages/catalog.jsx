@@ -5,6 +5,7 @@
 import { s, sx, kb } from '../helpers';
 import { skelTableTag } from './skeleton';
 import { renderLoadFail } from './loadfail';
+import { renderSearchBox } from './thaibox';
 
 // หัวตารางตรึงใต้แถบค้นหาที่ตรึงอยู่ก่อนแล้ว — ระยะวัดจริงจาก ResizeObserver ผ่าน --cathead
 const TH = 'padding:9px 10px;text-align:left;font:600 12px/1.75 Sarabun,sans-serif;color:#fff;background:#2f7d5d;white-space:nowrap;position:sticky;top:var(--cathead,150px);z-index:2';
@@ -50,23 +51,18 @@ export function renderCatalog(V) {
           {/* 🚨 ช่องค้นหากิน 25% ของแถว ที่เหลือ 75% เป็นของตัวกรอง (พี่กันสั่ง 25 ส.ค. 2569)
               ชิป 9 อันกับปุ่มล้างต้องอยู่บรรทัดเดียวกันให้ได้ ไม่งั้นแถบที่ตรึงไว้สูงขึ้นอีกแถว
               flex:0 1 = ย่อได้แต่ห้ามขยาย · min-width กันแคบจนพิมพ์แล้วอ่านไม่ออกบนจอเล็ก */}
-          <div style={s('flex:0 1 25%;min-width:170px;position:relative')}>
-            <input
-              value={V.catSearch}
-              onChange={(e) => V.setCatSearch(e.target.value)}
-              placeholder="ค้นหาชื่อยา ชื่อการค้า ตัวย่อ"
-              style={sx('width:100%;height:38px;box-sizing:border-box;border:1.5px solid #dfe5e1;border-radius:10px;padding:0 13px;font:400 13.5px/1.75 Sarabun,sans-serif;color:#1e2420;outline:none',
-                { paddingRight: V.catSwapped ? '150px' : '44px' })}
-            />
-            {V.catSwapped && (
-              <span style={s('position:absolute;right:42px;top:50%;transform:translateY(-50%);font:600 11px/1.75 Sarabun,sans-serif;color:#2f7d5d;background:#e7f2ec;border-radius:6px;padding:3px 8px;white-space:nowrap;pointer-events:none')}>
-                ค้นว่า {V.catSwapLabel}
-              </span>
-            )}
-            {V.catHasSearch && (
-              <span {...kb(V.clearCatSearch)} aria-label="ล้างช่องค้นหา" className="tap hv-bg-eef" title="ล้างช่องค้นหา"
-                style={s('position:absolute;right:8px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b746e;font:400 13px/1.75 Sarabun,sans-serif')}>✕</span>
-            )}
+          {/* ช่องค้นหามาตรฐานของทั้งเว็บ (thaibox.jsx) — พี่กันตั้งเป็นกฎ 3 ก.ย. 2569
+              🚨 ช่องนี้กิน 25% ของแถว ที่เหลือเป็นของตัวกรอง (พี่กันสั่ง 25 ส.ค. 2569) */}
+          <div style={s('display:flex;flex:0 1 25%;min-width:170px')}>
+            {renderSearchBox({
+              value: V.catSearch,
+              onChange: (e) => V.setCatSearch(e.target.value),
+              onClear: V.clearCatSearch,
+              placeholder: 'ค้นหาชื่อยา ชื่อการค้า ตัวย่อ',
+              font: '400 13.5px/1.75 var(--font-sarabun), Sarabun, sans-serif',
+              h: 38, swapLabel: V.catSwapped ? V.catSwapLabel : '',
+              ariaLabel: 'ค้นหาชื่อยา ชื่อการค้า ตัวย่อ',
+            })}
           </div>
 
           <div style={s('flex:1 1 300px;min-width:0;display:flex;gap:6px;flex-wrap:wrap;align-items:center')}>

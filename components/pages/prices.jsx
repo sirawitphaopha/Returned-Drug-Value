@@ -3,6 +3,7 @@
 import { s, sx, kb } from '../helpers';
 import { skelCard } from './skeleton';
 import { renderLoadFail } from './loadfail';
+import { renderSearchBox } from './thaibox';
 
 export function renderPrices(V) {
   return (
@@ -33,7 +34,15 @@ export function renderPrices(V) {
           นำเข้าราคาจาก HIS
         </div>
 
-        <input value={V.priceQuery} onChange={V.onPriceQuery} placeholder="ค้นชื่อยา" style={s('width:100%;height:46px;padding:0 14px;border:1px solid rgba(30,36,32,.16);border-radius:12px;background:#f6f7f4;font:400 15px Sarabun,sans-serif;color:#1e2420')} />
+        {/* ช่องค้นหามาตรฐานของทั้งเว็บ (thaibox.jsx) — พี่กันตั้งเป็นกฎ 3 ก.ย. 2569 */}
+        <div style={s('display:flex')}>
+          {renderSearchBox({
+            value: V.priceQuery, onChange: V.onPriceQuery,
+            placeholder: 'ค้นชื่อยา',
+            font: '400 15px/1.75 var(--font-sarabun), Sarabun, sans-serif',
+            h: 46, bg: '#f6f7f4', ariaLabel: 'ค้นชื่อยา',
+          })}
+        </div>
 
         <div style={s('display:flex;gap:6px;margin-top:10px;flex-wrap:wrap')}>
           {V.priceFilters.map((f) => (

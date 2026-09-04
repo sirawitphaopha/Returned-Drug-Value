@@ -305,20 +305,8 @@ export function recordVals(app, d) {
     // ── ช่องค้นยา ────────────────────────────────────────────────────────────
     query: st.query,
     searchRef: app.searchRef,
-    searchDrawRef: app.searchDrawRef,
-    // 🚨 ช่องกรอกโปร่งใส ตัวอักษรที่เห็นวาดด้วยกล่องธรรมดา จึงต้องเลื่อนตามกัน
-    //    ไม่งั้นพิมพ์ยาวเกินช่องแล้วตัวอักษรค้างที่เดิม ขีดกะพริบวิ่งหนีไปคนละที่
-    onSearchScroll: (e) => {
-      const d = app.searchDrawRef && app.searchDrawRef.current;
-      if (d) d.scrollLeft = e.target.scrollLeft;
-    },
-    // เลิกโฟกัสแล้วเลื่อนกลับไปต้นข้อความ ให้เห็นชื่อยาตั้งแต่ตัวแรก
-    onSearchBlur: () => {
-      const i = app.searchRef && app.searchRef.current;
-      const d = app.searchDrawRef && app.searchDrawRef.current;
-      if (i) i.scrollLeft = 0;
-      if (d) d.scrollLeft = 0;
-    },
+    // ✅ 3 ก.ย. 2569 ช่องนี้ใช้ช่องค้นหามาตรฐาน components/pages/thaibox.jsx แล้ว
+    //    ตัวกลางหาชั้นวาดจากกล่องแม่เอง จึงไม่ต้องมี ref คู่กับตัวเลื่อนตามอีก
     searchPlaceholder: 'ค้นชื่อยา (' + st.drugs.length + ' รายการ)',
     // พิมพ์ใหม่ = เด้งไฮไลต์กลับไปแถวแรกเสมอ
     onQuery: (e) => app.setState({ query: e.target.value, hi: 0 }),

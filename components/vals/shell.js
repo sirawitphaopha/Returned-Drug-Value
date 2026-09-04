@@ -87,7 +87,8 @@ export function shellVals(app, d) {
     anyModalOpen: !!(
       st.confirm || st.sheet || st.result ||
       st.hisOpen || st.slipLot || st.lotEdit || st.showOtherDrafts ||
-      st.deviceAsk || st.reasonAsk || st.catEdit || st.catLog || st.priceFix
+      st.deviceAsk || st.reasonAsk || st.catEdit || st.catLog || st.priceFix ||
+      st.lotsFilterOpen || st.histFilterOpen
     ),
     // สีปุ่มที่เลือกอยู่ใช้เขียวของเว็บ ไม่ใช่ดำแบบมอคอัป — ชุดเดียวกับปุ่มเพิ่ม/แหล่งที่มา
     // ธงบอกว่าตอนนี้ดูแบบคอมอยู่ไหม ใช้เลือกคลาสสีตอนเอาเมาส์ชี้

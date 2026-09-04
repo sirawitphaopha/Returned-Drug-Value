@@ -1,10 +1,12 @@
 // หน้าประวัติการบันทึก — คัดจากมอคอัป (คอม 224–265 · มือถือ 267–313)
 // เพิ่มจากต้นฉบับอย่างเดียวคือข้อความ "กำลังโหลด" เพราะของจริงต้องรอเซิร์ฟเวอร์
-import { s, sx, kb } from '../helpers';
+import { s, sx, kb, Z } from '../helpers';
+import { renderPageHead, HEAD_PAD } from './pagehead';
 import { renderExportBtn } from './exportbtn';
 import { renderDrugName } from './drugname';
 import { skelTable, skelCard } from './skeleton';
 import { renderLoadFail } from './loadfail';
+import { renderSearchBox } from './thaibox';
 
 // แถบเครื่องมือเสริม — ไม่มีในมอคอัป
 // เดิมมีแค่ 4 ปุ่มช่วงเวลาสำเร็จรูป + ตัดที่ 60 แถว แล้วบอกให้ "กรองช่วงวันที่ให้แคบลง"
@@ -65,20 +67,15 @@ export function renderHistoryWide(V) {
         {/* ช่องค้นหา — ระบบเดียวกับหน้าคลังยาและหน้าบันทึก (พี่กันสั่ง 25 ส.ค. 2569)
             รองรับลืมสลับแป้นพิมพ์ + ป้ายบอกคำที่ค้นจริง + ปุ่มล้าง
             เว้นที่ว่างขวาตามสิ่งที่โผล่จริง ไม่งั้นตัวหนังสือที่พิมพ์จะลอดไปใต้ป้าย */}
-        <div style={s('position:relative;width:320px;flex:none')}>
-          <input value={V.histQuery} onChange={V.onHistQuery}
-            placeholder="ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลข Lot"
-            style={sx('width:100%;height:42px;box-sizing:border-box;padding:0 13px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;font:400 14px Sarabun,sans-serif',
-              { paddingRight: V.histSwapped ? '150px' : (V.histHasSearch ? '42px' : '13px') })} />
-          {V.histSwapped && (
-            <span style={s('position:absolute;right:40px;top:50%;transform:translateY(-50%);font:600 11px/1.75 Sarabun,sans-serif;color:#2f7d5d;background:#e7f2ec;border-radius:6px;padding:3px 8px;white-space:nowrap;pointer-events:none')}>
-              ค้นว่า {V.histSwapLabel}
-            </span>
-          )}
-          {V.histHasSearch && (
-            <span {...kb(V.clearHistQuery)} aria-label="ล้างช่องค้นหา" className="tap hv-bg-eef" title="ล้างช่องค้นหา"
-              style={s('position:absolute;right:7px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b746e;font:400 13px/1.75 Sarabun,sans-serif')}>✕</span>
-          )}
+        {/* ช่องค้นหามาตรฐานของทั้งเว็บ (thaibox.jsx) — พี่กันตั้งเป็นกฎ 3 ก.ย. 2569 */}
+        <div style={s('display:flex;width:320px;flex:none')}>
+          {renderSearchBox({
+            value: V.histQuery, onChange: V.onHistQuery, onClear: V.clearHistQuery,
+            placeholder: 'ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลข Lot',
+            font: '400 14px/1.75 var(--font-sarabun), Sarabun, sans-serif',
+            h: 42, swapLabel: V.histSwapped ? V.histSwapLabel : '',
+            ariaLabel: 'ค้นหาในประวัติ',
+          })}
         </div>
         <div style={s('display:flex;gap:6px')}>
           {V.ranges.map((g) => (
@@ -186,72 +183,146 @@ export function renderHistoryWide(V) {
   );
 }
 
+
+// ── แผ่นตัวกรองหน้าประวัติ ฝั่งมือถือ ────────────────────────────────────────
+// โทนเดียวกับแผ่นของหน้ารายการ Lot ทุกอย่าง (พี่กันสั่ง 3 ก.ย. 2569)
+// เก็บของที่ถูกย้ายออกจากหัวหน้าไว้ครบ — ช่วงวันที่ · ถังขยะ · ป้ายกรอง Lot
+//
+// 🚨 กดพื้นหลังปิดได้ ไม่ใช่การกระทำที่ย้อนยาก ปิดแล้วตัวกรองยังเหมือนเดิม
+// 🚨 ใช้ Z.panel จากตารางชั้นกลาง ห้ามเขียนเลขเอง (กฎข้อ 3.68)
+export function renderHistFilter(V) {
+  if (!V.histFilterOpen) return null;
+  const ป้าย = 'font:600 11.5px/1.6 Sarabun,sans-serif;color:#414a44;margin:0 0 6px';
+  const ช่องวัน = 'height:44px;padding:0 10px;border-radius:9px;background-color:#fff;font:400 16px Sarabun,sans-serif;flex:1;min-width:0;box-sizing:border-box';
+  return (
+    <>
+      <div {...kb(V.closeHistFilter)} aria-label="ปิดตัวกรอง"
+        style={sx('position:fixed;inset:0;background:rgba(20,26,22,.34)', { zIndex: Z.panel })} />
+      <div role="dialog" aria-modal="true" aria-label="ตัวกรองประวัติ"
+        style={sx('position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -5px 22px rgba(0,0,0,.16);padding:10px 16px 20px;max-height:82vh;overflow-y:auto;overscroll-behavior:contain',
+          { zIndex: Z.panel + 1 })}>
+        <div aria-hidden="true" style={s('width:36px;height:4px;border-radius:99px;background:#d7dbd6;margin:0 auto 12px')} />
+
+        <div style={s(ป้าย)}>ช่วงเวลา</div>
+        <div style={s('display:flex;gap:7px;flex-wrap:wrap')}>
+          {V.ranges.map((g) => (
+            <div key={g.key} {...kb(g.pick)} className={g.on ? 'hv-seg-on' : 'hv-seg-off'}
+              style={sx('height:40px;padding:0 16px;border-radius:999px;display:inline-flex;align-items:center;font:500 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;white-space:nowrap', { background: g.bg, color: g.fg })}>{g.label}</div>
+          ))}
+        </div>
+
+        <div style={sx(ป้าย, { marginTop: '16px' })}>หรือกำหนดวันเอง</div>
+        <div style={s('display:flex;gap:8px;align-items:center')}>
+          <input type="date" value={V.histFrom} onChange={V.onHistFrom} aria-label="ตั้งแต่วันที่"
+            style={sx(ช่องวัน, { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
+          <span style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;flex:none')}>ถึง</span>
+          <input type="date" value={V.histTo} onChange={V.onHistTo} aria-label="ถึงวันที่"
+            style={sx(ช่องวัน, { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
+        </div>
+
+        {/* ถังขยะเป็นสวิตช์สลับมุมมอง ไม่ใช่ตัวกรองธรรมดา จึงแยกหัวข้อของตัวเอง
+            🚨 ต้องเห็นชัดว่ากำลังเปิดอยู่ไหม เปิดค้างแล้วลืมคือที่มาของ "รายการวันนี้หายไปไหน" */}
+        <div style={sx(ป้าย, { marginTop: '16px' })}>มุมมอง</div>
+        <div {...kb(V.toggleTrash)} className={V.histTrash ? 'hv-teal' : 'btn-back'}
+          style={sx('height:46px;border-radius:11px;display:flex;align-items:center;justify-content:center;gap:8px;font:600 13px/1.75 Sarabun,sans-serif;cursor:pointer',
+            { background: V.histTrash ? '#2f7d5d' : '#fff', color: V.histTrash ? '#fff' : '#414a44',
+              border: '1px solid ' + (V.histTrash ? '#2f7d5d' : 'rgba(30,36,32,.14)') })}>
+          {V.trashLabel}
+        </div>
+
+        {V.histLot && (
+          <>
+            <div style={sx(ป้าย, { marginTop: '16px' })}>กรองอยู่ที่ Lot เดียว</div>
+            <div {...kb(V.clearLot)} className="hv-bg-e3f"
+              style={s('height:46px;border-radius:11px;background:#e3f0e8;color:#2f7d5d;border:1px solid rgba(47,125,93,.34);display:flex;align-items:center;justify-content:center;gap:8px;font:600 13px/1.75 Sarabun,sans-serif;cursor:pointer')}>
+              Lot {V.histLot} · กดเพื่อเลิกกรอง
+            </div>
+          </>
+        )}
+
+        <div style={s('display:flex;gap:9px;margin-top:18px')}>
+          <div {...kb(V.closeHistFilter)} aria-label="ดูผลการกรอง" className="hv-teal"
+            style={s('flex:1;height:46px;border-radius:11px;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;font:600 13px/1.75 Sarabun,sans-serif;cursor:pointer')}>
+            ดูผล {V.histCountLabel}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function renderHistoryNarrow(V) {
   return (
     <div style={s('width:100%;max-width:520px;margin:0 auto;min-height:100%;flex:1 0 auto')}>
-      <div style={s('padding:16px 20px 14px;background:#fff;border-bottom:1px solid rgba(30,36,32,.07)')}>
-        <div style={s('display:flex;align-items:center;gap:10px;margin-bottom:10px')}>
-          <div style={s('width:30px;height:30px;border-radius:8px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;position:relative;flex:none')}>
-            <div style={s('position:absolute;inset:4px;border:1.6px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
-            <span style={s("font:700 13px/1.75 Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
-          </div>
-          <div role="heading" aria-level="1" style={s('font:600 18px Sarabun,sans-serif;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>{V.histTitle || 'ประวัติการบันทึก'}</div>
-          <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-bg-f6 mrv-hit" style={s('margin-left:auto;width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
-          <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" className="hv-bg-f6 mrv-hit" style={s('width:34px;height:34px;border-radius:8px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
+      {/* 🚨 หัวใช้ตัวกลาง components/pages/pagehead.jsx ตัวเดียวกับอีกสองหน้า
+          ห้ามวาดเอง ไม่งั้นปุ่ม ℹ ⚙ เหลื่อมกันอีก (พี่กันจับได้ 4 ก.ย. 2569) */}
+      <div style={s('background:#fff;border-bottom:1px solid rgba(30,36,32,.07)')}>
+        <div style={s(HEAD_PAD)}>
+          {renderPageHead({
+          onAbout: V.openAbout, onSettings: V.openSettings,
+          sub: (<>{V.histTitle || 'ประวัติ'} · {V.histCountLabel} · <span style={s('font:700 11.5px/1.45 Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{V.histTotalLabel}</span></>),
+          })}
         </div>
-        {/* ฝั่งมือถือ — ระบบเดียวกับฝั่งคอมทุกอย่าง ต่างแค่ขนาดกับสีพื้น */}
-        <div style={s('position:relative;width:100%;margin-bottom:9px')}>
-          <input value={V.histQuery} onChange={V.onHistQuery}
-            placeholder="ชื่อยา · HN · ชื่อคนบันทึก · เลข Lot"
-            style={sx('width:100%;height:44px;box-sizing:border-box;padding:0 13px;border:1px solid rgba(30,36,32,.14);border-radius:10px;background:#f6f7f4;font:400 14.5px Sarabun,sans-serif',
-              { paddingRight: V.histSwapped ? '150px' : (V.histHasSearch ? '44px' : '13px') })} />
-          {V.histSwapped && (
-            <span style={s('position:absolute;right:42px;top:50%;transform:translateY(-50%);font:600 11px/1.75 Sarabun,sans-serif;color:#2f7d5d;background:#e7f2ec;border-radius:6px;padding:3px 8px;white-space:nowrap;pointer-events:none')}>
-              ค้นว่า {V.histSwapLabel}
-            </span>
-          )}
-          {V.histHasSearch && (
-            <span {...kb(V.clearHistQuery)} aria-label="ล้างช่องค้นหา" className="tap hv-bg-eef" title="ล้างช่องค้นหา"
-              style={s('position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#6b746e;font:400 14px Sarabun,sans-serif')}>✕</span>
+
+      <div style={s('padding:0 20px 14px')}>
+        {/* ช่องค้นหา + ปุ่มตัวกรอง อยู่แถวเดียวกัน โทนเดียวกับหน้ารายการ Lot */}
+        <div style={s('display:flex;align-items:center;gap:8px;margin-bottom:9px')}>
+        {renderSearchBox({
+          value: V.histQuery, onChange: V.onHistQuery, onClear: V.clearHistQuery,
+          placeholder: 'ชื่อยา · HN · ชื่อคนบันทึก · เลข Lot',
+          font: '400 14.5px/1.75 var(--font-sarabun), Sarabun, sans-serif',
+          h: 44, bg: '#f6f7f4', swapLabel: V.histSwapped ? V.histSwapLabel : '',
+          ariaLabel: 'ค้นหาในประวัติ',
+        })}
+        {/* ปุ่มเปิดแผ่นตัวกรอง — ชุดเดียวกับหน้ารายการ Lot
+            🚨 ตัวเลขบอกว่ามีตัวกรองที่ถูกซ่อนไว้ทำงานอยู่กี่ชั้น
+               ที่สำคัญที่สุดคือถังขยะ เปิดค้างไว้แล้วซ่อนไป จะงงว่ารายการวันนี้หายไปไหน */}
+        <div {...kb(V.openHistFilter)} aria-label="ตัวกรองเพิ่มเติม" className="btn-back"
+          style={sx('position:relative;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none',
+            { border: '1px solid ' + (V.histFilterCount ? 'rgba(47,125,93,.40)' : 'rgba(30,36,32,.14)'),
+              background: V.histFilterCount ? '#f2f8f4' : '#fff',
+              color: V.histFilterCount ? '#2f7d5d' : '#414a44' })}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 6h16" /><path d="M7 12h10" /><path d="M10 18h4" />
+          </svg>
+          {!!V.histFilterCount && (
+            <span aria-hidden="true"
+              style={s('position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:#2f7d5d;color:#fff;font:700 10px/17px Sarabun,sans-serif;text-align:center;box-sizing:border-box')}>{V.histFilterCount}</span>
           )}
         </div>
-        {/* ชิปช่วงเวลาฝั่งมือถือ — สูง 44px เต็มเกณฑ์นิ้ว (ผลตรวจข้อ ต-12)
-            🚨 ถอดคลาส .tap ออกจากชิปที่วางเรียงติดกัน
-               .tap ขยายพื้นที่กดออกด้านละ 11px ชิปที่ห่างกัน 6px จึงทับกันหมดแถว
-               กดชิปหนึ่งแล้วโดนชิปข้าง ๆ · ขยายตัวชิปเองแทนแล้วไม่ต้องพึ่ง .tap
-            🚨 ฝั่งเดสก์ท็อป (renderHistoryWide) ห้ามแตะ พี่กันสั่ง "อย่าไปหลงแก้ในเดสก์ท็อป"
-               เมาส์ชี้แม่นกว่านิ้วมาก ปุ่มเล็กบนคอมไม่ใช่ปัญหา */}
-        <div style={s('display:flex;gap:8px;flex-wrap:wrap')}>
+        </div>
+        {/* ── ชิปช่วงเวลา + ปุ่มรายการ Lot (เกลาใหม่ 3 ก.ย. 2569) ─────────────
+            พี่กันสั่ง "เกลาอันนี้ เป็นโทนเดียวกันด้วยละกัน เเต่ให้ปุ่มดู lot เด่นนะ"
+            = ทำโทนเดียวกับหัวหน้ารายการ Lot ที่เพิ่งเคาะไป
+
+            เดิม 5 แถว  หัวเว็บ · ค้นหา · ชิป+รายการ Lot+ถังขยะ (ตกบรรทัด) · ช่องวันที่ · ยอด
+            ใหม่ 4 แถว  หัวเว็บ+ยอด · ค้นหา+ตัวกรอง · ชิป · ปุ่มรายการ Lot
+
+            🚨 ชิปเลื่อนแนวนอนแทนการตกบรรทัด หัวจึงสูงเท่าเดิมเสมอไม่ว่าจอแคบแค่ไหน
+            🚨 ห้ามใส่คลาส .tap ชิปห่างกัน 8 จุด ส่วน .tap ขยายพื้นที่กดด้านละ 11 จุด
+               พื้นที่กดจะทับกัน เล็งกดช่วงหนึ่งแล้วโดนอีกช่วง (กฎข้อ 3.55)
+            🚨 ฝั่งเดสก์ท็อป (renderHistoryWide) ห้ามแตะ พี่กันสั่งไว้ตลอด */}
+        <div className="mrv-xscroll" style={s('display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain')}>
           {V.ranges.map((g) => (
-            <div key={g.key} {...kb(g.pick)} className={g.on ? 'hv-seg-on' : 'hv-seg-off'} style={sx('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px/1.75 Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
+            <div key={g.key} {...kb(g.pick)} className={g.on ? 'hv-seg-on' : 'hv-seg-off'}
+              style={sx('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px/1.75 Sarabun,sans-serif;cursor:pointer;white-space:nowrap;flex:none', { background: g.bg, color: g.fg })}>{g.label}</div>
           ))}
-          {/* เด่นกว่าชิปช่วงเวลาแบบเดียวกับฝั่งคอม — ของสองอย่างที่ทำคนละเรื่องกัน
-              ไม่ควรหน้าตาเหมือนกัน (กฎ "อะไรที่คล้ายกันทำให้เหมือนกัน" ใช้กับของที่คล้ายกันจริง) */}
-          <div {...kb(V.openLots)} className="hv-bg-e3f" style={s('min-height:44px;padding:0 16px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(47,125,93,.34);font:600 13px/1.75 Sarabun,sans-serif;cursor:pointer;background:#e3f0e8;color:#2f7d5d')}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
+        </div>
+
+        {/* ปุ่มรายการ Lot — พี่กันสั่งให้เด่น จึงเป็นปุ่มเขียวเต็มพื้นเต็มความกว้าง
+            🚨 แยกออกจากแถวชิปโดยตั้งใจ ชิปที่เลือกอยู่ก็เขียวเข้มเหมือนกัน
+               วางปนกันแล้วตาแยกไม่ออกว่าอันไหนคือช่วงเวลาที่เลือก อันไหนคือปุ่มไปอีกหน้า */}
+        <div {...kb(V.openLots)} aria-label="ดูเป็นรายการ Lot" className="hv-teal"
+          style={s('margin-top:9px;height:46px;border-radius:12px;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font:600 13.5px/1.75 Sarabun,sans-serif;cursor:pointer')}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
             <path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M3 6h.01" /><path d="M3 12h.01" /><path d="M3 18h.01" />
           </svg>
-            รายการ Lot
-          </div>
-          <div {...kb(V.toggleTrash)} className={V.histTrash ? 'hv-seg-on' : 'hv-seg-off'} style={sx('min-height:44px;padding:0 15px;border-radius:999px;display:inline-flex;align-items:center;font:500 13px/1.75 Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>{V.trashLabel}</div>
-          {/* 🚨 เขียน "Lot" เป็นภาษาอังกฤษเสมอ ห้ามแปลว่า "ชุด" (พี่กันสั่ง — แคลร์เคยแปลผิดมาแล้ว)
-              ตรงนี้หลุดมาจากรอบก่อน เพิ่งเจอตอนไล่ทำหน้ารายการ Lot */}
-          {V.histLot && (
-            <div {...kb(V.clearLot)} className="hv-bg-e3f tap" style={s('display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px/1.75 Sarabun,sans-serif;cursor:pointer')}>Lot {V.histLot} ✕</div>
-          )}
+          ดูเป็นรายการ Lot
         </div>
-        <div style={s('display:flex;align-items:center;gap:6px;margin-top:9px')}>
-          <input type="date" className="mrv-hit-input" value={V.histFrom} onChange={V.onHistFrom} style={sx("flex:1;min-width:0;height:38px;padding:0 9px;border-radius:8px;background:#f6f7f4;font:400 16px Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.14)') })} />
-          <span style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;flex:none')}>ถึง</span>
-          <input type="date" className="mrv-hit-input" value={V.histTo} onChange={V.onHistTo} style={sx("flex:1;min-width:0;height:38px;padding:0 9px;border-radius:8px;background:#f6f7f4;font:400 16px Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.14)') })} />
-        </div>
+      </div>
       </div>
 
       <div style={s('padding:14px 20px 20px')}>
-        <div style={s('display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;font:400 12px/1.75 Sarabun,sans-serif;color:#6b746e')}>
-          <span>{V.histCountLabel}</span>
-          <span style={s("font:600 12.5px/1.75 Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{V.histTotalLabel}</span>
-        </div>
 
         {/* ฝั่งมือถือเป็นการ์ด ไม่ใช่ตาราง โครงจางจึงต้องเป็นการ์ดตาม */}
         {(V.histLoading || V.skelDemo) && (

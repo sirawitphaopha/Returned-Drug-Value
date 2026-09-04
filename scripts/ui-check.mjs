@@ -97,7 +97,13 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     if (where === 'lots') {
       await clickText('ประวัติ');
       await wait(1800);
-      await clickText('รายการ Lot');
+      // 🚨 หาปุ่มด้วย aria-label ก่อน — ข้อความบนปุ่มเปลี่ยนได้ (มือถือเป็น "ดูเป็นรายการ Lot")
+      //    ตัวตรวจที่หาปุ่มด้วยข้อความจะเงียบ ๆ ถ่ายภาพหน้าผิดมาให้โดยไม่มีอะไรเตือน
+      const ไปLot = await page.evaluate(() => {
+        const b = document.querySelector('[aria-label="ดูเป็นรายการ Lot"]');
+        if (b) { b.click(); return true; } return false;
+      });
+      if (!ไปLot) await clickText('รายการ Lot');
       await wait(2500);
       // รายงานตัวเลือกในดรอปดาวน์กรอง — ต้องเห็นว่ามี รพ.สต. ให้เลือกครบทุกแห่ง
       const opts = await page.evaluate(() => {
@@ -107,6 +113,35 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       });
       log('ตัวเลือกในดรอปดาวน์กรอง ' + opts.length + ' รายการ:');
       log('   ' + opts.join(' · '));
+    } else if (where === 'lotsfilter') {
+      // แผ่นตัวกรองรายการ Lot ฝั่งมือถือ (แบบ ก · พี่กันเลือก 3 ก.ย. 2569)
+      await clickText('ประวัติ');
+      await wait(1800);
+      // 🚨 หาปุ่มด้วย aria-label ก่อน — ข้อความบนปุ่มเปลี่ยนได้ (มือถือเป็น "ดูเป็นรายการ Lot")
+      //    ตัวตรวจที่หาปุ่มด้วยข้อความจะเงียบ ๆ ถ่ายภาพหน้าผิดมาให้โดยไม่มีอะไรเตือน
+      const ไปLot = await page.evaluate(() => {
+        const b = document.querySelector('[aria-label="ดูเป็นรายการ Lot"]');
+        if (b) { b.click(); return true; } return false;
+      });
+      if (!ไปLot) await clickText('รายการ Lot');
+      await wait(2500);
+      const เปิด = await page.evaluate(() => {
+        const b = document.querySelector('[aria-label="ตัวกรองเพิ่มเติม"]');
+        if (!b) return false; b.click(); return true;
+      });
+      log(เปิด ? 'กดปุ่มตัวกรองแล้ว' : '❌ ไม่เจอปุ่มตัวกรอง');
+      await wait(900);
+      const มี = await page.evaluate(() => !!document.querySelector('[aria-label="ตัวกรองรายการ Lot"]'));
+      log(มี ? '✅ แผ่นตัวกรองเปิดขึ้นมาแล้ว' : '❌ แผ่นไม่โผล่');
+    } else if (where === 'settings' || where === 'about') {
+      // หน้าตั้งค่ากับหน้าเกี่ยวกับเป็นคู่กัน เปิดจากปุ่มที่อยู่ข้างกันบนหัวเว็บ
+      const ปุ่ม = where === 'settings' ? 'ตั้งค่า' : 'เกี่ยวกับ';
+      const เปิดได้ = await page.evaluate((lb) => {
+        const b = document.querySelector('[aria-label="' + lb + '"]');
+        if (b) { b.click(); return true; } return false;
+      }, ปุ่ม);
+      log(เปิดได้ ? ('กดปุ่ม ' + ปุ่ม + ' แล้ว') : ('❌ ไม่เจอปุ่ม ' + ปุ่ม));
+      await wait(1500);
     } else if (where === 'home') {
       // ทดสอบว่ากดชื่อเว็บแล้วกลับหน้าแรกจริงไหม
       // ไปหน้าที่ไม่ใช่หน้าแรกก่อน แล้วค่อยกดชื่อเว็บ

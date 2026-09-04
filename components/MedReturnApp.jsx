@@ -251,8 +251,6 @@ export default class MedReturnApp extends React.Component {
     };
 
     this.searchRef = React.createRef();
-    // ชั้นที่วาดตัวอักษรของช่องค้นยาฝั่งมือถือ — ต้องเลื่อนตามช่องกรอกจริง
-    this.searchDrawRef = React.createRef();
     this.qtyRef = React.createRef();
     this.qtyLayerRef = React.createRef();   // ชั้นที่วาดสูตรในช่องจำนวน — เลื่อนตาม input
     this.sheetQtyRef = React.createRef();
@@ -374,7 +372,8 @@ export default class MedReturnApp extends React.Component {
     const now = !!(
       st.confirm || st.sheet || st.result ||
       st.hisOpen || st.slipLot || st.lotEdit || st.showOtherDrafts ||
-      st.deviceAsk || st.reasonAsk || st.catEdit || st.catLog || st.priceFix
+      st.deviceAsk || st.reasonAsk || st.catEdit || st.catLog || st.priceFix ||
+      st.lotsFilterOpen || st.histFilterOpen
     );
     if (now !== st.anyModalOpen) this.setState({ anyModalOpen: now });
     this._lockBody(now);
@@ -686,6 +685,8 @@ export default class MedReturnApp extends React.Component {
     // หน้าผลบันทึกสำเร็จ — กดพื้นหลังไม่ปิดเหมือนกัน (เลข Lot ที่โชว์อยู่หายแล้วต้องไปหาเอง)
     // อยู่ล่างกว่าใบสรุป เพราะกดปุ่มบนหน้านี้เปิดใบสรุปซ้อนขึ้นไปได้อีกชั้น
     if (st.result) { this.closeResult(); return; }
+    if (st.lotsFilterOpen) { this.closeLotsFilter(); return; }
+    if (st.histFilterOpen) { this.closeHistFilter(); return; }
     if (st.settingsOpen) { this.setState({ settingsOpen: false, favQuery: '' }); }
   };
 

@@ -1,8 +1,10 @@
 // หน้าบันทึก — คัดจากมอคอัป มือถือ (บรรทัด 28–123) คอม (124–220) แถบบันทึกล่างจอมือถือ (541–565)
 // ตัดออกตามที่ตกลงไว้: สวิตช์จำลองเน็ตหลุด (ของเดโม) และเลขคงคลังปลอมใต้ชื่อยา
-import { s, sx, kb } from '../helpers';
+import { s, sx, kb, APP_VERSION } from '../helpers';
 import { renderParked } from './parked';
 import { renderDrugName } from './drugname';
+import { renderSearchBox } from './thaibox';
+import { renderPageHead, HEAD_PAD } from './pagehead';
 import { renderRecorderField } from './recorder';
 import { renderPcuField } from './pcufield';
 
@@ -124,42 +126,21 @@ export function renderRecordNarrow(V) {
              (ต่ำสุดคือป๊อปใส่จำนวนที่ 20 — ตรงนี้จึงใช้ 6)
           🚨 พื้นต้องทึบ ไม่งั้นเห็นรายการยาไหลผ่านทะลุหลังชื่อเว็บ
           ⚠️ ฝั่งคอมไม่ได้ตรึงตรงนี้ หน้าบันทึกคอมล็อกความสูงเท่าจออยู่แล้ว (กฎข้อ 3.2) */}
-      <div style={s('position:sticky;top:0;z-index:6;padding:11px 20px 11px;background:#fff;border-bottom:1px solid rgba(30,36,32,.07)')}>
-        <div style={s('display:flex;justify-content:space-between;align-items:center;margin-bottom:8px')}>
-          {/* ── หัวเว็บฝั่งมือถือ เหลือแค่ชื่อเว็บ (พี่กันสั่ง 1 ก.ย. 2569) ──────────
-              "เอาโลโก้ออก กินที่ · เอากลุ่มงานบลา ๆ ออก เหลือแค่ชื่อเว็บ"
-
-              🚨 ฝั่งคอม (renderNavWide) ยังมีทั้งโลโก้และชื่อหน่วยงานครบเหมือนเดิม
-                 ห้ามเอากฎนี้ไปใช้ที่นั่น จอคอมมีที่เหลือเฟือ
-              ⚠️ ชื่อหน่วยงานเต็มยศยังอยู่ที่ท้ายเว็บและหน้าเกี่ยวกับ ไม่ได้หายจากระบบ
-                 (บนหัวมือถือมันโดนตัดเหลือ "กลุ่มงานเภสัชก…" อ่านไม่จบอยู่แล้ว)
-
-              🚨 Charmonman ลากหางลงมายาวเกินกรอบบรรทัดของตัวเอง
-                 padding-bottom กันที่ใต้ตัวอักษรไว้ ห้ามตัดออก ไม่งั้นหางไปแตะของข้างล่าง */}
-          <div style={s('display:flex;align-items:center;gap:9px;min-width:0')}>
-            {/* โลโก้กลับมาแล้วตามที่พี่กันสั่ง — ย่อจาก 34 เหลือ 30 จุดให้พอดีกับแถวที่เตี้ยลง */}
-            <div style={s('width:30px;height:30px;border-radius:8px;background:#2f7d5d;display:flex;align-items:center;justify-content:center;position:relative;flex:none')}>
-              <div style={s('position:absolute;inset:4px;border:1.6px solid rgba(255,255,255,.45);border-radius:50%;border-top-color:transparent;transform:rotate(-38deg)')}></div>
-              <span style={s("font:700 13px/1.75 Sarabun,sans-serif;color:#fff;line-height:1")}>฿</span>
-            </div>
-            {/* 🚨 ระยะขอบขวาติดลบทำให้กรอบของชื่อเว็บยื่นไปทับช่องวันที่ 5 จุด
-                (ระยะขอบติดลบดึงตัวถัดไปเข้ามาในระยะในของตัวเอง — ยื่นเท่ากับเลขที่ติดลบเสมอ)
-                ถอดออกทั้งระยะขอบขวาและระยะในขวา ความกว้างรวมเท่าเดิมเป๊ะ ตัวอักษรไม่ขยับ
-                สิ่งเดียวที่หายคือแถบไฮไลต์ตอนชี้ที่เคยยื่นไปใต้ปุ่มวันที่ ซึ่งไม่ควรมีอยู่แต่แรก */}
-            <div {...kb(V.goHome)} aria-label="กลับไปหน้าบันทึก" className="hv-home"
-              style={s('font:700 19px/1.35 Krub,sans-serif;cursor:pointer;display:inline-block;border-radius:8px;margin:0 0 0 -7px;padding:5px 0 5px 7px;white-space:nowrap')}>มูลค่ายาคืน</div>
-          </div>
-          <div style={s('display:flex;align-items:center;gap:7px;flex:none')}>
-            {/* 🚨 ปุ่มแถวหัวเตี้ยลงเหลือ 38px (พี่กันถาม "บีบได้อีกมั้ย")
-                ต่ำกว่าเกณฑ์นิ้ว 44px แต่ยอมได้เพราะกว้างเกิน 44 มาก และไม่มีปุ่มอื่น
-                วางติดกันในแนวตั้งให้กดพลาด — ต่างจากปุ่มคู่ในการ์ดที่ห้ามลด */}
-            <div {...kb(V.toggleMore)} className="hv-bg-f6" style={s("display:flex;align-items:center;gap:6px;height:38px;padding:0 12px;border:1px solid rgba(30,36,32,.14);border-radius:9px;font:500 12.5px/1.75 Sarabun,sans-serif;cursor:pointer")}>{V.dateLabel} <span style={s('color:#6f7873')}>▾</span></div>
-            {/* ปุ่มเกี่ยวกับ แยกออกมาเป็นปุ่มของตัวเองข้างเฟือง — พี่กันสั่ง
-                เดิมซ่อนอยู่ในหน้าตั้งค่า ต้องเลื่อนลงไปหา ไม่มีใครเจอ */}
-            <div {...kb(V.openAbout)} aria-label="เกี่ยวกับ" title="เกี่ยวกับ" className="hv-bg-f6" style={s('width:38px;height:38px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:700 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>ℹ</div>
-            <div {...kb(V.openSettings)} aria-label="ตั้งค่า" title="ตั้งค่า" className="hv-bg-f6" style={s('width:38px;height:38px;border-radius:9px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 16px Sarabun,sans-serif;color:#6b746e;cursor:pointer;flex:none')}>⚙</div>
-          </div>
-        </div>
+      {/* 🚨 หัวใช้ตัวกลาง components/pages/pagehead.jsx ตัวเดียวกับหน้าประวัติและหน้าสรุป
+          พี่กันวัดด้วยตาแล้วจับได้ว่าปุ่ม ℹ ⚙ ขยับทั้งสามหน้า (4 ก.ย. 2569)
+          ค่าทุกตัวในตัวกลางลอกจากหน้านี้มาเป๊ะ เพราะพี่กันบอกว่าหน้านี้คือหน้าหลักที่ตรึงแล้ว
+          เปลี่ยนมาใช้ตัวกลางแล้วหน้านี้ต้องไม่ขยับสักจุด — วัดยืนยันแล้ว
+          🚨 ปุ่มวันที่ส่งเข้าไปทาง extra จึงยังอยู่ที่เดิมก่อนปุ่มสองตัวเหมือนเดิม */}
+      <div style={s('position:sticky;top:0;z-index:6;' + HEAD_PAD + ';background:#fff;border-bottom:1px solid rgba(30,36,32,.07)')}>
+        {renderPageHead({
+          onHome: V.goHome, onAbout: V.openAbout, onSettings: V.openSettings,
+          // เลขรุ่นเป็นบรรทัดรองของหน้านี้ (พี่กันสั่ง 4 ก.ย. 2569)
+          // อีกสองหน้ามีบรรทัดรองอยู่แล้ว หน้านี้เว้นว่างไว้จึงดูไม่เป็นชุดเดียวกัน
+          // 🚨 ดึงจาก helpers ตรง ๆ ไม่ใช้ V.appVersion เพราะค่านั้นอยู่ใน vals/settings
+          //    ซึ่งถูกข้ามการคำนวณตอนไม่ได้เปิดหน้าตั้งค่า (กฎข้อ 3.62)
+          sub: (<span style={s('font:700 11px/1.45 Sarabun,sans-serif;color:#2f7d5d')}>{'v' + APP_VERSION}</span>),
+          extra: (<div {...kb(V.toggleMore)} className="hv-bg-f6" style={s("display:flex;align-items:center;gap:6px;height:38px;padding:0 12px;border:1px solid rgba(30,36,32,.14);border-radius:9px;font:500 12.5px/1.75 Sarabun,sans-serif;cursor:pointer")}>{V.dateLabel} <span style={s('color:#6f7873')}>▾</span></div>),
+        })}
 
         {/* ปุ่ม ✕ ล้างช่องค้นหาทีเดียว — พี่กันขอ ไม่ต้องกด Backspace รัว */}
         {/* ── ช่องค้นยาฝั่งมือถือ — ช่องกรอกไม่ได้วาดตัวอักษรเอง ──────────────────
@@ -182,34 +163,19 @@ export function renderRecordNarrow(V) {
                ไม่งั้นขีดกะพริบจะไม่ตรงกับตัวอักษรที่เห็น
             🚨 ต้องเลื่อนตามกันเมื่อข้อความยาวเกินช่อง (onScroll → scrollLeft)
             🚨 ฝั่งคอมห้ามแตะ (พี่กันสั่ง) */}
-        <div style={s('position:relative;height:42px;border:1px solid rgba(30,36,32,.16);border-radius:12px;background:#f6f7f4;display:flex;align-items:center')}>
-
-          {/* ชั้นที่วาดตัวอักษร — สูง 56 หักคืนด้วยขอบติดลบ ผังยังนับ 42 เท่าเดิม
-              ตัดเฉพาะแนวนอนที่ความสูง 56 ซึ่งไม่มีทางโดนวรรณยุกต์ */}
-          <div ref={V.searchDrawRef} aria-hidden="true"
-            style={s('position:absolute;left:0;right:0;top:-7px;bottom:-7px;overflow:hidden;display:flex;align-items:center;pointer-events:none;padding:0 42px 0 13px')}>
-            <span style={sx('white-space:nowrap;flex:none', {
-              font: '400 16px/1.75 var(--font-sarabun), Sarabun, sans-serif',
-              color: V.query ? '#1e2420' : '#8d948f'
-            })}>{V.query || V.searchPlaceholder}</span>
-          </div>
-
-          <input ref={V.searchRef} value={V.query} onChange={V.onQuery} onKeyDown={V.onSearchKey}
-            onScroll={V.onSearchScroll} onBlur={V.onSearchBlur} aria-label="ค้นชื่อยา"
-            style={sx('position:relative;width:100%;height:100%;padding:0 42px 0 13px;border:none;background:transparent;caret-color:#1e2420', {
-              font: '400 16px/1.75 var(--font-sarabun), Sarabun, sans-serif', color: 'transparent'
-            })} />
-          {V.hasQuery && (
-            <div {...kb(V.clearQuery)} aria-label="ล้างช่องค้นหายา" className="hv-bg-e6e" style={s('position:absolute;right:9px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:400 15px Sarabun,sans-serif;color:#6b746e;cursor:pointer;background:rgba(30,36,32,.06)')}>✕</div>
-          )}
-          {/* ลืมสลับแป้นพิมพ์ — บอกให้เห็นว่าระบบกำลังค้นด้วยคำว่าอะไร
-              วางชิดซ้ายปุ่ม ✕ · ไม่ใช่ปุ่ม กดไม่ได้ แค่บอกให้รู้ */}
-          {V.showSwap && (
-            <div style={s("position:absolute;right:47px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:#e3f0e8;font:600 12.5px/1.75 Sarabun,sans-serif;color:#2f7d5d;pointer-events:none;max-width:45%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis")}>
-              <span style={s('font:400 11px/1.75 Sarabun,sans-serif;color:#6b746e;flex:none')}>ค้นว่า</span>{V.swapLabel}
-            </div>
-          )}
-        </div>
+        {/* ช่องค้นหามาตรฐานของทั้งเว็บ (thaibox.jsx) — พี่กันตั้งเป็นกฎ 3 ก.ย. 2569
+            เดิมช่องนี้วาดโครงสามชั้นเอง จึงไม่มีแว่นขยายเหมือนช่องอื่น (พี่กันจับได้)
+            🚨 ต้องส่ง inputRef ไปด้วย หน้าบันทึกสั่งโฟกัสกลับมาที่ช่องนี้ 4 จุด
+               หลังเลือกยา ปิดป๊อป และล้างคำค้น */}
+        {renderSearchBox({
+          value: V.query, onChange: V.onQuery, onKeyDown: V.onSearchKey,
+          onClear: V.clearQuery, inputRef: V.searchRef,
+          placeholder: V.searchPlaceholder,
+          font: '400 16px/1.75 var(--font-sarabun), Sarabun, sans-serif',
+          h: 42, bg: '#f6f7f4',
+          swapLabel: V.showSwap ? V.swapLabel : '',
+          ariaLabel: 'ค้นชื่อยา',
+        })}
 
         {/* 🚨 overscroll-behavior:contain — เลื่อนดูยาจนสุดกรอบแล้วหน้าเว็บข้างหลังต้องไม่ไหลตาม
             (กฎกลาง pharmacy-web-logic ข้อ 28) ไม่เปลี่ยนหน้าตาสักพิกเซล เปลี่ยนแค่พฤติกรรมการเลื่อน */}
@@ -422,31 +388,17 @@ export function renderRecordWide(V) {
                 🚨 ฟอนต์ ขนาด ระยะขอบ ต้องตรงกันเป๊ะทั้งสองชั้น ไม่งั้นขีดกะพริบเยื้อง
                 🚨 ชั้นที่วาดสูงเกินกรอบ 7 จุดบนล่าง แล้วหักคืนด้วยตำแหน่งติดลบ
                    ผังหน้าเว็บจึงยังนับความสูง 46 จุดเท่าเดิม ไม่มีอะไรขยับ */}
-            <div style={s('position:relative;height:46px;border:1px solid rgba(30,36,32,.16);border-radius:9px;background:#fff;display:flex;align-items:center')}>
-              <div ref={V.searchDrawRef} aria-hidden="true"
-                style={s('position:absolute;left:0;right:0;top:-7px;bottom:-7px;overflow:hidden;display:flex;align-items:center;pointer-events:none;padding:0 44px 0 13px')}>
-                <span style={sx('white-space:nowrap;flex:none', {
-                  font: '500 15px/1.75 var(--font-sarabun), Sarabun, sans-serif',
-                  color: V.query ? '#1e2420' : '#8d948f'
-                })}>{V.query || 'พิมพ์ชื่อยา แล้วกด Enter'}</span>
-              </div>
-              <input ref={V.searchRef} value={V.query} onChange={V.onQuery} onKeyDown={V.onSearchKeyDesktop}
-                onScroll={V.onSearchScroll} onBlur={V.onSearchBlur} aria-label="ค้นชื่อยา"
-                style={sx('position:relative;width:100%;height:100%;padding:0 44px 0 13px;border:none;background:transparent;caret-color:#1e2420', {
-                  font: '500 15px/1.75 var(--font-sarabun), Sarabun, sans-serif', color: 'transparent'
-                })} />
-            </div>
-            {/* ปุ่ม ✕ ล้างช่องค้นหาทีเดียว — พี่กันขอ ไม่ต้องกด Backspace รัว */}
-            {V.hasQuery && (
-              <div {...kb(V.clearQuery)} aria-label="ล้างช่องค้นหายา" className="hv-bg-e6e" style={s('position:absolute;right:8px;top:calc(50% + 9px);transform:translateY(-50%);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:400 14px Sarabun,sans-serif;color:#6b746e;cursor:pointer;background:rgba(30,36,32,.06);z-index:10')}>✕</div>
-            )}
-            {/* ลืมสลับแป้นพิมพ์ — บอกให้เห็นว่าระบบกำลังค้นด้วยคำว่าอะไร
-                วางชิดซ้ายปุ่ม ✕ · ไม่ใช่ปุ่ม กดไม่ได้ แค่บอกให้รู้ */}
-            {V.showSwap && (
-              <div style={s("position:absolute;right:44px;top:calc(50% + 9px);transform:translateY(-50%);z-index:10;display:flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;background:#e3f0e8;font:600 12.5px/1.75 Sarabun,sans-serif;color:#2f7d5d;pointer-events:none;max-width:55%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis")}>
-                <span style={s('font:400 11px/1.75 Sarabun,sans-serif;color:#6b746e;flex:none')}>ค้นว่า</span>{V.swapLabel}
-              </div>
-            )}
+            {/* ช่องค้นหามาตรฐานของทั้งเว็บ (thaibox.jsx) — ชุดเดียวกับฝั่งมือถือทุกอย่าง
+                ต่างแค่ความสูง สีพื้น และปุ่มกดแป้นที่ฝั่งคอมมีลูกศรขึ้นลงกับ Enter */}
+            {renderSearchBox({
+              value: V.query, onChange: V.onQuery, onKeyDown: V.onSearchKeyDesktop,
+              onClear: V.clearQuery, inputRef: V.searchRef,
+              placeholder: 'พิมพ์ชื่อยา แล้วกด Enter',
+              font: '500 15px/1.75 var(--font-sarabun), Sarabun, sans-serif',
+              h: 46,
+              swapLabel: V.showSwap ? V.swapLabel : '',
+              ariaLabel: 'ค้นชื่อยา',
+            })}
             {/* หน้าคอมเดิมไม่มีกล่อง "ไม่พบยา" (มอคอัปก็ไม่มี) พิมพ์ผิดแล้วเงียบสนิท
                 เภสัชกรไม่รู้ว่าพิมพ์ผิดหรือระบบค้าง — ฝั่งมือถือมีอยู่แล้ว เอามาใส่ให้เหมือนกัน */}
             {V.noResults && (

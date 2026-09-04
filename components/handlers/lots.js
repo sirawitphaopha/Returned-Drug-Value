@@ -92,6 +92,13 @@ export function lotsActions(app) {
     });
   };
 
+  // ── แผ่นตัวกรองฝั่งมือถือ (พี่กันเลือกแบบ ก · 3 ก.ย. 2569) ──────────────
+  //    หัวหน้านี้เคยกิน 62% ของจอ เหลือที่ให้รายการจริงแค่ใบเดียว
+  //    ช่วงวันที่ แหล่งที่มา และปุ่มล้างค่า ย้ายมาอยู่ในแผ่นที่เลื่อนขึ้นจากขอบล่าง
+  //    ชิปช่วงเวลายังอยู่นอกแผ่น เพราะเป็นสิ่งที่กดบ่อยที่สุด
+  app.openLotsFilter = () => app.setState({ lotsFilterOpen: true });
+  app.closeLotsFilter = () => app.setState({ lotsFilterOpen: false });
+
   app.clearLotsFilters = () => app.setState({ lotsQuery: '', lotsSrcFilter: '', lotsSiteFilter: '', lotsShown: 40 });
 
   // กดหัวคอลัมน์เดิมซ้ำ = สลับทิศ · กดคอลัมน์ใหม่ = เริ่มจากมากไปน้อย

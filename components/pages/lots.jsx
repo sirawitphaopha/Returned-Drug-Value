@@ -1,10 +1,11 @@
 // หน้ารายการ Lot + ใบสรุป Lot สำหรับพิมพ์
 // ใช้ภาษาภาพชุดเดียวกับหน้าประวัติ (สี ระยะ ความโค้ง) จะได้ไม่รู้สึกเป็นคนละเว็บ
 import { createPortal } from 'react-dom';
-import { s, sx, kb } from '../helpers';
+import { s, sx, kb, Z } from '../helpers';
 import { renderExportBtn } from './exportbtn';
 import { skelTable, skelCard } from './skeleton';
 import { renderLoadFail } from './loadfail';
+import { renderSearchBox } from './thaibox';
 
 // ── ปุ่มจัดการท้ายแถว ────────────────────────────────────────────────────────
 // แยกออกมาเพราะใช้ทั้งตาราง (จอกว้าง) และการ์ด (จอแคบ) ต้องเหมือนกันเป๊ะ
@@ -45,6 +46,158 @@ function siteCell(l) {
   return <span style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#c9cdc9')}>—</span>;
 }
 
+// ── หัวหน้าฝั่งมือถือ (พี่กันเลือกแบบ ก · 3 ก.ย. 2569) ─────────────────────
+//
+// พี่กันบอกว่า "มันกินที่ เเละไม่สวย" — วัดแล้วหัวเดิมกิน 62% ของจอ 900 จุด
+// เหลือที่ให้รายการ Lot จริงแค่ใบเดียว ทั้งที่หน้านี้มีไว้ดูรายการ
+//
+// เดิม 6 แถว   ปุ่มกลับ · หัวเรื่อง · คำอธิบาย · ช่องวันที่ · ชิป · ค้นหา · ตัวกรอง · ยอด+CSV
+// ใหม่ 3 แถว   [← ชื่อหน้า+ยอด ⤓] · [ค้นหา ⚙] · ชิปช่วงเวลา
+//
+// ของที่ย้ายเข้าแผ่นตัวกรอง — ช่องวันที่ · แหล่งที่มา · รพ.สต. · ปุ่มล้างค่า
+// 🚨 ชิปช่วงเวลาไม่ย้ายเข้าแผ่น เป็นสิ่งที่กดบ่อยที่สุด ซ่อนแล้วต้องกดสองครั้งทุกครั้ง
+// 🚨 ฝั่งคอมไม่แตะเลยสักจุด (V.lotsWide) พี่กันสั่งไว้ตลอดว่าอย่าไปหลงแก้เดสก์ท็อป
+function headNarrow(V) {
+  return (
+    <>
+      {/* แถวเดียวจบ — ปุ่มกลับ ชื่อหน้า ยอดรวม และปุ่มส่งออก
+          ยอดย้ายขึ้นมาอยู่ใต้ชื่อหน้า เดิมลอยอยู่กลางจอคนละระดับกับปุ่มส่งออก */}
+      <div style={s('display:flex;align-items:center;gap:10px;margin-bottom:10px')}>
+        <div {...kb(V.closeLots)} aria-label="กลับไปหน้าประวัติ" className="btn-back mrv-hit"
+          style={s('width:38px;height:38px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background:#fff;display:flex;align-items:center;justify-content:center;color:#414a44;cursor:pointer;flex:none')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+          </svg>
+        </div>
+        <div style={s('min-width:0;flex:1')}>
+          <div style={s('font:700 17px/1.25 Sarabun,sans-serif')} role="heading" aria-level="1">รายการ Lot</div>
+          <div style={s('font:500 11.5px/1.6 Sarabun,sans-serif;color:#6b746e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>
+            {V.lotsCountLabel} · <span style={s('font:700 12px/1.6 Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{V.lotsSumLabel}</span>
+          </div>
+        </div>
+        {renderExportBtn(V.doExportLots, 'ส่งออก', {})}
+      </div>
+
+      {/* ช่องค้นหา + ปุ่มเปิดแผ่นตัวกรอง
+          🚨 ตัวเลขบนปุ่มบอกว่ามีตัวกรองที่ถูกซ่อนไว้ทำงานอยู่กี่ชั้น
+             ไม่มีตัวเลขนี้ = กรองค้างไว้แล้วลืม แล้วงงว่าทำไมรายการหาย */}
+      <div style={s('display:flex;align-items:center;gap:8px;margin-bottom:9px')}>
+        {renderSearchBox({
+          value: V.lotsQuery, onChange: V.onLotsQuery, onClear: V.clearLotsQuery,
+          placeholder: 'ค้น Lot ผู้บันทึก รพ.สต.',
+          font: '400 13.5px/1.75 var(--font-sarabun), Sarabun, sans-serif',
+          h: 44, ariaLabel: 'ค้นหาในรายการ Lot',
+        })}
+        <div {...kb(V.openLotsFilter)} aria-label="ตัวกรองเพิ่มเติม" className="btn-back"
+          style={sx('position:relative;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none',
+            { border: '1px solid ' + (V.lotsFilterCount ? 'rgba(47,125,93,.40)' : 'rgba(30,36,32,.14)'),
+              background: V.lotsFilterCount ? '#f2f8f4' : '#fff',
+              color: V.lotsFilterCount ? '#2f7d5d' : '#414a44' })}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 6h16" /><path d="M7 12h10" /><path d="M10 18h4" />
+          </svg>
+          {!!V.lotsFilterCount && (
+            <span aria-hidden="true"
+              style={s('position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:#2f7d5d;color:#fff;font:700 10px/17px Sarabun,sans-serif;text-align:center;box-sizing:border-box')}>{V.lotsFilterCount}</span>
+          )}
+        </div>
+      </div>
+
+      {/* ชิปช่วงเวลา — เลื่อนแนวนอนได้ ไม่ตกบรรทัดใหม่อีกแล้ว
+          🚨 ห้ามใส่คลาส .tap ชิปห่างกัน 7 จุด ส่วน .tap ขยายพื้นที่กดด้านละ 11 จุด
+             พื้นที่กดจะทับกัน เล็งกดช่วงหนึ่งแล้วโดนอีกช่วง (กฎข้อ 3.55) */}
+      <div className="mrv-xscroll" style={s('display:flex;gap:7px;margin-bottom:11px;overflow-x:auto;overscroll-behavior-x:contain')}>
+        {V.lotsRanges.map((r) => (
+          <div key={r.key} {...kb(r.pick)} className={r.on ? 'hv-seg-on' : 'hv-seg-off'}
+            style={sx('height:36px;padding:0 15px;border-radius:999px;font:500 12.5px/36px Sarabun,sans-serif;cursor:pointer;white-space:nowrap;flex:none', { background: r.bg, color: r.fg })}>{r.label}</div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+
+// ── แผ่นตัวกรองฝั่งมือถือ ────────────────────────────────────────────────────
+// เลื่อนขึ้นจากขอบล่าง เก็บทุกอย่างที่ถูกย้ายออกจากหัวหน้าไว้ครบ
+//
+// 🚨 กดพื้นหลังปิดได้ ต่างจากป๊อปยืนยันลบ เพราะไม่ใช่การกระทำที่ย้อนยาก
+//    ปิดทิ้งแล้วตัวกรองยังเป็นเหมือนเดิมทุกอย่าง ไม่มีอะไรเสียหาย
+// 🚨 ใช้ Z.panel จากตารางชั้นกลาง ห้ามเขียนเลขเอง (กฎข้อ 3.68)
+// 🚨 ต้องเติมชื่อใน anyModalOpen และ _syncModalFlag ด้วย ไม่งั้นฉากหลังเลื่อนตามนิ้ว
+export function renderLotsFilter(V) {
+  if (!V.lotsFilterOpen) return null;
+  const ป้าย = 'font:600 11.5px/1.6 Sarabun,sans-serif;color:#414a44;margin:0 0 6px';
+  const ช่องวัน = 'height:44px;padding:0 10px;border-radius:9px;background-color:#fff;font:400 12.5px/1.75 Sarabun,sans-serif;flex:1;min-width:0;box-sizing:border-box';
+  return (
+    <>
+      <div {...kb(V.closeLotsFilter)} aria-label="ปิดตัวกรอง"
+        style={sx('position:fixed;inset:0;background:rgba(20,26,22,.34)', { zIndex: Z.panel })} />
+      <div role="dialog" aria-modal="true" aria-label="ตัวกรองรายการ Lot"
+        style={sx('position:fixed;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -5px 22px rgba(0,0,0,.16);padding:10px 16px 20px;max-height:82vh;overflow-y:auto;overscroll-behavior:contain',
+          { zIndex: Z.panel + 1 })}>
+        <div aria-hidden="true" style={s('width:36px;height:4px;border-radius:99px;background:#d7dbd6;margin:0 auto 12px')} />
+
+        <div style={s(ป้าย)}>ช่วงเวลา</div>
+        <div style={s('display:flex;gap:7px;flex-wrap:wrap')}>
+          {V.lotsRanges.map((r) => (
+            <div key={r.key} {...kb(r.pick)} className={r.on ? 'hv-seg-on' : 'hv-seg-off'}
+              style={sx('height:40px;padding:0 16px;border-radius:999px;font:500 12.5px/40px Sarabun,sans-serif;cursor:pointer;white-space:nowrap', { background: r.bg, color: r.fg })}>{r.label}</div>
+          ))}
+        </div>
+
+        <div style={sx(ป้าย, { marginTop: '16px' })}>หรือกำหนดวันเอง</div>
+        <div style={s('display:flex;gap:8px;align-items:center')}>
+          <input type="date" value={V.lotsFrom} onChange={V.onLotsFrom} aria-label="ตั้งแต่วันที่"
+            style={sx(ช่องวัน, { border: '1px solid ' + (V.lotsCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
+          <span style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;flex:none')}>ถึง</span>
+          <input type="date" value={V.lotsTo} onChange={V.onLotsTo} aria-label="ถึงวันที่"
+            style={sx(ช่องวัน, { border: '1px solid ' + (V.lotsCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
+        </div>
+
+        <div style={sx(ป้าย, { marginTop: '16px' })}>แหล่งที่มา</div>
+        {/* 🚨 เขียน background-color แยก ห้ามเขียน background รวบ
+               กฎกลางใน globals.css วาดลูกศร ▾ ด้วย background-image
+               เขียนรวบแล้วรูปลูกศรหายไป ช่องดูไม่ออกว่ากดได้ (พี่กันทัก 26 ส.ค. 2569) */}
+        <select value={V.lotsSrcFilter} onChange={V.setLotsSrc} aria-label="กรองตามแหล่งที่มา"
+          style={s('width:100%;height:44px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background-color:#fff;padding:0 36px 0 12px;font:500 13px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer;box-sizing:border-box')}>
+          <option value="" style={{ font: '400 13px Sarabun, sans-serif' }}>ทุกแหล่งที่มา</option>
+          {V.lotsSrcOptions.map((o) => (
+            <option key={o.value} value={o.value} style={{ font: '400 13px Sarabun, sans-serif' }}>{o.label}</option>
+          ))}
+        </select>
+
+        {V.lotsSiteOn && (
+          <>
+            <div style={sx(ป้าย, { marginTop: '13px' })}>รพ.สต. ต้นทาง</div>
+            <select value={V.lotsSiteFilter} onChange={V.setLotsSite} aria-label="กรองตาม รพ.สต. ต้นทาง"
+              style={s('width:100%;height:44px;border-radius:10px;border:1px solid rgba(47,125,93,.34);background-color:#f2f8f4;padding:0 36px 0 12px;font:600 13px/1.75 Sarabun,sans-serif;color:#2f7d5d;cursor:pointer;box-sizing:border-box')}>
+              <option value="" style={{ font: '400 13px Sarabun, sans-serif' }}>ทุกแห่ง</option>
+              {V.lotsSiteOptions.map((o) => (
+                <option key={o.value} value={o.value} style={{ font: '400 13px Sarabun, sans-serif' }}>{o.label}</option>
+              ))}
+            </select>
+          </>
+        )}
+
+        {/* ปุ่มล้างค่าเทาไว้ตอนไม่มีอะไรให้ล้าง ไม่ซ่อนทิ้ง
+            ซ่อนแล้วปุ่มขวาจะกระโดดขยายเต็มแถวทุกครั้งที่ตัวกรองเปลี่ยน ตาต้องไล่หาใหม่ */}
+        <div style={s('display:flex;gap:9px;margin-top:18px')}>
+          <div {...kb(V.lotsHasFilter ? V.clearLotsFilters : null)} aria-label="ล้างตัวกรองทั้งหมด"
+            className={V.lotsHasFilter ? 'btn-back' : ''}
+            style={sx('flex:1;height:46px;border-radius:11px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 13px/1.75 Sarabun,sans-serif',
+              { background: '#fff', color: V.lotsHasFilter ? '#414a44' : '#b3b9b4', cursor: V.lotsHasFilter ? 'pointer' : 'default' })}>
+            ล้างค่าทั้งหมด
+          </div>
+          <div {...kb(V.closeLotsFilter)} aria-label="ดูผลการกรอง" className="hv-teal"
+            style={s('flex:1;height:46px;border-radius:11px;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;font:600 13px/1.75 Sarabun,sans-serif;cursor:pointer')}>
+            ดูผล {V.lotsCountLabel}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function renderLots(V) {
   return (
     <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:20px 26px 26px;display:flex;flex-direction:column;min-height:100%')}>
@@ -54,6 +207,10 @@ export function renderLots(V) {
           ทำเหมือนหน้าประวัติทุกอย่าง พี่กันสั่ง 27 ส.ค. 2569 */}
       <div ref={V.lotsHeadRef} className="lots-head">
 
+      {/* 🚨 หัวชุดนี้เป็นของฝั่งคอมเท่านั้น ฝั่งมือถือใช้ headNarrow ห้ามแตะข้ามฝั่ง
+          พี่กันสั่งไว้ตลอดว่าอย่าไปหลงแก้เดสก์ท็อป (กฎข้อ 3.55) */}
+      {V.lotsWide && (
+        <>
       {/* ── แถบหัวเรื่อง ─────────────────────────────────────────────────── */}
       <div style={s('display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px')}>
         {/* ปุ่มกลับ — มีข้อความบอกปลายทางด้วย ลูกศรเปล่า ๆ ไม่บอกว่ากดแล้วไปไหน
@@ -88,18 +245,14 @@ export function renderLots(V) {
 
       {/* ── แถบค้นหาและตัวกรอง ───────────────────────────────────────────── */}
       <div style={s('display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:11px')}>
-        <div style={s('position:relative;flex:0 1 340px;min-width:200px')}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6f7873" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"
-            style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-            <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
-          </svg>
-          <input value={V.lotsQuery} onChange={V.onLotsQuery} placeholder="ค้นเลข Lot ชื่อผู้บันทึก หรือชื่อ รพ.สต."
-            aria-label="ค้นหาในรายการ Lot"
-            style={s('width:100%;height:38px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background:#fff;padding:0 34px;font:400 13px/1.75 Sarabun,sans-serif;color:#1e2420;outline:none;box-sizing:border-box')} />
-          {V.lotsHasSearch && (
-            <div {...kb(V.clearLotsQuery)} aria-label="ล้างคำค้น" className="hv-bg-f6"
-              style={s('position:absolute;right:7px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font:400 13px/1.75 Sarabun,sans-serif;color:#6b746e;cursor:pointer')}>✕</div>
-          )}
+        {/* ช่องค้นหามาตรฐานของทั้งเว็บ — แว่นขยาย กันไม้โทหาย จัดกลาง ปุ่มล้าง มาครบในตัว */}
+        <div style={s('display:flex;flex:0 1 340px;min-width:200px')}>
+          {renderSearchBox({
+            value: V.lotsQuery, onChange: V.onLotsQuery, onClear: V.clearLotsQuery,
+            placeholder: 'ค้นเลข Lot ชื่อผู้บันทึก หรือชื่อ รพ.สต.',
+            font: '400 13px/1.75 var(--font-sarabun), Sarabun, sans-serif',
+            h: 38, ariaLabel: 'ค้นหาในรายการ Lot',
+          })}
         </div>
 
         {/* ── ตัวกรองแหล่งที่มา เลือกสองชั้น ────────────────────────────
@@ -152,6 +305,11 @@ export function renderLots(V) {
           {renderExportBtn(V.doExportLots, 'ส่งออก CSV', {})}
         </div>
       </div>
+
+        </>
+      )}
+
+      {!V.lotsWide && headNarrow(V)}
 
       </div>{/* ปิดแถบหัวที่ตรึงไว้ */}
 

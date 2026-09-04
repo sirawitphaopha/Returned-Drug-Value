@@ -8,6 +8,9 @@ import { pillColorOf } from '@/lib/drugPillColors';
 
 const EMPTY = { saved: 0, lost: 0, records: 0, qty: 0, drugCount: 0, byMonth: {}, bySrc: {}, topDrugs: [] };
 
+// ปีงบของวันนี้ตามนาฬิกาเครื่อง — ใช้ตอนเซิร์ฟเวอร์ยังไม่ตอบ
+function fyNow(st) { return fyOf(st.today || '2026-01-01'); }
+
 export function summaryVals(app, d) {
   const st = d.st;
   const dark = d.dark;
@@ -119,7 +122,15 @@ export function summaryVals(app, d) {
     zeroPricedLabel: 'มี ' + Number(sum.zeroPriced || 0).toLocaleString('en-US') + ' รายการที่มูลค่ายังเป็น 0 — ใส่ราคายาแล้วกดตีราคาย้อนหลังได้ที่หน้าจัดการราคา',
 
     // เลือกปีงบย้อนหลัง — เดิมดูได้แค่ปีปัจจุบัน พอขึ้นปีใหม่ตัวเลขปีเก่าหายหมด
-    fyPicks: (st.sumFyYears.length ? st.sumFyYears : [fyOf(st.today || '2026-01-01')]).map((y) => ({
+    //
+    // 🚨🔴 ระหว่างรอเซิร์ฟเวอร์ ต้องมีรายชื่อปีให้ครบสองปีไว้ก่อนเสมอ
+    //    เดิมใส่ปีเดียว แล้วตัววาดมีเงื่อนไข "น้อยกว่า 2 ปี ไม่ต้องแสดง"
+    //    ผลคือรีเฟรชแล้วกดเข้าหน้าสรุปทันที ปุ่มปีงบหายไปทั้งแถว
+    //    แล้วโผล่มาเองตอนข้อมูลถึง = หน้ากระโดด (พี่กันเจอเอง 4 ก.ย. 2569)
+    //
+    //    CLAUDE.md ข้อ 3.60 เขียนไว้เองแล้วว่าปุ่มปีงบ "ไม่ต้องรอเซิร์ฟเวอร์"
+    //    แต่โค้ดจริงรออยู่ — ปีงบคำนวณจากนาฬิกาเครื่องได้ ไม่ต้องถามใคร
+    fyPicks: (st.sumFyYears.length ? st.sumFyYears : [fyNow(st), fyNow(st) - 1]).map((y) => ({
       key: y,
       label: String(y),
       on: (st.sumFy || (st.sum ? st.sum.fyYear : 0) || fyOf(st.today || '2026-01-01')) === y,
