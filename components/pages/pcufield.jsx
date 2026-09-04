@@ -42,12 +42,15 @@ export function renderPcuField(V, o) {
   if (opt.inline) {
     const bd = has ? 'rgba(47,125,93,.34)' : 'rgba(194,84,60,.55)';
     const fg = has ? '#2f7d5d' : '#c2543c';
+    // พื้นไฮไลต์ของป้าย — เขียวจางเมื่อกรอกแล้ว แดงจางเมื่อยังไม่ได้กรอก
+    // (พี่กันเสนอ 4 ก.ย. 2569) ตัวหนังสือแดงบนพื้นขาวเด่นไม่พอ
+    const bg = has ? 'rgba(47,125,93,.10)' : 'rgba(194,84,60,.10)';
     if (empty) {
       return (<div style={s('margin-top:9px;font:400 12px/1.75 Sarabun,sans-serif;color:#6b746e;background:#f6f7f4;border-radius:9px;padding:9px 11px')}>ยังไม่ได้ตั้งรายชื่อ รพ.สต. ในระบบ ติดต่อผู้ดูแลระบบเพื่อเพิ่มรายชื่อ</div>);
     }
     return (
       <div style={sx('margin-top:9px;display:flex;align-items:center;height:40px;padding:0;border-radius:9px;background:#fff', { border: '1px solid ' + bd })}>
-        <span style={sx('font:500 11px/1.75 Sarabun,sans-serif;flex:none;width:62px;align-self:stretch;display:flex;align-items:center;justify-content:center;white-space:nowrap', { color: fg, borderRight: '1px solid ' + bd })}>รพ.สต.</span>
+        <span style={sx('font:500 11px/1.75 Sarabun,sans-serif;flex:none;width:62px;align-self:stretch;display:flex;align-items:center;justify-content:center;white-space:nowrap', { color: fg, borderRight: '1px solid ' + bd, background: bg })}>รพ.สต.</span>
         <select className={has ? 'hv-bg-f6' : 'hv-bg-red-l'} value={V.pcuSite || ''} onChange={V.onPcuSite} aria-label="เลือก รพ.สต. ต้นทาง"
           style={sx('flex:1;min-width:0;height:100%;border:none;background-color:transparent;padding:0;text-align:center;text-align-last:center;font:400 16px/1.7 Sarabun,sans-serif;cursor:pointer', { color: has ? '#1e2420' : '#c2543c', fontWeight: has ? 600 : 500 })}>
           <option value="" style={s('font:600 14.5px Sarabun,sans-serif;color:#6b746e')}>— เลือก รพ.สต. ก่อนบันทึก —</option>

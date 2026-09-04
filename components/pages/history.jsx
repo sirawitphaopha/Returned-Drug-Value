@@ -6,6 +6,8 @@ import { renderExportBtn } from './exportbtn';
 import { renderDrugName } from './drugname';
 import { skelTable, skelCard } from './skeleton';
 import { renderLoadFail } from './loadfail';
+import { renderSortClear } from './sortclear';
+import { renderPageTitle } from './pagetitle';
 import { renderSearchBox } from './thaibox';
 
 // แถบเครื่องมือเสริม — ไม่มีในมอคอัป
@@ -43,6 +45,10 @@ function renderHistTools(V) {
         {V.trashLabel}
       </div>
 
+      {/* ปุ่มล้างการเรียง — พี่กันสั่งให้มาอยู่ข้างถังขยะ 4 ก.ย. 2569
+          โผล่เฉพาะตอนกดเรียงเองแล้วจริง ๆ */}
+      {renderSortClear(V.histSortClear)}
+
       {V.histLot && (
         <div {...kb(V.clearLot)} aria-label="เลิกกรองเฉพาะ Lot นี้" className="hv-bg-e3f tap" style={s('display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px/1.75 Sarabun,sans-serif;cursor:pointer')}>
           Lot {V.histLot} <span aria-hidden="true" style={s('font:400 13px/1.75 Sarabun,sans-serif')}>✕</span>
@@ -59,11 +65,19 @@ function renderHistTools(V) {
 export function renderHistoryWide(V) {
   return (
     <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:20px 26px 26px;flex:1 0 auto')}>
+      {/* กรอบขาวใบเดียวครอบทั้งหน้า — ทำเหมือนหน้าคลังยา (พี่กันสั่ง 4 ก.ย. 2569
+          "ทำหน้านี้ให้เหมือนเพื่อน") เดิมแถบเครื่องมือลอยอยู่บนพื้นเทานอกกรอบ
+          แล้วตารางมีกรอบของตัวเองอีกใบ ซึ่งไม่มีหน้าไหนในเว็บทำแบบนั้น
+          🚨 ห้ามใส่ overflow ที่กรอบนี้เด็ดขาด — sticky ของแถบกรองกับหัวตารางจะตายทันที
+          🚨 min-width:fit-content ห้ามลบ — ตารางกว้างคงที่ตาม colgroup (ราว 1300 จุด)
+             จอที่แคบกว่านั้นถ้ากรอบไม่ยอมกว้างตาม ตารางจะทะลุออกไปนอกกรอบ
+             เห็นเป็นปุ่มกับหัวตารางลอยทับกัน (พี่กันเจอเอง 4 ก.ย. 2569) */}
+      <div style={s('background:#fff;border:1px solid rgba(30,36,32,.1);border-radius:14px;padding:16px 18px;min-width:fit-content')}>
       {/* แถบกรองติดบนตอนเลื่อน — เลื่อนดูแถวลึก ๆ แล้วยังเปลี่ยนช่วงเวลา/ค้นหาได้ทันที
           ref = ตัววัดความสูง ส่งให้หัวตารางไปตั้งระยะติดบน (ดู .hist-head ใน globals.css) */}
       <div ref={V.histHeadRef} className="hist-head">
       <div style={s('display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px')}>
-        <div role="heading" aria-level="1" style={s('font:600 19px Sarabun,sans-serif')}>{V.histTitle || 'ประวัติการบันทึก'}</div>
+        {renderPageTitle(V.histTitle || 'ประวัติการบันทึก')}
         {/* ช่องค้นหา — ระบบเดียวกับหน้าคลังยาและหน้าบันทึก (พี่กันสั่ง 25 ส.ค. 2569)
             รองรับลืมสลับแป้นพิมพ์ + ป้ายบอกคำที่ค้นจริง + ปุ่มล้าง
             เว้นที่ว่างขวาตามสิ่งที่โผล่จริง ไม่งั้นตัวหนังสือที่พิมพ์จะลอดไปใต้ป้าย */}
@@ -90,30 +104,94 @@ export function renderHistoryWide(V) {
 
       {renderHistTools(V)}
       </div>
+      {/* ══ ตารางจริง (จอกว้าง) ═══════════════════════════════════════════
+          รื้อจากกล่อง flex เรียงกันมาเป็น <table> จริง 4 ก.ย. 2569
+          ต้นแบบคือหน้ารายการ Lot (พี่กันย้ำ) — เส้นแบ่งคอลัมน์ ไฮไลต์แถว
+          และลูกศรเรียงลำดับ ยกมาจากที่นั่นทั้งชุด
 
-      {/* overflow:hidden ถูกเอาออกเพราะทำให้หัวตารางติดบนไม่ทำงาน
-          ใช้มุมโค้งกับเส้นขอบที่แถวแทน */}
-      <div style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px')}>
-        {/* หัวตาราง — กดเรียงได้ทุกคอลัมน์ · สีเข้มกว่าเดิม
-            (เดิมพื้น #f6f7f4 ตัวหนังสือ rgba(.5) จางมากจนแทบมองไม่เห็น) */}
-        <div className="sticky-head" style={s("display:flex;padding:11px 16px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);border-radius:10px 10px 0 0;font:600 11.5px/1.75 Sarabun,sans-serif;letter-spacing:.04em")}>
-          {V.histCols.map((c) => (
-            <span
-              key={c.key}
-              {...kb(c.pick)}
-              className="hv-bg-e3f"
-              style={sx('display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;border-radius:5px;margin:-3px 0;padding:3px 0', Object.assign(
-                { color: c.fg },
-                c.flex ? { flex: 1, minWidth: '180px' } : { width: c.w },
-                c.align === 'right' ? { justifyContent: 'flex-end' } : c.align === 'center' ? { justifyContent: 'center' } : {}
+          🚨 กรอบนี้ห้ามใส่ overflow เด็ดขาด — sticky ของ thead จะตายทันที
+          🚨 ความกว้างคอลัมน์อยู่ที่ <colgroup> ห้ามไปตั้งที่ th หรือ td */}
+      <div style={s('border:1px solid rgba(30,36,32,.08);border-radius:10px')}>
+        {/* 🚨 ต้องลบ 16 ออกจากความสูงแถบกรอง
+            แถบกรองอยู่ในกรอบขาวที่มีระยะขอบใน 16 จุด และตรึงที่ top:-16px
+            ตัววัด --histhead วัดความสูงเต็มของแถบ ซึ่งรวม 16 จุดนั้นไว้ด้วย
+            ถ้าเอามาใช้ตรง ๆ หัวตารางจะติดต่ำกว่าที่ควร 16 จุด เกิดร่องให้แถวลอดผ่าน
+            (พี่กันเจอเอง 4 ก.ย. 2569 — แคลร์ดูในโครมแล้วแต่ไม่ได้เลื่อน เลยไม่เห็น) */}
+          <table className="tbl" style={sx('', { '--tbl-top': 'calc(var(--histhead, 16px) - 16px)' })}>
+          <colgroup>
+            {V.histCols.map((c) => (
+              <col key={c.key} style={c.flex ? { minWidth: '180px' } : { width: c.w }} />
+            ))}
+            <col style={s('width:104px')} />
+          </colgroup>
+          <thead>
+            <tr>
+              {/* 🚨 หัวคอลัมน์อยู่กึ่งกลางทุกอัน ยกเว้นคอลัมน์ยา (พี่กันสั่ง 4 ก.ย. 2569)
+                  ส่วนข้อมูลในแถวคงการจัดวางเดิมไว้ — ตัวเลขชิดขวาให้หลักตรงกัน
+                  ข้อความชิดซ้ายเพราะตาอ่านจากซ้าย เป็นคนละเรื่องกับหัว
+                  ⚠️ คอมเมนต์ต้องอยู่นอกแท็ก วางระหว่าง attribute ไม่ได้ เว็บจะพังทั้งหน้า */}
+              {V.histCols.map((c) => (
+                <th key={c.key} {...kb(c.pick)} scope="col"
+                  className={'tbl-sort' + (c.flex ? '' : ' ta-c')}
+                  style={sx('', { color: c.fg })}>
+                  <span style={s('display:inline-flex;align-items:center;gap:4px')}>
+                    {c.label}
+                    <span aria-hidden="true" className="tbl-arrow" style={sx('', { color: c.arrowColor, fontSize: c.arrowSize })}>{c.arrow}</span>
+                  </span>
+                </th>
               ))}
-            >
-              {c.label}
-              <span style={sx('font-size:9px;flex:none', { color: c.arrowColor })}>{c.arrow}</span>
-            </span>
-          ))}
-          <span style={s('width:80px')}></span>
-        </div>
+              {/* หัวคอลัมน์ปุ่ม — เดิมเว้นว่าง พี่กันทัก 4 ก.ย. 2569 ว่าไม่มีชื่อ
+                  ใช้คำเดียวกับหน้ารายการ Lot ซึ่งเป็นต้นแบบ */}
+              <th scope="col" className="ta-c">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {V.histRows.map((hr) => (
+              <tr key={hr.key} style={sx('', { background: hr.bg })}>
+                <td style={s('color:#6b746e')}>{hr.dateLabel}</td>
+                {/* ชื่อยาวาดทีละส่วนพร้อมสี ตัวเดียวกับผลค้นหาในหน้าบันทึก
+                    (พี่กันสั่ง 25 ส.ค. 2569 "ไหนสีแบบที่ช่องค้นหา")
+                    ตัดด้วยจุดไข่ปลา ไม่งั้นชื่อยาว ๆ ดันแถวสูงเป็นสิบบรรทัด
+                    title = เอาเมาส์ชี้แล้วเห็นชื่อเต็ม */}
+                <td title={hr.name} style={s('overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>
+                  {renderDrugName(hr.parts, { size: '13.5px' })}
+                </td>
+                <td className="ta-r">{hr.qtyLabel}</td>
+                <td className="ta-r" style={s('color:#6b746e')}>{hr.priceLabel}</td>
+                <td className="ta-r" style={sx('font:600 14.5px Sarabun,sans-serif', { color: hr.color })}>{hr.valueLabel}</td>
+                <td className="ta-c">
+                  <span style={sx('display:inline-block;padding:3px 9px;border-radius:6px;font:600 11px/1.75 Sarabun,sans-serif;white-space:nowrap', { background: hr.dispBg, color: hr.dispFg })}>{hr.dispLabel}</span>
+                </td>
+                <td style={s('color:#6b746e')}>{hr.sourceLabel}</td>
+                <td style={s('color:#6b746e')}>{hr.hnLabel}</td>
+                {/* 🚨 ชื่อผู้บันทึกห้ามตัดทิ้ง เป็นข้อมูลสืบกลับว่าใครเซ็นรับล็อตนั้น
+                    เดิมใช้ ellipsis ตัดท้าย ชื่อยาว ๆ เลยเหลือ "ภญ. วลัยพรรณ…" */}
+                <td title={hr.byFull} className="wrap" style={s('color:#6b746e;font-size:12px;line-height:1.35')}>{hr.byLabel}</td>
+                {/* เลข Lot — กดแล้วกรองดูเฉพาะ Lot นั้น */}
+                <td>
+                  {hr.hasLot ? (
+                    <span {...kb(hr.openLot)} className="hv-lot" title={'ดูเฉพาะ ' + hr.lotLabel}
+                      style={s("font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;cursor:pointer;border-bottom:1px dashed rgba(30,36,32,.28);white-space:nowrap")}>{hr.lotLabel}</span>
+                  ) : (
+                    <span style={s('font:400 12px/1.75 Sarabun,sans-serif;color:#c0c5c1')}>{hr.lotLabel}</span>
+                  )}
+                </td>
+                <td>
+                  <span style={s('display:flex;justify-content:flex-end;gap:6px')}>
+                    {hr.inTrash ? (
+                      <span {...kb(hr.restore)} className="hv-bg-e3f tap" style={s('padding:6px 9px;border-radius:7px;background:#e3f0e8;font:500 11.5px/1.75 Sarabun,sans-serif;color:#2f7d5d;cursor:pointer;white-space:nowrap')}>กู้คืน</span>
+                    ) : (
+                      <>
+                        <span {...kb(hr.edit)} className="hv-bg-e6e tap" style={s('padding:6px 9px;border-radius:7px;background:#f0f1ee;font:500 11.5px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer')}>แก้</span>
+                        <span {...kb(hr.remove)} className="hv-bg-fbe tap" style={s('padding:6px 9px;border-radius:7px;background:#fdf1ed;font:500 11.5px/1.75 Sarabun,sans-serif;color:#c2543c;cursor:pointer')}>ลบ</span>
+                      </>
+                    )}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
         {/* โครงจางใช้คอลัมน์ชุดเดียวกับตารางจริง (V.histCols) */}
         {(V.histLoading || V.skelDemo) && skelTable(V.histCols, 9, { noHead: true })}
@@ -125,52 +203,6 @@ export function renderHistoryWide(V) {
         {V.histEmpty && (
           <div style={s('padding:40px 16px;text-align:center;font:400 13.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>{V.histEmptyLabel}</div>
         )}
-
-        {V.histRows.map((hr) => (
-          <div key={hr.key} style={sx('display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(30,36,32,.05);font:400 13.5px/1.75 Sarabun,sans-serif;font-variant-numeric:tabular-nums', { background: hr.bg })}>
-            <span style={s('width:110px;color:#6b746e')}>{hr.dateLabel}</span>
-            {/* ชื่อยาต้องตัดด้วยจุดไข่ปลา ไม่งั้นชื่อยาว ๆ ดันแถวสูงเป็นสิบบรรทัด
-                title = เอาเมาส์ชี้แล้วเห็นชื่อเต็ม */}
-            {/* ชื่อยาวาดทีละส่วนพร้อมสี ตัวเดียวกับผลค้นหาในหน้าบันทึก
-                (พี่กันสั่ง 25 ส.ค. 2569 "ไหนสีแบบที่ช่องค้นหา")
-                ยังตัดด้วยจุดไข่ปลาเหมือนเดิม ไม่งั้นชื่อยาว ๆ ดันแถวสูงเป็นสิบบรรทัด
-                title = เอาเมาส์ชี้แล้วเห็นชื่อเต็ม */}
-            <span title={hr.name} style={s('flex:1;min-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px')}>
-              {renderDrugName(hr.parts, { size: '13.5px' })}
-            </span>
-            <span style={s('width:80px;text-align:right')}>{hr.qtyLabel}</span>
-            <span style={s('width:92px;text-align:right;color:#6b746e')}>{hr.priceLabel}</span>
-            <span style={sx("width:104px;text-align:right;font:600 14.5px Sarabun,sans-serif", { color: hr.color })}>{hr.valueLabel}</span>
-            <span style={s('width:90px;display:flex;justify-content:center')}>
-              <span style={sx('padding:3px 9px;border-radius:6px;font:600 11px/1.75 Sarabun,sans-serif;white-space:nowrap', { background: hr.dispBg, color: hr.dispFg })}>{hr.dispLabel}</span>
-            </span>
-            <span style={s('width:88px;color:#6b746e')}>{hr.sourceLabel}</span>
-            <span style={s('width:84px;color:#6b746e')}>{hr.hnLabel}</span>
-            {/* 🚨 ชื่อผู้บันทึกห้ามตัดทิ้ง เป็นข้อมูลสืบกลับว่าใครเซ็นรับล็อตนั้น (กฎเดิมของหน้ารายการ Lot)
-                เดิมใช้ ellipsis ตัดท้าย ชื่อยาว ๆ เลยเหลือ "ภญ. วลัยพรรณ…" อ่านไม่ออกว่านามสกุลอะไร
-                ฟอนต์ Roboto Mono ทำให้เห็นชัดขึ้นเพราะตัวอักษรกว้างกว่าเดิม (พี่กันจับได้ 27 ส.ค. 2569) */}
-            <span title={hr.byLabel} style={s('width:118px;color:#6b746e;font-size:12px;overflow-wrap:anywhere;padding-right:8px;line-height:1.35')}>{hr.byLabel}</span>
-            {/* เลข Lot — กดแล้วกรองดูเฉพาะ Lot นั้น */}
-            <span style={s('width:96px;padding-right:8px;overflow:hidden')}>
-              {hr.hasLot ? (
-                <span {...kb(hr.openLot)} className="hv-lot" title={'ดูเฉพาะ ' + hr.lotLabel}
-                  style={s("font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;cursor:pointer;border-bottom:1px dashed rgba(30,36,32,.28);white-space:nowrap")}>{hr.lotLabel}</span>
-              ) : (
-                <span style={s('font:400 12px/1.75 Sarabun,sans-serif;color:#c0c5c1')}>{hr.lotLabel}</span>
-              )}
-            </span>
-            <span style={s('width:80px;display:flex;justify-content:flex-end;gap:6px')}>
-              {hr.inTrash ? (
-                <span {...kb(hr.restore)} className="hv-bg-e3f tap" style={s('padding:6px 9px;border-radius:7px;background:#e3f0e8;font:500 11.5px/1.75 Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>กู้คืน</span>
-              ) : (
-                <>
-                  <span {...kb(hr.edit)} className="hv-bg-e6e tap" style={s('padding:6px 9px;border-radius:7px;background:#f0f1ee;font:500 11.5px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer')}>แก้</span>
-                  <span {...kb(hr.remove)} className="hv-bg-fbe tap" style={s('padding:6px 9px;border-radius:7px;background:#fdf1ed;font:500 11.5px/1.75 Sarabun,sans-serif;color:#c2543c;cursor:pointer')}>ลบ</span>
-                </>
-              )}
-            </span>
-          </div>
-        ))}
       </div>
 
       {V.histTruncated && !V.skelDemo && (
@@ -179,6 +211,7 @@ export function renderHistoryWide(V) {
           <div {...kb(V.loadMoreHistory)} className="hv-bg-f6 tap" style={s('display:inline-flex;align-items:center;padding:10px 20px;border:1px solid rgba(30,36,32,.16);border-radius:999px;background:#fff;font:600 13px/1.75 Sarabun,sans-serif;color:#2f7d5d;cursor:pointer')}>{V.loadMoreLabel}</div>
         </div>
       )}
+      </div>
     </div>
   );
 }

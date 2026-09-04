@@ -4,6 +4,7 @@ import { SOURCES, money, thaiDate, fyOf } from '@/lib/format';
 // ใช้ตัวแยกชิ้นส่วนชื่อยาตัวเดียวกับหน้าบันทึก — ชื่อยาจะได้หน้าตาเหมือนกันทุกหน้า
 import { nameParts } from './record';
 import { pillColorOf } from '@/lib/drugPillColors';
+import { shortStaffName } from '../helpers';
 
 const HIST_LIMIT = 60;
 
@@ -61,16 +62,16 @@ export function historyVals(app, d) {
 
   // หัวตาราง — กดเรียงได้ · สีเข้มกว่าเดิม (เดิมจางมากจนแทบไม่เห็น)
   const COLS = [
-    { key: 'date', label: 'วันที่', w: '110px', align: 'left' },
+    { key: 'date', label: 'วันที่', w: '124px', align: 'left' },
     { key: 'name', label: 'ยา', w: '', align: 'left', flex: true },
     { key: 'qty', label: 'จำนวน', w: '80px', align: 'right' },
-    { key: 'price', label: 'ราคา/หน่วย', w: '92px', align: 'right' },
-    { key: 'value', label: 'มูลค่า (฿)', w: '104px', align: 'right' },
+    { key: 'price', label: 'ราคา/หน่วย', w: '116px', align: 'right' },
+    { key: 'value', label: 'มูลค่า (฿)', w: '118px', align: 'right' },
     { key: 'disposition', label: 'สถานะ', w: '90px', align: 'center' },
-    { key: 'source', label: 'แหล่งที่มา', w: '88px', align: 'left' },
-    { key: 'hn', label: 'HN', w: '84px', align: 'left' },
+    { key: 'source', label: 'แหล่งที่มา', w: '96px', align: 'left' },
+    { key: 'hn', label: 'HN', w: '68px', align: 'left' },
     { key: 'by', label: 'ผู้บันทึก', w: '104px', align: 'left' },
-    { key: 'lot', label: 'Lot', w: '96px', align: 'left' }
+    { key: 'lot', label: 'Lot', w: '92px', align: 'left' }
   ];
 
   // ── แถบสีจางแยกแต่ละ Lot (พี่กันเลือกแบบ ข) ───────────────────────────────
@@ -179,16 +180,28 @@ export function historyVals(app, d) {
     histHeadRef: app.histHeadRef,
 
     // หัวตารางกดเรียงได้ · ลูกศรบอกทิศ ▲ น้อยไปมาก ▼ มากไปน้อย ↕ ยังไม่ได้เรียง
+    // ปุ่มล้างการเรียง — โผล่เฉพาะตอนกดเรียงเองแล้วจริง ๆ
+    histSortClear: { on: !!sortKey, clear: app.clearHistSort, label: (COLS.find((c) => c.key === sortKey) || {}).label || '' },
+
     histCols: COLS.map((c) => {
-      const on = sortKey === c.key;
+            // 🚨 ยังไม่ได้กดเรียง ไม่ได้แปลว่าไม่ได้เรียง
+      //    ฐานส่งข้อมูลมาเรียงวันที่ใหม่ไปเก่าอยู่แล้ว ลูกศรจึงต้องชี้ลงที่คอลัมน์วันที่
+      //    ของเดิมโชว์ ↑↓ ทั้งที่เรียงอยู่จริง = ลูกศรโกหก (พี่กันจับได้ 4 ก.ย. 2569)
+      const on = sortKey ? sortKey === c.key : c.key === 'date';
+      const dir = sortKey ? st.histSortDir : 'desc';
       return {
         key: c.key,
         label: c.label,
         w: c.w,
         flex: !!c.flex,
         align: c.align,
-        arrow: on ? (st.histSortDir === 'asc' ? '▲' : '▼') : '↕',
-        arrowColor: on ? '#2f7d5d' : 'rgba(30,36,32,.28)',
+        // ลูกศรชุดเดียวกับหน้ารายการ Lot ซึ่งเป็นต้นแบบ (พี่กันย้ำ 4 ก.ย. 2569)
+        // ↑ น้อยไปมาก · ↓ มากไปน้อย · ↑↓ ยังไม่ได้เรียงด้วยคอลัมน์นี้
+        // ของเดิมเป็นสามเหลี่ยม ▲▼↕ ขนาด 9px เล็กจนดูไม่ออกว่าเรียงทางไหนอยู่
+        arrow: on ? (dir === 'asc' ? '↑' : '↓') : '↑↓',
+        arrowColor: on ? '#2f7d5d' : 'rgba(30,36,32,.34)',
+        // ตัวที่กำลังเรียงอยู่ใหญ่กว่าเพื่อน เพราะเป็นตัวเดียวที่ต้องอ่านจริง
+        arrowSize: on ? '19px' : '16px',
         fg: on ? '#2f7d5d' : '#414a44',
         pick: () => app.setHistSort(c.key)
       };
@@ -242,7 +255,10 @@ export function historyVals(app, d) {
         dispFg: reuse ? '#2f7d5d' : '#c2543c',
         sourceLabel: srcFull(r),
         hnLabel: r.hn || '—',
-        byLabel: r.by || '—',
+        // แสดงแค่คำนำหน้ากับชื่อ ไม่เอานามสกุล (พี่กันสั่ง 4 ก.ย. 2569)
+        // ชื่อเต็มยังอยู่ครบใน byFull สำหรับเอาเมาส์ชี้ดู และในไฟล์ส่งออก
+        byLabel: shortStaffName(r.by) || '—',
+        byFull: r.by || '—',
         lotLabel: r.lot || '—',
         // กดเลข Lot = กรองดูเฉพาะ Lot นั้น · เดิมมีฟีเจอร์นี้อยู่แล้วแต่หน้าคอมไม่เคยโชว์เลข
         // คนใช้เลยไม่มีทางรู้ว่าเลขคืออะไร กลายเป็นฟีเจอร์ที่มีแต่ใช้ไม่ได้

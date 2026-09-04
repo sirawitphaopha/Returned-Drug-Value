@@ -6,6 +6,7 @@
 //   2. เนื้อหาเปลี่ยนเป็นของเว็บมูลค่ายาคืน · TypeScript → JavaScript (เว็บนี้ไม่ใช้ TS)
 //   3. ตัวเลขในระบบเปลี่ยนจาก "Med/DRP กี่เคส" เป็น "กี่รายการ · มูลค่าสะสมเท่าไร"
 import { s, sx, kb } from '../helpers';
+import { renderPageTitle } from './pagetitle';
 
 const CARD = 'background:#fff;border:1px solid rgba(47,125,93,.16);border-radius:16px;padding:20px 22px';
 const TITLE = 'font:700 15px Sarabun,sans-serif;color:#24614a;margin-bottom:14px';
@@ -40,13 +41,24 @@ export function renderAbout(V) {
             🚨 ลูกศรวาดด้วย SVG ไม่ใช่ตัวอักษร ← ซึ่งหน้าตาขึ้นกับฟอนต์ของเครื่อง
             🚨 ปุ่ม 38 จุดเล็กกว่าเกณฑ์นิ้ว แต่คลาส tap ขยายพื้นที่กดออกด้านละ 11 จุด
                และไม่มีปุ่มอื่นวางติดกัน จึงไม่มีพื้นที่กดทับกัน (กฎข้อ 3.55) */}
+        {/* 🚨 ปุ่มกลับโผล่เฉพาะฝั่งมือถือ (พี่กันสั่ง 4 ก.ย. 2569)
+            ฝั่งคอมมีแท็บ บันทึก·ประวัติ·สรุป·คลังยา อยู่บนหัวเว็บตลอดเวลา
+            กดแท็บไหนก็ออกจากหน้านี้ได้ทันที ปุ่มกลับจึงซ้ำซ้อน
+            🚨 ฝั่งมือถือห้ามแตะ พี่กันย้ำ */}
+        {!V.wide && (
         <div {...kb(V.closeAbout)} className="hv-bg-f6 tap" aria-label="กลับไปหน้าก่อนหน้า"
           style={s('width:38px;height:38px;border:1px solid rgba(30,36,32,.14);border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;color:#414a44;cursor:pointer;flex:none')}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
           </svg>
         </div>
-        <div role="heading" aria-level="1" style={s('font:700 21px/1.3 Krub,sans-serif;color:#24614a;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>เกี่ยวกับ</div>
+        )}
+        {/* ฝั่งคอมหัวเรื่องย้ายเข้าไปอยู่ในกรอบขาวใบแรกแทน (ดูด้านล่าง)
+            ทำเหมือนหน้าคลังยาซึ่งเป็นหน้าที่โครงคล้ายกันที่สุดในเว็บ */}
+        {!V.wide && (
+          <div role="heading" aria-level="1"
+            style={s('font:700 21px/1.55 Krub,sans-serif;color:#24614a;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>เกี่ยวกับ</div>
+        )}
       </div>
 
       {/* หัวเรื่อง */}
@@ -56,7 +68,7 @@ export function renderAbout(V) {
         {/* 🚨 ระยะบรรทัด 1.2 ไม่ใช่ 1.95 (พี่กันทัก "รูปสองชื่อเว้บต่ำจัง")
             Charmonman ลากหางลงมายาว ระยะบรรทัดกว้าง ๆ จึงดันตัวอักษรลอยต่ำกลางกล่อง
             ใช้ padding-bottom กันที่ให้หางแทน ซึ่งดันเฉพาะของที่อยู่ข้างล่าง */}
-        <div style={s('font:700 30px/1.3 Krub,sans-serif;color:#24614a;padding-bottom:2px')}>มูลค่ายาคืน</div>
+        <div style={s('font:700 30px/1.55 Krub,sans-serif;color:#24614a;padding-bottom:2px')}>มูลค่ายาคืน</div>
 
         {/* คำอธิบายเว็บ — เกลาใหม่ 3 ก.ย. 2569 (พี่กันสั่ง "เกลาคำนี้ที")
             เดิมเป็นข้อความก้อนเดียว 12.5 จุด สีจาง ยัดคำอธิบายระบบกับชื่อหน่วยงาน
@@ -80,6 +92,13 @@ export function renderAbout(V) {
 
       {/* ผู้พัฒนา */}
       <div style={s(CARD + ';text-align:center')}>
+
+        {/* หัวเรื่องอยู่ในกรอบ แบบเดียวกับหน้าคลังยา (พี่กันสั่งให้จัดเรียงใหม่ 4 ก.ย. 2569) */}
+        {V.wide && (
+          <div style={s('text-align:left;padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid rgba(30,36,32,.08)')}>
+            {renderPageTitle('เกี่ยวกับ')}
+          </div>
+        )}
         <div style={s(TITLE)}>👤 ผู้พัฒนา</div>
         <div style={s('font:800 22px/1.25 Sarabun,sans-serif;color:#24614a;margin-top:6px;letter-spacing:-.2px')}>เภสัชกร สิรวิชญ์ เผ่าผา</div>
         <div style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-top:5px')}>เลขที่ใบประกอบวิชาชีพเภสัชกรรม 47186</div>

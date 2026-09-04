@@ -28,13 +28,16 @@ export function renderRecorderField(V, opt) {
   const inline = !!opt.inline;
   const ibd = has ? 'rgba(47,125,93,.34)' : 'rgba(194,84,60,.55)';
   const ifg = has ? '#2f7d5d' : '#c2543c';
+  // พื้นไฮไลต์ของป้าย — เขียวจางเมื่อกรอกแล้ว แดงจางเมื่อยังไม่ได้กรอก
+  // (พี่กันเสนอ 4 ก.ย. 2569) ตัวหนังสือแดงบนพื้นขาวเด่นไม่พอ
+  const ibg = has ? 'rgba(47,125,93,.10)' : 'rgba(194,84,60,.10)';
 
   return (
     <div style={s('position:relative')}>
       {inline ? (
         <div {...kb(V.toggleRecorderMenu)} className={has ? 'hv-bg-f6' : 'hv-bg-red-l'}
           style={sx('display:flex;align-items:center;height:40px;padding:0;border-radius:9px;background:#fff;cursor:pointer', { border: '1px solid ' + (open ? '#2f7d5d' : ibd) })}>
-          <span style={sx('font:500 11px/1.75 Sarabun,sans-serif;flex:none;width:62px;align-self:stretch;display:flex;align-items:center;justify-content:center;white-space:nowrap', { color: ifg, borderRight: '1px solid ' + ibd })}>ผู้บันทึก</span>
+          <span style={sx('font:500 11px/1.75 Sarabun,sans-serif;flex:none;width:62px;align-self:stretch;display:flex;align-items:center;justify-content:center;white-space:nowrap', { color: ifg, borderRight: '1px solid ' + ibd, background: ibg })}>ผู้บันทึก</span>
           {/* 🚨 ขนาดกับน้ำหนักตัวอักษรต้องเท่ากับช่อง รพ.สต. เป๊ะ (พี่กันทัก 1 ก.ย. 2569)
               16px · เลือกแล้วหนา 600 · ยังไม่เลือกหนา 500
               สองช่องอยู่ในชุดเดียวกัน ตัวหนังสือหนาไม่เท่ากันเห็นได้ทันที */}

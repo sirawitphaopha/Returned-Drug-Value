@@ -158,7 +158,17 @@ export function historyActions(app) {
   };
 
   // กดหัวคอลัมน์ครั้งแรก = เรียงมากไปน้อย · กดซ้ำ = สลับทิศ · กดคอลัมน์อื่น = เริ่มใหม่
+  // ล้างการเรียง กลับไปเรียงวันที่ใหม่ไปเก่าตามที่ฐานส่งมา (พี่กันสั่ง 4 ก.ย. 2569)
+  app.clearHistSort = () => app.setState({ histSortKey: '', histSortDir: 'desc' });
+
   app.setHistSort = (key) => {
+    // 🚨 ตอนยังไม่ได้กดเรียง ตารางเรียงวันที่ใหม่ไปเก่าอยู่แล้ว (ฐานส่งมาแบบนั้น)
+    //    กดคอลัมน์วันที่ครั้งแรกจึงต้องสลับเป็นเก่าไปใหม่ทันที ไม่ใช่ตั้ง desc ซ้ำ
+    //    ไม่งั้นกดแล้วหน้าจอไม่เปลี่ยนอะไรเลย ดูเหมือนปุ่มเสีย (พี่กันทัก 4 ก.ย. 2569)
+    if (!app.state.histSortKey && key === 'date') {
+      app.setState({ histSortKey: key, histSortDir: 'asc' });
+      return;
+    }
     if (app.state.histSortKey === key) {
       app.setState({ histSortDir: app.state.histSortDir === 'asc' ? 'desc' : 'asc' });
     } else {

@@ -46,7 +46,11 @@ export function shellVals(app, d) {
     // 🚨 หน้าบันทึกแบบคอม = หน้าเดียวที่ "ล็อกความสูงเท่าจอ" ไม่ให้ทั้งหน้าเลื่อน
     //    ของทุกอย่างถูกตรึง เหลือแค่ในกรอบรายการที่เลื่อนได้ (พี่กันสั่ง)
     //    หน้าอื่นยังเลื่อนทั้งหน้าตามปกติ ดูวิธีสลับที่ shell.jsx
-    fitScreen: st.screen === 'record' && d.wide,
+    // 🚨 ต้องเช็ค !st.settingsOpen ด้วย (พี่กันเจอบั๊ก 4 ก.ย. 2569 ท้ายเว็บลอยทับเนื้อหา)
+    //    หน้าตั้งค่าเปิดทับหน้าบันทึกได้ ถ้าไม่เช็ค กล่องครอบจะยังถูกล็อกความสูงเท่าจอ
+    //    เนื้อหาหน้าตั้งค่าที่ยาวกว่าจอจึงล้นออกไป แล้วท้ายเว็บค้างอยู่ที่ขอบจอพอดี
+    //    กลายเป็นแถบลอยทับกลางหน้าขณะเลื่อน
+    fitScreen: st.screen === 'record' && d.wide && !st.settingsOpen,
     isRecord: st.screen === 'record',
     isHistory: st.screen === 'history',
     isSummary: st.screen === 'summary',
@@ -71,6 +75,10 @@ export function shellVals(app, d) {
     orgName: st.orgName,
     dateLabel: st.date ? thaiDate(st.date) : '—',
     settingsOpen: st.settingsOpen,
+    // ปุ่ม เกี่ยวกับ/ตั้งค่า บนหัวเว็บต้องเปลี่ยนสีตอนเปิดหน้านั้นอยู่ เหมือนแท็บอีกสี่อัน
+    // (พี่กันทัก 4 ก.ย. 2569 "เราอยู่หน้าตั้งค่า ทำไมแท็บมันไม่เปลี่ยนสี")
+    settingsOn: !!st.settingsOpen,
+    aboutOn: st.screen === 'about',
     openSettings: () => app.setState({ settingsOpen: true, favQuery: '' }),
     closeSettings: () => app.setState({ settingsOpen: false, favQuery: '' }),
 

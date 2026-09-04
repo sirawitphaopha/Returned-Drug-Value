@@ -3,12 +3,14 @@
 // 🚨 ตาราง drugs ใช้ร่วมกัน 3 เว็บ · แก้ที่นี่กระทบ ME-DRP กับ TB Calculator ด้วย
 // 🚨 ลบยาไม่ได้โดยตั้งใจ ใช้ "ซ่อน" แทน (พี่กันสั่ง 13 ส.ค. 2569)
 import { s, sx, kb } from '../helpers';
+import { renderSortClear } from './sortclear';
+import { renderPageTitle } from './pagetitle';
 import { skelTableTag } from './skeleton';
 import { renderLoadFail } from './loadfail';
 import { renderSearchBox } from './thaibox';
 
 // หัวตารางตรึงใต้แถบค้นหาที่ตรึงอยู่ก่อนแล้ว — ระยะวัดจริงจาก ResizeObserver ผ่าน --cathead
-const TH = 'padding:9px 10px;text-align:left;font:600 12px/1.75 Sarabun,sans-serif;color:#fff;background:#2f7d5d;white-space:nowrap;position:sticky;top:var(--cathead,150px);z-index:2';
+const TH = 'padding:9px 10px;text-align:center;font:600 12px/1.75 Sarabun,sans-serif;color:#fff;background:#2f7d5d;white-space:nowrap;position:sticky;top:var(--cathead,150px);z-index:2';
 const TD = 'padding:9px 10px;font:400 12.5px/1.75 Sarabun,sans-serif;color:#414a44;vertical-align:top';
 const BTN = 'border:1px solid #cfe0d6;background:#fff;color:#2f7d5d;font:600 11.5px/1.75 Sarabun,sans-serif;padding:4px 9px;border-radius:7px;cursor:pointer';
 // 🚨 ชิปกับช่องค้นหาต้องสูงเท่ากันเป๊ะ (พี่กันสั่ง 25 ส.ค. 2569)
@@ -27,7 +29,7 @@ export function renderCatalog(V) {
 
         <div style={s('display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px')}>
           <div>
-            <div role="heading" aria-level="1" style={s('font:700 18px/1.2 Sarabun,sans-serif;color:#1e2420')}>คลังยา</div>
+            {renderPageTitle('คลังยา')}
             <div style={s('font:400 12px/1.75 Sarabun,sans-serif;color:#6b746e;margin-top:4px;font-variant-numeric:tabular-nums')}>
               แสดง {V.catShown} จาก {V.catTotal} รายการ
               {V.catHiddenCount > 0 && <span> · ซ่อนอยู่ {V.catHiddenCount} ตัว</span>}
@@ -71,6 +73,7 @@ export function renderCatalog(V) {
             ))}
             {/* ปุ่มล้าง — โผล่เมื่อมีอะไรให้ล้างจริง ล้างทั้งตัวกรองและคำค้นในปุ่มเดียว
                 เดิมล้างเฉพาะตัวกรอง ผู้ใช้ที่ทั้งค้นทั้งกรองต้องกดสองที่ (พี่กันทัก) */}
+            {renderSortClear(V.catSortClear)}
             {(V.catHasFilter || V.catHasSearch) && (
               <div {...kb(V.catClearAll)} className="hv-bg-red-l tap" title="ล้างคำค้นและตัวกรองทั้งหมด"
                 style={s(CHIP_BASE + ';border:1px solid rgba(194,84,60,.3);background:#fff;color:#c2543c;font:600 12px/1.75 Sarabun,sans-serif')}>
@@ -110,7 +113,7 @@ export function renderCatalog(V) {
           skelTableTag(V.catCols, 11, { extraCols: ["178px"] })
         ) : (
           <div style={s('border:1px solid #eef1ee;border-radius:10px')}>
-            <table style={s('width:100%;border-collapse:collapse')}>
+            <table className="tbl-grid" style={s('width:100%;border-collapse:collapse')}>
               <colgroup>
                 {V.catCols.map((c) => <col key={c.key} style={c.w ? { width: c.w } : undefined} />)}
                 {V.catShowFull && <col style={{ width: '340px' }} />}
@@ -119,17 +122,18 @@ export function renderCatalog(V) {
               <thead>
                 <tr>
                   {V.catCols.map((c) => (
-                    <th key={c.key} {...(c.sort ? kb(() => V.catSortBy(c.key)) : {})} className={c.sort ? 'hv-teal' : ''} style={sx(TH, c.sort ? { cursor: 'pointer' } : null)}>
+                    <th key={c.key} {...(c.sort ? kb(() => V.catSortBy(c.key)) : {})} className={c.sort ? 'hv-teal' : ''} style={sx(TH, Object.assign({}, c.sort ? { cursor: 'pointer' } : null, c.key === 'generic' ? { textAlign: 'left' } : null))}>
                       {c.label}
                       {c.sort && (
-                        <span style={s('margin-left:3px;opacity:.75')}>
-                          {V.catSortKey === c.key ? (V.catSortDir === 'asc' ? '▲' : '▼') : '↕'}
+                        <span aria-hidden="true" className="tbl-arrow" style={s('margin-left:3px;opacity:.85;font-size:12px')}>
+                          {V.catSortKey === c.key ? (V.catSortDir === 'asc' ? '↑' : '↓') : '↑↓'}
                         </span>
                       )}
                     </th>
                   ))}
                   {V.catShowFull && <th style={s(TH + ';background:#25664b')}>ชื่อที่เห็นตอนค้นหา</th>}
-                  <th style={s(TH)}></th>
+                  {/* หัวคอลัมน์ปุ่ม — ใช้คำเดียวกับอีกสองหน้า (พี่กันทัก 4 ก.ย. 2569) */}
+                  <th style={s(TH)}>จัดการ</th>
                 </tr>
               </thead>
               <tbody>

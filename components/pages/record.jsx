@@ -167,6 +167,11 @@ export function renderRecordNarrow(V) {
             เดิมช่องนี้วาดโครงสามชั้นเอง จึงไม่มีแว่นขยายเหมือนช่องอื่น (พี่กันจับได้)
             🚨 ต้องส่ง inputRef ไปด้วย หน้าบันทึกสั่งโฟกัสกลับมาที่ช่องนี้ 4 จุด
                หลังเลือกยา ปิดป๊อป และล้างคำค้น */}
+        {/* 🚨 ช่องค้นยาหน้านี้อยู่ในกล่องหัวเดียวกับชื่อเว็บ ต่างจากหน้าประวัติกับหน้าสรุป
+            ที่ช่องค้นอยู่นอกกล่อง แล้วได้ระยะขอบในล่างของกล่อง (11 จุด) มาบวกให้เอง
+            หน้านี้จึงต้องใส่ระยะเองเท่ากัน ไม่งั้นช่องค้นมาชิดหัวเว็บ
+            (พี่กันเจอเอง 4 ก.ย. 2569 "จุดนี้กลับบีบกว่าเดิม") */}
+        <div style={s('margin-top:12px')} />
         {renderSearchBox({
           value: V.query, onChange: V.onQuery, onKeyDown: V.onSearchKey,
           onClear: V.clearQuery, inputRef: V.searchRef,
@@ -231,7 +236,7 @@ export function renderRecordNarrow(V) {
           <div style={s('margin-top:9px;display:flex;gap:9px')}>
 
             <div style={s('flex:1;min-width:0;display:flex;align-items:center;height:40px;padding:0;border:1px solid rgba(47,125,93,.34);border-radius:9px;background:#fff')}>
-              <span style={s('font:500 11px/1.75 Sarabun,sans-serif;color:#2f7d5d;flex:none;width:62px;align-self:stretch;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(47,125,93,.28)')}>วันที่</span>
+              <span style={s('font:500 11px/1.75 Sarabun,sans-serif;color:#2f7d5d;flex:none;width:62px;align-self:stretch;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(47,125,93,.28);background:rgba(47,125,93,.10)')}>วันที่</span>
               {/* 🚨 ช่องวันที่ห้ามเผื่อที่ว่างทางขวาเหมือนช่องอื่น
                     กรอบกว้างแค่ครึ่งจอ (~195px) หักป้าย 62 แล้วเผื่ออีก 62
                     เหลือที่จริง 71px ซึ่งไม่พอกับ 01/09/2026 (~110px) แล้วปีหายไปทั้งดุ้น
@@ -241,7 +246,7 @@ export function renderRecordNarrow(V) {
             </div>
 
             <div style={s('flex:1;min-width:0;display:flex;align-items:center;height:40px;padding:0;border:1px solid rgba(47,125,93,.34);border-radius:9px;background:#fff')}>
-              <span style={s('font:500 11px/1.75 Sarabun,sans-serif;color:#2f7d5d;flex:none;width:62px;align-self:stretch;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(47,125,93,.28)')}>HN</span>
+              <span style={s('font:500 11px/1.75 Sarabun,sans-serif;color:#2f7d5d;flex:none;width:62px;align-self:stretch;display:flex;align-items:center;justify-content:center;border-right:1px solid rgba(47,125,93,.28);background:rgba(47,125,93,.10)')}>HN</span>
               {/* 🚨 ข้อความไว้กึ่งกลาง (พี่กันสั่ง 1 ก.ย. 2569 "ไม่ก็เอาไว้กึ่งกลาง")
                     ตัว ไ เคยโดนขอบช่องตัดยอด · อยู่กึ่งกลางแล้วมีที่ว่างบนล่างเท่ากัน */}
               <input value={V.hn} onChange={V.onHn} inputMode="numeric" placeholder="ไม่บังคับ"
@@ -565,34 +570,47 @@ export function renderRecordWide(V) {
             min-height:0 = ยอมให้หดต่ำกว่าเนื้อในได้ ไม่งั้นแถวเยอะแล้วกรอบดันทั้งหน้ายาวออกไป
             แทนที่จะเลื่อนอยู่ข้างในกรอบ */}
         <div style={s('background:#fff;border:1px solid rgba(30,36,32,.08);border-radius:10px;overflow:hidden;flex:1;min-height:0;display:flex;flex-direction:column')}>
-          {/* หัวตาราง — กดเรียงได้ + สีเข้ม ชุดเดียวกับหน้าประวัติ (พี่กันสั่งให้เหมือนกัน) */}
-          <div style={s("flex:none;display:flex;padding:11px 16px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);font:600 11.5px/1.75 Sarabun,sans-serif;letter-spacing:.04em")}>
-            {V.rowCols.map((c) => (
-              <span
-                key={c.key}
-                {...kb(c.pick)}
-                className="hv-bg-e3f"
-                style={sx('display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none;border-radius:5px;margin:-3px 0;padding:3px 0', Object.assign(
-                  { color: c.fg },
-                  c.flex ? { flex: 1 } : { width: c.w },
-                  c.align === 'right' ? { justifyContent: 'flex-end' }
-                    : c.align === 'center' ? { justifyContent: 'center' } : {},
-                  // ถอยหัวเข้ามาให้ตรงกับตัวเลข ไม่ใช่ตรงขอบคอลัมน์ (ดูเหตุผลใน ROW_COLS)
-                  c.padRight ? { paddingRight: c.padRight } : {}
-                ))}
-              >
-                {c.label}
-                <span style={sx('font-size:9px;flex:none', { color: c.arrowColor })}>{c.arrow}</span>
-              </span>
-            ))}
-            {/* ปุ่มล้างทั้งหมด วางหัวคอลัมน์ ✕ พอดี — สื่อว่า "ลบทั้งคอลัมน์นี้" (พี่กันขอ)
-                กดแล้วมีป๊อปอัปยืนยันอีกชั้น เพราะลบแล้วไม่มีถังขยะให้กู้
-                โผล่เฉพาะตอนมีรายการ ไม่งั้นเป็นปุ่มตายที่กดไปก็ไม่เกิดอะไร */}
-            {V.canClearAll ? (
-              <span {...kb(V.askClearAll)} title="ล้างรายการทั้งหมด" className="hv-del" style={s('width:40px;flex:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#c2543c;border-radius:5px;margin:-3px 0;padding:3px 0')}>ล้าง</span>
-            ) : (
-              <span style={s('width:40px')}></span>
-            )}
+          {/* ══ หัวตาราง — ตารางจริงก้อนแรก ═══════════════════════════════
+              หน้านี้ใช้ตาราง 2 ก้อน ไม่ใช่ก้อนเดียวเหมือนอีกสองหน้า เพราะ
+              หัวต้องตรึงอยู่นอกพื้นที่เลื่อน ส่วนแถบล็อตค้างต้องอยู่ "ใต้หัว"
+              และเลื่อนหายไปได้ (พี่กันสั่งไว้ว่าไม่ต้องตรึงแถบนั้น)
+              ถ้ารวมเป็นตารางเดียว แถบล็อตค้างจะไปอยู่เหนือหัว ซึ่งสลับที่กัน
+
+              🚨 ทั้งสองก้อนต้องใช้ colgroup ชุดเดียวกันเป๊ะ ๆ ไม่งั้นคอลัมน์เหลื่อม */}
+          <div style={s('flex:none')}>
+            <table className="tbl" style={s('--tbl-pad:16px')}>
+              <colgroup>
+                {V.rowCols.map((c) => <col key={c.key} style={c.flex ? undefined : { width: c.w }} />)}
+                <col style={s('width:40px')} />
+              </colgroup>
+              <thead>
+                <tr>
+                  {V.rowCols.map((c) => (
+                    <th key={c.key} {...kb(c.pick)} scope="col"
+                      className={'tbl-sort' + (c.flex ? '' : ' ta-c')}
+                      style={sx('', Object.assign(
+                        { color: c.fg },
+                        // ถอยหัวเข้ามาให้ตรงกับตัวเลข ไม่ใช่ตรงขอบคอลัมน์ (ดูเหตุผลใน ROW_COLS)
+                        c.padRight ? { paddingRight: c.padRight } : {}
+                      ))}>
+                      <span style={s('display:inline-flex;align-items:center;gap:4px')}>
+                        {c.label}
+                        <span aria-hidden="true" className="tbl-arrow" style={sx('', { color: c.arrowColor, fontSize: c.arrowSize })}>{c.arrow}</span>
+                      </span>
+                    </th>
+                  ))}
+                  {/* ปุ่มล้างทั้งหมด วางหัวคอลัมน์ ✕ พอดี — สื่อว่า "ลบทั้งคอลัมน์นี้" (พี่กันขอ)
+                      กดแล้วมีป๊อปอัปยืนยันอีกชั้น เพราะลบแล้วไม่มีถังขยะให้กู้
+                      โผล่เฉพาะตอนมีรายการ ไม่งั้นเป็นปุ่มตายที่กดไปก็ไม่เกิดอะไร */}
+                  <th scope="col" className="ta-c">
+                    {V.canClearAll ? (
+                      <span {...kb(V.askClearAll)} title="ล้างรายการทั้งหมด" className="hv-del"
+                        style={s('display:inline-block;cursor:pointer;color:#c2543c;border-radius:5px;padding:0 2px')}>ล้าง</span>
+                    ) : null}
+                  </th>
+                </tr>
+              </thead>
+            </table>
           </div>
 
           {/* 🎯 จุดเดียวในหน้าบันทึกแบบคอมที่เลื่อนได้ (พี่กันสั่ง)
@@ -608,11 +626,20 @@ export function renderRecordWide(V) {
             </div>
           )}
 
+          {/* ══ แถว — ตารางจริงก้อนที่สอง ═══════════════════════════════
+              🚨 colgroup ต้องเหมือนก้อนหัวเป๊ะ ๆ ไม่งั้นคอลัมน์เหลื่อมกัน
+              🚨 ห้ามใส่ thead ในก้อนนี้ หัวอยู่ก้อนบนแล้ว */}
+          <table className="tbl" style={s('--tbl-pad:16px')}>
+            <colgroup>
+              {V.rowCols.map((c) => <col key={c.key} style={c.flex ? undefined : { width: c.w }} />)}
+              <col style={s('width:40px')} />
+            </colgroup>
+            <tbody>
           {V.rows.map((row) => (
-            <div key={row.rid} style={sx('display:flex;align-items:center;border-bottom:1px solid rgba(30,36,32,.05);font:400 14px Sarabun,sans-serif;font-variant-numeric:tabular-nums', { background: row.deskBg, padding: V.tight ? '6px 16px' : '11px 16px' })}>
+            <tr key={row.rid} className={V.tight ? 'rec-row rec-tight' : 'rec-row'} style={sx('', { background: row.deskBg })}>
               {/* ชื่อยาหน้าตาเหมือนตอนค้นหาเป๊ะ — สีความแรง · รูปแบบยา · ER · ชื่อการค้า
                   (พี่กันสั่ง 25 ส.ค. 2569) ยาฉีดกับยากินจะได้แยกออกตั้งแต่กวาดตา */}
-              <span style={s('flex:1;min-width:0')}>
+              <td>
                 {renderDrugName(row.np, { size: '14px' })}
                 {/* เหตุผลที่ทำลาย — ตัวเล็กสีแดงอิฐใต้ชื่อยา เห็นได้โดยไม่ต้องเปิดอะไรเพิ่ม
                     ไม่มีเหตุผลก็ไม่มีบรรทัดนี้ แถวที่ใช้ต่อได้จึงหน้าตาเหมือนเดิมทุกประการ */}
@@ -621,7 +648,7 @@ export function renderRecordWide(V) {
                     เหตุผล: {row.reasonLabel}
                   </div>
                 )}
-              </span>
+              </td>
 
               {/* จำนวนแก้ได้ทั้งที่กด Enter ลงมาแล้ว — มีปุ่มดินสอบอกชัด ๆ ว่ากดแก้ได้
                   พิมพ์สูตรได้เหมือนช่องด้านบน · ปุ่ม ✓ ตกลง · ปุ่ม ✕ ยกเลิก (พี่กันสั่ง 25 ส.ค. 2569)
@@ -632,8 +659,8 @@ export function renderRecordWide(V) {
                      แล้วต่อด้วยปุ่ม 26px สองช่องเสมอ (ตอนไม่แก้ ช่องที่สองเป็นที่ว่างเปล่า)
                      ถ้าปล่อยให้จำนวนปุ่มไม่เท่ากัน กรอบตัวเลขจะเลื่อนซ้ายตอนกดแก้
                      ซึ่งทำให้ตาต้องไล่หาใหม่ทุกครั้ง (พี่กันทัก 25 ส.ค. 2569) */}
-              {row.editing ? (
-                <span style={s('width:220px;height:22px;display:flex;align-items:center;justify-content:flex-end;gap:5px;position:relative')}>
+              <td>{row.editing ? (
+                <span style={s('height:22px;display:flex;align-items:center;justify-content:flex-end;gap:5px;position:relative')}>
                   {/* onFocus select() = กดดินสอแล้วเลขถูกไฮไลต์ พิมพ์ทับได้เลยไม่ต้องลบก่อน */}
                   <input autoFocus onFocus={(e) => e.target.select()}
                     value={row.editText} onChange={row.onEditQty} onKeyDown={row.onEditQtyKey} autoComplete="off"
@@ -649,28 +676,30 @@ export function renderRecordWide(V) {
                   )}
                 </span>
               ) : (
-                <span style={s('width:220px;height:22px;display:flex;align-items:center;justify-content:flex-end;gap:5px')}>
+                <span style={s('height:22px;display:flex;align-items:center;justify-content:flex-end;gap:5px')}>
                   <span style={s('width:150px;text-align:right;font-variant-numeric:tabular-nums;padding-right:7px')}>{row.qtyLabel}</span>
                   <span {...kb(row.startEditQty)} aria-label="แก้จำนวน" className="tap hv-bg-eef" title="แก้จำนวน"
                     style={s('width:26px;height:24px;flex:none;border:1px solid rgba(30,36,32,.14);border-radius:6px;background:#fff;color:#6b746e;display:flex;align-items:center;justify-content:center;cursor:pointer;font:400 11px/1.75 Sarabun,sans-serif')}>✎</span>
                   <span style={s('width:26px;flex:none')} />
                 </span>
-              )}
+              )}</td>
               {/* ราคาจัดกลางคอลัมน์ให้ตรงกับหัว (พี่กันสั่ง 25 ส.ค. 2569)
                   ราคาทุกตัวมีทศนิยม 2 ตำแหน่งเสมอ หลักจุดจึงเยื้องกันน้อยมาก
                   ต่างจากคอลัมน์มูลค่าที่ตัวเลขยาวไม่เท่ากัน (15.00 กับ 1,200.00) ต้องชิดขวา */}
-              <span style={s('width:104px;text-align:center;color:#6b746e')}>{row.priceLabel}</span>
-              <span style={sx("width:124px;text-align:right;font:600 15px Sarabun,sans-serif", { color: row.color })}>{row.valueLabel}</span>
-              <span style={s('width:150px;display:flex;justify-content:flex-end')}>
+              <td className="ta-c" style={s('color:#6b746e')}>{row.priceLabel}</td>
+              <td className="ta-r" style={sx('font:600 15px Sarabun,sans-serif', { color: row.color })}>{row.valueLabel}</td>
+              <td className="ta-r">
                 <span style={sx('display:flex;padding:2px;border-radius:7px', { background: row.pillBg })}>
                   <span {...kb(row.setReuse)} className={row.reuseOn ? 'hv-seg-on' : 'hv-txt'} style={sx('padding:4px 9px;border-radius:5px;cursor:pointer;font:600 11px/1.75 Sarabun,sans-serif', { background: row.reuseBg, color: row.reuseFg })}>ใช้ต่อ</span>
                   <span {...kb(row.setDestroy)} className={row.reuseOn ? 'hv-des-off' : 'hv-des-on'} style={sx('padding:4px 9px;border-radius:5px;cursor:pointer;font:600 11px/1.75 Sarabun,sans-serif', { background: row.destroyBg, color: row.destroyFg })}>ทำลาย</span>
                 </span>
-              </span>
+              </td>
               {/* ✕ อยู่กลางคอลัมน์ให้ตรงกับหัว "ล้าง" ซึ่งจัดกลางอยู่แล้ว (พี่กันสั่ง 25 ส.ค. 2569) */}
-              <span {...kb(row.remove)} aria-label="ลบรายการนี้ออกจากรายการครั้งนี้" className="hv-fg-red" style={s('width:40px;flex:none;display:flex;align-items:center;justify-content:center;color:#c0c5c1;cursor:pointer')}>✕</span>
-            </div>
+              <td {...kb(row.remove)} aria-label="ลบรายการนี้ออกจากรายการครั้งนี้" className="hv-fg-red ta-c" style={s('color:#c0c5c1;cursor:pointer')}>✕</td>
+            </tr>
           ))}
+            </tbody>
+          </table>
           </div>
         </div>
       </div>

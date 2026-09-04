@@ -26,7 +26,7 @@ import { s, sx, kb } from '../helpers';
  */
 // 🚨 ระยะขอบของกล่องหัว — ทุกหน้าต้องใช้ค่านี้ ห้ามเขียนเลขเอง
 //    ปุ่ม ℹ ⚙ จะอยู่ระดับเดียวกันทั้งสามหน้าก็ต่อเมื่อระยะขอบบนเท่ากัน
-export const HEAD_PAD = 'padding:11px 20px 11px';
+export const HEAD_PAD = 'padding:11px 20px 12px';
 
 export function renderPageHead(o) {
   const t = o.tone || {};
@@ -46,7 +46,10 @@ export function renderPageHead(o) {
     // 🚨 ระยะห่างใต้หัวอยู่ในตัวกลาง ทุกหน้าจึงเท่ากันเอง
     //    ตอนยกหัวมาเป็นตัวกลางรอบแรก ระยะนี้หายไป ช่องค้นหาเลยมาชิดหัวเว็บ
     //    (พี่กันเห็นเองแล้วทัก 4 ก.ย. 2569 "กรอบค้น มันชิดไป")
-    <div style={s('display:flex;justify-content:space-between;align-items:center;margin-bottom:12px')}>
+    // 🚨 ไม่มีระยะขอบล่างของตัวเอง — ระยะใต้หัวมาจาก HEAD_PAD ของกล่องที่ครอบ (12 จุด)
+    //    ถ้าใส่ทั้งสองที่ ค่าจะบวกกันแล้วช่องค้นหาลอยห่างจากหัวเรื่อง
+    //    พี่กันเคาะ 12 จุดเท่ากันทุกหน้า (4 ก.ย. 2569)
+    <div style={s('display:flex;justify-content:space-between;align-items:center;margin-bottom:0')}>
 
         <div style={s('display:flex;align-items:center;gap:9px;min-width:0')}>
           {/* โลโก้ ฿ 30 จุด — เท่าหน้าบันทึกเป๊ะ */}
@@ -62,7 +65,7 @@ export function renderPageHead(o) {
               <div {...kb(o.onHome)} aria-label="กลับไปหน้าบันทึก" className="hv-home"
                 style={s('font:700 18px/1.2 Krub,sans-serif;cursor:pointer;display:inline-block;border-radius:8px;margin:0 0 0 -7px;padding:0 0 0 7px;white-space:nowrap')}>มูลค่ายาคืน</div>
             ) : (
-              <div style={s('font:700 18px/1.2 Krub,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>มูลค่ายาคืน</div>
+              <div style={s('font:700 18px/1.2 Krub,sans-serif;white-space:nowrap')}>มูลค่ายาคืน</div>
             )}
             {!!o.sub && (
               <div role="heading" aria-level="1"

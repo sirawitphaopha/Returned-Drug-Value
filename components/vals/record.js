@@ -647,8 +647,12 @@ export function recordVals(app, d) {
         flex: !!c.flex,
         padRight: c.padRight || '',
         align: c.align,
-        arrow: on ? (st.rowSortDir === 'asc' ? '▲' : '▼') : '↕',
-        arrowColor: on ? '#2f7d5d' : 'rgba(30,36,32,.28)',
+        // ลูกศรชุดเดียวกับอีกสามหน้า ต้นแบบคือหน้ารายการ Lot (พี่กันย้ำ 4 ก.ย. 2569)
+        // ↑ น้อยไปมาก · ↓ มากไปน้อย · ↑↓ ยังไม่ได้เรียงด้วยคอลัมน์นี้
+        arrow: on ? (st.rowSortDir === 'asc' ? '↑' : '↓') : '↑↓',
+        arrowColor: on ? '#2f7d5d' : 'rgba(30,36,32,.34)',
+        // ตัวที่กำลังเรียงอยู่ใหญ่กว่าเพื่อน เพราะเป็นตัวเดียวที่ต้องอ่านจริง
+        arrowSize: on ? '19px' : '16px',
         fg: on ? '#2f7d5d' : '#414a44',
         pick: () => app.setRowSort(c.key)
       };

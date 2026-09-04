@@ -395,8 +395,9 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
       ใบพิมพ์จึงยังเป็นฟอนต์ราชการล้วนเสมอ ไม่ว่าผู้ใช้เลือกอะไร */
 :root { --font-en: var(--font-mono) }
 
-.lots-head{position:sticky;top:0;z-index:5;background:#f6f7f4;
-  margin:-20px -26px 0;padding:20px 26px 2px}
+/* แถบหัวหน้ารายการ Lot — อยู่ในกรอบขาวแล้ว ระยะทำเหมือน .hist-head ทุกอย่าง */
+.lots-head{position:sticky;top:-16px;z-index:5;background:#fff;
+  margin:-16px -18px 0;padding:28px 18px 6px;border-radius:14px 14px 0 0}
 /* 🚨 หัวตารางติดใต้แถบหัวพอดี — ระยะมาจาก ResizeObserver ไม่ใช่เลขตายตัว
       เพราะปุ่มช่วงเวลากับช่องวันที่ขึ้นบรรทัดใหม่เองเมื่อจอแคบ */
 .col-head { position: sticky; top: var(--lotshead, 0px); z-index: 4 }
@@ -420,8 +421,19 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
 
 
 
-.hist-head{position:sticky;top:0;z-index:5;background:#f6f7f4;
-  margin:-20px -26px 0;padding:20px 26px 2px}
+/* 🚨 แถบกรองอยู่ในกรอบขาวแล้ว (4 ก.ย. 2569) ระยะจึงต้องอิงขอบในของกรอบ ไม่ใช่ขอบหน้า
+   กรอบมี padding 16px 18px — margin ติดลบเท่านั้นเพื่อให้แถบแผ่เต็มความกว้างกรอบ
+   แล้ว padding ชดเชยกลับ ไม่งั้นเลื่อนแล้วเห็นแถวลอดผ่านตรงร่องซ้ายขวา
+   🚨 top ต้องเป็น -16px ไม่ใช่ 0 — sticky ในกล่องที่มี padding จะติดต่ำลงเท่า padding
+   🚨 padding-top 28 = ระยะขอบใน 16 + ช่องหายใจอีก 12 (พี่กันสั่ง "ควรมีระยะห่างหน่อย")
+      หัวเรื่องจึงไม่ชิดขอบทั้งตอนอยู่นิ่งและตอนตรึงระหว่างเลื่อน
+      (กฎเดียวกับที่สกิลกลางเขียนไว้เรื่อง sticky header) */
+.hist-head{position:sticky;top:-16px;z-index:5;background:#fff;
+  margin:-16px -18px 0;padding:28px 18px 6px;
+  /* 🚨 ต้องมีมุมมนตรงกับกรอบที่ครอบอยู่ (14px) — แถบนี้พื้นขาวและแผ่ออกไป
+     ชนขอบกรอบด้วยระยะขอบติดลบ ถ้าไม่ใส่ มุมเหลี่ยมของมันจะไปทับมุมมนของกรอบ
+     เห็นเป็นมุมตัดตรงที่ซ้ายบนขวาบน (พี่กันจับได้ 4 ก.ย. 2569) */
+  border-radius:14px 14px 0 0}
 
 /* ── หัวตารางติดบนตอนเลื่อน ───────────────────────────────────────────────────
    ตารางประวัติแสดงได้ 60 แถว จอสูง 900px เห็นราว 12 แถว
@@ -616,3 +628,140 @@ nextjs-portal {
 /* ปุ่มพื้นอำพันเข้ม — ใช้ในแถบล็อตที่กรอกค้างไว้ (โทนอำพัน)
    🚨 สีตอนชี้ต้องอยู่ในโทนเดียวกับปุ่ม เข้มขึ้นหนึ่งระดับ ไม่ใช่เปลี่ยนเป็นสีอื่น */
 .hv-amber:hover { background: #6e4a0b !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ตารางจริงกลาง — ใช้ร่วมกันทั้งหน้าประวัติ · รายการ Lot · คลังยา
+   พี่กันสั่ง 1 ก.ย. 2569: "ตั้งเป็นกฎ ต้องสร้างตารางจริงเท่านั้น"
+   ทำจริง 4 ก.ย. 2569
+
+   เดิมสามหน้าวาดตารางคนละแบบ (กล่อง flex เรียงกัน 2 หน้า · table จริง 1 หน้า)
+   เส้นแบ่งคอลัมน์กับไฮไลต์แถวจึงมีแค่หน้าเดียว และต้องเขียนกฎซ้ำสองชุด
+   ตอนนี้ทุกหน้าใช้ <table> จริง กฎชุดนี้ชุดเดียวคุมหมด
+
+   🚨 กรอบที่ครอบตารางห้ามใส่ overflow เด็ดขาด — sticky ของ thead จะตายทันที
+   🚨 ความกว้างคอลัมน์กำหนดที่ <colgroup> ไม่ใช่ที่ th หรือ td
+   ══════════════════════════════════════════════════════════════════════════ */
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;          /* ความกว้างเชื่อ colgroup ไม่ให้เนื้อหาดันคอลัมน์ */
+  --tbl-pad: 15px;              /* ระยะขอบซ้ายขวา — ตามหน้ารายการ Lot ซึ่งเป็นต้นแบบ */
+}
+
+.tbl th, .tbl td {
+  box-sizing: border-box;
+  padding: 0 12px;              /* ช่องไฟระหว่างเส้นแบ่งกับตัวอักษร */
+  vertical-align: middle;
+  text-align: left;
+  white-space: nowrap;          /* ค่าเริ่มต้น ห้ามตัดบรรทัด — ตัวเลขกับปุ่มต้องอยู่บรรทัดเดียว */
+}
+.tbl th:first-child, .tbl td:first-child { padding-left: var(--tbl-pad) }
+.tbl th:last-child,  .tbl td:last-child  { padding-right: var(--tbl-pad) }
+
+/* เส้นแบ่งคอลัมน์เต็มความสูงแถวแบบ Excel (พี่กันสั่ง 27 ส.ค. 2569) */
+.tbl th:not(:last-child), .tbl td:not(:last-child) { border-right: 1px solid rgba(30,36,32,.06) }
+
+/* 🚨 หน้าคลังยาไม่มี table-layout:fixed คอลัมน์จึงยืดตามเนื้อหาได้
+   ถ้าใช้ border-right เส้นจะไปเพิ่มความกว้างตารางอีก 14px (1px x 14 คอลัมน์)
+   ตารางนั้นล้นขอบอยู่ก่อนแล้ว 100px การเพิ่มอีกทำให้ปุ่มขวาสุดโดนตัด
+   ใช้เงาด้านในแทน — วาดเส้นได้เหมือนกันแต่ไม่กินพื้นที่เลยสักจุด */
+.tbl-grid th:not(:last-child),
+.tbl-grid td:not(:last-child) { box-shadow: inset -1px 0 0 rgba(30,36,32,.06) }
+
+/* มุมบนมนเท่าตารางอีกสองหน้า (พี่กันสั่ง 4 ก.ย. 2569 "เปลี่ยนเป็นขอบมน เหมือนกับตารางอื่น")
+   กรอบที่ครอบมี border-radius อยู่แล้ว แต่หัวสีเขียวเข้มทับมุมจนเห็นเป็นเหลี่ยม */
+.tbl-grid thead th:first-child { border-top-left-radius: 9px }
+.tbl-grid thead th:last-child  { border-top-right-radius: 9px }
+/* 🚨 ต้องล็อกความกว้างด้วย ไม่งั้นหัวคอลัมน์ดันคอลัมน์ให้บานได้
+   ลูกศร ↑↓ กว้างกว่า ↕ ตัวเดิม ตารางเลยล้นขอบขวาจนปุ่มขวาสุดลอยทับแถบด้านบน
+   (พี่กันเจอเอง 4 ก.ย. 2569 "คำว่าซ่อนมันโผล่มา") */
+.tbl-grid { border-radius: 9px; overflow: clip; table-layout: fixed }
+
+/* หัวคอลัมน์ในตารางที่คอลัมน์เยอะ ห้ามให้ลูกศรดันจนตกบรรทัด */
+.tbl-grid thead th { white-space: nowrap; overflow: hidden }
+
+/* หัวตาราง — ตรึงไว้บนสุดของพื้นที่เลื่อน
+   แต่ละหน้าตั้ง top เองผ่านตัวแปร --tbl-top เพราะมีแถบกรองสูงไม่เท่ากัน */
+.tbl thead th {
+  position: sticky;
+  top: var(--tbl-top, 0px);
+  z-index: 3;
+  background: #e3f0e8;
+  border-bottom: 1px solid rgba(47,125,93,.22);
+  font: 600 11.5px/1.75 var(--font-en), var(--font-sarabun), Sarabun, sans-serif;
+  letter-spacing: .04em;
+  color: #414a44;
+  padding-top: 11px;
+  padding-bottom: 11px;
+  white-space: nowrap;
+}
+/* 🚨 มุมมนของหัวและแถวสุดท้าย ต้องตรงกับกรอบที่ครอบตารางอยู่ (10px)
+   ไม่งั้นมุมเหลี่ยมของช่องจะไปทับมุมมนของกรอบ เห็นเป็นมุมตัดตรง
+   (พี่กันจับได้ 4 ก.ย. 2569 — เดิมหัวมน 10 กรอบมน 11 เหลื่อมกัน 1 จุด
+    ส่วนแถวสุดท้ายไม่มนเลย มุมล่างจึงตัดตรงทั้งสองข้าง) */
+.tbl thead th:first-child { border-radius: 10px 0 0 0 }
+.tbl thead th:last-child  { border-radius: 0 10px 0 0 }
+.tbl tbody tr:last-child td:first-child { border-radius: 0 0 0 10px }
+.tbl tbody tr:last-child td:last-child  { border-radius: 0 0 10px 0 }
+
+/* หัวคอลัมน์ที่กดเรียงได้ */
+.tbl thead th.tbl-sort { cursor: pointer; user-select: none }
+.tbl thead th.tbl-sort:hover { background: #d5e8dd }
+
+/* แถวข้อมูล */
+.tbl tbody td {
+  border-top: 1px solid rgba(30,36,32,.06);
+  font: 400 13.5px/1.75 var(--font-en), var(--font-sarabun), Sarabun, sans-serif;
+  font-variant-numeric: tabular-nums;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+.tbl tbody tr, .tbl-grid tbody tr { transition: background-color .12s ease }
+.tbl tbody tr:hover td,
+.tbl-grid tbody tr:hover td { background: #eef6f1 !important }
+
+/* 🚨 ปุ่มในแถวต้องเข้มขึ้นตามแถวด้วย ไม่งั้นแถวเปลี่ยนสีแต่ปุ่มยังขาว ดูลอย
+   แต่ละปุ่มเข้มขึ้นในโทนของตัวเอง ไม่ใช่โทนเดียวกันหมด (กฎข้อ 3.56) */
+.tbl tbody tr:hover .hv-cream,
+.tbl-grid tbody tr:hover .hv-cream { background: #fbeed4 !important }
+.tbl tbody tr:hover .hv-bg-f6,
+.tbl-grid tbody tr:hover .hv-bg-f6 { background: #e8f2ec !important; border-color: rgba(47,125,93,.30) !important }
+.tbl tbody tr:hover .hv-bg-e6e,
+.tbl-grid tbody tr:hover .hv-bg-e6e { background: #e4e6e1 !important }
+.tbl tbody tr:hover .hv-bg-fbe,
+.tbl-grid tbody tr:hover .hv-bg-fbe { background: #fbe4dc !important }
+.tbl tbody tr:hover .hv-bg-e3f,
+.tbl-grid tbody tr:hover .hv-bg-e3f { background: #d5e8dd !important }
+.tbl tbody tr:hover .hv-teal,
+.tbl-grid tbody tr:hover .hv-teal { background: #24614a !important }
+
+/* 🚨 คอลัมน์ที่ยอมให้ขึ้นบรรทัดใหม่ได้ ต้องใส่คลาสนี้เอง
+   ใช้กับชื่อผู้บันทึกซึ่งห้ามตัดทิ้ง เป็นข้อมูลสืบกลับว่าใครเซ็นรับล็อตนั้น */
+.tbl .wrap { white-space: normal; overflow-wrap: anywhere }
+
+/* ตัวจัดตำแหน่งรายคอลัมน์ — ตั้งที่ colgroup ไม่ได้ ต้องตั้งที่ th กับ td */
+.tbl .ta-r { text-align: right }
+.tbl .ta-c { text-align: center }
+
+/* แถวสลับสีจาง — ยกมาจากหน้ารายการ Lot ซึ่งเป็นต้นแบบของทั้งสามหน้า
+   🚨 หน้าประวัติไม่ใช้กฎนี้ เพราะมีระบบสีจางแยกตาม Lot ของตัวเองอยู่แล้ว (ข้อ 3.4.1)
+      ซึ่งสื่อความหมายมากกว่าการสลับสีตามลำดับแถวเฉย ๆ */
+.tbl-zebra tbody tr:nth-child(even) td { background: #fbfcfb }
+
+/* ลูกศรเรียงลำดับ — ต้นแบบจากหน้ารายการ Lot (พี่กันชี้รูปให้ดู 27 ส.ค. 2569)
+   ↑ น้อยไปมาก · ↓ มากไปน้อย · ↑↓ ยังไม่ได้เรียงด้วยคอลัมน์นี้
+   🚨 ตัวที่กำลังเรียงอยู่ต้องใหญ่กว่าเพื่อน (19px) เพราะเป็นตัวเดียวที่ต้องอ่านจริง
+      เคยทำ 12/15px แล้วพี่กันทักว่า "อันเล็กนิดเดียวเอง" */
+.tbl-arrow {
+  line-height: 1;
+  letter-spacing: -.06em;
+  font-weight: 700;
+  flex: none;
+}
+
+/* แถวตาราง "รายการในครั้งนี้" หน้าบันทึก
+   🚨 ความสูงต้องคงที่ทั้ง 3 สถานะ (ปกติ · กำลังแก้จำนวน · มีป้ายผลลัพธ์สูตร)
+      ป้ายผลลัพธ์ใช้ position:absolute จึงไม่ดันแถว แต่ td ต้องเป็น relative ให้มันเกาะ
+   🚨 จอเตี้ยกว่า 700px บีบแถวลง เห็นเพิ่มอีก 2 แถว (คลาส rec-tight · ดูข้อ 3.65) */
+.tbl tbody tr.rec-row td { padding-top: 11px; padding-bottom: 11px; position: relative }
+.tbl tbody tr.rec-tight td { padding-top: 6px; padding-bottom: 6px }

@@ -47,7 +47,9 @@ export function catalogActions(app) {
   };
 
   app.openCatalog = () => {
-    app.setState({ screen: 'catalog' });
+    // 🚨 ต้องปิดหน้าตั้งค่าด้วย ไม่งั้นกดแท็บคลังยาจากหน้าตั้งค่าแล้วหน้าไม่เปลี่ยน
+    //    (พี่กันเจอบั๊ก 4 ก.ย. 2569 — แท็บกดไม่ติดทั้งสี่อัน)
+    app.setState({ screen: 'catalog', settingsOpen: false });
     app.loadCatalog();
   };
 
@@ -83,6 +85,9 @@ export function catalogActions(app) {
   app.clearCatAll = () => app.setState(Object.assign({ catFilters: [], catSearch: '' }, RESET));
 
   // กดหัวคอลัมน์เพื่อเรียง · กดซ้ำสลับขึ้น/ลง
+  // ล้างการเรียง กลับไปเรียงตามรหัสยาเหมือนตอนเปิดหน้า (พี่กันสั่ง 4 ก.ย. 2569)
+  app.clearCatSort = () => app.setState(Object.assign({ catSort: null }, RESET));
+
   app.toggleCatSort = (key) => {
     const s = app.state.catSort;
     app.setState(Object.assign({ catSort: s && s.key === key ? { key: key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key: key, dir: 'asc' } }, RESET));

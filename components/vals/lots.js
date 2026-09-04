@@ -1,6 +1,6 @@
 // ค่าของหน้ารายการ Lot + ใบสรุป Lot
 import { money, thaiDate, SOURCES, thaiDateFull } from '@/lib/format';
-import { qtyText, evalQty, isQtyExpr, exprText } from '../helpers';
+import { qtyText, evalQty, isQtyExpr, exprText, shortStaffName } from '../helpers';
 import { nameParts } from './record';
 import { pillColorOf } from '@/lib/drugPillColors';
 
@@ -20,18 +20,24 @@ const COLS = [
   //    ที่ 92px วันที่ตกบรรทัดเป็นสองแถว แถวทั้งตารางเลยสูงขึ้นตาม (เจอ 27 ส.ค. 2569)
   { key: 'date',  label: 'วันที่',      w: '116px' },
   { key: 'lot',   label: 'เลข Lot',     w: '108px' },
-  { key: 'by',    label: 'ผู้บันทึก',    flex: true },
-  { key: 'src',   label: 'แหล่งที่มา',   w: '108px' },
+  // ชื่อเต็มพร้อมคำนำหน้าและนามสกุล (พี่กันเคาะ 4 ก.ย. 2569 ว่าตัวเต็มได้)
+  // เป็นข้อมูลสืบกลับว่าใครเซ็นรับล็อตนั้น กว้างพอให้อยู่บรรทัดเดียว
+  { key: 'by',    label: 'ผู้บันทึก',    w: '176px' },
+  { key: 'src',   label: 'แหล่งที่มา',   flex: true },
   // 🚨 รพ.สต. เป็นคอลัมน์ของตัวเอง ไม่ใช่บรรทัดล่างของแหล่งที่มา (พี่กันสั่ง 26 ส.ค. 2569)
   //    แยกแล้วจึงกดเรียงเพื่อจับกลุ่มยาที่คืนจากแห่งเดียวกันมาอยู่ติดกันได้
-  { key: 'site',  label: 'รพ.สต.',      w: '120px' },
+  { key: 'site',  label: 'รพ.สต.',      w: '104px' },
   // 🚨 ความกว้างตรงนี้ต้องตรงกับที่เขียนในแถว (pages/lots.jsx) เป๊ะ ๆ
   //    แก้ที่เดียวไม่พอ หัวกับช่องจะเหลื่อมกันทันที
   //    ขยาย 27 ส.ค. 2569 — คอลัมน์ตัวเลขเดิมแคบจนตัวเลขดูอึดอัด ทั้งที่คอลัมน์ผู้บันทึก
   //    (flex:1 กินที่เหลือ) กว้างถึง 27% ของตารางแล้วปล่อยว่าง · ที่เพิ่มมาหักจากตรงนั้น
-  { key: 'items', label: 'รายการ',      w: '88px',  align: 'center' },
-  { key: 'saved', label: 'ใช้ต่อได้',    w: '116px', align: 'right' },
-  { key: 'lost',  label: 'ทำลาย',       w: '100px', align: 'right' },
+  { key: 'items', label: 'รายการ',      w: '76px',  align: 'center' },
+  { key: 'saved', label: 'ใช้ต่อได้',    w: '106px', align: 'right' },
+  { key: 'lost',  label: 'ทำลาย',       w: '94px',  align: 'right' },
+  // 🆕 มูลค่ารวมทั้งล็อต = ใช้ต่อได้ + ทำลาย (พี่กันถามหาคอลัมน์เพิ่ม 4 ก.ย. 2569)
+  //    เดิมมีแต่ยอดแยกสองช่อง ถ้าอยากรู้ว่าล็อตนี้รับคืนมากี่บาทต้องบวกเอง
+  //    ยอดรวมทุกล็อตมีอยู่บนหัวตารางแล้ว แต่รายแถวยังไม่มี
+  { key: 'total', label: 'รวม',        w: '110px', align: 'right' },
   { key: 'act',   label: 'จัดการ',      w: '262px', align: 'center', noSort: true }
 ];
 
@@ -46,7 +52,8 @@ const SORT_VAL = {
   site:  (l) => String(l.pcuSite || '') || 'ๅๅๅ',
   items: (l) => Number(l.items || 0),
   saved: (l) => Number(l.saved || 0),
-  lost:  (l) => Number(l.lost || 0)
+  lost:  (l) => Number(l.lost || 0),
+  total: (l) => Number(l.saved || 0) + Number(l.lost || 0)
 };
 
 export function lotsVals(app, d) {
@@ -214,6 +221,8 @@ export function lotsVals(app, d) {
     // หัวคอลัมน์กดเรียงได้ · ↑ น้อยไปมาก ↓ มากไปน้อย ↑↓ ยังไม่ได้เรียง
     // พี่กันสั่ง 27 ส.ค. 2569 ให้เอาแบบที่ชี้ให้ดู — ลูกศรขึ้นกับลง ตัวใหญ่ ๆ เห็นชัด
     // ของเดิมเป็นสามเหลี่ยม ▲▼↕ ขนาด 10px ซึ่งเล็กจนดูไม่ออกว่าเรียงทางไหนอยู่
+    lotsSortClear: { on: !!sk, clear: app.clearLotsSort, label: (COLS.find((c) => c.key === sk) || {}).label || '' },
+
     lotCols: COLS.map((c) => {
       const on = sk === c.key;
       return {
@@ -253,6 +262,7 @@ export function lotsVals(app, d) {
         lot: l.lot,
         dateLabel: thaiDate(l.date),
         by: l.by || 'ไม่ระบุผู้บันทึก',
+        byFull: l.by || 'ไม่ระบุผู้บันทึก',
         // ป้ายเล็กบอกว่าล็อตนี้มาจาก รพ.สต. ไหน — ว่างเมื่อไม่ได้มาจาก รพ.สต.
         siteLabel: l.src === 'pcu' ? String(l.pcuSite || '').trim() : '',
         // แหล่งที่มาเป็นคอลัมน์ของตัวเองแล้ว ไม่ใช่ข้อความห้อยท้ายชื่อคนเหมือนเดิม
@@ -267,6 +277,8 @@ export function lotsVals(app, d) {
         savedLabel: money(saved),
         lostLabel: lost > 0 ? money(lost) : '',
         hasLost: lost > 0,
+        // มูลค่ารวมทั้งล็อต = ใช้ต่อได้ + ทำลาย (คอลัมน์ใหม่ 4 ก.ย. 2569)
+        totalLabel: money(saved + lost),
         openHistory: () => app.openLotInHistory(l.lot),
         openSlip: () => app.openLotSlip(l),
         openEdit: () => app.openLotEdit(l.lot)

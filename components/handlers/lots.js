@@ -36,7 +36,7 @@ export function lotsActions(app) {
   app._lotsCache = {};
 
   app.openLots = () => {
-    app.setState({ screen: 'lots' });
+    app.setState({ screen: 'lots', settingsOpen: false });
     app.loadLots();
   };
 
@@ -103,6 +103,9 @@ export function lotsActions(app) {
 
   // กดหัวคอลัมน์เดิมซ้ำ = สลับทิศ · กดคอลัมน์ใหม่ = เริ่มจากมากไปน้อย
   // (ทำเหมือนหน้าประวัติเป๊ะ ๆ มือจะได้จำท่าเดียวใช้ได้ทั้งเว็บ)
+  // ล้างการเรียง กลับไปเรียงตามที่ฐานส่งมา (วันที่ใหม่ก่อน)
+  app.clearLotsSort = () => app.setState({ lotsSortKey: '', lotsSortDir: 'desc' });
+
   app.setLotsSort = (key) => {
     if (app.state.lotsSortKey === key) {
       app.setState({ lotsSortDir: app.state.lotsSortDir === 'asc' ? 'desc' : 'asc' });

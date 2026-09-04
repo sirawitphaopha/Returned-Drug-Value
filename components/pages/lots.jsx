@@ -3,6 +3,8 @@
 import { createPortal } from 'react-dom';
 import { s, sx, kb, Z } from '../helpers';
 import { renderExportBtn } from './exportbtn';
+import { renderSortClear } from './sortclear';
+import { renderPageTitle } from './pagetitle';
 import { skelTable, skelCard } from './skeleton';
 import { renderLoadFail } from './loadfail';
 import { renderSearchBox } from './thaibox';
@@ -72,6 +74,7 @@ function headNarrow(V) {
         <div style={s('min-width:0;flex:1')}>
           <div style={s('font:700 17px/1.25 Sarabun,sans-serif')} role="heading" aria-level="1">รายการ Lot</div>
           <div style={s('font:500 11.5px/1.6 Sarabun,sans-serif;color:#6b746e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis')}>
+            {renderSortClear(V.lotsSortClear)}
             {V.lotsCountLabel} · <span style={s('font:700 12px/1.6 Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{V.lotsSumLabel}</span>
           </div>
         </div>
@@ -201,6 +204,11 @@ export function renderLotsFilter(V) {
 export function renderLots(V) {
   return (
     <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:20px 26px 26px;display:flex;flex-direction:column;min-height:100%')}>
+      {/* กรอบขาวใบเดียวครอบทั้งหน้า — ทำเหมือนหน้าประวัติกับหน้าคลังยา
+          (พี่กันสั่ง 4 ก.ย. 2569 "ทำหน้านี้ให้เหมือนกัน")
+          🚨 ห้ามใส่ overflow ที่กรอบนี้ — sticky ของแถบหัวกับหัวตารางจะตายทันที
+          🚨 min-width:fit-content ห้ามลบ — เหตุผลเดียวกับหน้าประวัติ */}
+      <div style={s('background:#fff;border:1px solid rgba(30,36,32,.1);border-radius:14px;padding:16px 18px;flex:1 0 auto;min-width:fit-content')}>
 
       {/* ── แถบหัวที่ตรึงไว้บนสุด (หัวเรื่อง + ช่วงเวลา + ค้นหา + ตัวกรอง) ──────
           ref = ตัววัดความสูง ส่งให้หัวตารางไปตั้งระยะติดบน (ดู .lots-head ใน globals.css)
@@ -224,7 +232,7 @@ export function renderLots(V) {
           ประวัติ
         </div>
         <div style={s('min-width:0')}>
-          <div style={s('font:700 19px/1.2 Sarabun,sans-serif')} role="heading" aria-level="1">รายการ Lot</div>
+          {renderPageTitle('รายการ Lot')}
           <div style={s('font:400 12px/1.75 Sarabun,sans-serif;color:#6b746e')}>หนึ่งรอบกดบันทึก = หนึ่ง Lot · กดหัวคอลัมน์เพื่อเรียงลำดับ</div>
         </div>
         {/* ช่วงวันที่ที่เลือกเอง อยู่แถวเดียวกับปุ่มช่วงเวลา (พี่กันสั่ง 26 ส.ค. 2569)
@@ -343,46 +351,58 @@ export function renderLots(V) {
         </div>
       )}
 
-      {/* ── ตาราง (จอกว้าง) ──────────────────────────────────────────────── */}
-      {V.lotsWide && !V.lotsEmpty && !V.lotsLoading && !V.skelDemo && (
-        <div className="col-tab" style={s('border:1px solid rgba(30,36,32,.10);border-radius:11px;background:#fff')}>
-          <div className="col-head" style={s('display:flex;padding:11px 15px;background:#e3f0e8;border-bottom:1px solid rgba(47,125,93,.22);border-radius:10px 10px 0 0;font:600 11.5px/1.75 Sarabun,sans-serif;letter-spacing:.04em')}>
-            {V.lotCols.map((c) => (
-              <span key={c.key}
-                {...(c.pick ? kb(c.pick) : {})}
-                className={c.pick ? 'hv-bg-e3f' : ''}
-                style={sx('display:flex;align-items:center;gap:4px;user-select:none;margin:-11px 0;padding:11px 0', Object.assign(
-                  { color: c.fg, cursor: c.pick ? 'pointer' : 'default' },
-                  c.flex ? { flex: 1, minWidth: '120px' } : { width: c.w, flex: 'none' },
-                  c.align === 'right' ? { justifyContent: 'flex-end' } : c.align === 'center' ? { justifyContent: 'center' } : {}
-                ))}
-              >
-                {c.label}
-                {c.arrow && <span aria-hidden="true" style={sx('line-height:1;letter-spacing:-.06em;font-weight:700', { color: c.arrowColor, fontSize: c.arrowSize })}>{c.arrow}</span>}
-              </span>
-            ))}
-          </div>
+      {/* ══ ตารางจริง (จอกว้าง) ═══════════════════════════════════════════
+          รื้อจากกล่อง flex เรียงกันมาเป็น <table> จริง 4 ก.ย. 2569
+          หน้านี้เป็นต้นแบบของอีกสองหน้า — เส้นแบ่งคอลัมน์ ไฮไลต์แถว ลูกศรเรียง
 
-          {V.lotRows.map((l, i) => (
-            <div key={l.key} className="col-row" style={sx('display:flex;align-items:center;padding:9px 15px;border-top:1px solid rgba(30,36,32,.06)', { background: i % 2 ? '#fbfcfb' : '#fff' })}>
-              <span style={s('width:116px;flex:none;font:400 12.5px/1.75 Sarabun,sans-serif;color:#414a44')}>{l.dateLabel}</span>
-              <span style={s('width:108px;flex:none;font:700 13.5px/1.75 Sarabun,sans-serif;color:#2f7d5d')}>{l.lot}</span>
-              {/* ชื่อผู้บันทึกยาวให้ขึ้นบรรทัดใหม่ ห้ามตัดทิ้ง เป็นข้อมูลสืบกลับ */}
-              <span style={s('flex:1;min-width:120px;font:500 12.5px/1.75 Sarabun,sans-serif;color:#1e2420;overflow-wrap:anywhere')}>{l.by}</span>
-              <span style={s('width:108px;flex:none;font:500 12.5px/1.75 Sarabun,sans-serif;color:#414a44')}>{l.srcText}</span>
-              <span style={s('width:120px;flex:none')}>{siteCell(l)}</span>
-              <span style={s('width:88px;flex:none;text-align:center;justify-content:center;font:500 12.5px/1.75 Sarabun,sans-serif;color:#414a44;font-variant-numeric:tabular-nums')}>{l.itemsCount}</span>
-              <span style={s('width:116px;flex:none;text-align:right;justify-content:flex-end;font:600 13px/1.75 Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{l.savedLabel}</span>
-              {/* มีตัวเลข = ชิดขวาให้หลักตรงกับคอลัมน์ใช้ต่อได้ · ไม่มี = ขีดอยู่กึ่งกลางช่อง
-                  ของเดิมขีดชิดขวาจนไปแนบปุ่มแก้ไข ดูเหมือนเศษที่ห้อยอยู่หน้าปุ่ม ไม่ใช่ข้อมูลของช่อง */}
-              <span style={sx('width:100px;flex:none;font:600 12.5px/1.75 Sarabun,sans-serif;font-variant-numeric:tabular-nums', {
-                color: l.hasLost ? '#c2543c' : '#c9cdc9',
-                textAlign: l.hasLost ? 'right' : 'center',
-                justifyContent: l.hasLost ? 'flex-end' : 'center'
-              })}>{l.hasLost ? l.lostLabel : '—'}</span>
-              <span style={s('width:262px;flex:none')}>{rowButtons(l)}</span>
-            </div>
-          ))}
+          🚨 กรอบนี้ห้ามใส่ overflow เด็ดขาด — sticky ของ thead จะตายทันที
+          🚨 ความกว้างคอลัมน์อยู่ที่ <colgroup> ห้ามไปตั้งที่ th หรือ td */}
+      {V.lotsWide && !V.lotsEmpty && !V.lotsLoading && !V.skelDemo && (
+        <div className="col-tab" style={s('border:1px solid rgba(30,36,32,.10);border-radius:10px')}>
+          <table className="tbl tbl-zebra" style={sx('', { '--tbl-top': 'calc(var(--lotshead, 16px) - 16px)' })}>
+            <colgroup>
+              {V.lotCols.map((c) => (
+                <col key={c.key} style={c.flex ? { minWidth: '196px' } : { width: c.w }} />
+              ))}
+            </colgroup>
+            <thead>
+              <tr>
+                {V.lotCols.map((c) => (
+                  <th key={c.key} {...(c.pick ? kb(c.pick) : {})} scope="col"
+                    className={(c.pick ? 'tbl-sort' : '') + (c.flex ? '' : ' ta-c')}
+                    style={sx('', { color: c.fg })}>
+                    <span style={s('display:inline-flex;align-items:center;gap:4px')}>
+                      {c.label}
+                      {c.arrow && <span aria-hidden="true" className="tbl-arrow" style={sx('', { color: c.arrowColor, fontSize: c.arrowSize })}>{c.arrow}</span>}
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {V.lotRows.map((l) => (
+                <tr key={l.key}>
+                  <td style={s('font:400 12.5px/1.75 Sarabun,sans-serif;color:#414a44')}>{l.dateLabel}</td>
+                  <td style={s('font:700 13.5px/1.75 Sarabun,sans-serif;color:#2f7d5d')}>{l.lot}</td>
+                  {/* ชื่อผู้บันทึกยาวให้ขึ้นบรรทัดใหม่ ห้ามตัดทิ้ง เป็นข้อมูลสืบกลับ */}
+                  <td className="wrap" title={l.byFull} style={s('font:500 12.5px/1.75 Sarabun,sans-serif;color:#1e2420')}>{l.by}</td>
+                  <td style={s('font:500 12.5px/1.75 Sarabun,sans-serif;color:#414a44')}>{l.srcText}</td>
+                  <td>{siteCell(l)}</td>
+                  <td className="ta-c" style={s('font:500 12.5px/1.75 Sarabun,sans-serif;color:#414a44')}>{l.itemsCount}</td>
+                  <td className="ta-r" style={s('font:600 13px/1.75 Sarabun,sans-serif;color:#2f7d5d')}>{l.savedLabel}</td>
+                  {/* มีตัวเลข = ชิดขวาให้หลักตรงกับคอลัมน์ใช้ต่อได้ · ไม่มี = ขีดอยู่กึ่งกลางช่อง
+                      ของเดิมขีดชิดขวาจนไปแนบปุ่มแก้ไข ดูเหมือนเศษที่ห้อยอยู่หน้าปุ่ม */}
+                  <td className={l.hasLost ? 'ta-r' : 'ta-c'}
+                    style={sx('font:600 12.5px/1.75 Sarabun,sans-serif', { color: l.hasLost ? '#c2543c' : '#c9cdc9' })}>
+                    {l.hasLost ? l.lostLabel : '—'}
+                  </td>
+                  {/* มูลค่ารวมทั้งล็อต — เดิมมีแต่ยอดแยกสองช่อง ต้องบวกเอง */}
+                  <td className="ta-r" style={s('font:700 13px/1.75 Sarabun,sans-serif;color:#1e2420')}>{l.totalLabel}</td>
+                  <td>{rowButtons(l)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -413,6 +433,7 @@ export function renderLots(V) {
       {V.lotsHasMore && !V.skelDemo && (
         <div {...kb(V.moreLots)} className="hv-bg-f6 tap" style={s('margin-top:10px;height:44px;border-radius:11px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 13.5px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer')}>{V.lotsMoreLabel}</div>
       )}
+      </div>
     </div>
   );
 }
