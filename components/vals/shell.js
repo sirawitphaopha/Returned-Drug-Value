@@ -78,7 +78,10 @@ export function shellVals(app, d) {
     // ปุ่ม เกี่ยวกับ/ตั้งค่า บนหัวเว็บต้องเปลี่ยนสีตอนเปิดหน้านั้นอยู่ เหมือนแท็บอีกสี่อัน
     // (พี่กันทัก 4 ก.ย. 2569 "เราอยู่หน้าตั้งค่า ทำไมแท็บมันไม่เปลี่ยนสี")
     settingsOn: !!st.settingsOpen,
-    aboutOn: st.screen === 'about',
+    // 🚨 ต้องเช็ค !settingsOpen ด้วย — หน้าตั้งค่าเปิดทับหน้าเกี่ยวกับได้
+    //    ถ้าไม่เช็ค ปุ่มทั้งสองจะไฮไลต์พร้อมกันทั้งที่เปิดอยู่หน้าเดียว
+    //    (พี่กันเจอเอง 5 ก.ย. 2569)
+    aboutOn: st.screen === 'about' && !st.settingsOpen,
     openSettings: () => app.setState({ settingsOpen: true, favQuery: '' }),
     closeSettings: () => app.setState({ settingsOpen: false, favQuery: '' }),
 

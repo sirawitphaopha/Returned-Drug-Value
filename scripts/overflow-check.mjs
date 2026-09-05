@@ -8,7 +8,10 @@
 import fs from 'fs';
 import puppeteer from 'puppeteer-core';
 
-const BASE = 'http://127.0.0.1:3000';
+// พอร์ตอ่านจากตัวแปรแวดล้อม PORT ถ้าไม่ตั้งใช้ 3000
+// (พี่กันตั้งกฎ 5 ก.ย. 2569 ว่าพอร์ตอาจไม่ว่าง ต้องเปิดพอร์ตอื่นได้)
+// ใช้: PORT=3002 node scripts/xxx.mjs
+const BASE = 'http://127.0.0.1:' + (process.env.PORT || '3000');
 const CHROME = ['C:/Program Files/Google/Chrome/Application/chrome.exe',
   'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'].find((p) => fs.existsSync(p));
 const pw = (() => {

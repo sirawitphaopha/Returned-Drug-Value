@@ -25,7 +25,10 @@ const LAB = 'display:block;font:600 12px/1.75 Sarabun,sans-serif;color:#6b746e;m
 export function renderCatalog(V) {
   return (
     <div style={s('width:100%;max-width:1400px;margin:0 auto;padding:20px 26px 26px')}>
-      <div style={s('background:#fff;border:1px solid rgba(30,36,32,.1);border-radius:14px;padding:16px 18px')}>
+      {/* 🚨 min-width:fit-content ห้ามลบ — ตารางล็อกความกว้างคอลัมน์ไว้ตายตัว
+          จอที่แคบกว่านั้นถ้ากรอบยอมหดตามจอ ตารางจะทะลุออกไปนอกกรอบ
+          เห็นเป็นปุ่มกับหัวตารางลอยทับกัน (หน้าประวัติกับรายการ Lot เจอมาแล้ว 4 ก.ย. 2569) */}
+      <div style={s('background:#fff;border:1px solid rgba(30,36,32,.1);border-radius:14px;padding:16px 18px;min-width:fit-content')}>
 
         <div style={s('display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px')}>
           <div>
