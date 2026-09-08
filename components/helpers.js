@@ -668,7 +668,7 @@ export const Z = {
   toast: 95      // ข้อความเด้ง — เหนือทุกอย่าง
 };
 
-export const APP_VERSION = '0.19.1.0';
+export const APP_VERSION = '0.19.2.0';
 export const APP_FIRST_RELEASE = '4 สิงหาคม 2569';
 export const APP_LAST_UPDATE = '5 กันยายน 2569';
 
