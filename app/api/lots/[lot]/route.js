@@ -184,7 +184,7 @@ export async function PATCH(req, ctx) {
         if (q !== Number(r.qty)) {
           patch.qty = q;
           audit.push({
-            field: 'qty', return_id: id, drug_name: r.drug_name,
+            field: 'qty', return_id: id, drug_id: r.drug_id, drug_name: r.drug_name,
             old_value: String(Number(r.qty)), new_value: String(q)
           });
         }
@@ -195,7 +195,7 @@ export async function PATCH(req, ctx) {
         if (dp !== r.disposition) {
           patch.disposition = dp;
           audit.push({
-            field: 'disposition', return_id: id, drug_name: r.drug_name,
+            field: 'disposition', return_id: id, drug_id: r.drug_id, drug_name: r.drug_name,
             old_value: r.disposition, new_value: dp
           });
         }
