@@ -15,14 +15,12 @@ import { renderScrollBtns } from './scrollbtns';
 // เดิมมีแค่ 4 ปุ่มช่วงเวลาสำเร็จรูป + ตัดที่ 60 แถว แล้วบอกให้ "กรองช่วงวันที่ให้แคบลง"
 // ทั้งที่ไม่มีเครื่องมือเลือกช่วงวันเลย · เพิ่ม เลือกช่วงวันเอง + ถังขยะ + ดูรายล็อต
 function renderHistTools(V) {
+  // 🚨 ระยะใต้แถบนี้ต้องเท่ากับระยะระหว่างแถวในแถบเอง (พี่กันสั่ง 10 ก.ย. 2569)
+  //    "ระยะห่างบนมันแคบกว่าระยะห่างล่าง เราอยากให้มันแคบเท่ากันวงบน"
+  //    3 (ตรงนี้) + 6 (padding ล่างของ .hist-head) + เส้นแบ่ง = 10 เท่ากับระยะระหว่างแถวพอดี
+  // ⚠️ คอมเมนต์แบบ JSX วางเป็นลูกตัวแรกของ return ไม่ได้ เว็บพังทั้งหน้า (ข้อ 3.68)
   return (
-    <div style={s('display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px')}>
-      <div style={s('display:flex;align-items:center;gap:6px')}>
-        <span style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>ตั้งแต่</span>
-        <input type="date" className="mrv-hit-input" value={V.histFrom} onChange={V.onHistFrom} style={sx("height:38px;padding:0 9px;border-radius:8px;background:#fff;font:400 12.5px/1.75 Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
-        <span style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>ถึง</span>
-        <input type="date" className="mrv-hit-input" value={V.histTo} onChange={V.onHistTo} style={sx("height:38px;padding:0 9px;border-radius:8px;background:#fff;font:400 12.5px/1.75 Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
-      </div>
+    <div style={s('display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:3px')}>
 
       {/* หน้ารายการ Lot — ประวัติเป็นรายแถวยา มองไม่ออกว่ารอบไหนรับคืนไปเท่าไหร่
           ต้องไล่บวกเอง · หน้านั้นตอบได้ในบรรทัดเดียวต่อ Lot และพิมพ์ใบสรุปได้ */}
@@ -31,33 +29,125 @@ function renderHistTools(V) {
           ของสองอย่างที่ทำคนละเรื่องกันไม่ควรหน้าตาเหมือนกัน
           ใช้พื้นเขียวอ่อนกับขอบเขียว ไม่ใช่เขียวทึบ เพราะเขียวทึบจองไว้ให้
           "ช่วงเวลาที่กำลังเลือกอยู่" แล้ว ถ้าใช้ซ้ำจะอ่านผิดว่าปุ่มนี้ถูกเลือกอยู่ */}
-      <div {...kb(V.openLots)} className="hv-bg-e3f tap" style={s('display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:999px;border:1px solid rgba(47,125,93,.34);font:600 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;background:#e3f0e8;color:#2f7d5d')}>
+      <div {...kb(V.openLots)} className="hv-bg-e3f tap" style={s('height:40px;display:inline-flex;align-items:center;gap:7px;padding:0 15px;border-radius:10px;border:1px solid rgba(47,125,93,.34);font:600 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;background-color:#e3f0e8;color:#2f7d5d;flex:none')}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
           <path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M3 6h.01" /><path d="M3 12h.01" /><path d="M3 18h.01" />
         </svg>
         รายการ Lot
       </div>
 
-      {/* 🚨 คลาส hover ต้องสลับตามสถานะปุ่ม ไม่ใช่ตั้งตายตัว
-             ตอนอยู่ในถังขยะปุ่มเป็นพื้นเขียวตัวหนังสือขาว ถ้าใช้ hv-bg-f6 (พื้นขาวนวล)
-             ชี้เมาส์แล้วตัวหนังสือขาวจะกลืนไปกับพื้นขาว อ่านไม่ออกเลย
-             (พี่กันเจอเอง 25 ส.ค. 2569 — ตระกูลเดียวกับบั๊ก border-color ใน ME-DRP) */}
-      <div {...kb(V.toggleTrash)} className={(V.histTrash ? 'hv-teal' : 'hv-bg-f6') + ' tap'} style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px/1.75 Sarabun,sans-serif;cursor:pointer', { background: V.histTrash ? '#2f7d5d' : '#f0f1ee', color: V.histTrash ? '#fff' : '#414a44' })}>
-        {V.trashLabel}
-      </div>
+      {/* ── ปุ่มกลับจากถังขยะ — โผล่เฉพาะตอนอยู่ในถังขยะ ──────────────────
+          พี่กันสั่ง 10 ก.ย. 2569 ให้ย้ายทางเข้าถังขยะไปไว้ในหน้าตั้งค่า
+          "เอาปุ่มถังขยะออก เอาไปไว้ที่ตั้งค่า เอาไว้กดแล้วมันจะเด้งมาหน้าตารางนี้เอง"
+          🚨 ทางออกต้องอยู่ตรงนี้เสมอ ไม่งั้นเข้าถังขยะแล้วออกไม่ได้
+          🚨 คลาส hover ต้องเป็น hv-teal เพราะปุ่มพื้นเขียวตัวหนังสือขาว
+             ถ้าใช้ hv-bg-f6 (พื้นขาวนวล) ตัวหนังสือขาวจะกลืนหาย (พี่กันเจอเอง 25 ส.ค. 2569) */}
+      {V.histTrash && (
+        <div {...kb(V.toggleTrash)} className="hv-teal tap" style={s('height:40px;display:flex;align-items:center;padding:0 14px;border-radius:10px;font:500 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;background-color:#2f7d5d;color:#fff;white-space:nowrap;flex:none')}>
+          {V.trashLabel}
+        </div>
+      )}
 
       {/* ปุ่มล้างการเรียง — พี่กันสั่งให้มาอยู่ข้างถังขยะ 4 ก.ย. 2569
           โผล่เฉพาะตอนกดเรียงเองแล้วจริง ๆ */}
       {renderSortClear(V.histSortClear)}
 
+      {/* ── ตัวกรอง 3 ทาง — สถานะ · แหล่งที่มา · ผู้บันทึก (พี่กันสั่ง 10 ก.ย. 2569) ──
+          "ใส่ด้วย" พร้อมภาพช่องเลือก 3 ช่อง
+
+          🚨 กรองที่ฐาน ไม่ใช่กรองแถวที่โหลดมาแล้ว — หน้านี้โหลดทีละ 60 แถว
+             กรองในเครื่องจะได้ตัวเลขที่โกหกโดยไม่มีอะไรเตือน
+          🚨 ช่องที่กรองอยู่เปลี่ยนเป็นพื้นเขียวอ่อน ตาจะได้เห็นทันทีว่าตัวไหนกรองค้างอยู่
+             ไม่งั้นเลื่อนดูแล้วรายการหาย จะไล่หาไม่เจอว่าตั้งอะไรไว้ตรงไหน
+          🚨 ห้ามเขียน background แบบรวบ — กฎกลางใน globals.css วาดลูกศร ▾ ด้วย
+             background-image เขียนรวบแล้วรูปลูกศรหายทั้งช่อง (ข้อ 3.52) */}
+      {[
+        { key: 'disp', value: V.histDispValue, on: V.onHistDisp, opts: V.histDispOpts, label: 'กรองตามสถานะ' },
+        { key: 'src', value: V.histSrcValue, on: V.onHistSrc, opts: V.histSrcOpts, label: 'กรองตามแหล่งที่มา' },
+        // ── ชั้นที่สอง — รพ.สต. แห่งไหน (พี่กันสั่ง 10 ก.ย. 2569) ───────────────
+        //   "รพ.สต. ถ้าเลือกแล้วควรขึ้นเหมือนหน้า lot นะ"
+        // 🚨 ต้องอยู่ติดกับช่องแหล่งที่มาที่มันห้อยอยู่ ไม่ใช่ไปต่อท้ายแถว
+        //    (พี่กันทักเอง "ทำไมกรอบทุกคนบันทึกอยู่ตรงกลางขวางการเลือก รพ.สต.")
+        // 🚨 พื้นเขียวจางตลอดเวลา แม้ยังไม่ได้เลือกแห่ง เพื่อบอกว่าเป็นลูกของช่องก่อนหน้า
+        ...(V.histSiteOn ? [{ key: 'site', value: V.histSiteValue, on: V.onHistSite,
+          opts: V.histSiteOpts, label: 'กรองตาม รพ.สต. ต้นทาง', ชั้นสอง: true }] : []),
+        { key: 'by', value: V.histByValue, on: V.onHistBy, opts: V.histByOpts, label: 'กรองตามผู้บันทึก' }
+      ].map((f) => (
+        <select key={f.key} value={f.value} onChange={f.on} aria-label={f.label}
+          style={sx('height:40px;border-radius:10px;padding:0 34px 0 12px;font:500 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;flex:none;max-width:190px', {
+            backgroundColor: (f.value || f.ชั้นสอง) ? '#f2f8f4' : '#fff',
+            border: '1px solid ' + ((f.value || f.ชั้นสอง) ? 'rgba(47,125,93,.34)' : 'rgba(30,36,32,.14)'),
+            color: (f.value || f.ชั้นสอง) ? '#2f7d5d' : '#414a44',
+            fontWeight: f.ชั้นสอง ? 600 : 500
+          })}>
+          {f.opts.map((o) => (
+            <option key={o.value} value={o.value} style={{ font: '400 13px Sarabun, sans-serif', color: '#1e2420' }}>{o.label}</option>
+          ))}
+        </select>
+      ))}
+
+      {/* ── ปุ่มล้างตัวกรองทั้งหมด (พี่กันสั่ง 10 ก.ย. 2569 "เอาปุ่มล้างตัวกรองใส่ก่อน") ──
+          🚨 โผล่เฉพาะตอนมีตัวกรองอยู่จริง — ปุ่มที่กดแล้วไม่เกิดอะไรคือปุ่มหลอก
+          🚨 กลับไปเป็นค่าตั้งต้นของหน้า (เดือนนี้) ไม่ใช่ล้างจนว่างเปล่า
+          🚨 ไม่แตะถังขยะ — อยู่ในถังขยะแล้วกดล้าง ต้องยังอยู่ในถังขยะ */}
+      {/* 🚨 สีแดงคือสิ่งที่พี่กันเลือกเอง 10 ก.ย. 2569 ("แต่เราชอบปุ่มล้างตัวกรอง สีนี้นะ")
+          ส่วนรูปกรอบเอาแบบหน้ารายการ Lot — มุมมน 10 ไม่ใช่แคปซูล
+          ("เราชอบกรอบในหน้า lot นะ มันเกลี้ยง ขอบมน ดูแข็งแรงดี") */}
+      {V.histHasFilter && (
+        <div {...kb(V.clearHistFilters)} aria-label="ล้างตัวกรองทั้งหมด" className="hv-bg-fbe tap"
+          style={s('height:40px;padding:0 14px;border-radius:10px;border:1px solid rgba(194,84,60,.28);background-color:#fdf1ed;display:flex;align-items:center;gap:6px;font:600 12.5px/1.75 Sarabun,sans-serif;color:#c2543c;cursor:pointer;flex:none')}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: 'none' }}>
+            <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+          </svg>
+          ล้างตัวกรอง
+        </div>
+      )}
+
       {V.histLot && (
-        <div {...kb(V.clearLot)} aria-label="เลิกกรองเฉพาะ Lot นี้" className="hv-bg-e3f tap" style={s('display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:999px;background:#e3f0e8;color:#2f7d5d;font:600 12.5px/1.75 Sarabun,sans-serif;cursor:pointer')}>
+        <div {...kb(V.clearLot)} aria-label="เลิกกรองเฉพาะ Lot นี้" className="hv-bg-e3f tap" style={s('height:40px;display:flex;align-items:center;gap:7px;padding:0 14px;border-radius:10px;background-color:#e3f0e8;color:#2f7d5d;font:600 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;flex:none')}>
           Lot {V.histLot} <span aria-hidden="true" style={s('font:400 13px/1.75 Sarabun,sans-serif')}>✕</span>
         </div>
       )}
 
-      {/* ส่งออกเฉพาะที่กรองอยู่ตอนนี้ — หน้าสรุปมีปุ่มส่งออกทั้งปีงบอยู่แล้ว */}
-      {renderExportBtn(V.exportHistoryCsv, V.histExportLabel, { push: true })}
+
+      {/* ── ปุ่มซ่อน/แสดงคอลัมน์ HN (พี่กันสั่ง 10 ก.ย. 2569) ────────────────
+          ค่าตั้งต้นคือซ่อน และจำสถานะที่เลือกไว้ข้ามการรีเฟรช
+          🚨 HN เป็นข้อมูลผู้ป่วย ซ่อนไว้ = คนที่เดินผ่านจอไม่เห็นโดยไม่ตั้งใจ
+          🚨 ปิดอยู่ก็ยังค้นด้วย HN ได้ตามปกติ แค่ไม่โชว์เลขในตาราง
+             และไฟล์ส่งออก CSV มี HN เสมอ ไม่ผูกกับสถานะปุ่มนี้ */}
+      <div {...kb(V.hnColToggle)} title={V.hnColTitle} aria-label={V.hnColTitle}
+        className={(V.hnCol ? 'hv-bg-e3f' : 'hv-bg-f6') + ' tap'}
+        style={sx('height:40px;display:flex;align-items:center;padding:0 14px;border-radius:10px;font:500 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;white-space:nowrap;flex:none',
+          { backgroundColor: V.hnColBg, color: V.hnColFg, border: '1px solid ' + V.hnColBorder })}>
+        {V.hnColLabel}
+      </div>
+
+      {/* ── ปุ่มเลือกความสูงแถว (พี่กันสั่ง 10 ก.ย. 2569) ──────────────────────
+          "ความสูง 43 34 30 เรารู้ละ เอาปุ่มเลือกขนาดได้ใส่ไปเลย"
+          แล้วสั่งย้ายมาไว้ข้างปุ่มส่งออก — "ย้ายไปไว้แถว ๆ ปุ่มโหลด CSV"
+          🚨 margin-left:auto ดันทั้งกลุ่มไปชิดขวา ปุ่มส่งออกจึงตามมาต่อท้ายเอง
+             (ปุ่มส่งออกเลิกใช้ push แล้ว ไม่งั้นสองตัวแย่งกันดันไปขวาคนละที)
+          🚨 มีผลกับตารางทุกหน้า เพราะคลาสไปอยู่ที่ <html> ไม่ใช่ที่ตารางนี้ */}
+      {/* 🚨 เป็นไอคอน ไม่ใช่ตัวหนังสือ (พี่กันสั่ง 10 ก.ย. 2569 "ขอเป็น icon")
+          ⚠️ ต่างจากกฎเดิมข้อ 3.52 ที่ว่าปุ่มต้องมีข้อความกำกับ — พี่กันสั่งเปลี่ยนเอง
+             แต่ยังต้องมีชื่อให้โปรแกรมอ่านจอและป้ายตอนเอาเมาส์ชี้เสมอ (title + aria-label)
+          ไอคอนคือเส้นแนวนอนที่ห่างกันตามระดับ — โปร่ง 3 เส้นห่าง · แน่นมาก 4 เส้นชิด
+          ตาอ่านได้ทันทีว่าหมายถึงแถวห่างแค่ไหน ไม่ต้องแปลจากคำ */}
+      <div style={s('margin-left:auto;display:flex;align-items:center;gap:4px')}>
+        {V.rowHPicks.map((h) => (
+          <div key={h.key} {...kb(h.pick)} title={h.title} aria-label={h.title}
+            className={(h.on ? 'hv-seg-on' : 'hv-seg-off') + ' tap'}
+            style={sx('width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer',
+              { background: h.bg, color: h.fg })}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              {h.lines.map((y, i) => (<path key={i} d={'M4 ' + y + 'h16'} />))}
+            </svg>
+          </div>
+        ))}
+      </div>
+
+
     </div>
   );
 }
@@ -77,8 +167,23 @@ export function renderHistoryWide(V) {
       {/* แถบกรองติดบนตอนเลื่อน — เลื่อนดูแถวลึก ๆ แล้วยังเปลี่ยนช่วงเวลา/ค้นหาได้ทันที
           ref = ตัววัดความสูง ส่งให้หัวตารางไปตั้งระยะติดบน (ดู .hist-head ใน globals.css) */}
       <div ref={V.histHeadRef} className="hist-head">
-      <div style={s('display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px')}>
-        {renderPageTitle(V.histTitle || 'ประวัติการบันทึก')}
+      <div style={s('display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:5px')}>
+        {/* หัวเรื่อง + ยอดสรุปใต้ชื่อ (พี่กันสั่ง 10 ก.ย. 2569)
+            "ที่เขียนว่า 75 รายการและราคา อันนี้ย้ายไปอยู่ใต้คำว่า ประวัติบันทึก
+             และบีบให้มันอยู่ใต้ชื่อนี้"
+            เดิมลอยอยู่ขวาสุดของแถว ห่างจากหัวเรื่องคนละฟากจอ */}
+        <div style={s('display:flex;flex-direction:column;gap:1px;flex:none')}>
+          {renderPageTitle(V.histTitle || 'ประวัติการบันทึก')}
+          <div style={s('display:flex;align-items:baseline;gap:8px;font:400 12px/1.5 Sarabun,sans-serif;color:#6b746e')}>
+            <span>{V.histCountLabel}</span>
+            {/* 🚨 กรองสถานะ "ทำลาย" แล้วยอดต้องเป็นยอดทำลาย ไม่ใช่ยอดนำกลับใช้ที่เป็นศูนย์
+                (เจอตอนตรวจภาพเอง 10 ก.ย. 2569 — ขึ้น 1 รายการ 0.00 ฿ ดูเหมือนระบบพัง) */}
+            <span style={sx("font:700 14px Sarabun,sans-serif;font-variant-numeric:tabular-nums", { color: V.histTotalColor })}>{V.histTotalLabel}</span>
+            {V.histTotalNote && (
+              <span style={sx('font:500 11px/1.5 Sarabun,sans-serif', { color: V.histTotalColor })}>{V.histTotalNote}</span>
+            )}
+          </div>
+        </div>
         {/* ช่องค้นหา — ระบบเดียวกับหน้าคลังยาและหน้าบันทึก (พี่กันสั่ง 25 ส.ค. 2569)
             รองรับลืมสลับแป้นพิมพ์ + ป้ายบอกคำที่ค้นจริง + ปุ่มล้าง
             เว้นที่ว่างขวาตามสิ่งที่โผล่จริง ไม่งั้นตัวหนังสือที่พิมพ์จะลอดไปใต้ป้าย */}
@@ -97,10 +202,21 @@ export function renderHistoryWide(V) {
             <div key={g.key} {...kb(g.pick)} className={(g.on ? 'hv-seg-on' : 'hv-seg-off') + ' tap'} style={sx('padding:8px 14px;border-radius:999px;font:500 12.5px/1.75 Sarabun,sans-serif;cursor:pointer', { background: g.bg, color: g.fg })}>{g.label}</div>
           ))}
         </div>
-        <div style={s('margin-left:auto;display:flex;align-items:baseline;gap:14px;font:400 13px/1.75 Sarabun,sans-serif;color:#6b746e')}>
-          <span>{V.histCountLabel}</span>
-          <span style={s("font:600 17px Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums")}>{V.histTotalLabel}</span>
+
+        {/* ช่วงวันที่เลือกเอง — ต่อจากชิปปีงบ (พี่กันสั่ง 10 ก.ย. 2569 "ย้ายอันนี้ไปต่อจากปีงบ")
+            อยู่ชุดเดียวกับชิปช่วงเวลาแล้ว เพราะเป็นเครื่องมือเลือกช่วงเวลาเหมือนกัน */}
+        <div style={s('display:flex;align-items:center;gap:6px')}>
+          <span style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>ตั้งแต่</span>
+          <input type="date" className="mrv-hit-input" value={V.histFrom} onChange={V.onHistFrom} style={sx("height:38px;padding:0 9px;border-radius:8px;background:#fff;font:400 12.5px/1.75 Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
+          <span style={s('font:500 11.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>ถึง</span>
+          <input type="date" className="mrv-hit-input" value={V.histTo} onChange={V.onHistTo} style={sx("height:38px;padding:0 9px;border-radius:8px;background:#fff;font:400 12.5px/1.75 Sarabun,sans-serif", { border: '1px solid ' + (V.isCustomRange ? '#2f7d5d' : 'rgba(30,36,32,.16)') })} />
         </div>
+
+        {/* ส่งออกเฉพาะที่กรองอยู่ตอนนี้ — หน้าสรุปมีปุ่มส่งออกทั้งปีงบอยู่แล้ว
+            🚨 อยู่แถวบนสุด (พี่กันสั่ง 10 ก.ย. 2569 "เอาปุ่มโหลด csv อยู่แถวบน
+               แล้วขนาดแถว อยู่แถวล่าง") */}
+        {renderExportBtn(V.exportHistoryCsv, V.histExportLabel, { push: true })}
+
       </div>
 
       {renderHistTools(V)}
@@ -118,7 +234,12 @@ export function renderHistoryWide(V) {
             ตัววัด --histhead วัดความสูงเต็มของแถบ ซึ่งรวม 16 จุดนั้นไว้ด้วย
             ถ้าเอามาใช้ตรง ๆ หัวตารางจะติดต่ำกว่าที่ควร 16 จุด เกิดร่องให้แถวลอดผ่าน
             (พี่กันเจอเอง 4 ก.ย. 2569 — แคลร์ดูในโครมแล้วแต่ไม่ได้เลื่อน เลยไม่เห็น) */}
-          <table className="tbl" style={sx('', { '--tbl-top': 'calc(var(--histhead, 16px) - 16px)' })}>
+          {/* 🚨🔴 หัวตารางต้องติดใต้แถบหัวพอดี ห้ามเหลือร่องให้แถวลอดผ่าน
+              (พี่กันเจอเอง 10 ก.ย. 2569 "ตารางข้างล่างมันโผล่ ตัวขอบหัวตารางต้องชิดสิ")
+              เดิมลบ 16 ออก เพราะแถบหัวตรึงที่ top:-16px
+              พอเปลี่ยนแถบเป็น top:0 (ตอนทำระยะบน 10 จุด) การลบ 16 จึงกลายเป็นร่อง 16 จุด
+              🚨 แก้ระยะตรึงของแถบหัวเมื่อไหร่ ต้องมาแก้บรรทัดนี้ให้ตรงกันเสมอ */}
+          <table className="tbl" style={sx('', { '--tbl-top': 'var(--histhead, 0px)' })}>
           <colgroup>
             {V.histCols.map((c) => (
               <col key={c.key} style={c.flex ? { minWidth: '180px' } : { width: c.w }} />
@@ -154,8 +275,13 @@ export function renderHistoryWide(V) {
                     (พี่กันสั่ง 25 ส.ค. 2569 "ไหนสีแบบที่ช่องค้นหา")
                     ตัดด้วยจุดไข่ปลา ไม่งั้นชื่อยาว ๆ ดันแถวสูงเป็นสิบบรรทัด
                     title = เอาเมาส์ชี้แล้วเห็นชื่อเต็ม */}
-                <td title={hr.name} style={s('overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>
-                  {renderDrugName(hr.parts, { size: '13.5px' })}
+                {/* 🚨 กดชื่อยาแล้วกรองเฉพาะยาตัวนั้น (พี่กันสั่ง 10 ก.ย. 2569)
+                    ใส่ชื่อลงช่องค้นหาจริง ๆ ไม่ใช่กรองซ่อนอยู่เบื้องหลัง
+                    ผู้ใช้จะได้เห็นว่ากรองด้วยอะไร แก้คำต่อเองได้ และกดล้างในช่องได้ตามปกติ */}
+                <td title={hr.name + ' — กดเพื่อกรองเฉพาะยาตัวนี้'} style={s('overflow:hidden;text-overflow:ellipsis;white-space:nowrap')}>
+                  <span {...kb(hr.pickDrug)} className="hv-drug" style={s('cursor:pointer')}>
+                    {renderDrugName(hr.parts, { size: '13.5px' })}
+                  </span>
                 </td>
                 <td className="ta-r">{hr.qtyLabel}</td>
                 <td className="ta-r" style={s('color:#6b746e')}>{hr.priceLabel}</td>
@@ -163,11 +289,23 @@ export function renderHistoryWide(V) {
                 <td className="ta-c">
                   <span style={sx('display:inline-block;padding:3px 9px;border-radius:6px;font:600 11px/1.75 Sarabun,sans-serif;white-space:nowrap', { background: hr.dispBg, color: hr.dispFg })}>{hr.dispLabel}</span>
                 </td>
-                <td style={s('color:#6b746e')}>{hr.sourceLabel}</td>
-                <td style={s('color:#6b746e')}>{hr.hnLabel}</td>
+                {/* 🚨 ชื่อ รพ.สต. ห้ามตัดเหมือนชื่อคน — "รพ.สต. หนองเชียงทูน" ยาวสุด 132 จุด
+                    คอลัมน์กว้าง 164 จุดจึงพอทุกแห่ง (ดู scripts/col-width.mjs) */}
+                <td style={s('color:#6b746e;white-space:nowrap')}>{hr.sourceLabel}</td>
+                {V.hnCol && <td className="ta-c" style={s('color:#6b746e')}>{hr.hnLabel}</td>}
                 {/* 🚨 ชื่อผู้บันทึกห้ามตัดทิ้ง เป็นข้อมูลสืบกลับว่าใครเซ็นรับล็อตนั้น
-                    เดิมใช้ ellipsis ตัดท้าย ชื่อยาว ๆ เลยเหลือ "ภญ. วลัยพรรณ…" */}
-                <td title={hr.byFull} className="wrap" style={s('color:#6b746e;font-size:12px;line-height:1.35')}>{hr.byLabel}</td>
+                    เดิมใช้ ellipsis ตัดท้าย ชื่อยาว ๆ เลยเหลือ "ภญ. วลัยพรรณ…"
+
+                    🚨🔴 และห้ามผ่ากลางคำด้วย (พี่กันสั่ง 10 ก.ย. 2569 "ห้ามตัดชื่อ")
+                    คลาส wrap ตั้งไว้ให้ตัดตรงไหนก็ได้ ซึ่งจำเป็นกับชื่อยาอังกฤษยาว ๆ
+                    แต่กับชื่อคนแล้วมันผ่ากลางชื่อ — "ภญ. วลัย" ขึ้นบรรทัดหนึ่ง "พรรณ" อีกบรรทัด
+                    ห่อแต่ละก้อนด้วย nowrap แล้วตัดได้เฉพาะตรงช่องว่างเท่านั้น
+                    (ท่าเดียวกับก้อนในบรรทัดชื่อยา — CLAUDE.md ข้อ 3.19) */}
+                <td title={hr.byFull} style={s('color:#6b746e;font-size:12px;line-height:1.35;white-space:nowrap')}>
+                  {hr.byParts.map((w, i) => (
+                    <span key={i} style={s('white-space:nowrap')}>{i ? ' ' : ''}{w}</span>
+                  ))}
+                </td>
                 {/* เลข Lot — กดแล้วกรองดูเฉพาะ Lot นั้น */}
                 <td>
                   {hr.hasLot ? (
@@ -180,11 +318,13 @@ export function renderHistoryWide(V) {
                 <td>
                   <span style={s('display:flex;justify-content:flex-end;gap:6px')}>
                     {hr.inTrash ? (
-                      <span {...kb(hr.restore)} className="hv-bg-e3f tap" style={s('padding:6px 9px;border-radius:7px;background:#e3f0e8;font:500 11.5px/1.75 Sarabun,sans-serif;color:#2f7d5d;cursor:pointer;white-space:nowrap')}>กู้คืน</span>
+                      <span {...kb(hr.restore)} className="hv-bg-e3f tap rh-btn" style={s('padding:6px 9px;border-radius:7px;background:#e3f0e8;font:500 11.5px/1.75 Sarabun,sans-serif;color:#2f7d5d;cursor:pointer;white-space:nowrap')}>กู้คืน</span>
                     ) : (
                       <>
-                        <span {...kb(hr.edit)} className="hv-bg-e6e tap" style={s('padding:6px 9px;border-radius:7px;background:#f0f1ee;font:500 11.5px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer')}>แก้</span>
-                        <span {...kb(hr.remove)} className="hv-bg-fbe tap" style={s('padding:6px 9px;border-radius:7px;background:#fdf1ed;font:500 11.5px/1.75 Sarabun,sans-serif;color:#c2543c;cursor:pointer')}>ลบ</span>
+                        {/* 🚨 คลาส rh-btn ให้ปุ่มย่อตามระดับความสูงแถวที่ผู้ใช้เลือก
+                            ปุ่มคือตัวที่กำหนดความสูงแถวจริง ๆ ไม่ใช่ตัวหนังสือ */}
+                        <span {...kb(hr.edit)} className="hv-bg-e6e tap rh-btn" style={s('padding:6px 9px;border-radius:7px;background:#f0f1ee;font:500 11.5px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer')}>แก้</span>
+                        <span {...kb(hr.remove)} className="hv-bg-fbe tap rh-btn" style={s('padding:6px 9px;border-radius:7px;background:#fdf1ed;font:500 11.5px/1.75 Sarabun,sans-serif;color:#c2543c;cursor:pointer')}>ลบ</span>
                       </>
                     )}
                   </span>

@@ -71,6 +71,23 @@ export async function GET(req) {
     const lot = (url.searchParams.get('lot') || '').slice(0, 24);
     const offset = Math.max(0, Math.min(100000, Number(url.searchParams.get('offset') || 0) || 0));
 
+    // ── ตัวกรอง 3 ทาง — สถานะ · แหล่งที่มา · ผู้บันทึก (พี่กันสั่ง 10 ก.ย. 2569) ──
+    //
+    // 🚨 กรองที่ฐาน ไม่ใช่กรองในเครื่อง — หน้านี้โหลดทีละ 60 แถว
+    //    กรองในเครื่องจะได้เฉพาะที่โหลดมาแล้ว เลือก "ทำลาย" แล้วเห็น 1 รายการ
+    //    ทั้งที่ทั้งปีมี 20 · และยอดรวมท้ายหน้าต้องนับจากผลที่กรองแล้วด้วย
+    //
+    // 🚨 ค่าที่ไม่รู้จักตกเป็นค่าว่าง (ไม่กรอง) ไม่ใช่ส่งดิบเข้าฐาน
+    const dispRaw = url.searchParams.get('disp') || '';
+    const disp = (dispRaw === 'reuse' || dispRaw === 'destroy') ? dispRaw : '';
+    const srcRaw = url.searchParams.get('src') || '';
+    const src = SOURCES.some((s) => s.key === srcRaw) ? srcRaw : '';
+    // ชื่อผู้บันทึกเทียบตรงทั้งชื่อ ไม่ใช่ค้นบางส่วน (ช่องค้นหาทำหน้าที่นั้นอยู่แล้ว)
+    const by = (url.searchParams.get('by') || '').slice(0, 80);
+    // ชั้นที่สองของแหล่งที่มา — ใช้ได้เฉพาะตอนกรอง รพ.สต. เท่านั้น
+    // 🚨 แหล่งที่มาอื่นแล้วยังส่งชื่อแห่งมาด้วย = เงื่อนไขที่ขัดกันเอง ได้ผลว่างโดยไม่มีเหตุผล
+    const site = src === 'pcu' ? (url.searchParams.get('site') || '').slice(0, 120) : '';
+
     // ช่วงวันที่เลือกเองได้ — เดิมมีแค่ 4 ปุ่มสำเร็จรูป
     // ระบบบอกให้ "กรองช่วงวันที่ให้แคบลง" แต่ไม่มีเครื่องมือให้เลือกช่วงวันเลย
     const cFrom = ISO_DATE.test(url.searchParams.get('from') || '') ? url.searchParams.get('from') : null;
@@ -89,7 +106,11 @@ export async function GET(req) {
       p_limit: limit,
       p_trash: trash,
       p_lot: lot || null,
-      p_offset: offset
+      p_offset: offset,
+      p_disp: disp || null,
+      p_src: src || null,
+      p_by: by || null,
+      p_site: site || null
     });
     if (res.error) throw new Error(res.error.message);
 
@@ -111,7 +132,10 @@ export async function GET(req) {
       saved: Number(h.saved || 0),
       lost: Number(h.lost || 0),
       limit: limit,
-      offset: offset
+      offset: offset,
+      // รายชื่อผู้บันทึกที่มีจริงในช่วงเวลาที่เลือก — ช่องเลือกจะได้มีเฉพาะคนที่บันทึกจริง
+      // ไม่ใช่พนักงานทั้ง 16 คนซึ่งส่วนใหญ่ไม่มีรายการในช่วงนั้น
+      people: Array.isArray(h.people) ? h.people : []
     });
   } catch (e) {
     return apiFail("returns.GET", e, "อ่านประวัติไม่สำเร็จ");

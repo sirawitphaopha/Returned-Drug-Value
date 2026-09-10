@@ -16,7 +16,9 @@ export function historyActions(app) {
 
   const keyOf = () => {
     const st = app.state;
-    return [st.histRange, st.histQuery.trim(), st.histTrash ? 'T' : '', st.histLot, st.histFrom, st.histTo].join('\n');
+    // 🚨 ตัวกรอง 3 ทางต้องอยู่ในกุญแจด้วย ไม่งั้นเปลี่ยนตัวกรองแล้วได้ของชุดเดิมกลับมา
+    return [st.histRange, st.histQuery.trim(), st.histTrash ? 'T' : '', st.histLot,
+      st.histFrom, st.histTo, st.histDisp, st.histSrc, st.histBy, st.histSite].join('\n');
   };
 
   // qUse = คำที่ใช้ค้นจริง · ปกติคือคำที่พิมพ์ แต่ถ้าลืมสลับแป้นจะเป็นคำที่แปลงแล้ว
@@ -30,6 +32,11 @@ export function historyActions(app) {
     if (st.histRange === 'custom') {
       u += '&from=' + encodeURIComponent(st.histFrom) + '&to=' + encodeURIComponent(st.histTo);
     }
+    // ตัวกรอง 3 ทาง — ส่งเฉพาะตัวที่เลือกไว้จริง (เว้นว่าง = ไม่กรอง)
+    if (st.histDisp) u += '&disp=' + encodeURIComponent(st.histDisp);
+    if (st.histSrc) u += '&src=' + encodeURIComponent(st.histSrc);
+    if (st.histBy) u += '&by=' + encodeURIComponent(st.histBy);
+    if (st.histSite) u += '&site=' + encodeURIComponent(st.histSite);
     if (offset) u += '&offset=' + offset;
     return u;
   };
@@ -45,8 +52,12 @@ export function historyActions(app) {
       // ทั้งที่ผลลัพธ์บนจอยังเป็นของคำที่แปลงแล้ว
       app.setState({
         histRows: c.rows, histTotal: c.total, histSaved: c.saved,
+        histLost: Number(c.lost || 0),
         histMore: [], histLoading: false,
-        histSwapped: !!c.swapped, histSwapLabel: c.swapLabel || ''
+        histSwapped: !!c.swapped, histSwapLabel: c.swapLabel || '',
+        // 🚨 ต้องคืนรายชื่อผู้บันทึกมาด้วย ไม่งั้นพอหยิบจากแคช ช่องเลือกคนบันทึกจะว่างเปล่า
+        //    ทั้งที่ยังกรองด้วยชื่อคนนั้นอยู่ (ตระกูลเดียวกับป้าย "ค้นว่า ..." ที่เคยหาย)
+        histPeople: Array.isArray(c.people) ? c.people : []
       });
       return;
     }
@@ -89,15 +100,20 @@ export function historyActions(app) {
         rows: data.rows,
         total: Number(data.total || 0),
         saved: Number(data.saved || 0),
+        lost: Number(data.lost || 0),
         swapped: swapped,
-        swapLabel: swapLabel
+        swapLabel: swapLabel,
+        people: Array.isArray(data.people) ? data.people : []
       });
       app.setState({
         histRows: data.rows,
         histTotal: Number(data.total || 0),
         histSaved: Number(data.saved || 0),
+        histLost: Number(data.lost || 0),
         histMore: [],
-        histLoading: false
+        histLoading: false,
+        // รายชื่อผู้บันทึกที่มีจริงในช่วงเวลานี้ — ฐานส่งมาพร้อมผลค้น
+        histPeople: Array.isArray(data.people) ? data.people : []
       });
     } catch (e) {
       if (seq !== app._histSeq) return;
@@ -161,6 +177,42 @@ export function historyActions(app) {
   // ล้างการเรียง กลับไปเรียงวันที่ใหม่ไปเก่าตามที่ฐานส่งมา (พี่กันสั่ง 4 ก.ย. 2569)
   app.clearHistSort = () => app.setState({ histSortKey: '', histSortDir: 'desc' });
 
+  // ── ล้างตัวกรองทั้งหมดในทีเดียว (พี่กันสั่ง 10 ก.ย. 2569) ─────────────────
+  //
+  //   หน้านี้กรองซ้อนกันได้หลายชั้น — คำค้น · ช่วงเวลา · ช่วงวันที่เอง · Lot · การเรียง
+  //   กรองไว้หลายชั้นแล้วลืม จะงงว่าทำไมรายการหายไป แล้วไล่ปิดทีละอันไม่ถูก
+  //
+  // 🚨 กลับไปเป็นค่าตั้งต้นของหน้า คือ "เดือนนี้" ไม่ใช่ล้างจนว่างเปล่า
+  //    ล้างช่วงเวลาทิ้งด้วยจะไม่เหลืออะไรให้ดูเลย ซึ่งไม่ใช่สิ่งที่คนกดต้องการ
+  // 🚨 ไม่แตะถังขยะ — อยู่ในถังขยะแล้วกดล้างตัวกรอง ต้องยังอยู่ในถังขยะ
+  //    ทางออกจากถังขยะมีปุ่มของตัวเองอยู่แล้ว ("กลับไปดูรายการปกติ")
+  app.clearHistFilters = () => {
+    if (app._histTimer) clearTimeout(app._histTimer);
+    app.setState({
+      histQuery: '', histSwapped: false, histSwapLabel: '',
+      histRange: 'month', histFrom: '', histTo: '',
+      histLot: '', histSortKey: '', histSortDir: 'desc',
+      // 🚨 ตัวกรอง 3 ทางต้องล้างด้วย ไม่งั้นกดล้างแล้วรายการยังหายอยู่
+      //    โดยไม่มีอะไรบนจอบอกว่าเพราะอะไร
+      histDisp: '', histSrc: '', histBy: '', histSite: ''
+    }, () => app.loadHistory());
+  };
+
+  // ── กดชื่อยาในตาราง แล้วกรองเฉพาะยาตัวนั้น (พี่กันสั่ง 10 ก.ย. 2569) ──────
+  //
+  // 🚨 ใส่ชื่อลงช่องค้นหาจริง ๆ ไม่ใช่กรองแบบซ่อนอยู่เบื้องหลัง
+  //    ผู้ใช้จะได้เห็นว่ากำลังกรองด้วยอะไร แก้คำต่อเองได้ และกดปุ่มล้างในช่องได้ตามปกติ
+  //    (บทเรียนเดิม — ตัวกรองที่มองไม่เห็นบนจอ ทำให้ผลลัพธ์ว่างโดยไม่รู้สาเหตุ)
+  // 🚨 ใช้ชื่อที่ตาเห็นในตาราง ไม่ใช่รหัสยา — ฐานค้นจากข้อความ
+  //    และถ้าชื่อยาวเกินไปจนไม่เจอ ผู้ใช้ลบคำท้ายออกเองได้ทันที
+  app.filterByDrug = (name) => {
+    const q = String(name || '').trim();
+    if (!q) return;
+    if (app._histTimer) clearTimeout(app._histTimer);
+    app.setState({ histQuery: q, histSwapped: false, histSwapLabel: '', histLot: '' },
+      () => app.loadHistory());
+  };
+
   app.setHistSort = (key) => {
     // 🚨 ตอนยังไม่ได้กดเรียง ตารางเรียงวันที่ใหม่ไปเก่าอยู่แล้ว (ฐานส่งมาแบบนั้น)
     //    กดคอลัมน์วันที่ครั้งแรกจึงต้องสลับเป็นเก่าไปใหม่ทันที ไม่ใช่ตั้ง desc ซ้ำ
@@ -176,6 +228,32 @@ export function historyActions(app) {
     }
   };
 
+  // ── ตัวกรอง 3 ทาง (พี่กันสั่ง 10 ก.ย. 2569) ────────────────────────────
+  //
+  // 🚨 ยิงเซิร์ฟเวอร์ทันที ไม่หน่วง — เป็นการกดเลือกจากรายการ ไม่ใช่การพิมพ์รัว
+  // 🚨 ล้าง histLot ทิ้งด้วยทุกครั้ง — กำลังดูเฉพาะ Lot เดียวอยู่แล้วมาเลือกตัวกรองอื่น
+  //    ถ้าไม่ล้าง จะเหลือเงื่อนไขซ้อนกันจนผลว่าง แล้วหาสาเหตุไม่เจอ
+  //    (บทเรียนเดิมจากตัวกรอง รพ.สต. หน้ารายการ Lot — ข้อ 3.52)
+  app.setHistDisp = (e) => {
+    app.setState({ histDisp: e.target.value, histLot: '' }, () => app.loadHistory());
+  };
+  // 🚨 เปลี่ยนแหล่งที่มาไปเป็นอย่างอื่น ต้องล้างชื่อ รพ.สต. ทิ้งด้วย
+  //    ไม่งั้นเหลือเงื่อนไขซ่อนอยู่ที่มองไม่เห็นบนจอ แล้วผลว่างโดยไม่รู้สาเหตุ
+  //    (กติกาเดียวกับหน้ารายการ Lot — CLAUDE.md ข้อ 3.52)
+  app.setHistSrc = (e) => {
+    const v = e.target.value;
+    app.setState({ histSrc: v, histSite: v === 'pcu' ? app.state.histSite : '', histLot: '' },
+      () => app.loadHistory());
+  };
+  app.setHistSite = (e) => {
+    app.setState({ histSite: e.target.value, histLot: '' }, () => app.loadHistory());
+  };
+
+  app.setHistBy = (e) => {
+    app.setState({ histBy: e.target.value, histLot: '' }, () => app.loadHistory());
+  };
+
+
   app.onHistFrom = (e) => app.setState({ histFrom: e.target.value, histRange: 'custom' }, () => app.loadHistory());
   app.onHistTo = (e) => app.setState({ histTo: e.target.value, histRange: 'custom' }, () => app.loadHistory());
 
@@ -185,6 +263,18 @@ export function historyActions(app) {
   //    เหลือบนหัวแค่ ช่องค้นหา ชิปช่วงเวลา และปุ่มรายการ Lot ที่พี่กันขอให้เด่น
   app.openHistFilter = () => app.setState({ histFilterOpen: true });
   app.closeHistFilter = () => app.setState({ histFilterOpen: false });
+
+  // ── เปิดถังขยะจากหน้าตั้งค่า (พี่กันสั่ง 10 ก.ย. 2569) ──────────────────
+  //   "เอาปุ่มถังขยะออก เอาไปไว้ที่ตั้งค่า เอาไว้กดแล้วมันจะเด้งมาหน้าตารางนี้เอง"
+  //
+  // 🚨 ถังขยะเป็นของที่ใช้นาน ๆ ครั้ง (กู้รายการที่ลบผิด) แต่กินที่ในแถบเครื่องมือ
+  //    ที่ต้องใช้ทุกวันตลอดเวลา · ย้ายมาไว้ในตั้งค่าแล้วกดทีเดียวเด้งไปหน้าประวัติเลย
+  // 🚨 ปุ่ม "กลับไปดูรายการปกติ" ยังอยู่ในแถบเครื่องมือเหมือนเดิม
+  //    แต่โผล่เฉพาะตอนอยู่ในถังขยะ ไม่งั้นเข้าไปแล้วออกไม่ได้
+  app.openTrash = () => {
+    app.setState({ settingsOpen: false, favQuery: '', screen: 'history', histTrash: true, histLot: '', histQuery: '' },
+      () => { app.loadHistory(); if (app.toTop) app.toTop(); });
+  };
 
   app.toggleTrash = () => {
     app.setState({ histTrash: !app.state.histTrash, histLot: '' }, () => app.loadHistory());

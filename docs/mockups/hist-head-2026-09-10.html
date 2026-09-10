@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>เกลาแถบหัวหน้าประวัติ — เติมช่องว่าง 891 จุด</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1e2420; --dim:#6b746e; --faint:#9aa19c; --teal:#2f7d5d; --teal-d:#24614a;
+    --line:rgba(30,36,32,.10); --paper:#fff; --ground:#eef1ec; --red:#c2543c; --redbg:#fdf1ed;
+    --en:"Roboto Mono";
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font:400 15px/1.75 var(--en),Sarabun,sans-serif;padding:24px 18px 70px}
+  .wrap{max-width:1400px;margin:0 auto}
+  h1{font:700 25px/1.5 Sarabun,sans-serif;margin:0 0 4px}
+  .lead{font:400 14px/1.8 var(--en),Sarabun,sans-serif;color:var(--dim);margin:0 0 6px;max-width:860px}
+  h2{font:700 18px/1.55 Sarabun,sans-serif;margin:30px 0 8px;padding-top:18px;border-top:1px solid var(--line)}
+  h3{font:700 15.5px/1.5 Sarabun,sans-serif;margin:0 0 2px}
+  p{margin:0 0 8px;font:400 14px/1.8 var(--en),Sarabun,sans-serif}
+  .note{font:400 13px/1.75 var(--en),Sarabun,sans-serif;color:var(--dim)}
+
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px 16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(30,36,32,.04)}
+  .card.pick{border-color:rgba(47,125,93,.45);background:#fbfefc}
+  .head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .tag{font:600 11px/1 var(--en),Sarabun,sans-serif;padding:5px 9px;border-radius:6px;
+    background:#f0f1ee;color:var(--dim);white-space:nowrap}
+  .tag.on{background:#e3f0e8;color:var(--teal)}
+  .tag.bad{background:var(--redbg);color:var(--red)}
+
+  /* ── แถบหัวจำลอง — ค่าจริงจากเว็บทุกตัว ─────────────────────── */
+  .bar{border:1px solid var(--line);border-radius:12px;padding:10px 18px 6px;background:#fff}
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .row:last-child{margin-bottom:0}
+  .title{font:700 22px/1.35 Sarabun,sans-serif;color:var(--teal-d);white-space:nowrap}
+  .sub{font:400 12px/1.5 var(--en),Sarabun,sans-serif;color:var(--dim)}
+  .sub b{font:700 14px var(--en),Sarabun,sans-serif;color:var(--teal)}
+  .srch{width:320px;height:42px;border-radius:10px;background:#f6f7f4;border:1px solid var(--line);
+    display:flex;align-items:center;gap:8px;padding:0 12px;font:400 13px/1 var(--en),Sarabun,sans-serif;color:var(--faint)}
+  .chip{height:36px;padding:0 14px;border-radius:999px;background:#f0f1ee;color:#414a44;
+    display:inline-flex;align-items:center;font:500 12.5px/1 var(--en),Sarabun,sans-serif;white-space:nowrap}
+  .chip.on{background:var(--teal);color:#fff}
+  .chip.ghost{background:#fff;border:1px solid var(--line)}
+  .chip.lot{background:#eef6f1;border:1px solid rgba(47,125,93,.25);color:var(--teal);font-weight:600}
+  .dt{height:38px;padding:0 9px;border-radius:8px;background:#fff;border:1px solid var(--line);
+    display:inline-flex;align-items:center;gap:6px;font:400 12.5px/1 var(--en),Sarabun,sans-serif;color:var(--dim)}
+  .csv{height:38px;padding:0 14px;border-radius:9px;background:var(--teal);color:#fff;
+    display:inline-flex;align-items:center;gap:7px;font:600 12.5px/1 var(--en),Sarabun,sans-serif}
+  .icons{display:flex;gap:4px}
+  .icon{width:38px;height:38px;border-radius:10px;background:#f0f1ee;
+    display:flex;align-items:center;justify-content:center}
+  .icon.on{background:var(--teal)}
+  .icon svg{stroke:#414a44}
+  .icon.on svg{stroke:#fff}
+  .push{margin-left:auto}
+  .gap{flex:1;min-height:38px;border:1px dashed rgba(194,84,60,.45);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font:600 11.5px/1 var(--en),Sarabun,sans-serif;color:var(--red);background:rgba(194,84,60,.04)}
+
+  /* ชิปกรองสถานะพร้อมยอด */
+  .stat{height:38px;padding:0 13px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;
+    font:500 12.5px/1 var(--en),Sarabun,sans-serif;background:#f6f7f4;border:1px solid var(--line);white-space:nowrap}
+  .stat b{font-weight:700}
+  .stat .num{font-variant-numeric:tabular-nums}
+  .stat.all.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .stat.ok{color:var(--teal);background:#eef7f1;border-color:rgba(47,125,93,.28)}
+  .stat.no{color:var(--red);background:var(--redbg);border-color:rgba(194,84,60,.25)}
+  .sel{height:38px;padding:0 30px 0 11px;border-radius:8px;background:#fff;border:1px solid var(--line);
+    display:inline-flex;align-items:center;font:400 12.5px/1 var(--en),Sarabun,sans-serif;color:#414a44;
+    position:relative;white-space:nowrap}
+  .sel::after{content:'▾';position:absolute;right:11px;color:var(--dim);font-size:11px}
+
+  table{border-collapse:collapse;table-layout:fixed;width:100%;margin-top:8px}
+  th{background:#eaf3ee;color:#414a44;font:600 12.5px/1.75 var(--en),Sarabun,sans-serif;
+    padding:9px 12px;text-align:left;border-right:1px solid rgba(30,36,32,.06);white-space:nowrap}
+  td{padding:6px 12px;font:400 13.5px/1.75 var(--en),Sarabun,sans-serif;
+    border-top:1px solid rgba(30,36,32,.06);border-right:1px solid rgba(30,36,32,.06);white-space:nowrap}
+  .dim{color:var(--dim)}
+  .drug{font-weight:600}
+  .drug em{font-style:normal;font-weight:400;color:var(--dim)}
+  .val{font:600 14.5px var(--en),Sarabun,sans-serif;color:var(--teal)}
+  .ta-r{text-align:right}
+  .ta-c{text-align:center}
+  ul{margin:10px 0 0;padding-left:19px}
+  li{font:400 13px/1.8 var(--en),Sarabun,sans-serif;margin-bottom:2px}
+  li.good::marker{color:var(--teal)}
+  li.bad::marker{color:var(--red)}
+  .flag{display:inline-flex;align-items:center;gap:6px;background:#fdf1ee;color:var(--red);
+    border:1px solid rgba(194,84,60,.25);border-radius:8px;padding:7px 11px;
+    font:600 13px/1.6 var(--en),Sarabun,sans-serif;margin:4px 0 10px}
+  .flag.ok{background:#eef7f1;color:var(--teal);border-color:rgba(47,125,93,.25)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>เกลาแถบหัวหน้าประวัติ</h1>
+<p class="lead">วัดจากเว็บจริงที่จอ 1500 — <b>แถวบนเต็มแล้ว</b> เหลือที่ว่างแค่ 68 จุด
+แต่ <b>แถวล่างว่าง 891 จุด</b> จากทั้งหมด 1310</p>
+
+<h2>ตอนนี้เป็นแบบนี้</h2>
+<div class="card">
+  <div class="bar">
+    <div class="row">
+      <div>
+        <div class="title">ประวัติการบันทึก</div>
+        <div class="sub">75 รายการ <b>10,014.50 ฿</b></div>
+      </div>
+      <div class="srch">🔍 ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลข Lot</div>
+      <span class="chip">วันนี้</span><span class="chip">7 วัน</span>
+      <span class="chip on">เดือนนี้</span><span class="chip">ปีงบ 2569</span>
+      <span class="dim" style="font:500 11.5px/1 var(--en),Sarabun,sans-serif">ตั้งแต่</span>
+      <span class="dt">วว/ดด/ปปปป 📅</span>
+      <span class="dim" style="font:500 11.5px/1 var(--en),Sarabun,sans-serif">ถึง</span>
+      <span class="dt">วว/ดด/ปปปป 📅</span>
+      <span class="csv push">⬇ ส่งออก CSV</span>
+    </div>
+    <div class="row">
+      <span class="chip lot">☰ รายการ Lot</span>
+      <span class="chip">ถังขยะ</span>
+      <span class="chip ghost">ซ่อน HN</span>
+      <span class="gap">ช่องว่าง 891 จุด</span>
+      <span class="icons">
+        <span class="icon on"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></span>
+        <span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg></span>
+        <span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 8h16"/><path d="M4 11.5h16"/><path d="M4 15h16"/><path d="M4 18.5h16"/></svg></span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<h2>4 แบบที่เสนอ</h2>
+
+<!-- ═══ แบบ ก ═══ -->
+<div class="card pick">
+  <div class="head"><h3>แบบ ก — ชิปกรองสถานะพร้อมยอดเงินในตัว</h3>
+    <span class="tag on">แคลร์แนะนำ</span><span class="tag">ได้ทั้งฟังก์ชันและเติมช่องว่าง</span></div>
+  <div class="bar">
+    <div class="row">
+      <div>
+        <div class="title">ประวัติการบันทึก</div>
+        <div class="sub">75 รายการ <b>10,014.50 ฿</b></div>
+      </div>
+      <div class="srch">🔍 ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลข Lot</div>
+      <span class="chip">วันนี้</span><span class="chip">7 วัน</span>
+      <span class="chip on">เดือนนี้</span><span class="chip">ปีงบ 2569</span>
+      <span class="dim" style="font:500 11.5px/1 var(--en),Sarabun,sans-serif">ตั้งแต่</span>
+      <span class="dt">วว/ดด/ปปปป 📅</span>
+      <span class="dim" style="font:500 11.5px/1 var(--en),Sarabun,sans-serif">ถึง</span>
+      <span class="dt">วว/ดด/ปปปป 📅</span>
+      <span class="csv push">⬇ ส่งออก CSV</span>
+    </div>
+    <div class="row">
+      <span class="chip lot">☰ รายการ Lot</span>
+      <span class="chip">ถังขยะ</span>
+      <span class="chip ghost">ซ่อน HN</span>
+      <span class="stat all on">ทั้งหมด <b class="num">75</b></span>
+      <span class="stat ok">ใช้ต่อได้ <b class="num">74</b> · <b class="num">10,014.50 ฿</b></span>
+      <span class="stat no">ทำลาย <b class="num">1</b> · <b class="num">120.00 ฿</b></span>
+      <span class="icons push">
+        <span class="icon on"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></span>
+        <span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg></span>
+        <span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 8h16"/><path d="M4 11.5h16"/><path d="M4 15h16"/><path d="M4 18.5h16"/></svg></span>
+      </span>
+    </div>
+  </div>
+  <ul>
+    <li class="good"><b>กดกรองได้จริง</b> กด "ทำลาย" แล้วเหลือแต่แถวที่ทำลาย</li>
+    <li class="good"><b>ตอบคำถามผู้บริหารได้ทันทีโดยไม่ต้องกดอะไร</b> — "เดือนนี้ทำลายไปเท่าไหร่" อ่านจากชิปได้เลย</li>
+    <li class="good">ยอดเปลี่ยนตามช่วงเวลาที่เลือก และตามคำค้นที่พิมพ์</li>
+    <li class="bad">แถวล่างยาวขึ้น — จอแคบกว่า 1300 จะตกบรรทัด (แต่ชิปจะพับลงมาเอง)</li>
+  </ul>
+</div>
+
+<!-- ═══ แบบ ข ═══ -->
+<div class="card">
+  <div class="head"><h3>แบบ ข — ตัวกรองครบชุด</h3>
+    <span class="tag">กรองได้ละเอียดที่สุด</span></div>
+  <div class="bar">
+    <div class="row">
+      <div>
+        <div class="title">ประวัติการบันทึก</div>
+        <div class="sub">75 รายการ <b>10,014.50 ฿</b></div>
+      </div>
+      <div class="srch">🔍 ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลข Lot</div>
+      <span class="chip">วันนี้</span><span class="chip">7 วัน</span>
+      <span class="chip on">เดือนนี้</span><span class="chip">ปีงบ 2569</span>
+      <span class="dim" style="font:500 11.5px/1 var(--en),Sarabun,sans-serif">ตั้งแต่</span>
+      <span class="dt">วว/ดด/ปปปป 📅</span>
+      <span class="dim" style="font:500 11.5px/1 var(--en),Sarabun,sans-serif">ถึง</span>
+      <span class="dt">วว/ดด/ปปปป 📅</span>
+      <span class="csv push">⬇ ส่งออก CSV</span>
+    </div>
+    <div class="row">
+      <span class="chip lot">☰ รายการ Lot</span>
+      <span class="chip">ถังขยะ</span>
+      <span class="chip ghost">ซ่อน HN</span>
+      <span class="sel">ทุกสถานะ</span>
+      <span class="sel">ทุกแหล่งที่มา</span>
+      <span class="sel">ทุกคนบันทึก</span>
+      <span class="icons push">
+        <span class="icon on"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></span>
+        <span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg></span>
+        <span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 8h16"/><path d="M4 11.5h16"/><path d="M4 15h16"/><path d="M4 18.5h16"/></svg></span>
+      </span>
+    </div>
+  </div>
+  <ul>
+    <li class="good">กรองได้ 3 ทาง — สถานะ · แหล่งที่มา · คนบันทึก (หน้ารายการ Lot มีแบบนี้อยู่แล้ว)</li>
+    <li class="good">ตอบได้ว่า "รพ.สต. ไหนคืนเยอะสุด" หรือ "ใครเป็นคนรับล็อตนี้"</li>
+    <li class="bad">ไม่เห็นยอดเงินจนกว่าจะกดกรอง — ต้องกดถึงจะรู้</li>
+    <li class="bad">ช่องเลือกที่ยังไม่ได้เลือกอะไร ดูเหมือนที่ว่างอยู่ดี</li>
+  </ul>
+</div>
+
+<!-- ═══ แบบ ค ═══ -->
+<div class="card">
+  <div class="head"><h3>แบบ ค — ยุบเหลือแถวเดียว</h3>
+    <span class="tag bad">ไม่พอที่จอ 1500</span></div>
+  <p class="note">ของทั้งหมดกิน <b>1,591 จุด</b> แต่แถบกว้างแค่ <b>1,310</b> — ต้องตัดของออกราว 280 จุด</p>
+
+  <p class="note" style="margin-top:10px"><b>ถ้ายัดทุกอย่างลงแถวเดียวโดยไม่ตัดอะไร</b> — ล้นออกนอกกรอบแบบนี้</p>
+  <div class="bar" style="overflow:hidden;position:relative">
+    <div class="row" style="flex-wrap:nowrap;margin-bottom:0">
+      <div style="flex:none">
+        <div class="title">ประวัติการบันทึก</div>
+        <div class="sub">75 รายการ <b>10,014.50 ฿</b></div>
+      </div>
+      <div class="srch" style="flex:none">🔍 ค้นด้วยชื่อยา · HN · ชื่อคนบันทึก · เลข Lot</div>
+      <span class="chip">วันนี้</span><span class="chip">7 วัน</span>
+      <span class="chip on">เดือนนี้</span><span class="chip">ปีงบ 2569</span>
+      <span class="dt">วว/ดด/ปปปป 📅</span><span class="dt">วว/ดด/ปปปป 📅</span>
+      <span class="chip lot">☰ รายการ Lot</span>
+      <span class="chip">ถังขยะ</span>
+      <span class="chip ghost">ซ่อน HN</span>
+      <span class="icons"><span class="icon on"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></span><span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg></span><span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 8h16"/><path d="M4 11.5h16"/><path d="M4 15h16"/><path d="M4 18.5h16"/></svg></span></span>
+      <span class="csv">⬇ ส่งออก CSV</span>
+    </div>
+    <div style="position:absolute;top:0;right:0;bottom:0;width:120px;
+      background:linear-gradient(90deg,rgba(255,255,255,0),rgba(253,241,237,.95));
+      display:flex;align-items:center;justify-content:flex-end;padding-right:10px;
+      font:700 11.5px/1 var(--en),Sarabun,sans-serif;color:var(--red)">ล้นออกไป 281 จุด →</div>
+  </div>
+
+  <p class="note" style="margin-top:14px"><b>ถ้าตัดของออกให้พอดี</b> — ต้องเอา 3 อย่างนี้ออก<br><span style="color:var(--red);font-weight:600">แต่ที่จอ 1460 ก็ยังตกบรรทัดอยู่ดี — ปุ่มส่งออกหล่นลงไปแถวสอง (ดูภาพข้างล่าง)</span></p>
+  <div class="bar">
+    <div class="row" style="margin-bottom:0">
+      <div style="flex:none">
+        <div class="title">ประวัติการบันทึก</div>
+        <div class="sub">75 รายการ <b>10,014.50 ฿</b></div>
+      </div>
+      <div class="srch" style="width:250px;flex:none">🔍 ค้นชื่อยา · HN · Lot</div>
+      <span class="chip">วันนี้</span><span class="chip">7 วัน</span><span class="chip on">เดือนนี้</span>
+      <span class="dt">วว/ดด/ปปปป 📅</span><span class="dt">วว/ดด/ปปปป 📅</span>
+      <span class="chip lot">☰ รายการ Lot</span>
+      <span class="chip">ถังขยะ</span>
+      <span class="chip ghost">ซ่อน HN</span>
+      <span class="icons push"><span class="icon on"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></span><span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg></span><span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 8h16"/><path d="M4 11.5h16"/><path d="M4 15h16"/><path d="M4 18.5h16"/></svg></span></span>
+      <span class="icon" style="background:var(--teal)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg></span>
+    </div>
+  </div>
+  <p class="note" style="margin-top:8px;color:var(--red)">
+    ที่หายไป — ชิป <b>"ปีงบ 2569"</b> · คำว่า <b>"ตั้งแต่/ถึง"</b> ·
+    ช่องค้นหาสั้นลง 70 จุด · ปุ่มส่งออกเหลือแต่ไอคอน (ไม่มีคำว่า CSV)</p>
+  <ul>
+    <li class="good">กระชับที่สุด ได้ที่คืนให้ตารางอีก 48 จุด</li>
+    <li class="bad">🔴 ต้องตัดของที่ใช้อยู่ออก ซึ่งพี่กันเพิ่งสั่งให้ย้ายมาไว้แถวบนเอง</li>
+    <li class="bad">จอ 1366 (คอมห้องยา) จะตกบรรทัดอยู่ดี = กลับไปเป็น 2 แถวเหมือนเดิม</li>
+  </ul>
+</div>
+
+<!-- ═══ แบบ ง ═══ -->
+<div class="card">
+  <div class="head"><h3>แบบ ง — แถบสรุปย่อ (ดูอย่างเดียว กดไม่ได้)</h3>
+    <span class="tag">ง่ายที่สุด</span></div>
+  <div class="bar">
+    <div class="row">
+      <span class="chip lot">☰ รายการ Lot</span>
+      <span class="chip">ถังขยะ</span>
+      <span class="chip ghost">ซ่อน HN</span>
+      <span style="margin-left:20px;font:400 12.5px/1 var(--en),Sarabun,sans-serif;color:var(--dim)">
+        ใช้ต่อได้ <b style="color:var(--teal);font-weight:700">74 รายการ · 10,014.50 ฿</b>
+        &nbsp;·&nbsp; ทำลาย <b style="color:var(--red);font-weight:700">1 รายการ · 120.00 ฿</b>
+      </span>
+      <span class="icons push">
+        <span class="icon on"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></span>
+        <span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg></span>
+        <span class="icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 8h16"/><path d="M4 11.5h16"/><path d="M4 15h16"/><path d="M4 18.5h16"/></svg></span>
+      </span>
+    </div>
+  </div>
+  <ul>
+    <li class="good">อ่านง่าย ไม่มีอะไรให้เรียนรู้</li>
+    <li class="good">ทำเร็วที่สุด ตัวเลขมีอยู่ในมือแล้ว</li>
+    <li class="bad">กดไม่ได้ — เห็นว่าทำลาย 1 รายการ แต่ต้องไปหาเองว่าแถวไหน</li>
+  </ul>
+</div>
+
+<h2>ฟังก์ชันอื่นที่เพิ่มได้ ถ้าพี่กันสนใจ</h2>
+<div class="card">
+  <ul>
+    <li><b>ปุ่มล้างตัวกรองทั้งหมด</b> — ตอนนี้มีแค่ปุ่มล้างการเรียง ถ้ากรองไว้หลายชั้นแล้วลืม จะงงว่าทำไมรายการหาย</li>
+    <li><b>เลือกจำนวนแถวต่อครั้ง</b> — ตอนนี้ 60 ตายตัว เลือกได้ 60 / 120 / ทั้งหมด</li>
+    <li><b>กดที่ชื่อยาแล้วกรองเฉพาะยาตัวนั้น</b> — แบบเดียวกับที่กดเลข Lot แล้วกรองอยู่ตอนนี้</li>
+    <li><b>ปุ่มพิมพ์หน้านี้</b> — ตอนนี้พิมพ์ได้เฉพาะใบสรุป Lot</li>
+    <li><b>จำการเรียงกับตัวกรองไว้ข้ามการรีเฟรช</b> — แบบเดียวกับที่จำคอลัมน์ HN กับความสูงแถว</li>
+  </ul>
+  <p class="note" style="margin-top:10px">ทั้งหมดนี้ยังไม่ได้ทำ · บอกได้ว่าอยากได้ตัวไหน แคลร์ทำให้</p>
+</div>
+
+<h2>สรุป</h2>
+<div class="flag ok">แคลร์เลือกแบบ ก — ได้ทั้งเติมช่องว่างและได้ฟังก์ชันที่ใช้จริงทุกวัน</div>
+<p class="note">แบบ ง ก็เติมช่องว่างได้เหมือนกัน แต่กดไม่ได้ · แบบ ข กรองละเอียดกว่าแต่ไม่เห็นตัวเลข<br>
+ส่วนแบบ ค ต้องตัดของที่พี่กันเพิ่งสั่งให้ย้ายขึ้นไปเมื่อกี้ออก</p>
+
+</div>
+</body>
+</html>

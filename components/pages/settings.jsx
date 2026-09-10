@@ -145,6 +145,29 @@ export function renderSettings(V) {
             </div>
           </div>
 
+          {/* ── ถังขยะ ─────────────────────────────────────────────────────────
+              พี่กันสั่ง 10 ก.ย. 2569 — "เอาปุ่มถังขยะออก เอาไปไว้ที่ตั้งค่า
+              เอาไว้กดแล้วมันจะเด้งมาหน้าตารางนี้เอง"
+
+              ถังขยะเป็นของที่ใช้นาน ๆ ครั้ง (ตอนลบผิดแล้วต้องกู้คืน)
+              แต่เดิมกินที่ในแถบเครื่องมือหน้าประวัติที่ต้องใช้ทุกวัน
+              🚨 กดแล้วเด้งไปหน้าประวัติในโหมดถังขยะเลย ไม่ต้องไปกดต่ออีกที
+              🚨 ปุ่ม "กลับไปดูรายการปกติ" อยู่ในแถบเครื่องมือของหน้านั้น */}
+          <div style={s(LABEL + ';margin-bottom:4px')}>ถังขยะ</div>
+          <div style={s('font:400 11.5px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:8px')}>รายการที่ลบไปแล้วยังอยู่ครบ กู้คืนได้ทุกเมื่อ ไม่มีการลบถาวรจากหน้าเว็บ</div>
+          <div style={s('display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:22px;padding:11px 13px;border-radius:10px;background:#f6f7f4;border:1px solid rgba(30,36,32,.10)')}>
+            <div style={s('flex:1;min-width:150px;font:400 12.5px/1.75 Sarabun,sans-serif;color:#6b746e')}>
+              เปิดดูรายการที่ถูกลบ แล้วกดกู้คืนได้จากหน้าประวัติ
+            </div>
+            <div {...kb(V.openTrash)} aria-label="เปิดดูถังขยะ" className="hv-bg-e3f tap"
+              style={s('display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:9px;background:#eef6f1;color:#2f7d5d;font:700 12.5px/1.75 Sarabun,sans-serif;cursor:pointer;flex:none')}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M4 7h16" /><path d="M9 7V5h6v2" /><path d="M6 7l1 13h10l1-13" />
+              </svg>
+              เปิดถังขยะ
+            </div>
+          </div>
+
           <div style={s(LABEL + ';margin-bottom:7px')}>ธีมหน้าสรุป</div>
           <div style={s('display:flex;gap:6px;margin-bottom:6px')}>
             <div {...kb(V.setLight)} className="hv-sun" style={sx('flex:1;text-align:center;padding:11px 0;border-radius:10px;cursor:pointer;font:600 13.5px/1.75 Sarabun,sans-serif', { background: V.themeLightBg, color: V.themeLightFg })}>สว่าง</div>

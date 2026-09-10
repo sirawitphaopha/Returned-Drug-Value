@@ -1,7 +1,7 @@
 // ตัวช่วยทั่วไป: เก็บลงเครื่อง · ข้อความเด้ง · ตัวเลขที่นับขึ้น
 // คัดจากมอคอัป (บรรทัด 957–1004) ตัดเฉพาะส่วนที่เก็บรายการที่บันทึกแล้วลงเครื่อง
 // เพราะยอด KPI เก่าค้างบนจอแย่กว่ารอโหลดนิดหน่อย
-import { LS, writeLS, myTabId, draftKeyOf } from '../helpers';
+import { LS, writeLS, myTabId, draftKeyOf, ROW_H, ROW_H_CLASSES } from '../helpers';
 
 export function uiActions(app) {
   // เก็บเฉพาะร่างที่ยังไม่บันทึก กับธีม — ที่เหลืออยู่บนเซิร์ฟเวอร์
@@ -73,6 +73,42 @@ export function uiActions(app) {
     app.setState({ enFont: mode }, () => {
       app.applyEnFont(mode);
       writeLS(LS.enFont, mode);
+    });
+  };
+
+  // ── คอลัมน์ HN ในหน้าประวัติ กดซ่อน/แสดงได้ (พี่กันสั่ง 10 ก.ย. 2569) ────
+  //   "แสดงเริ่มต้นคือซ่อน · จำสถานะ"
+  //
+  //   เหตุผลที่ซ่อนเป็นค่าตั้งต้น มีสองชั้น
+  //     ① HN เป็นข้อมูลผู้ป่วย ซ่อนไว้ = คนที่เดินผ่านจอไม่เห็นเลขผู้ป่วยโดยไม่ตั้งใจ
+  //        เข้าชุดกับกฎเดิมของเว็บนี้ (ปิดบัง HN ในบันทึกเซิร์ฟเวอร์ · ล้างตอนออกจากระบบ)
+  //     ② ตรวจฐานแล้วยังไม่มีใครกรอก HN สักแถวจาก 291 แถว คอลัมน์กินที่ไปเปล่า ๆ 68 จุด
+  //
+  // 🚨 ค้นด้วย HN ยังทำงานปกติแม้คอลัมน์ปิดอยู่ (พี่กันเคาะว่าไม่ต้องโชว์เลข)
+  // 🚨 ไฟล์ส่งออก CSV มี HN เสมอ ไม่ผูกกับสถานะคอลัมน์บนจอ
+  app.toggleHnCol = () => {
+    const next = !app.state.hnCol;
+    app.setState({ hnCol: next }, () => writeLS(LS.hnCol, next));
+  };
+
+  // ── ความสูงแถวตาราง 3 ระดับ (พี่กันสั่ง 10 ก.ย. 2569) ────────────────────
+  //   "ความสูง 43 34 30 เรารู้ละ เอาปุ่มเลือกขนาดได้ใส่ไปเลย"
+  //
+  // 🚨 ทาคลาสที่ <html> ไม่ใช่ที่ตาราง — ตั้งครั้งเดียวมีผลกับตารางทุกหน้า
+  //    (ประวัติ · รายการ Lot · หน้าบันทึก) ไม่ต้องส่งค่าไปให้แต่ละหน้าเอง
+  // 🚨 ต้องถอดคลาสเก่าออกก่อนเสมอ ไม่งั้นซ้อนกันแล้วอันที่เขียนทีหลังใน CSS ชนะ
+  app.applyRowH = (key) => {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    ROW_H_CLASSES.forEach((c) => root.classList.remove(c));
+    const hit = ROW_H.find((r) => r.key === key) || ROW_H[0];
+    root.classList.add(hit.cls);
+  };
+
+  app.setRowH = (key) => {
+    app.setState({ rowH: key }, () => {
+      app.applyRowH(key);
+      writeLS(LS.rowH, key);
     });
   };
 

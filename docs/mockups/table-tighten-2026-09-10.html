@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>บีบตารางประวัติ — ความสูงแถว กับ คอลัมน์ราคา</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1e2420; --dim:#6b746e; --faint:#9aa19c; --teal:#2f7d5d;
+    --line:rgba(30,36,32,.10); --paper:#fff; --ground:#eef1ec; --red:#c2543c; --redbg:#fdf1ed;
+    --en:"Roboto Mono";
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font:400 15px/1.75 var(--en),Sarabun,sans-serif;padding:26px 18px 70px}
+  .wrap{max-width:1320px;margin:0 auto}
+  h1{font:700 25px/1.5 Sarabun,sans-serif;margin:0 0 4px}
+  .lead{font:400 14px/1.8 var(--en),Sarabun,sans-serif;color:var(--dim);margin:0 0 8px;max-width:840px}
+  h2{font:700 19px/1.55 Sarabun,sans-serif;margin:32px 0 8px;padding-top:20px;border-top:1px solid var(--line)}
+  h3{font:700 15.5px/1.5 Sarabun,sans-serif;margin:0 0 2px}
+  p{margin:0 0 10px;font:400 14px/1.85 var(--en),Sarabun,sans-serif}
+  .note{font:400 13px/1.75 var(--en),Sarabun,sans-serif;color:var(--dim)}
+
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px 16px;margin-bottom:14px;box-shadow:0 2px 10px rgba(30,36,32,.04)}
+  .card.pick{border-color:rgba(47,125,93,.42);background:#fbfefc}
+  .head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .tag{font:600 11px/1 var(--en),Sarabun,sans-serif;padding:5px 9px;border-radius:6px;
+    background:#f0f1ee;color:var(--dim);white-space:nowrap}
+  .tag.on{background:#e3f0e8;color:var(--teal)}
+  .tag.warn{background:#fdf3e7;color:#8a5a12}
+  .tag.bad{background:var(--redbg);color:var(--red)}
+
+  /* ── ตารางจำลอง — ยกค่าจริงมาจากเว็บทุกตัว ─────────────────────── */
+  table{border-collapse:collapse;table-layout:fixed;width:100%;
+    border:1px solid rgba(30,36,32,.08);border-radius:10px;overflow:hidden}
+  th,td{box-sizing:border-box;padding:0 12px;vertical-align:middle;text-align:left;white-space:nowrap;
+    border-right:1px solid rgba(30,36,32,.06)}
+  th:last-child,td:last-child{border-right:0}
+  th:first-child,td:first-child{padding-left:15px}
+  th:last-child,td:last-child{padding-right:15px}
+  thead th{background:#eaf3ee;color:#414a44;font:600 12.5px/1.75 var(--en),Sarabun,sans-serif;
+    padding-top:9px;padding-bottom:9px}
+  tbody td{border-top:1px solid rgba(30,36,32,.06);
+    font:400 13.5px/1.75 var(--en),Sarabun,sans-serif;font-variant-numeric:tabular-nums;
+    padding-top:9px;padding-bottom:9px}
+  tbody tr:nth-child(even) td{background:#f7faf8}
+  .ta-r{text-align:right}
+  .ta-c{text-align:center}
+  .val{font:600 14.5px var(--en),Sarabun,sans-serif;color:var(--teal)}
+  .dim{color:var(--dim)}
+  .drug{font:600 13.5px var(--en),Sarabun,sans-serif}
+  .drug em{font-style:normal;font-weight:400;color:var(--dim)}
+  .chip{display:inline-block;padding:3px 9px;border-radius:6px;
+    font:600 11px/1.75 var(--en),Sarabun,sans-serif;background:#e3f0e8;color:var(--teal)}
+  .lot{font:500 11.5px/1.75 var(--en),Sarabun,sans-serif;color:var(--dim);
+    border-bottom:1px dashed rgba(30,36,32,.28)}
+  .btns{display:flex;justify-content:flex-end;gap:6px}
+  .mini{padding:6px 9px;border-radius:7px;background:#f0f1ee;color:#414a44;
+    font:500 11.5px/1.75 var(--en),Sarabun,sans-serif}
+  .mini.del{background:var(--redbg);color:var(--red)}
+
+  /* แบบบีบ — เปลี่ยนแค่ระยะบนล่างกับขนาดปุ่ม */
+  .h44 tbody td{padding-top:6px;padding-bottom:6px}
+  .h44 .mini{padding:5px 9px}
+  .h38 tbody td{padding-top:4px;padding-bottom:4px}
+  .h38 .mini{padding:3px 9px;font-size:11px}
+  .h34 tbody td{padding-top:3px;padding-bottom:3px;font-size:13px}
+  .h34 .mini{padding:2px 8px;font-size:10.5px}
+  .h34 .val{font-size:13.5px}
+  .h34 .chip{padding:2px 8px;font-size:10.5px}
+
+  .ruler{display:inline-flex;align-items:center;gap:6px;font:600 12px/1 var(--en),Sarabun,sans-serif;
+    color:var(--teal);background:#e3f0e8;border-radius:6px;padding:5px 9px}
+
+  table.priceB td.merged{font-variant-numeric:tabular-nums}
+  .sub{font:400 10.5px/1.5 var(--en),Sarabun,sans-serif;color:var(--faint)}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:1100px){ .grid2{grid-template-columns:1fr} }
+  ul{margin:8px 0 0;padding-left:19px}
+  li{font:400 13px/1.8 var(--en),Sarabun,sans-serif;margin-bottom:2px}
+  li.good::marker{color:var(--teal)}
+  li.bad::marker{color:var(--red)}
+  .flag{display:inline-flex;align-items:center;gap:6px;background:#eef7f1;color:var(--teal);
+    border:1px solid rgba(47,125,93,.25);border-radius:8px;padding:7px 11px;
+    font:600 13px/1.6 var(--en),Sarabun,sans-serif;margin:4px 0 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>บีบตารางประวัติ — เลือกแบบ</h1>
+<p class="lead">วัดจากตารางจริงในเว็บทุกค่า · แถวสูง <b>51 จุด</b> ตอนนี้
+และคอลัมน์ <b>ราคา/หน่วย</b> กว้าง 116 จุด ทั้งที่ตัวเลขข้างในต้องการแค่ 57 จุด</p>
+
+<h2>เรื่องที่ 1 — ความสูงแถว</h2>
+<div class="flag">ตัวที่กำหนดความสูงคือปุ่ม แก้/ลบ (สูง 32 จุด) ไม่ใช่ตัวหนังสือ</div>
+<p class="note">แถว 51 จุด = ปุ่ม 32 + ระยะบนล่างช่องละ 9 + เส้นแบ่ง 1<br>
+บีบได้ 2 ที่พร้อมกัน — ระยะบนล่างของช่อง กับ ระยะในของปุ่ม</p>
+
+<div class="card">
+  <div class="head"><h3>แบบที่ใช้อยู่</h3><span class="ruler">แถวสูง 51 จุด</span>
+    <span class="tag">เห็นราว 11 แถวต่อจอ</span></div>
+  <table>
+    <colgroup><col style="width:124px"><col><col style="width:80px"><col style="width:116px"><col style="width:118px"><col style="width:90px"><col style="width:164px"><col style="width:114px"><col style="width:92px"><col style="width:104px"></colgroup>
+    <thead><tr><th>วันที่</th><th>ยา</th><th class="ta-r">จำนวน</th><th class="ta-r">ราคา/หน่วย</th><th class="ta-r">มูลค่า (฿)</th><th class="ta-c">สถานะ</th><th>แหล่งที่มา</th><th>ผู้บันทึก</th><th>Lot</th><th class="ta-c">จัดการ</th></tr></thead>
+    <tbody>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Amlodipine <em>10 mg tab</em></td><td class="ta-r">85 เม็ด</td><td class="ta-r dim">2.50</td><td class="ta-r val">212.50 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. หนองเชียงทูน</td><td class="dim">ภญ. วลัยพรรณ</td><td><span class="lot">L690909-11</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Hydralazine <em>25 mg tab</em></td><td class="ta-r">80 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">80.00 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. ดู่</td><td class="dim">พนง. สุพิชฌาย์</td><td><span class="lot">L690909-10</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Metformin <em>500 mg tab</em></td><td class="ta-r">440 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">440.00 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. ดอนเหลือม</td><td class="dim">จพ. ภัชทราวลี</td><td><span class="lot">L690909-10</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="head"><h3>แบบ ก — บีบนิดเดียว</h3><span class="ruler">แถวสูง 43 จุด</span>
+    <span class="tag on">เห็นเพิ่ม 3 แถว</span><span class="tag">ระยะบนล่าง 9 → 6</span></div>
+  <table class="h44">
+    <colgroup><col style="width:124px"><col><col style="width:80px"><col style="width:116px"><col style="width:118px"><col style="width:90px"><col style="width:164px"><col style="width:114px"><col style="width:92px"><col style="width:104px"></colgroup>
+    <thead><tr><th>วันที่</th><th>ยา</th><th class="ta-r">จำนวน</th><th class="ta-r">ราคา/หน่วย</th><th class="ta-r">มูลค่า (฿)</th><th class="ta-c">สถานะ</th><th>แหล่งที่มา</th><th>ผู้บันทึก</th><th>Lot</th><th class="ta-c">จัดการ</th></tr></thead>
+    <tbody>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Amlodipine <em>10 mg tab</em></td><td class="ta-r">85 เม็ด</td><td class="ta-r dim">2.50</td><td class="ta-r val">212.50 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. หนองเชียงทูน</td><td class="dim">ภญ. วลัยพรรณ</td><td><span class="lot">L690909-11</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Hydralazine <em>25 mg tab</em></td><td class="ta-r">80 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">80.00 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. ดู่</td><td class="dim">พนง. สุพิชฌาย์</td><td><span class="lot">L690909-10</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Metformin <em>500 mg tab</em></td><td class="ta-r">440 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">440.00 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. ดอนเหลือม</td><td class="dim">จพ. ภัชทราวลี</td><td><span class="lot">L690909-10</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+    </tbody>
+  </table>
+  <ul><li class="good">ตัวหนังสือขนาดเดิมทุกตัว อ่านง่ายเท่าเดิม</li>
+      <li class="good">ปุ่มยังใหญ่พอกดสบายบนคอม</li></ul>
+</div>
+
+<div class="card pick">
+  <div class="head"><h3>แบบ ข — บีบพอดี</h3><span class="ruler">แถวสูง 34 จุด</span>
+    <span class="tag on">เห็นเพิ่ม 7 แถว</span><span class="tag">ระยะบนล่าง 9 → 4 · ปุ่มเตี้ยลง</span>
+    <span class="tag on">แคลร์แนะนำ</span></div>
+  <table class="h38">
+    <colgroup><col style="width:124px"><col><col style="width:80px"><col style="width:116px"><col style="width:118px"><col style="width:90px"><col style="width:164px"><col style="width:114px"><col style="width:92px"><col style="width:104px"></colgroup>
+    <thead><tr><th>วันที่</th><th>ยา</th><th class="ta-r">จำนวน</th><th class="ta-r">ราคา/หน่วย</th><th class="ta-r">มูลค่า (฿)</th><th class="ta-c">สถานะ</th><th>แหล่งที่มา</th><th>ผู้บันทึก</th><th>Lot</th><th class="ta-c">จัดการ</th></tr></thead>
+    <tbody>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Amlodipine <em>10 mg tab</em></td><td class="ta-r">85 เม็ด</td><td class="ta-r dim">2.50</td><td class="ta-r val">212.50 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. หนองเชียงทูน</td><td class="dim">ภญ. วลัยพรรณ</td><td><span class="lot">L690909-11</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Hydralazine <em>25 mg tab</em></td><td class="ta-r">80 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">80.00 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. ดู่</td><td class="dim">พนง. สุพิชฌาย์</td><td><span class="lot">L690909-10</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Metformin <em>500 mg tab</em></td><td class="ta-r">440 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">440.00 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. ดอนเหลือม</td><td class="dim">จพ. ภัชทราวลี</td><td><span class="lot">L690909-10</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Enalapril <em>5 mg tab</em></td><td class="ta-r">110 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">110.00 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. ตาเปียง</td><td class="dim">ภก. พลกฤษณ์</td><td><span class="lot">L690909-10</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+    </tbody>
+  </table>
+  <ul><li class="good">ตัวหนังสือยังขนาดเดิม — เตี้ยลงเพราะระยะกับปุ่ม ไม่ใช่เพราะย่อตัวอักษร</li>
+      <li class="good">แถวยังห่างพอที่ตาไม่สับสนว่าบรรทัดไหนเป็นของใคร</li>
+      <li class="bad">ปุ่ม แก้/ลบ เตี้ยลงเหลือ 26 จุด (ยังกดด้วยเมาส์สบาย) · แถวเตี้ยลง 17 จุดจากเดิม</li></ul>
+</div>
+
+<div class="card">
+  <div class="head"><h3>แบบ ค — บีบสุด</h3><span class="ruler">แถวสูง 30 จุด</span>
+    <span class="tag on">เห็นเพิ่ม 9 แถว</span><span class="tag warn">ย่อตัวอักษรลงด้วย 13.5 → 13</span></div>
+  <table class="h34">
+    <colgroup><col style="width:124px"><col><col style="width:80px"><col style="width:116px"><col style="width:118px"><col style="width:90px"><col style="width:164px"><col style="width:114px"><col style="width:92px"><col style="width:104px"></colgroup>
+    <thead><tr><th>วันที่</th><th>ยา</th><th class="ta-r">จำนวน</th><th class="ta-r">ราคา/หน่วย</th><th class="ta-r">มูลค่า (฿)</th><th class="ta-c">สถานะ</th><th>แหล่งที่มา</th><th>ผู้บันทึก</th><th>Lot</th><th class="ta-c">จัดการ</th></tr></thead>
+    <tbody>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Amlodipine <em>10 mg tab</em></td><td class="ta-r">85 เม็ด</td><td class="ta-r dim">2.50</td><td class="ta-r val">212.50 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. หนองเชียงทูน</td><td class="dim">ภญ. วลัยพรรณ</td><td><span class="lot">L690909-11</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Hydralazine <em>25 mg tab</em></td><td class="ta-r">80 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">80.00 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. ดู่</td><td class="dim">พนง. สุพิชฌาย์</td><td><span class="lot">L690909-10</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Metformin <em>500 mg tab</em></td><td class="ta-r">440 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">440.00 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. ดอนเหลือม</td><td class="dim">จพ. ภัชทราวลี</td><td><span class="lot">L690909-10</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Enalapril <em>5 mg tab</em></td><td class="ta-r">110 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">110.00 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. ตาเปียง</td><td class="dim">ภก. พลกฤษณ์</td><td><span class="lot">L690909-10</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+      <tr><td class="dim">9 ก.ย. 2569</td><td class="drug">Simvastatin <em>40 mg tab</em></td><td class="ta-r">65 เม็ด</td><td class="ta-r dim">2.50</td><td class="ta-r val">162.50 ฿</td><td class="ta-c"><span class="chip">ใช้ต่อได้</span></td><td class="dim">รพ.สต. กระดึ</td><td class="dim">จพ. กฤตยชญ์</td><td><span class="lot">L690909-09</span></td><td><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></td></tr>
+    </tbody>
+  </table>
+  <ul><li class="good">เห็นข้อมูลมากที่สุด</li>
+      <li class="bad">ตัวอักษรเล็กลง — เจ้าหน้าที่อายุมากอ่านยากขึ้น</li>
+      <li class="bad">ปุ่มเตี้ยเหลือ 22 จุด เริ่มเล็กสำหรับการกดเร็ว ๆ</li></ul>
+</div>
+
+<h2>เรื่องที่ 2 — คอลัมน์ราคา/หน่วย กินที่เกินจำเป็น</h2>
+<div class="flag">ตัวที่กินที่คือ "หัวคอลัมน์" ไม่ใช่ตัวเลข</div>
+<p class="note">คอลัมน์กว้าง <b>116 จุด</b> · ตัวเลขข้างในต้องการแค่ <b>57</b> · แต่คำว่า "ราคา/หน่วย" กับลูกศรต้องการ <b>105</b></p>
+
+<div class="grid2">
+  <div class="card pick">
+    <div class="head"><h3>แบบ ก — เปลี่ยนหัวเป็น "ราคา"</h3><span class="ruler">116 → 78 จุด</span><span class="tag on">แคลร์แนะนำ</span></div>
+    <table>
+      <colgroup><col style="width:96px"><col style="width:78px"><col style="width:110px"></colgroup>
+      <thead><tr><th class="ta-r">จำนวน</th><th class="ta-r">ราคา</th><th class="ta-r">มูลค่า (฿)</th></tr></thead>
+      <tbody>
+        <tr><td class="ta-r">85 เม็ด</td><td class="ta-r dim">2.50</td><td class="ta-r val">212.50 ฿</td></tr>
+        <tr><td class="ta-r">440 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">440.00 ฿</td></tr>
+        <tr><td class="ta-r">110 เม็ด</td><td class="ta-r dim">1.00</td><td class="ta-r val">110.00 ฿</td></tr>
+      </tbody>
+    </table>
+    <ul><li class="good">ได้ที่คืน 38 จุด ยกให้คอลัมน์ยา</li>
+        <li class="good">ไม่เสียข้อมูลอะไรเลย · เรียงตามราคายังกดได้เหมือนเดิม</li>
+        <li class="bad">คำว่า "ต่อหน่วย" หายจากหัว (แต่ตัวเลขก็บอกอยู่แล้วว่าเป็นราคาต่อหนึ่ง)</li></ul>
+  </div>
+
+  <div class="card">
+    <div class="head"><h3>แบบ ข — ยุบรวมกับมูลค่า</h3><span class="ruler">116 → 0 จุด</span></div>
+    <table class="priceB">
+      <colgroup><col style="width:96px"><col style="width:150px"></colgroup>
+      <thead><tr><th class="ta-r">จำนวน</th><th class="ta-r">มูลค่า (฿)</th></tr></thead>
+      <tbody>
+        <tr><td class="ta-r">85 เม็ด</td><td class="ta-r"><span class="val">212.50 ฿</span><div class="sub">85 × 2.50</div></td></tr>
+        <tr><td class="ta-r">440 เม็ด</td><td class="ta-r"><span class="val">440.00 ฿</span><div class="sub">440 × 1.00</div></td></tr>
+        <tr><td class="ta-r">110 เม็ด</td><td class="ta-r"><span class="val">110.00 ฿</span><div class="sub">110 × 1.00</div></td></tr>
+      </tbody>
+    </table>
+    <ul><li class="good">ได้ที่คืนมากที่สุด 116 จุด</li>
+        <li class="good">เห็นที่มาของตัวเลขในบรรทัดเดียวกัน</li>
+        <li class="bad">🔴 <b>แถวสูงขึ้นเป็น 2 บรรทัด</b> ซึ่งสวนทางกับเรื่องที่ 1</li>
+        <li class="bad">กดเรียงตามราคาต่อหน่วยไม่ได้อีก</li></ul>
+  </div>
+</div>
+
+<div class="card">
+  <div class="head"><h3>แบบ ค — เอาคอลัมน์ราคาออกไปเลย</h3><span class="ruler">116 → 0 จุด</span><span class="tag bad">แคลร์ไม่แนะนำ</span></div>
+  <p class="note">ราคาต่อหน่วยไปดูในหน้าคลังยาแทน</p>
+  <ul><li class="bad">🔴 ราคาที่แช่ไว้ในแถวคือ <b>ราคา ณ วันบันทึก</b> ซึ่งอาจไม่เท่าราคาปัจจุบันในคลัง</li>
+      <li class="bad">ตรวจย้อนหลังไม่ได้ว่าตัวเลขมูลค่ามาจากราคาเท่าไหร่ — เป็นข้อมูลสืบกลับ</li></ul>
+</div>
+
+<h2>สรุปที่แคลร์แนะนำ</h2>
+<p><b>เรื่องที่ 1 → แบบ ข (34 จุด)</b> · <b>เรื่องที่ 2 → แบบ ก (เปลี่ยนหัวเป็น "ราคา")</b></p>
+<p class="note">รวมกันแล้วเห็นเพิ่มราว 7 แถวต่อจอ และได้ที่คืนอีก 38 จุดให้คอลัมน์ชื่อยาซึ่งยาวเกินช่องอยู่ตอนนี้
+โดยไม่ต้องย่อตัวอักษรลงเลยสักจุด</p>
+
+</div>
+</body>
+</html>

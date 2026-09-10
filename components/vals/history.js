@@ -4,7 +4,7 @@ import { SOURCES, money, thaiDate, fyOf } from '@/lib/format';
 // ใช้ตัวแยกชิ้นส่วนชื่อยาตัวเดียวกับหน้าบันทึก — ชื่อยาจะได้หน้าตาเหมือนกันทุกหน้า
 import { nameParts } from './record';
 import { pillColorOf } from '@/lib/drugPillColors';
-import { shortStaffName } from '../helpers';
+import { shortStaffName, textWidth, TBL_FONT, ROW_H } from '../helpers';
 
 const HIST_LIMIT = 60;
 
@@ -61,6 +61,34 @@ export function historyVals(app, d) {
     : loaded;
 
   // หัวตาราง — กดเรียงได้ · สีเข้มกว่าเดิม (เดิมจางมากจนแทบไม่เห็น)
+  // ── คอลัมน์ HN กดซ่อน/แสดงได้ (พี่กันสั่ง 10 ก.ย. 2569) ────────────────────
+  //   "แสดงเริ่มต้นคือซ่อน · จำสถานะ"
+  const เปิดHN = !!st.hnCol;
+
+  // ── คอลัมน์แหล่งที่มา ยืดหดตามข้อมูลที่แสดงอยู่จริง (พี่กันสั่ง 10 ก.ย. 2569) ──
+  //
+  //   "ให้มันเปลี่ยนความยาวตามข้อมูลแหล่งที่มา แต่เรากำหนด fix ตัวสูงสุดไว้
+  //    แล้วมันจะทำงานเมื่อ รพ.สต. ที่ยาวที่สุดจะกรอกเท่านั้น
+  //    และให้ตัวที่ไหลลื่นขยับขยายได้คือชื่อยา ตามที่ทำอยู่ตอนนี้"
+  //
+  //   หน้าที่มีแต่ "OPD NCD" คอลัมน์จะแคบ · หน้าที่มี "รพ.สต. หนองเชียงทูน" ค่อยกว้างสุด
+  //   ที่เหลือตกเป็นของคอลัมน์ยา (flex) ซึ่งยาวเกินช่องอยู่ตลอด
+  //
+  // 🚨 เพดาน 156 = "รพ.สต. หนองเชียงทูน" 132 จุด + ระยะขอบใน 24 (พอดีเป๊ะ ไม่เผื่อ)
+  //    ยาวสุดใน 13 แห่ง วัดด้วย scripts/col-width.mjs ห้ามเดาจากจำนวนตัวอักษร
+  // 🚨 พื้น 96 = หัวคอลัมน์ "แหล่งที่มา" กับลูกศรเรียง ต้องการเท่านี้เป็นอย่างน้อย
+  //    แคบกว่านี้หัวจะโดนบีบจนลูกศรตกไปคนละบรรทัด
+  // 🚨 ตอนเซิร์ฟเวอร์วาดจอวัดไม่ได้ (ยังไม่มีผืนผ้าใบ) ใช้เพดานไปก่อน
+  //    กว้างเกินไว้ก่อนดีกว่าแคบแล้วชื่อโดนตัดตอนวาดครั้งแรก
+  const SRC_MIN = 96;
+  const SRC_MAX = 156;
+  const กว้างสุดที่แสดงอยู่ = rows.reduce((m, r) => {
+    const w = textWidth(srcFull(r), TBL_FONT);
+    return w > m ? w : m;
+  }, 0);
+  const กว้างแหล่งที่มา = กว้างสุดที่แสดงอยู่
+    ? Math.min(SRC_MAX, Math.max(SRC_MIN, กว้างสุดที่แสดงอยู่ + 24))
+    : SRC_MAX;
   const COLS = [
     { key: 'date', label: 'วันที่', w: '124px', align: 'left' },
     { key: 'name', label: 'ยา', w: '', align: 'left', flex: true },
@@ -68,9 +96,17 @@ export function historyVals(app, d) {
     { key: 'price', label: 'ราคา/หน่วย', w: '116px', align: 'right' },
     { key: 'value', label: 'มูลค่า (฿)', w: '118px', align: 'right' },
     { key: 'disposition', label: 'สถานะ', w: '90px', align: 'center' },
-    { key: 'source', label: 'แหล่งที่มา', w: '96px', align: 'left' },
-    { key: 'hn', label: 'HN', w: '68px', align: 'left' },
-    { key: 'by', label: 'ผู้บันทึก', w: '104px', align: 'left' },
+    // ความกว้างคำนวณข้างบน — ยืดหดตามข้อมูลที่แสดงอยู่ เพดาน 164
+    { key: 'source', label: 'แหล่งที่มา', w: กว้างแหล่งที่มา + 'px', align: 'left' },
+    // 🚨 ขีดกลางของแถวที่ไม่มี HN ต้องอยู่กึ่งกลางช่อง (พี่กันสั่ง 10 ก.ย. 2569)
+    ...(เปิดHN ? [{ key: 'hn', label: 'HN', w: '68px', align: 'center' }] : []),
+    // 🚨🔴 ชื่อผู้บันทึกห้ามตัด ทุกสถานะ — พี่กันสั่ง "ห้ามตัดชื่อ" (10 ก.ย. 2569)
+    //    114 จุด = 82 (ชื่อยาวสุดใน 16 คน คือ "ภญ. วลัยพรรณ" กับ "พนง. สุพิชฌาย์")
+    //             + 24 ระยะขอบใน + 8 เผื่อ
+    //    เคยตั้ง 146 ซึ่งกว้างเกินไป 40 จุด พี่กันทักว่า "ช่องไฟมันเยอะมากเลย"
+    //    และเคยตั้งให้หดเป็น 104 ตอนเปิด HN ซึ่งไม่พอ ชื่อตกบรรทัดทันที
+    //    วัดครบทั้ง 16 คนด้วย scripts/col-width.mjs — ห้ามเดาจากจำนวนตัวอักษร
+    { key: 'by', label: 'ผู้บันทึก', w: '114px', align: 'left' },
     { key: 'lot', label: 'Lot', w: '92px', align: 'left' }
   ];
 
@@ -179,9 +215,94 @@ export function historyVals(app, d) {
     // ตัววัดความสูงแถบกรอง — หัวตารางเอาไปใช้ตั้งระยะติดบน (ดู .sticky-head ใน globals.css)
     histHeadRef: app.histHeadRef,
 
+    // ── ปุ่มเลือกความสูงแถว 3 ระดับ (พี่กันสั่ง 10 ก.ย. 2569) ──────────────
+    // 🚨 ตั้งครั้งเดียวมีผลกับตารางทุกหน้า เพราะคลาสไปอยู่ที่ <html>
+    rowHPicks: ROW_H.map((r) => ({
+      key: r.key,
+      label: r.label,
+      // ตำแหน่งเส้นในไอคอน — ยิ่งชิดยิ่งแทนแถวที่แน่นขึ้น
+      lines: r.lines,
+      title: 'แถวสูง ' + r.px + ' จุด · ' + r.hint,
+      on: (st.rowH || 'roomy') === r.key,
+      bg: (st.rowH || 'roomy') === r.key ? '#2f7d5d' : '#f0f1ee',
+      fg: (st.rowH || 'roomy') === r.key ? '#fff' : '#414a44',
+      pick: () => app.setRowH(r.key)
+    })),
+
+    // ── ปุ่มสลับคอลัมน์ HN ────────────────────────────────────────────────
+    // 🚨 ค้นด้วย HN ยังทำงานปกติแม้คอลัมน์ปิดอยู่ · ไฟล์ส่งออกมี HN เสมอ
+    hnCol: เปิดHN,
+    hnColToggle: app.toggleHnCol,
+    hnColLabel: เปิดHN ? 'ซ่อน HN' : 'แสดง HN',
+    hnColTitle: เปิดHN ? 'ซ่อนคอลัมน์ HN ออกจากตาราง' : 'แสดงคอลัมน์ HN ในตาราง',
+    hnColBg: เปิดHN ? '#e3f0e8' : '#fff',
+    hnColFg: เปิดHN ? '#2f7d5d' : '#6b746e',
+    hnColBorder: เปิดHN ? 'rgba(47,125,93,.40)' : 'rgba(30,36,32,.16)',
+
     // หัวตารางกดเรียงได้ · ลูกศรบอกทิศ ▲ น้อยไปมาก ▼ มากไปน้อย ↕ ยังไม่ได้เรียง
     // ปุ่มล้างการเรียง — โผล่เฉพาะตอนกดเรียงเองแล้วจริง ๆ
     histSortClear: { on: !!sortKey, clear: app.clearHistSort, label: (COLS.find((c) => c.key === sortKey) || {}).label || '' },
+
+    // ── ปุ่มล้างตัวกรองทั้งหมด (พี่กันสั่ง 10 ก.ย. 2569) ──────────────────────
+    // 🚨 นับเฉพาะตัวกรองที่ "ไม่ใช่ค่าตั้งต้น" — ช่วงเวลาเดือนนี้คือค่าตั้งต้น ไม่นับ
+    //    ไม่งั้นปุ่มจะเปิดใช้งานตลอดเวลาทั้งที่ไม่มีอะไรให้ล้าง
+    // 🚨 ไม่นับถังขยะ เพราะปุ่มนี้ไม่แตะถังขยะ (มีปุ่มกลับของตัวเองแล้ว)
+    histHasFilter: !!(st.histQuery.trim() || st.histLot || sortKey
+      || st.histDisp || st.histSrc || st.histBy || st.histSite
+      || (st.histRange && st.histRange !== 'month')),
+    clearHistFilters: app.clearHistFilters,
+
+    // ── ตัวกรอง 3 ทาง — สถานะ · แหล่งที่มา · ผู้บันทึก (พี่กันสั่ง 10 ก.ย. 2569) ──
+    //
+    // 🚨 ทุกช่องมีตัวเลือกแรกเป็น "ทุก…" ซึ่งค่าเป็นค่าว่าง = ไม่กรอง
+    //    ช่องเลือกที่ไม่มีทางกลับไปสถานะ "ไม่กรอง" คือกับดักที่ออกไม่ได้
+    // 🚨 ช่องผู้บันทึกใช้รายชื่อที่ "มีรายการจริงในช่วงเวลานี้" ไม่ใช่พนักงานทั้ง 16 คน
+    //    เลือกคนที่ไม่มีรายการแล้วได้ตารางว่าง = ตัวเลือกที่ไม่มีประโยชน์
+    // 🚨 แต่ถ้าเลือกคนไว้อยู่แล้วและคนนั้นหลุดจากรายชื่อ (เปลี่ยนช่วงเวลา) ต้องคงไว้ในรายการ
+    //    ไม่งั้นช่องจะเด้งกลับไปเป็น "ทุกคนบันทึก" ทั้งที่ยังกรองด้วยชื่อนั้นอยู่
+    histDispValue: st.histDisp || '',
+    onHistDisp: app.setHistDisp,
+    histDispOpts: [
+      { value: '', label: 'ทุกสถานะ' },
+      { value: 'reuse', label: 'นำกลับใช้' },
+      { value: 'destroy', label: 'ทำลาย' }
+    ],
+
+    histSrcValue: st.histSrc || '',
+    onHistSrc: app.setHistSrc,
+    histSrcOpts: [{ value: '', label: 'ทุกแหล่งที่มา' }]
+      .concat(SOURCES.map((s) => ({ value: s.key, label: s.label }))),
+
+    // ── ชั้นที่สอง — เลือก รพ.สต. ว่าแห่งไหน (พี่กันสั่ง 10 ก.ย. 2569) ──────
+    //   "รพ.สต. ถ้าเลือกแล้วควรขึ้นเหมือนหน้า lot นะ"
+    //
+    // 🚨 โผล่เฉพาะตอนแหล่งที่มาเป็น รพ.สต. — อำเภอปรางค์กู่มี 13 แห่ง
+    //    ยัดรวมลงช่องเดียวกับแหล่งที่มาจะได้รายการยาวเป็นหางว่าว 19 บรรทัด
+    //    (พี่กันสั่งแยกสองชั้นตั้งแต่ทำหน้ารายการ Lot — CLAUDE.md ข้อ 3.52)
+    // 🚨 รายชื่อมาจากการตั้งค่า (ครบทั้ง 13 แห่ง) ไม่ใช่จากแถวที่โหลดมาแล้ว
+    //    หน้านี้โหลดทีละ 60 แถว เอาจากข้อมูลที่เห็นจะได้ตัวเลือกไม่ครบ
+    //    และแห่งที่ยังไม่เคยคืนยาก็ต้องเลือกได้ (จะได้รู้ว่าไม่มีจริง ๆ)
+    histSiteOn: st.histSrc === 'pcu',
+    histSiteValue: st.histSite || '',
+    onHistSite: app.setHistSite,
+    histSiteOpts: [{ value: '', label: 'ทุกแห่ง' }].concat(
+      [...new Set((st.pcuSites || []).map((n) => String(n).trim()).filter(Boolean))]
+        .sort((x, y) => x.localeCompare(y, 'th'))
+        .map((n) => ({ value: n, label: n }))
+    ),
+
+    histByValue: st.histBy || '',
+    onHistBy: app.setHistBy,
+    histByOpts: [{ value: '', label: 'ทุกคนบันทึก' }].concat(
+      (() => {
+        const มี = (st.histPeople || []).filter((n) => String(n || '').trim());
+        const เลือกอยู่ = String(st.histBy || '').trim();
+        if (เลือกอยู่ && มี.indexOf(เลือกอยู่) < 0) มี.push(เลือกอยู่);
+        // ชื่อในช่องเลือกใช้ชื่อสั้นเหมือนในตาราง แต่ค่าที่ส่งกลับเป็นชื่อเต็มเสมอ
+        return มี.map((n) => ({ value: n, label: shortStaffName(n) || n }));
+      })()
+    ),
+
 
     histCols: COLS.map((c) => {
             // 🚨 ยังไม่ได้กดเรียง ไม่ได้แปลว่าไม่ได้เรียง
@@ -253,11 +374,19 @@ export function historyVals(app, d) {
         dispLabel: reuse ? 'ใช้ต่อได้' : 'ทำลาย',
         dispBg: reuse ? '#e3f0e8' : '#fbe4dd',
         dispFg: reuse ? '#2f7d5d' : '#c2543c',
+        // กดชื่อยาในตารางแล้วกรองเฉพาะยาตัวนั้น (พี่กันสั่ง 10 ก.ย. 2569)
+        pickDrug: () => app.filterByDrug(r.name),
         sourceLabel: srcFull(r),
         hnLabel: r.hn || '—',
         // แสดงแค่คำนำหน้ากับชื่อ ไม่เอานามสกุล (พี่กันสั่ง 4 ก.ย. 2569)
         // ชื่อเต็มยังอยู่ครบใน byFull สำหรับเอาเมาส์ชี้ดู และในไฟล์ส่งออก
         byLabel: shortStaffName(r.by) || '—',
+        // 🚨 ชื่อคนห้ามถูกผ่ากลางคำ (พี่กันสั่ง 10 ก.ย. 2569 "ห้ามตัดชื่อ")
+        //    แยกเป็นก้อนตามช่องว่าง แล้วให้ตัววาดห่อแต่ละก้อนด้วย nowrap
+        //    ตัดได้เฉพาะตรงช่องว่าง — "ภญ." ขึ้นบรรทัดหนึ่ง "วลัยพรรณ" อีกบรรทัด
+        //    ไม่มีทางได้ "ภญ. วลัย / พรรณ" อีกไม่ว่าคอลัมน์จะแคบแค่ไหน
+        //    (ท่าเดียวกับก้อนในบรรทัดชื่อยา — CLAUDE.md ข้อ 3.19)
+        byParts: String(shortStaffName(r.by) || '—').split(/\s+/).filter(Boolean),
         byFull: r.by || '—',
         lotLabel: r.lot || '—',
         // กดเลข Lot = กรองดูเฉพาะ Lot นั้น · เดิมมีฟีเจอร์นี้อยู่แล้วแต่หน้าคอมไม่เคยโชว์เลข
@@ -278,7 +407,16 @@ export function historyVals(app, d) {
     histFail: (!st.histLoading && !rows.length) ? (st.loadErr.hist || '') : '',
     histRetry: () => app.loadHistory(true),
     histCountLabel: st.histTotal.toLocaleString('en-US') + ' รายการ',
-    histTotalLabel: money(st.histSaved),
+    // ── ยอดสรุปใต้ชื่อหน้า ต้องตรงกับสิ่งที่กรองอยู่ ────────────────────────
+    //
+    // 🚨 เดิมโชว์ยอด "นำกลับใช้" เสมอ พอกรองเฉพาะแถวทำลาย ยอดจึงขึ้น 0.00 ฿
+    //    ทั้งที่มีรายการอยู่จริง — ตัวเลขที่โกหกโดยไม่มีอะไรเตือน
+    // 🚨 เปลี่ยนความหมายเมื่อไหร่ ต้องเปลี่ยนสีและมีคำกำกับด้วย
+    //    ตัวเลขสองความหมายที่หน้าตาเหมือนกันเป๊ะ อ่านผิดได้ทันที
+    histTotalLabel: money(st.histDisp === 'destroy' ? st.histLost : st.histSaved),
+    histTotalColor: st.histDisp === 'destroy' ? '#c2543c' : '#2f7d5d',
+    // คำกำกับโผล่เฉพาะตอนกรองสถานะ — ไม่กรองแล้วหน้าตาเหมือนเดิมทุกจุด
+    histTotalNote: st.histDisp === 'destroy' ? 'ทำลาย' : (st.histDisp === 'reuse' ? 'นำกลับใช้' : ''),
     histTruncated: st.histTotal > rows.length,
     histTruncLabel: 'แสดง ' + rows.length.toLocaleString('en-US') + ' จาก ' + st.histTotal.toLocaleString('en-US') + ' รายการ',
     loadMoreHistory: app.loadMoreHistory,
@@ -309,8 +447,12 @@ export function historyVals(app, d) {
     onHistFrom: app.onHistFrom,
     onHistTo: app.onHistTo,
     isCustomRange: st.histRange === 'custom',
+    // 🚨 หัวเรื่องต้องสั้น (พี่กันสั่ง 10 ก.ย. 2569 "เขียนแค่ ถังขยะพอ")
+    //    ของเดิม 'ถังขยะ — รายการที่ลบไปแล้ว' ยาวจนดันปุ่มส่งออกตกไปอีกแถว
+    //    หัวเรื่องอยู่แถวเดียวกับช่องค้นหา ชิปช่วงเวลา ช่องวันที่ และปุ่มส่งออก
+    //    ยาวขึ้นนิดเดียวก็ดันของท้ายแถวตกบรรทัดทันที
     histTitle: st.histTrash
-      ? 'ถังขยะ — รายการที่ลบไปแล้ว'
+      ? 'ถังขยะ'
       : st.histLot ? 'Lot ' + st.histLot : '',
     histEmptyLabel: st.histTrash ? 'ถังขยะว่าง ไม่มีรายการที่ถูกลบ' : 'ไม่พบรายการตามเงื่อนไขนี้',
 

@@ -269,6 +269,14 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
 /* เลข Lot ในตารางประวัติ — กดได้ เอาเมาส์ชี้แล้วเป็นเทลให้รู้ว่ากดได้ */
 .hv-lot:hover{color:#2f7d5d !important;border-bottom-color:#2f7d5d !important}
 
+/* กดชื่อยาแล้วกรองเฉพาะยาตัวนั้น (พี่กันสั่ง 10 ก.ย. 2569)
+   เส้นประโผล่ตอนเอาเมาส์ชี้เท่านั้น ไม่ขีดไว้ตลอด
+   เพราะทั้งคอลัมน์เป็นชื่อยา ขีดทุกแถวจะกลายเป็นลายพร้อยอ่านยาก
+   🚨 ห้ามเปลี่ยนสีตัวหนังสือ — สีในชื่อยาแต่ละส่วนมีความหมายเฉพาะตัว
+      (ตัวย่อม่วง · เปอร์เซ็นต์ส้ม · ER/IR แดงอมชมพู) ทับแล้วข้อมูลความปลอดภัยหาย */
+.hv-drug{border-bottom:1px dashed transparent}
+.hv-drug:hover{border-bottom-color:#2f7d5d}
+
 /* ── แถบเมนู 3 แท็บ (บันทึก · ประวัติ · สรุป) ────────────────────────────────
    พี่กันขอให้มีกรอบจาง ๆ ให้เห็นว่าเป็นปุ่ม แล้วเข้มขึ้นตอนเอาเมาส์ชี้
    :not(.on) = แท็บที่กำลังเปิดอยู่ไม่ต้องเปลี่ยน มีสีพื้นเข้มของตัวเองแล้ว */
@@ -396,8 +404,11 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
 :root { --font-en: var(--font-mono) }
 
 /* แถบหัวหน้ารายการ Lot — อยู่ในกรอบขาวแล้ว ระยะทำเหมือน .hist-head ทุกอย่าง */
-.lots-head{position:sticky;top:-16px;z-index:5;background:#fff;
-  margin:-16px -18px 0;padding:28px 18px 6px;border-radius:14px 14px 0 0}
+/* 🚨 top:0 ไม่ใช่ -16px — ตรงกับ .hist-head เป๊ะ (พี่กันสั่ง 10 ก.ย. 2569)
+   แก้ตรงนี้เมื่อไหร่ ต้องแก้ --tbl-top ในหน้าให้ตรงกันเสมอ
+   ไม่งั้นเหลือร่องใต้แถบให้แถวลอดผ่านตอนเลื่อน */
+.lots-head{position:sticky;top:0;z-index:5;background:#fff;
+  margin:-16px -18px 0;padding:10px 18px 6px;border-radius:14px 14px 0 0}
 /* 🚨 หัวตารางติดใต้แถบหัวพอดี — ระยะมาจาก ResizeObserver ไม่ใช่เลขตายตัว
       เพราะปุ่มช่วงเวลากับช่องวันที่ขึ้นบรรทัดใหม่เองเมื่อจอแคบ */
 .col-head { position: sticky; top: var(--lotshead, 0px); z-index: 4 }
@@ -428,8 +439,11 @@ input:focus-visible,[role="button"]:focus-visible,[tabindex]:focus-visible{
    🚨 padding-top 28 = ระยะขอบใน 16 + ช่องหายใจอีก 12 (พี่กันสั่ง "ควรมีระยะห่างหน่อย")
       หัวเรื่องจึงไม่ชิดขอบทั้งตอนอยู่นิ่งและตอนตรึงระหว่างเลื่อน
       (กฎเดียวกับที่สกิลกลางเขียนไว้เรื่อง sticky header) */
-.hist-head{position:sticky;top:-16px;z-index:5;background:#fff;
-  margin:-16px -18px 0;padding:28px 18px 6px;
+/* 🚨 ระยะบน 10 จุด (พี่กันสั่ง 10 ก.ย. 2569 "ขอข้างบน 10 ด้วย")
+   margin ติดลบดึงแถบขึ้นไปทับระยะขอบในของกรอบพอดี padding-top จึงเท่ากับระยะจากขอบกรอบ
+   top:0 ทำให้ตอนตรึงก็ห่างขอบจอ 10 เท่ากัน (เดิม -16 กับ 28 ได้ 12 ตอนตรึง 28 ตอนไม่ตรึง) */
+.hist-head{position:sticky;top:0;z-index:5;background:#fff;
+  margin:-16px -18px 0;padding:10px 18px 6px;
   /* 🚨 ต้องมีมุมมนตรงกับกรอบที่ครอบอยู่ (14px) — แถบนี้พื้นขาวและแผ่ออกไป
      ชนขอบกรอบด้วยระยะขอบติดลบ ถ้าไม่ใส่ มุมเหลี่ยมของมันจะไปทับมุมมนของกรอบ
      เห็นเป็นมุมตัดตรงที่ซ้ายบนขวาบน (พี่กันจับได้ 4 ก.ย. 2569) */
@@ -779,3 +793,46 @@ nextjs-portal {
 .jump-btn{transition:opacity .25s ease,transform .25s ease,background .18s ease}
 .jump-btn:hover{opacity:1 !important}
 @media (prefers-reduced-motion: reduce){ .jump-btn{transition:none} }
+
+/* ── ความสูงแถวตาราง เลือกได้ 3 ระดับ (พี่กันสั่ง 10 ก.ย. 2569) ──────────────
+   "ความสูง 43 34 30 เรารู้ละ เอาปุ่มเลือกขนาดได้ใส่ไปเลย"
+
+   ค่าตั้งต้นคือ 43 (แถวโปร่ง) — ของเดิม 51 จุดไม่มีให้เลือกแล้ว
+   เพราะสูงเกินจำเป็น ตัวที่กินคือระยะบนล่างกับปุ่ม ไม่ใช่ตัวหนังสือ
+
+   🚨 คลาสอยู่ที่ <html> จึงมีผลกับตารางทุกหน้าที่ใช้ .tbl พร้อมกัน
+      (ประวัติ · รายการ Lot · หน้าบันทึก) ตั้งครั้งเดียวใช้ทั้งเว็บ
+   🚨 ฝั่งมือถือเป็นการ์ด ไม่ใช่ตาราง จึงไม่โดนกฎพวกนี้เลยแม้แต่ข้อเดียว
+   🚨 ระดับ "แน่นมาก" เป็นระดับเดียวที่ย่อตัวอักษร — เจ้าหน้าที่อายุมากอาจอ่านยาก
+      จึงไม่ใช่ค่าตั้งต้น และเขียนกำกับไว้ที่ปุ่มให้รู้ตัวก่อนเลือก */
+
+/* 🚨🔴 ปุ่มในแถวเขียน padding ฝังในแท็ก ซึ่งชนะกฎ CSS เสมอ
+   ต้องมี !important ไม่งั้นกดเปลี่ยนระดับแล้วแถวไม่เตี้ยลงจริง
+   (เจอเองตอนเทส 10 ก.ย. 2569 — คลาสเปลี่ยนถูก แต่ความสูงไม่ขยับเลย) */
+
+/* แถวโปร่ง — 43 จุด (ค่าตั้งต้น) */
+.rh-roomy .tbl tbody td { padding-top: 6px; padding-bottom: 6px }
+.rh-roomy .tbl tbody .rh-btn { padding-top: 5px !important; padding-bottom: 5px !important }
+
+/* แถวแน่น — 34 จุด */
+.rh-tight .tbl tbody td { padding-top: 4px; padding-bottom: 4px }
+.rh-tight .tbl tbody .rh-btn { padding-top: 3px !important; padding-bottom: 3px !important; font-size: 11px !important }
+
+/* แถวแน่นมาก — 30 จุด · ระดับเดียวที่ตัวอักษรเล็กลง */
+.rh-dense .tbl tbody td { padding-top: 2px; padding-bottom: 2px; font-size: 13px }
+.rh-dense .tbl tbody .rh-btn { padding-top: 1px !important; padding-bottom: 1px !important; font-size: 11px !important }
+
+/* ── ระหว่างเลื่อน ปิดการไล่สีตอนเอาเมาส์ชี้ (พี่กันแจ้ง 10 ก.ย. 2569) ─────────
+   "พอเราเลื่อนตาราง ตอนนี้มันกระตุกอยู่นะ ต้องออปติไมซ์"
+
+   เมาส์ค้างที่เดิมแต่แถวเลื่อนผ่านใต้เมาส์ เบราว์เซอร์จึงคิดใหม่ทุกเฟรมว่าอยู่แถวไหน
+   แล้ววาดสีใหม่ทั้งแถว (10 ช่อง) ทุกเฟรม — คลาสนี้ตัดงานส่วนนั้นทิ้งชั่วคราว
+
+   🚨 ปิดเฉพาะเนื้อตาราง ไม่แตะแถบหัวกับปุ่มลอย ไม่งั้นกดอะไรไม่ได้เลยระหว่างเลื่อน
+   🚨 คืนให้ 140 มิลลิวินาทีหลังหยุดเลื่อน (ดู _markScrolling ใน MedReturnApp.jsx) */
+.is-scrolling .tbl tbody,
+.is-scrolling .tbl-grid tbody { pointer-events: none }
+.is-scrolling .tbl tbody tr,
+.is-scrolling .tbl tbody td,
+.is-scrolling .tbl-grid tbody tr,
+.is-scrolling .tbl-grid tbody td { transition: none !important }

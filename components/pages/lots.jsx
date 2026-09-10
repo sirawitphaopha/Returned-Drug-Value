@@ -221,7 +221,10 @@ export function renderLots(V) {
       {V.lotsWide && (
         <>
       {/* ── แถบหัวเรื่อง ─────────────────────────────────────────────────── */}
-      <div style={s('display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px')}>
+      {/* 🚨 ชิดบน ไม่ใช่กึ่งกลาง — ปุ่มกลับเตี้ยกว่ากล่องหัวเรื่องที่มีบรรทัดรอง
+          จัดกึ่งกลางแล้วปุ่มจะเริ่มที่ 17 ทั้งที่แถบตั้งระยะบนไว้ 10
+          (พี่กันทัก 10 ก.ย. 2569 "ข้างบน 10 แล้วเหรอ") */}
+      <div style={s('display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:5px')}>
         {/* ปุ่มกลับ — มีข้อความบอกปลายทางด้วย ลูกศรเปล่า ๆ ไม่บอกว่ากดแล้วไปไหน
             (พี่กันสั่ง 26 ส.ค. 2569 "ปุ่มกลับ ขอสวยกว่านี้ และเอาเมาส์ไปชี้แล้วเปลี่ยนสี")
             🚨 สีตอนชี้อยู่ในคลาส .btn-back ของ globals.css ห้ามเขียน onMouseEnter */}
@@ -253,7 +256,9 @@ export function renderLots(V) {
       </div>
 
       {/* ── แถบค้นหาและตัวกรอง ───────────────────────────────────────────── */}
-      <div style={s('display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:11px')}>
+      {/* 🚨 ระยะชุดเดียวกับหน้าประวัติเป๊ะ ๆ — ระหว่างแถว 5 · ใต้แถวล่าง 3
+          3 + ระยะในล่างของ .lots-head 6 + เส้นแบ่ง = 10 เท่าระยะระหว่างแถว */}
+      <div style={s('display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:3px')}>
         {/* ช่องค้นหามาตรฐานของทั้งเว็บ — แว่นขยาย กันไม้โทหาย จัดกลาง ปุ่มล้าง มาครบในตัว */}
         <div style={s('display:flex;flex:0 1 340px;min-width:200px')}>
           {renderSearchBox({
@@ -295,13 +300,16 @@ export function renderLots(V) {
 
         {/* ปุ่มล้างค่า — โผล่เฉพาะตอนมีเงื่อนไขอยู่จริง (พี่กันสั่ง 26 ส.ค. 2569)
             ล้างครบทั้งสามอย่างในคราวเดียว คำค้น แหล่งที่มา และ รพ.สต. */}
+        {/* 🚨 หน้าตาเดียวกับปุ่มล้างในหน้าประวัติเป๊ะ ๆ (พี่กันสั่ง 10 ก.ย. 2569
+            "จะเอากรอบแบบไหนกันแน่ เอาให้มันตามๆกันสิ") · สีแดงคือสีที่พี่กันเลือก
+            แก้ที่หน้าไหนต้องแก้อีกหน้าให้ตรงกันเสมอ */}
         {V.lotsHasFilter && (
-          <div {...kb(V.clearLotsFilters)} aria-label="ล้างตัวกรองทั้งหมด" className="btn-back tap"
-            style={s('height:38px;padding:0 13px 0 11px;border-radius:10px;border:1px solid rgba(30,36,32,.14);background-color:#fff;display:flex;align-items:center;gap:6px;font:600 12.5px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer;flex:none')}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
-              <path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" />
+          <div {...kb(V.clearLotsFilters)} aria-label="ล้างตัวกรองทั้งหมด" className="hv-bg-fbe tap"
+            style={s('height:38px;padding:0 14px;border-radius:10px;border:1px solid rgba(194,84,60,.28);background-color:#fdf1ed;display:flex;align-items:center;gap:6px;font:600 12.5px/1.75 Sarabun,sans-serif;color:#c2543c;cursor:pointer;flex:none')}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }}>
+              <path d="M18 6 6 18" /><path d="m6 6 12 12" />
             </svg>
-            ล้างค่า
+            ล้างตัวกรอง
           </div>
         )}
 
@@ -360,10 +368,16 @@ export function renderLots(V) {
           🚨 ความกว้างคอลัมน์อยู่ที่ <colgroup> ห้ามไปตั้งที่ th หรือ td */}
       {V.lotsWide && !V.lotsEmpty && !V.lotsLoading && !V.skelDemo && (
         <div className="col-tab" style={s('border:1px solid rgba(30,36,32,.10);border-radius:10px')}>
-          <table className="tbl tbl-zebra" style={sx('', { '--tbl-top': 'calc(var(--lotshead, 16px) - 16px)' })}>
+          {/* 🚨 แถบหัวตรึงที่ top:0 แล้ว จึงห้ามลบ 16 ออกอีก ไม่งั้นเกิดร่อง 16 จุด
+              (บทเรียนเดียวกับหน้าประวัติ 10 ก.ย. 2569 "ตารางข้างล่างมันโผล่") */}
+          <table className="tbl tbl-zebra" style={sx('', { '--tbl-top': 'var(--lotshead, 0px)' })}>
             <colgroup>
+            {/* 🚨 คอลัมน์ยืดหดคือตัวที่กันตารางตกขอบขวา — ความกว้างต่ำสุดต้องพอแค่
+                หัวคอลัมน์กับข้อความยาวสุด ("OPD ทั่วไป" 82 · หัวพร้อมลูกศร 98)
+                เดิมจอง 196 จุดโดยไม่มีเหตุผล ตารางเลยกว้าง 1,348 เกินจอ 1,351
+                (พี่กันเจอเอง 10 ก.ย. 2569) · จอกว้างกว่านั้นคอลัมน์นี้ยืดเต็มเหมือนเดิม */}
               {V.lotCols.map((c) => (
-                <col key={c.key} style={c.flex ? { minWidth: '196px' } : { width: c.w }} />
+                <col key={c.key} style={c.flex ? { minWidth: '104px' } : { width: c.w }} />
               ))}
             </colgroup>
             <thead>

@@ -11,6 +11,8 @@ export function settingsVals(app, d) {
   const priced = st.drugs.filter((x) => x.hasPrice).length;
 
   return {
+    // ทางเข้าถังขยะ — ย้ายมาจากแถบเครื่องมือหน้าประวัติ (พี่กันสั่ง 10 ก.ย. 2569)
+    openTrash: app.openTrash,
     onOrgName: app.onOrgName,
 
     settingsAlign: d.wide ? 'center' : 'flex-end',

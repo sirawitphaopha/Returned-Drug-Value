@@ -4,7 +4,7 @@
 import React from 'react';
 import { installHandlers } from './handlers';
 import { renderShell } from './shell';
-import { LS, readLS, readCache, writeLS, clearLS, myTabId, draftKeyOf, touchTab, releaseTab, orphanDrafts } from './helpers';
+import { LS, readLS, readCache, writeLS, clearLS, myTabId, draftKeyOf, touchTab, releaseTab, orphanDrafts, ROW_H_KEYS } from './helpers';
 import { todayISO } from '@/lib/format';
 
 export default class MedReturnApp extends React.Component {
@@ -92,11 +92,19 @@ export default class MedReturnApp extends React.Component {
       histRows: [],
       histTotal: 0,
       histSaved: 0,
+      histLost: 0,           // ยอดทำลายของผลที่กรองอยู่ — ใช้ตอนกรองสถานะเป็น "ทำลาย"
       histLoading: false,
       histTrash: false,      // เปิดดูถังขยะแทนรายการปกติ
       histLot: '',           // ดูเฉพาะล็อตเดียว (เว้นว่าง = ทุกล็อต)
       histFrom: '',          // ช่วงวันที่เลือกเอง
       histTo: '',
+      // ── ตัวกรอง 3 ทาง (พี่กันสั่ง 10 ก.ย. 2569) ─────────────────────────
+      // เว้นว่าง = ไม่กรอง · กรองที่ฐาน ไม่ใช่กรองแถวที่โหลดมาแล้ว
+      histDisp: '',          // สถานะ — reuse | destroy
+      histSrc: '',           // แหล่งที่มา — คีย์จาก SOURCES
+      histBy: '',            // ผู้บันทึก — ชื่อเต็มตรงทั้งชื่อ
+      histSite: '',          // รพ.สต. ต้นทาง — ใช้ได้เฉพาะตอนแหล่งที่มาเป็น รพ.สต.
+      histPeople: [],        // รายชื่อผู้บันทึกที่มีจริงในช่วงเวลาที่เลือก (ฐานส่งมา)
       // 🗑 เคยมี histOffset อยู่ตรงนี้ — ลบแล้ว (ผลตรวจข้อ ต-18)
       //    ถูกตั้งค่าอยู่ 4 จุดแต่ไม่มีใครอ่านเลย ตัวที่ใช้จริงคือ
       //    histRows.length + histMore.length ซึ่งนับจากของที่มีอยู่จริงในมือ
@@ -205,6 +213,12 @@ export default class MedReturnApp extends React.Component {
       //   jumpAwake เพิ่งเลื่อนภายใน 1.5 วินาทีไหม (ตื่น = ปุ่มชัด · หลับ = ปุ่มจาง)
       jumpPos: 'none',
       jumpAwake: false,
+      // คอลัมน์ HN ในหน้าประวัติ — ค่าตั้งต้นคือซ่อน (พี่กันสั่ง 10 ก.ย. 2569)
+      // ค่าจริงอ่านจากที่เก็บถาวรตอน componentDidMount
+      hnCol: false,
+      // ความสูงแถวตาราง — 'roomy' 43 · 'tight' 34 · 'dense' 30 (พี่กันสั่ง 10 ก.ย. 2569)
+      // ค่าจริงอ่านจากที่เก็บถาวรตอน componentDidMount
+      rowH: 'roomy',
       pullY: 0,
       pullBusy: false,
       // มีเมาส์จริงไหม — วัดตอน componentDidMount ด้วย (pointer: fine)
@@ -489,7 +503,17 @@ export default class MedReturnApp extends React.Component {
     const enFont = readLS(LS.enFont) === "thai" ? "thai" : "mono";
     this.applyEnFont(enFont);
 
-    const patch = Object.assign({ loading: false, vw: window.innerWidth, vh: window.innerHeight, dark: dark, enFont: enFont }, patchDevice);
+    // คอลัมน์ HN — จำสถานะที่เคยเลือกไว้ · ไม่เคยกด = ซ่อน (พี่กันสั่ง)
+    const hnCol = readLS(LS.hnCol) === true;
+
+    // ความสูงแถวตาราง — จำระดับที่เคยเลือก · ไม่เคยเลือก = โปร่ง (43 จุด)
+    // 🚨 ต้องทาคลาสทันทีตั้งแต่ตอนนี้ ไม่ใช่รอให้เข้าหน้าประวัติก่อน
+    //    ไม่งั้นตารางในหน้าบันทึกจะสูงไม่เท่าที่ผู้ใช้เลือกไว้
+    const rowHSaved = readLS(LS.rowH);
+    const rowH = ROW_H_KEYS.indexOf(rowHSaved) >= 0 ? rowHSaved : 'roomy';
+    this.applyRowH(rowH);
+
+    const patch = Object.assign({ loading: false, vw: window.innerWidth, vh: window.innerHeight, dark: dark, enFont: enFont, hnCol: hnCol, rowH: rowH }, patchDevice);
 
     // เครื่องสัมผัสล้วน (มือถือ/แท็บเล็ต) → (pointer: fine) เป็นเท็จ = ซ่อนสวิตช์มุมมอง
     // โน้ตบุ๊กจอสัมผัสที่ต่อเมาส์ยังนับเป็น fine เพราะดูตัวชี้หลัก
@@ -989,7 +1013,36 @@ export default class MedReturnApp extends React.Component {
     });
   };
 
-  _onScrollJump = () => this._syncJumpPos(true);
+  _onScrollJump = () => {
+    this._syncJumpPos(true);
+    this._markScrolling();
+  };
+
+  // ── ระหว่างเลื่อน ปิดการไล่สีตอนเอาเมาส์ชี้ชั่วคราว ────────────────────────
+  //
+  //   พี่กันแจ้ง 10 ก.ย. 2569 — "พอเราเลื่อนตาราง ตอนนี้มันกระตุกอยู่นะ ต้องออปติไมซ์"
+  //
+  //   ต้นเหตุ — เมาส์ค้างอยู่ที่เดิม แต่แถวเลื่อนผ่านใต้เมาส์ตลอดเวลา
+  //   เบราว์เซอร์จึงต้องคิดใหม่ทุกเฟรมว่าตอนนี้เมาส์อยู่บนแถวไหน แล้วไล่สีเข้า-ออก
+  //   ตารางประวัติมี 10 ช่องต่อแถว ทุกช่องมีกฎไล่สีของตัวเอง = วาดใหม่ทั้งแถวทุกเฟรม
+  //
+  // 🚨 ปิดการรับเมาส์ที่เนื้อตารางชั่วคราว เบราว์เซอร์จะข้ามการคิดเรื่อง hover ไปเลย
+  //    คืนให้ 140 มิลลิวินาทีหลังหยุดเลื่อน — สั้นจนมือไม่ทันรู้สึกว่ากดไม่ได้
+  // 🚨 ต้องปิดจังหวะไล่สีด้วย ไม่งั้นพอปล่อยคลาสออก สีจะไล่ย้อนกลับพร้อมกันทั้งจอ
+  // 🚨 ห้ามใช้กับแถบหัวหรือปุ่มลอย — ปิดทั้งหน้าแล้วจะกดอะไรไม่ได้เลยระหว่างเลื่อน
+  _markScrolling = () => {
+    if (typeof document === 'undefined') return;
+    const root = document.documentElement;
+    if (!this._scrolling) {
+      this._scrolling = true;
+      root.classList.add('is-scrolling');
+    }
+    clearTimeout(this._scrollEnd);
+    this._scrollEnd = setTimeout(() => {
+      this._scrolling = false;
+      root.classList.remove('is-scrolling');
+    }, 140);
+  };
 
   _pinLeft = () => {
     if (!this._isNarrowNow()) return;
@@ -1166,6 +1219,7 @@ export default class MedReturnApp extends React.Component {
     document.removeEventListener('scroll', this._pinLeft, true);
     document.removeEventListener('scroll', this._onScrollJump, true);
     clearTimeout(this._jumpSleep);
+    clearTimeout(this._scrollEnd);
     window.removeEventListener('scroll', this._pinLeft);
     window.removeEventListener('touchmove', this._pinLeft);
     window.removeEventListener('touchend', this._pinLeft);
