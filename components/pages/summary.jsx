@@ -7,6 +7,7 @@ import { renderExportBtn } from './exportbtn';
 import { skelSummary } from './skeleton';
 import { renderLoadFail } from './loadfail';
 import { renderPageHead, HEAD_PAD } from './pagehead';
+import { renderScrollBtns } from './scrollbtns';
 
 // แถบบอกสถานะบนสุดของหน้าสรุป — ไม่มีในมอคอัป (มอคอัปมีข้อมูลอยู่ในเครื่องเลยไม่ต้องรอ)
 // ของจริงต้องรอเซิร์ฟเวอร์ ถ้าไม่บอกอะไรเลย ผู้ใช้จะเห็น 0.00 กราฟว่าง
@@ -215,32 +216,14 @@ export function renderSummaryWide(V) {
         {renderTopReturned(V)}
         </>)}
       </div>
+      {renderScrollBtns(V)}
     </div>
   );
 }
 
-// ── ปุ่มลอยขึ้นบนสุด/ลงล่างสุด (พี่กันสั่ง 1 ก.ย. 2569) ─────────────────────
-//   "เอาปุ่มขึ้นสุดลงสุดไปใส่หน่อย" · "ใส่เฉพาะหน้ารายงาน เเดช ไม่ใส่หน้ากรอก"
-//
-// 🚨 ต้องลอยเหนือแถบเมนูล่างจอ ไม่ใช่ทับมัน
-//    --bottombar คือความสูงจริงของแถบล่าง วัดด้วย ResizeObserver (ดูข้อ 3.11)
-//    ตั้งเลขตายตัวไม่ได้ เพราะแถบสูงไม่เท่ากันในแต่ละหน้า
-// 🚨 z-index ต้องเป็น Z.float (15) ต่ำกว่าหน้าต่างซ้อนทุกตัว (ต่ำสุดคือ 20)
-//    ไม่งั้นปุ่มลอยทับป๊อปแล้วกดโดนแทน (บทเรียนข้อ ต-11)
-// 🚨 ห้ามใส่คลาส .tap — ปุ่มสองอันวางห่างกัน 8px ส่วน .tap ขยายพื้นที่กด
-//    ออกด้านละ 11px จะทับกันจนกดขึ้นแล้วโดนลง (กฎข้อ 3.55)
-//    ตัวปุ่มเอง 44px ผ่านเกณฑ์นิ้วอยู่แล้ว
-function renderScrollBtns(V) {
-  const btn = 'width:44px;height:44px;border-radius:50%;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(30,36,32,.28);font:700 17px Sarabun,sans-serif';
-  return (
-    <div style={sx('position:fixed;right:16px;display:flex;flex-direction:column;gap:8px', {
-      bottom: 'calc(var(--bottombar, 0px) + 16px)', zIndex: Z.float
-    })}>
-      <div {...kb(V.sumToTop)} className="hv-teal" title="ขึ้นบนสุด" aria-label="เลื่อนขึ้นบนสุด" style={s(btn)}>↑</div>
-      <div {...kb(V.sumToBottom)} className="hv-teal" title="ลงล่างสุด" aria-label="เลื่อนลงล่างสุด" style={s(btn)}>↓</div>
-    </div>
-  );
-}
+// 🔑 ปุ่มขึ้นบนสุด/ลงล่างสุด ย้ายไปเป็นตัวกลางที่ components/pages/scrollbtns.jsx
+//    (10 ก.ย. 2569) เพราะหน้าประวัติต้องใช้ชุดเดียวกัน และตรรกะว่าปุ่มไหนโผล่
+//    ต้องเหมือนกันเป๊ะทั้งสองหน้า ทั้งฝั่งมือถือและฝั่งคอม
 
 export function renderSummaryNarrow(V) {
   return (

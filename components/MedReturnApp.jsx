@@ -200,6 +200,11 @@ export default class MedReturnApp extends React.Component {
       // 🚨 ตัวจริงคำนวณใน vals/shell.js · ตรงนี้เป็นสำเนาที่ componentDidUpdate เขียนให้
       //    เพราะตัวดักเป็นเหตุการณ์นอก React จะเรียก renderVals เองไม่ได้
       anyModalOpen: false,
+      // ── ปุ่มขึ้นสุด/ลงสุด (พี่กันเคาะแบบ ค · 10 ก.ย. 2569) ──────────────────
+      //   jumpPos   ตอนนี้เลื่อนอยู่ตรงไหน — 'none' คือเนื้อหาสั้นจนไม่ต้องเลื่อน
+      //   jumpAwake เพิ่งเลื่อนภายใน 1.5 วินาทีไหม (ตื่น = ปุ่มชัด · หลับ = ปุ่มจาง)
+      jumpPos: 'none',
+      jumpAwake: false,
       pullY: 0,
       pullBusy: false,
       // มีเมาส์จริงไหม — วัดตอน componentDidMount ด้วย (pointer: fine)
@@ -377,6 +382,10 @@ export default class MedReturnApp extends React.Component {
     );
     if (now !== st.anyModalOpen) this.setState({ anyModalOpen: now });
     this._lockBody(now);
+    // 🚨 ปุ่มย้อนกลับใช้รายการของตัวเอง (_layers) ไม่ใช่ anyModalOpen
+    //    เพราะ anyModalOpen นับเฉพาะหน้าต่างที่ต้องล็อกฉากหลัง — หน้าตั้งค่า
+    //    แป้นคิดเลข เมนูผู้บันทึก ไม่อยู่ในนั้น แต่ปุ่มย้อนกลับต้องปิดให้ได้
+    this._syncModalHistory(this._hasTopLayer());
   };
 
   // ── ฉากหลังห้ามเลื่อนเมื่อมีหน้าต่างซ้อน — ฝั่งมือถือต้องตรึงทั้งใบ ────────
@@ -418,6 +427,10 @@ export default class MedReturnApp extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     this._syncModalFlag();
+    // ทวนว่าตอนนี้เลื่อนอยู่ตรงไหน — ความสูงเนื้อหาเปลี่ยนได้ตลอด
+    // (ข้อมูลมาถึง · เปลี่ยนตัวกรอง · สลับหน้า) ปุ่มขึ้นสุด/ลงสุดจึงต้องคิดใหม่
+    // 🚨 ส่ง false เพื่อไม่ปลุกปุ่มให้ชัดขึ้นมาเอง ตื่นได้เฉพาะตอนคนเลื่อนจริง
+    this._syncJumpPos(false);
     // สลับปุ่มมุมมองมือถือ/คอม ต้องอัปเดตคลาสที่ body ตามทันที
     if (prevState.vw !== this.state.vw || prevState.forceNarrow !== this.state.forceNarrow) {
       this.syncMobileClass();
@@ -595,6 +608,8 @@ export default class MedReturnApp extends React.Component {
     window.addEventListener('touchend', this._onTouchEnd, { passive: true });
     window.addEventListener('touchcancel', this._onTouchEnd, { passive: true });
     window.addEventListener('keydown', this._onKey);
+    // ปุ่มย้อนกลับของเครื่อง — ต้องปิดหน้าต่างซ้อน ไม่ใช่ออกจากเว็บ (ดู _onPop)
+    window.addEventListener('popstate', this._onPop);
     // แป้นเครื่องคิดเลขต้องปิดเมื่อกดที่อื่น — ป๊อปตัวเล็กที่ไม่มีฉากหลังคลุมจอ
     // ถ้าไม่ปิดจะค้างบังตารางรายการอยู่ตลอด ต้องย้อนกลับมากดปุ่มเดิม
     document.addEventListener('mousedown', this._onDocDown);
@@ -666,28 +681,103 @@ export default class MedReturnApp extends React.Component {
 
   // Esc ปิดหน้าต่างที่เปิดอยู่ทีละชั้น เริ่มจากชั้นบนสุด
   // (หน้าต่างยืนยันลบกดพื้นหลังไม่ปิดโดยตั้งใจ ถ้าไม่มี Esc ก็เหลือทางเดียวคือเมาส์)
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  ปิดของที่อยู่ชั้นบนสุดหนึ่งชั้น — ใช้ร่วมกันระหว่างปุ่ม Esc กับปุ่มย้อนกลับ
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  //  🚨 ลำดับต้องเรียงจากชั้นบนลงล่าง ตรงกับตาราง Z ใน helpers.js
+  //     เพิ่มหน้าต่างใหม่เมื่อไหร่ต้องมาเติมที่นี่ด้วย ไม่งั้นปุ่มย้อนกลับข้ามมันไป
+  //
+  //  คืน true เมื่อปิดอะไรไปจริง ๆ · false เมื่อไม่มีอะไรให้ปิด
+  //  🔑 ตารางเดียว ใช้ทั้งการปิด (Esc · ปุ่มย้อนกลับ) และการถามว่ามีชั้นไหนเปิดอยู่
+  //     ห้ามแยกเป็นสองรายการเด็ดขาด — แยกเมื่อไหร่ก็ไม่ตรงกัน แล้วปุ่มย้อนกลับ
+  //     จะข้ามชั้นนั้นไปออกจากเว็บเลย (เจอจริง 10 ก.ย. 2569 หน้าตั้งค่ากับแป้นคิดเลข
+  //     ไม่ได้อยู่ใน anyModalOpen จึงไม่มีรอยฝากไว้ กดย้อนกลับแล้วหลุดออกจากเว็บ)
+  _layers = () => {
+    const st = this.state;
+    return [
+      [st.confirm, this.closeConfirm],
+      [st.recorderMenuOpen, this.closeRecorderMenu],
+      [st.sheet, this.closeSheet],
+      // แป้นเครื่องคิดเลขกับช่องแก้จำนวนอยู่ชั้นในสุด ปิดก่อนหน้าต่างตั้งค่า
+      [st.calcOpen, () => this.setState({ calcOpen: false })],
+      [st.editQtyRid, () => this.setState({ editQtyRid: null, editQtyText: '' })],
+      // หน้าต่างแก้ไขล็อตซ้อนกัน 3 ชั้น ต้องปิดจากบนลงล่าง
+      [st.lotEditQtyId, () => this.setState({ lotEditQtyId: null, lotEditQtyText: '' })],
+      [st.lotEditConfirm, () => this.setState({ lotEditConfirm: false })],
+      // หน้าต่างในหน้าคลังยา
+      [st.catLog, this.closeCatLog],
+      [st.priceFix, this.closePriceFix],
+      [st.catEdit, this.closeCatEdit],
+      [st.reasonAsk, this.closeReasonPick],
+      [st.lotEdit, this.closeLotEdit],
+      // ใบสรุปล็อตกดพื้นหลังไม่ปิดโดยตั้งใจ (กันปิดพลาดตอนกำลังจะสั่งพิมพ์)
+      // ถ้าไม่มี Esc ก็เหลือทางเดียวคือเล็งปุ่ม ✕ มุมบนขวา — เจอเองตอนเทส 25 ส.ค. 2569
+      [st.slipLot, this.closeLotSlip],
+      // หน้าผลบันทึกสำเร็จ — กดพื้นหลังไม่ปิดเหมือนกัน (เลข Lot ที่โชว์อยู่หายแล้วต้องไปหาเอง)
+      // อยู่ล่างกว่าใบสรุป เพราะกดปุ่มบนหน้านี้เปิดใบสรุปซ้อนขึ้นไปได้อีกชั้น
+      [st.result, this.closeResult],
+      [st.hisOpen, this.closeHisImport],
+      [st.showOtherDrafts, () => this.setState({ showOtherDrafts: false })],
+      [st.lotsFilterOpen, this.closeLotsFilter],
+      [st.histFilterOpen, this.closeHistFilter],
+      [st.settingsOpen, () => this.setState({ settingsOpen: false, favQuery: '' })]
+      // 🚨 หน้าต่างถามชื่อเครื่อง (deviceAsk) ไม่อยู่ในรายการนี้โดยตั้งใจ
+      //    พี่กันสั่งว่าไม่มีปุ่มข้าม ต้องเลือกให้ครบก่อนใช้งาน
+      //    ปิดด้วยปุ่มย้อนกลับได้ = เปิดทางให้ข้ามด่านนั้น
+    ];
+  };
+
+  // มีชั้นที่ปุ่มย้อนกลับปิดได้เปิดอยู่ไหม — ตัวตัดสินว่าต้องฝากรอยในประวัติหรือยัง
+  _hasTopLayer = () => this._layers().some((l) => !!l[0]);
+
+  //  คืน true เมื่อปิดอะไรไปจริง ๆ · false เมื่อไม่มีอะไรให้ปิด
+  _closeTopLayer = () => {
+    const hit = this._layers().find((l) => !!l[0]);
+    if (!hit) return false;
+    hit[1]();
+    return true;
+  };
+
   _onKey = (e) => {
     if (e.key !== 'Escape') return;
-    const st = this.state;
-    if (st.confirm) { this.closeConfirm(); return; }
-    if (st.recorderMenuOpen) { this.closeRecorderMenu(); return; }
-    if (st.sheet) { this.closeSheet(); return; }
-    // แป้นเครื่องคิดเลขกับช่องแก้จำนวนอยู่ชั้นในสุด ปิดก่อนหน้าต่างตั้งค่า
-    if (st.calcOpen) { this.setState({ calcOpen: false }); return; }
-    if (st.editQtyRid) { this.setState({ editQtyRid: null, editQtyText: '' }); return; }
-    // หน้าต่างแก้ไขล็อตซ้อนกัน 3 ชั้น ต้องปิดจากบนลงล่าง
-    if (st.lotEditQtyId) { this.setState({ lotEditQtyId: null, lotEditQtyText: '' }); return; }
-    if (st.lotEditConfirm) { this.setState({ lotEditConfirm: false }); return; }
-    if (st.lotEdit) { this.closeLotEdit(); return; }
-    // ใบสรุปล็อตกดพื้นหลังไม่ปิดโดยตั้งใจ (กันปิดพลาดตอนกำลังจะสั่งพิมพ์)
-    // ถ้าไม่มี Esc ก็เหลือทางเดียวคือเล็งปุ่ม ✕ มุมบนขวา — เจอเองตอนเทส 25 ส.ค. 2569
-    if (st.slipLot) { this.closeLotSlip(); return; }
-    // หน้าผลบันทึกสำเร็จ — กดพื้นหลังไม่ปิดเหมือนกัน (เลข Lot ที่โชว์อยู่หายแล้วต้องไปหาเอง)
-    // อยู่ล่างกว่าใบสรุป เพราะกดปุ่มบนหน้านี้เปิดใบสรุปซ้อนขึ้นไปได้อีกชั้น
-    if (st.result) { this.closeResult(); return; }
-    if (st.lotsFilterOpen) { this.closeLotsFilter(); return; }
-    if (st.histFilterOpen) { this.closeHistFilter(); return; }
-    if (st.settingsOpen) { this.setState({ settingsOpen: false, favQuery: '' }); }
+    this._closeTopLayer();
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  ปุ่มย้อนกลับของเครื่อง — ปิดหน้าต่างซ้อน ไม่ใช่ออกจากเว็บ
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  //  พี่กันเคาะ 10 ก.ย. 2569 ให้ทำแบบ "กดย้อนกลับ = ปิดป๊อป"
+  //  เพราะการปิดป๊อปคือการยกเลิก ซึ่งไม่มีทางทำให้ข้อมูลเสียหาย
+  //  ต่างจากการกดพื้นหลังที่พื้นที่กว้างจนเผลอแตะง่าย (กฎเดิมยังอยู่ครบ)
+  //
+  //  ปัญหาเดิม — เว็บเปิดแบบแอปเต็มจอ (display: standalone) ไม่มีหน้าก่อนหน้าให้กลับ
+  //  ปุ่มย้อนกลับของแอนดรอยด์จึงออกจากเว็บทันที ยาที่กรอกค้างหายทั้งล็อต
+  //
+  //  วิธี — เปิดหน้าต่างซ้อนเมื่อไหร่ ฝากรอยไว้ในประวัติการเปิดหน้าหนึ่งรอย
+  //  กดย้อนกลับก็มาที่เว็บแทนที่จะออกไป แล้วเราปิดชั้นบนสุดให้
+  _syncModalHistory = (open) => {
+    if (typeof window === 'undefined' || !window.history) return;
+    if (open && !this._modalPushed) {
+      this._modalPushed = true;
+      try { window.history.pushState({ mrvModal: 1 }, ''); } catch (e) {}
+      return;
+    }
+    // ปิดด้วยปุ่มในเว็บเอง — ต้องเก็บรอยที่ฝากไว้คืน ไม่งั้นสะสมจนกดย้อนกลับแล้วไม่ไปไหน
+    if (!open && this._modalPushed) {
+      this._modalPushed = false;
+      this._skipPop = true;
+      try { window.history.back(); } catch (e) { this._skipPop = false; }
+    }
+  };
+
+  _onPop = () => {
+    // รอยที่เราเก็บคืนเอง ไม่ใช่ผู้ใช้กดย้อนกลับ
+    if (this._skipPop) { this._skipPop = false; return; }
+    // ปิดชั้นบนสุดหนึ่งชั้น · ถ้ายังเหลือชั้นอื่นอยู่ componentDidUpdate จะฝากรอยใหม่ให้เอง
+    this._modalPushed = false;
+    this._closeTopLayer();
   };
 
   // ── ตัวสังเกตท้ายตารางคลังยา ────────────────────────────────────────────
@@ -862,6 +952,45 @@ export default class MedReturnApp extends React.Component {
   // 🚨 ฝั่งคอมต้องไม่โดน — ตรวจคลาส .mrv-mobile ก่อนเสมอ
   //    (หน้าคลังยาฝั่งคอมมีตารางกว้างที่ต้องเลื่อนดูข้าง ๆ ได้จริง)
   // 🚨 ต้องดักที่ window ด้วย เผื่อสิ่งที่เลื่อนคือทั้งหน้าไม่ใช่กล่องข้างใน
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  ปุ่มขึ้นบนสุด / ลงล่างสุด — ปุ่มไหนโผล่ขึ้นกับว่าเลื่อนอยู่ตรงไหน
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  //  พี่กันเคาะ 10 ก.ย. 2569 หลังดูมอคอัป 3 แบบ
+  //    "ควรเอาแบบ ค" · "ปุ่มทั้งสองปุ่มจะไม่แสดงเสมอนะ"
+  //    "ถ้าบนสุด จะแสดงปุ่มลงสุด แต่ถ้าระหว่างตอนที่เลื่อน จะแสดงสองปุ่ม
+  //     และถ้าลงสุดจะแสดงแค่ปุ่มบนสุดเท่านั้น"
+  //
+  //  🚨 ปุ่มที่ชี้ไปยังที่ที่ยืนอยู่แล้ว = ปุ่มหลอก กดแล้วไม่มีอะไรเกิดขึ้น
+  //     คนจะเลิกเชื่อปุ่มนั้นไปเลย จึงต้องหายไปให้เห็นชัดว่าตอนนี้กดไม่ได้
+  //
+  // 🚨 ห้าม setState ทุกครั้งที่เลื่อน — ปัดนิ้วครั้งเดียวยิงเหตุการณ์เป็นร้อยครั้ง
+  //    รวบด้วย requestAnimationFrame แล้วเขียนเฉพาะตอนค่าเปลี่ยนจริง
+  // 🚨 'none' สำคัญ — หน้าที่เนื้อหาสั้นกว่าจอไม่ต้องมีปุ่มลอยมาบังอะไรเลย
+  _syncJumpPos = (ตื่น) => {
+    if (typeof window === 'undefined' || this._jumpRaf) return;
+    this._jumpRaf = window.requestAnimationFrame(() => {
+      this._jumpRaf = 0;
+      const sc = this.scrollRef && this.scrollRef.current;
+      if (!sc) return;
+      const room = sc.scrollHeight - sc.clientHeight;
+      // เผื่อ 8 จุด เพราะบางเครื่องเลื่อนสุดแล้วยังเหลือเศษทศนิยมค้างอยู่
+      const pos = room <= 24 ? 'none'
+        : (sc.scrollTop <= 8 ? 'top' : (sc.scrollTop >= room - 8 ? 'bottom' : 'mid'));
+      const st = this.state;
+      if (pos !== st.jumpPos || (!!ตื่น && !st.jumpAwake)) {
+        this.setState({ jumpPos: pos, jumpAwake: ตื่น ? true : st.jumpAwake });
+      }
+      if (!ตื่น) return;
+      clearTimeout(this._jumpSleep);
+      this._jumpSleep = setTimeout(() => {
+        if (this.state.jumpAwake) this.setState({ jumpAwake: false });
+      }, 1500);
+    });
+  };
+
+  _onScrollJump = () => this._syncJumpPos(true);
+
   _pinLeft = () => {
     if (!this._isNarrowNow()) return;
     const sc = this.scrollRef && this.scrollRef.current;
@@ -894,6 +1023,8 @@ export default class MedReturnApp extends React.Component {
     document.addEventListener('touchmove', this._blockBgScroll, { passive: false });
     document.addEventListener('wheel', this._blockBgScroll, { passive: false });
     document.addEventListener('scroll', this._pinLeft, { passive: true, capture: true });
+    // ปุ่มขึ้นสุด/ลงสุด — ต้องรู้ตลอดว่าตอนนี้เลื่อนอยู่ตรงไหน
+    document.addEventListener('scroll', this._onScrollJump, { passive: true, capture: true });
     window.addEventListener('scroll', this._pinLeft, { passive: true });
     window.addEventListener('touchmove', this._pinLeft, { passive: true });
     window.addEventListener('touchend', this._pinLeft, { passive: true });
@@ -1033,11 +1164,14 @@ export default class MedReturnApp extends React.Component {
     document.removeEventListener('touchmove', this._blockBgScroll);
     document.removeEventListener('wheel', this._blockBgScroll);
     document.removeEventListener('scroll', this._pinLeft, true);
+    document.removeEventListener('scroll', this._onScrollJump, true);
+    clearTimeout(this._jumpSleep);
     window.removeEventListener('scroll', this._pinLeft);
     window.removeEventListener('touchmove', this._pinLeft);
     window.removeEventListener('touchend', this._pinLeft);
     window.removeEventListener('resize', this._onResize);
     window.removeEventListener('keydown', this._onKey);
+    window.removeEventListener('popstate', this._onPop);
     document.removeEventListener('gesturestart', this._onGesture);
     document.removeEventListener('gesturechange', this._onGesture);
     document.removeEventListener('gestureend', this._onGesture);

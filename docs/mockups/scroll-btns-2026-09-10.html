@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ปุ่มขึ้นสุดลงสุด — 3 แบบที่ไม่บังเนื้อหา</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1e2420; --dim:#6b746e; --faint:#9aa19c; --teal:#2f7d5d;
+    --line:rgba(30,36,32,.10); --paper:#fff; --ground:#eef1ec; --red:#c2543c; --redbg:#fdf1ee;
+    --en:"Roboto Mono";
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font:400 15px/1.75 var(--en),Sarabun,sans-serif;padding:26px 18px 60px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font:700 26px/1.5 Sarabun,sans-serif;margin:0 0 4px}
+  .lead{font:400 14.5px/1.8 var(--en),Sarabun,sans-serif;color:var(--dim);margin:0 0 26px;max-width:780px}
+  h2{font:700 19px/1.55 Sarabun,sans-serif;margin:34px 0 10px;padding-top:20px;border-top:1px solid var(--line)}
+  p{margin:0 0 10px;font:400 14.5px/1.85 var(--en),Sarabun,sans-serif}
+  .note{font:400 13.5px/1.8 var(--en),Sarabun,sans-serif;color:var(--dim)}
+
+  .row{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px;
+    box-shadow:0 3px 14px rgba(30,36,32,.05)}
+  .card h3{font:700 16px/1.5 Sarabun,sans-serif;margin:0 0 3px}
+  .card .sub{font:400 12.5px/1.7 var(--en),Sarabun,sans-serif;color:var(--dim);margin:0 0 12px}
+
+  .phone{width:290px;height:470px;border:9px solid #2a302c;border-radius:26px;overflow:hidden;
+    position:relative;background:#f6f7f4;flex:none}
+  .scr{position:absolute;inset:0;display:flex;flex-direction:column}
+
+  .bar{background:#fff;border-bottom:1px solid var(--line);padding:8px 12px 10px;flex:none;position:relative;z-index:3}
+  .srch{height:30px;border-radius:9px;background:#f6f7f4;border:1px solid var(--line);
+    display:flex;align-items:center;gap:6px;padding:0 9px;font:400 11px/1 var(--en),Sarabun,sans-serif;color:var(--faint)}
+  .chips{display:flex;gap:5px;margin-top:6px}
+  .chip{height:26px;padding:0 10px;border-radius:99px;background:#f1f3ef;color:var(--dim);
+    display:flex;align-items:center;font:500 10.5px/1 var(--en),Sarabun,sans-serif;white-space:nowrap}
+  .chip.on{background:var(--teal);color:#fff}
+  .lotbtn{margin-top:6px;height:28px;border-radius:9px;background:var(--teal);color:#fff;
+    display:flex;align-items:center;justify-content:center;font:600 11px/1 var(--en),Sarabun,sans-serif}
+
+  .list{flex:1;overflow:hidden;padding:9px 12px;position:relative}
+  .day{display:flex;justify-content:space-between;font:600 11px/1.6 var(--en),Sarabun,sans-serif;margin-bottom:6px}
+  .day span:last-child{color:var(--teal)}
+  .it{background:#fff;border:1px solid var(--line);border-left:3px solid #a8d3bd;border-radius:9px;
+    padding:7px 8px;margin-bottom:6px}
+  .it .nm{font:600 11.5px/1.5 var(--en),Sarabun,sans-serif}
+  .it .nm em{font-style:normal;color:var(--dim);font-weight:400}
+  .it .qt{font:400 9.5px/1.5 var(--en),Sarabun,sans-serif;color:var(--dim)}
+  .it .bot{display:flex;align-items:center;justify-content:space-between;margin-top:3px}
+  .it .val{font:600 12px/1.4 var(--en),Sarabun,sans-serif;color:var(--teal)}
+  .btns{display:flex;gap:5px}
+  .mini{height:22px;padding:0 9px;border-radius:6px;background:#f1f3ef;color:var(--dim);
+    display:flex;align-items:center;font:500 10px/1 var(--en),Sarabun,sans-serif}
+  .mini.del{background:var(--redbg);color:var(--red)}
+
+  .nav{flex:none;height:44px;background:#fff;border-top:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-around;
+    font:500 9.5px/1 var(--en),Sarabun,sans-serif;color:var(--faint)}
+  .nav b{color:var(--teal);font-weight:600}
+
+  .fab{position:absolute;right:10px;bottom:54px;display:flex;flex-direction:column;gap:6px;z-index:5}
+  .fab i{width:32px;height:32px;border-radius:50%;background:var(--teal);color:#fff;font-style:normal;
+    display:flex;align-items:center;justify-content:center;font:700 14px/1 var(--en);
+    box-shadow:0 5px 14px rgba(30,36,32,.30)}
+  .hitmark{position:absolute;right:6px;bottom:50px;width:40px;height:76px;border:2px dashed var(--red);
+    border-radius:10px;z-index:6}
+  .hitlbl{position:absolute;right:52px;bottom:78px;background:var(--red);color:#fff;
+    font:600 9.5px/1 var(--en),Sarabun,sans-serif;padding:5px 7px;border-radius:5px;z-index:7;white-space:nowrap}
+
+  .lotrow{display:flex;gap:5px;margin-top:6px}
+  .lotrow .lotbtn{margin-top:0;flex:1}
+  .jump{display:flex;gap:4px;flex:none}
+  .jump i{width:28px;height:28px;border-radius:8px;background:#f1f3ef;color:var(--teal);
+    border:1px solid var(--line);font-style:normal;
+    display:flex;align-items:center;justify-content:center;font:700 13px/1 var(--en)}
+
+  .rail{position:absolute;right:0;bottom:54px;display:flex;flex-direction:column;gap:3px;z-index:5}
+  .rail i{width:20px;height:30px;border-radius:8px 0 0 8px;background:rgba(47,125,93,.92);color:#fff;
+    font-style:normal;display:flex;align-items:center;justify-content:center;font:700 12px/1 var(--en)}
+
+  .ghost i{opacity:.16;box-shadow:none}
+  .stage{font:600 10px/1.6 var(--en),Sarabun,sans-serif;color:var(--faint);text-align:center;margin:8px 0 0}
+
+  table{border-collapse:collapse;width:100%;margin:14px 0 0;background:#fff;
+    border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);
+    font:400 13.5px/1.7 var(--en),Sarabun,sans-serif;vertical-align:top}
+  th{background:#f4f7f4;font-weight:600;white-space:nowrap}
+  td.c,th.c{text-align:center}
+  tr:last-child td{border-bottom:0}
+  .yes{color:var(--teal);font-weight:700}
+  .no{color:var(--red);font-weight:700}
+  .pick{background:#f2f9f5}
+
+  .flag{display:inline-flex;align-items:center;gap:6px;background:#fdf1ee;color:var(--red);
+    border:1px solid rgba(194,84,60,.25);border-radius:8px;padding:7px 11px;
+    font:600 13px/1.6 var(--en),Sarabun,sans-serif;margin:6px 0 12px}
+  .ok{background:#eef7f1;color:var(--teal);border-color:rgba(47,125,93,.25)}
+  ul{margin:6px 0 0;padding-left:20px;max-width:290px}
+  li{font:400 13px/1.8 var(--en),Sarabun,sans-serif;margin-bottom:3px}
+  li.bad::marker{color:var(--red)}
+  li.good::marker{color:var(--teal)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>ปุ่มขึ้นสุด · ลงสุด — ออกแบบใหม่ให้ไม่บังเนื้อหา</h1>
+<p class="lead">พี่กันสั่งไว้ 1 ก.ย. 2569 ว่าให้ใส่ในหน้าแดชบอร์ดกับหน้ารายงาน ไม่ใส่หน้ากรอก ·
+แคลร์ใส่ให้แค่หน้าแดชบอร์ด (หน้าสรุป) หน้าเดียว หน้ารายงาน (หน้าประวัติ) ยังไม่มี ·
+และแบบที่ใช้อยู่ก็บังเนื้อหาจริงอย่างที่พี่กันทัก</p>
+
+<h2>ปัญหาของแบบที่ใช้อยู่ตอนนี้</h2>
+<div class="flag">ปุ่มกลมลอยมุมขวาล่าง ตกลงไปทับปุ่ม "ลบ" ในการ์ดประวัติพอดี</div>
+<p class="note">หน้าสรุปไม่เจอปัญหานี้ เพราะตรงมุมนั้นเป็นกราฟกับตัวเลข ไม่มีปุ่มให้กด<br>
+แต่หน้าประวัติทุกการ์ดมีปุ่ม แก้ กับ ลบ ชิดขอบขวา — ตำแหน่งเดียวกับปุ่มลอยเป๊ะ</p>
+
+<div class="row" style="margin-top:14px">
+  <div class="card">
+    <h3>แบบที่ใช้อยู่ — ปุ่มกลมลอย</h3>
+    <p class="sub">หน้าสรุปใช้อยู่ · ถ้ายกมาหน้าประวัติจะบัง</p>
+    <div class="phone"><div class="scr">
+      <div class="bar">
+        <div class="srch">ค้นหา ชื่อยา · HN · ชื่อคนบันทึก</div>
+        <div class="chips"><span class="chip">วันนี้</span><span class="chip">7 วัน</span><span class="chip on">เดือนนี้</span><span class="chip">ปีงบ 2569</span></div>
+        <div class="lotbtn">ดูเป็นรายการ Lot</div>
+      </div>
+      <div class="list">
+        <div class="day"><span>9 ก.ย. 2569</span><span>6,983.00 ฿</span></div>
+        <div class="it"><div class="nm">Amlodipine <em>10 mg tab</em></div><div class="qt">85 เม็ด × 2.50</div>
+          <div class="bot"><span class="val">212.50 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Hydralazine <em>25 mg tab</em></div><div class="qt">80 เม็ด × 1.00</div>
+          <div class="bot"><span class="val">80.00 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Enalapril <em>5 mg tab</em></div><div class="qt">110 เม็ด × 1.00</div>
+          <div class="bot"><span class="val">110.00 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Simvastatin <em>40 mg tab</em></div><div class="qt">65 เม็ด × 2.50</div>
+          <div class="bot"><span class="val">162.50 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+      </div>
+      <div class="fab"><i>↑</i><i>↓</i></div>
+      <div class="hitmark"></div>
+      <div class="hitlbl">ทับปุ่ม ลบ</div>
+      <div class="nav"><span>บันทึก</span><b>ประวัติ</b><span>สรุป</span></div>
+    </div></div>
+  </div>
+</div>
+
+<h2>3 แบบที่เสนอ</h2>
+
+<div class="row">
+
+  <div class="card">
+    <h3>แบบ ก — อยู่ในแถบที่ตรึงไว้แล้ว</h3>
+    <p class="sub">ไม่ลอย ไม่ทับอะไรเลย เพราะอยู่ในแถบเครื่องมือ</p>
+    <div class="phone"><div class="scr">
+      <div class="bar">
+        <div class="srch">ค้นหา ชื่อยา · HN · ชื่อคนบันทึก</div>
+        <div class="chips"><span class="chip">วันนี้</span><span class="chip">7 วัน</span><span class="chip on">เดือนนี้</span><span class="chip">ปีงบ 2569</span></div>
+        <div class="lotrow">
+          <div class="lotbtn">ดูเป็นรายการ Lot</div>
+          <div class="jump"><i>↑</i><i>↓</i></div>
+        </div>
+      </div>
+      <div class="list">
+        <div class="day"><span>9 ก.ย. 2569</span><span>6,983.00 ฿</span></div>
+        <div class="it"><div class="nm">Amlodipine <em>10 mg tab</em></div><div class="qt">85 เม็ด × 2.50</div>
+          <div class="bot"><span class="val">212.50 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Hydralazine <em>25 mg tab</em></div><div class="qt">80 เม็ด × 1.00</div>
+          <div class="bot"><span class="val">80.00 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Enalapril <em>5 mg tab</em></div><div class="qt">110 เม็ด × 1.00</div>
+          <div class="bot"><span class="val">110.00 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Simvastatin <em>40 mg tab</em></div><div class="qt">65 เม็ด × 2.50</div>
+          <div class="bot"><span class="val">162.50 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+      </div>
+      <div class="nav"><span>บันทึก</span><b>ประวัติ</b><span>สรุป</span></div>
+    </div></div>
+    <ul>
+      <li class="good">ไม่บังเนื้อหาเลยแม้แต่จุดเดียว</li>
+      <li class="good">อยู่ที่เดิมตลอด ตาไม่ต้องตามหา</li>
+      <li class="bad">หน้าสรุปใช้ไม่ได้ ไม่มีแถบตรึง</li>
+      <li class="bad">ปุ่มรายการ Lot สั้นลง 66 จุด</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>แบบ ข — แถบบางติดขอบขวา</h3>
+    <p class="sub">โผล่จากขอบจอครึ่งเดียว กว้าง 20 จุด</p>
+    <div class="phone"><div class="scr">
+      <div class="bar">
+        <div class="srch">ค้นหา ชื่อยา · HN · ชื่อคนบันทึก</div>
+        <div class="chips"><span class="chip">วันนี้</span><span class="chip">7 วัน</span><span class="chip on">เดือนนี้</span><span class="chip">ปีงบ 2569</span></div>
+        <div class="lotbtn">ดูเป็นรายการ Lot</div>
+      </div>
+      <div class="list">
+        <div class="day"><span>9 ก.ย. 2569</span><span>6,983.00 ฿</span></div>
+        <div class="it"><div class="nm">Amlodipine <em>10 mg tab</em></div><div class="qt">85 เม็ด × 2.50</div>
+          <div class="bot"><span class="val">212.50 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Hydralazine <em>25 mg tab</em></div><div class="qt">80 เม็ด × 1.00</div>
+          <div class="bot"><span class="val">80.00 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Enalapril <em>5 mg tab</em></div><div class="qt">110 เม็ด × 1.00</div>
+          <div class="bot"><span class="val">110.00 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Simvastatin <em>40 mg tab</em></div><div class="qt">65 เม็ด × 2.50</div>
+          <div class="bot"><span class="val">162.50 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+      </div>
+      <div class="rail"><i>↑</i><i>↓</i></div>
+      <div class="nav"><span>บันทึก</span><b>ประวัติ</b><span>สรุป</span></div>
+    </div></div>
+    <ul>
+      <li class="good">ใช้ได้ทั้งหน้าประวัติและหน้าสรุป</li>
+      <li class="good">กินขอบขวา 20 จุด ไม่ถึงปุ่ม ลบ</li>
+      <li class="bad">ปุ่มแคบกว่าเกณฑ์นิ้ว 44 จุด</li>
+      <li class="bad">ยังลอยทับตัวหนังสือได้ถ้าการ์ดชนขอบ</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>แบบ ค — โผล่ตอนเลื่อน หายตอนอ่าน</h3>
+    <p class="sub">ปุ่มกลมเหมือนเดิม แต่จางหายเองใน 1.5 วินาที</p>
+    <div class="phone"><div class="scr">
+      <div class="bar">
+        <div class="srch">ค้นหา ชื่อยา · HN · ชื่อคนบันทึก</div>
+        <div class="chips"><span class="chip">วันนี้</span><span class="chip">7 วัน</span><span class="chip on">เดือนนี้</span><span class="chip">ปีงบ 2569</span></div>
+        <div class="lotbtn">ดูเป็นรายการ Lot</div>
+      </div>
+      <div class="list">
+        <div class="day"><span>9 ก.ย. 2569</span><span>6,983.00 ฿</span></div>
+        <div class="it"><div class="nm">Amlodipine <em>10 mg tab</em></div><div class="qt">85 เม็ด × 2.50</div>
+          <div class="bot"><span class="val">212.50 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Hydralazine <em>25 mg tab</em></div><div class="qt">80 เม็ด × 1.00</div>
+          <div class="bot"><span class="val">80.00 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Enalapril <em>5 mg tab</em></div><div class="qt">110 เม็ด × 1.00</div>
+          <div class="bot"><span class="val">110.00 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+        <div class="it"><div class="nm">Simvastatin <em>40 mg tab</em></div><div class="qt">65 เม็ด × 2.50</div>
+          <div class="bot"><span class="val">162.50 ฿</span><span class="btns"><span class="mini">แก้</span><span class="mini del">ลบ</span></span></div></div>
+      </div>
+      <div class="fab ghost"><i>↑</i><i>↓</i></div>
+      <div class="nav"><span>บันทึก</span><b>ประวัติ</b><span>สรุป</span></div>
+    </div></div>
+    <p class="stage">ภาพนี้คือตอนหยุดอ่าน — ปุ่มจางจนเกือบมองไม่เห็น</p>
+    <ul>
+      <li class="good">ตอนอ่านเนื้อหาไม่มีอะไรบังเลย</li>
+      <li class="good">ใช้ได้ทั้งสองหน้า ปุ่มยังใหญ่ 44 จุด</li>
+      <li class="bad">อยากกดต้องปัดจอก่อนให้ปุ่มโผล่</li>
+      <li class="bad">ตอนโผล่มาก็ยังทับปุ่ม ลบ อยู่ดี</li>
+    </ul>
+  </div>
+
+</div>
+
+<h2>เทียบกัน</h2>
+<table>
+  <tr>
+    <th>เรื่อง</th>
+    <th class="c pick">ก — ในแถบตรึง</th>
+    <th class="c">ข — ขอบขวา</th>
+    <th class="c">ค — โผล่ตอนเลื่อน</th>
+  </tr>
+  <tr>
+    <td>บังเนื้อหาไหม</td>
+    <td class="c pick"><span class="yes">ไม่บังเลย</span></td>
+    <td class="c">บังขอบขวา 20 จุด</td>
+    <td class="c">บังตอนโผล่</td>
+  </tr>
+  <tr>
+    <td>ทับปุ่ม ลบ ในการ์ดไหม</td>
+    <td class="c pick"><span class="yes">ไม่ทับ</span></td>
+    <td class="c"><span class="yes">ไม่ทับ</span></td>
+    <td class="c"><span class="no">ทับ</span></td>
+  </tr>
+  <tr>
+    <td>ปุ่มถึงเกณฑ์นิ้ว 44 จุด</td>
+    <td class="c pick">ตาเห็น 28 จุด<br><span class="note">พื้นที่กดขยายเป็น 44 ได้</span></td>
+    <td class="c">20 × 30 <span class="no">ไม่ถึง</span></td>
+    <td class="c"><span class="yes">ถึง</span></td>
+  </tr>
+  <tr>
+    <td>ใช้กับหน้าสรุปได้ไหม</td>
+    <td class="c pick"><span class="no">ไม่ได้</span><br><span class="note">หน้านั้นไม่มีแถบตรึง</span></td>
+    <td class="c"><span class="yes">ได้</span></td>
+    <td class="c"><span class="yes">ได้</span></td>
+  </tr>
+  <tr>
+    <td>สองหน้าหน้าตาเหมือนกันไหม</td>
+    <td class="c pick"><span class="no">คนละแบบ</span></td>
+    <td class="c"><span class="yes">เหมือนกัน</span></td>
+    <td class="c"><span class="yes">เหมือนกัน</span></td>
+  </tr>
+  <tr>
+    <td>ต้องเรียนรู้ใหม่ไหม</td>
+    <td class="c pick"><span class="yes">ไม่ เห็นตลอด</span></td>
+    <td class="c"><span class="yes">ไม่</span></td>
+    <td class="c"><span class="no">ต้องรู้ว่าปัดแล้วโผล่</span></td>
+  </tr>
+</table>
+
+<h2>แคลร์เลือกแบบ ก</h2>
+<div class="flag ok">ปุ่มที่ไม่บังเนื้อหาจริง ๆ คือปุ่มที่ไม่ลอย</div>
+<p>แบบ ข กับ ค ยังเป็นปุ่มลอยอยู่ แค่ลอยให้เกะกะน้อยลง ส่วนแบบ ก ย้ายปุ่มไปอยู่ใน
+แถบเครื่องมือที่ตรึงไว้แล้ว จึงไม่มีทางทับอะไรได้เลย ไม่ว่ารายการจะยาวแค่ไหน</p>
+<p>เรื่องขนาดปุ่มแก้ได้ — ตัวปุ่มที่ตาเห็น 28 จุดตามภาพ แต่พื้นที่กดขยายเป็น 44 จุดได้
+โดยไม่ทำให้แถบสูงขึ้น เพราะแถบแถวนั้นสูง 44 จุดอยู่แล้วจากปุ่มรายการ Lot</p>
+<p><strong>ส่วนหน้าสรุปที่ใช้ปุ่มกลมลอยอยู่ ไม่ต้องแตะ</strong> — ตรงนั้นไม่มีปุ่มให้ทับ
+จึงไม่ได้สร้างปัญหาอะไร และเป็นของที่พี่กันเคาะไปแล้วเมื่อ 1 ก.ย.</p>
+
+<h2>ถ้าอยากให้สองหน้าเหมือนกันจริง ๆ</h2>
+<p class="note">บอกแคลร์ได้ค่ะ จะเปลี่ยนเป็นแบบ ข ให้ทั้งสองหน้าแทน แล้วขยายพื้นที่กดให้ถึงเกณฑ์นิ้ว
+แต่ต้องยอมให้ปุ่มกินขอบขวา 20 จุดตลอดเวลา</p>
+
+</div>
+</body>
+</html>

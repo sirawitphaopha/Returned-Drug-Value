@@ -74,9 +74,9 @@ export function summaryVals(app, d) {
   const srcTotal = Object.keys(bySrc).reduce((a, k) => a + Number(bySrc[k] || 0), 0) || 1;
 
   return {
-    // ปุ่มลอยขึ้นบนสุด/ลงล่างสุด — หน้าสรุปฝั่งมือถือเท่านั้น (ดู handlers/ui.js)
-    sumToTop: app.pageToTop,
-    sumToBottom: app.pageToBottom,
+    // 🔑 ปุ่มขึ้นบนสุด/ลงล่างสุด ย้ายไปเป็นของกลางใน vals/shell.js แล้ว
+    //    (V.jumpOn · V.jumpUp · V.jumpDown · V.jumpAwake) ใช้ร่วมกับหน้าประวัติ
+    //    ตัววาดอยู่ที่ components/pages/scrollbtns.jsx
     // ส่งต่อให้ตัววาดชื่อยาเลือกสีที่อ่านออกบนพื้นมืด (บั๊ก 26 ส.ค. 2569 ชื่อยาหาย)
     sumDark: dark,
     sumBg: dark ? '#151a17' : '#f6f7f4',

@@ -4,6 +4,7 @@
 //    แต่ยังอ่านผลได้ว่าถ้าปล่อยจริงมันจะยิงไหม
 import fs from 'fs';
 import puppeteer from 'puppeteer-core';
+import { UI, mustFind } from './lib/ui-text.mjs';
 
 // พอร์ตอ่านจากตัวแปรแวดล้อม PORT ถ้าไม่ตั้งใช้ 3000
 // (พี่กันตั้งกฎ 5 ก.ย. 2569 ว่าพอร์ตอาจไม่ว่าง ต้องเปิดพอร์ตอื่นได้)
@@ -142,10 +143,10 @@ const txt = (page) => page.evaluate(() => document.body.innerText.replace(/\s+/g
     });
     await wait(1500);
     t = await txt(page);
-    log('   กดแล้วเกิดอะไร: ' + (t.indexOf('ยืนยันการบันทึก') >= 0 ? 'ป๊อปยืนยันขึ้น'
-      : t.indexOf('เลือกชื่อผู้บันทึก') >= 0 ? '🔴 ติดที่ยังไม่เลือกผู้บันทึก'
-      : t.indexOf('เลือก รพ.สต.') >= 0 ? '🔴 ติดที่ยังไม่เลือก รพ.สต.'
-      : t.indexOf('โหมดดูตัวอย่าง') >= 0 ? '🔴 ติดที่โหมดดูตัวอย่าง'
+    log('   กดแล้วเกิดอะไร: ' + (t.indexOf(UI.confirmSaveTitle) >= 0 ? 'ป๊อปยืนยันขึ้น'
+      : t.indexOf(UI.blockedBy.ผู้บันทึก) >= 0 ? '🔴 ติดที่ยังไม่เลือกผู้บันทึก'
+      : t.indexOf(UI.blockedBy.รพสต) >= 0 ? '🔴 ติดที่ยังไม่เลือก รพ.สต.'
+      : t.indexOf(UI.blockedBy.โหมดตัวอย่าง) >= 0 ? '🔴 ติดที่โหมดดูตัวอย่าง'
       : '🔴 ไม่มีอะไรเกิดขึ้นเลย'));
 
     await page.screenshot({ path: 'out/มือถือ-กดบันทึก.png' });
@@ -169,9 +170,12 @@ const txt = (page) => page.evaluate(() => document.body.innerText.replace(/\s+/g
     });
     await wait(1500);
     t = await txt(page);
-    log('   กดแล้วเกิดอะไร: ' + (t.indexOf('ยืนยันการบันทึก') >= 0 ? '✅ ป๊อปยืนยันขึ้นแล้ว'
-      : t.indexOf('เลือก รพ.สต.') >= 0 ? '🔴 ติดที่ รพ.สต.'
-      : '🔴 ยังไม่มีอะไรเกิดขึ้น'));
+    log('   กดแล้วเกิดอะไร: ' + (t.indexOf(UI.confirmSaveTitle) >= 0 ? '✅ ป๊อปยืนยันขึ้นแล้ว'
+      : t.indexOf(UI.blockedBy.รพสต) >= 0 ? '🔴 ติดที่ รพ.สต.'
+      : "🔴 ยังไม่มีอะไรเกิดขึ้น"));
+
+    // 🚨 ป๊อปยืนยันต้องขึ้นจริง ไม่ขึ้น = หยุด ห้ามรายงานต่อ (พี่กันสั่ง 10 ก.ย. 2569)
+    mustFind({ "ป๊อปยืนยันบันทึก": t.indexOf(UI.confirmSaveTitle) >= 0 });
 
     // กดยืนยันในป๊อป
     await page.evaluate(() => {

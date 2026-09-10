@@ -8,6 +8,7 @@ import { renderPageTitle } from './pagetitle';
 import { skelTable, skelCard } from './skeleton';
 import { renderLoadFail } from './loadfail';
 import { renderSearchBox } from './thaibox';
+import { renderScrollBtns } from './scrollbtns';
 
 // ── ปุ่มจัดการท้ายแถว ────────────────────────────────────────────────────────
 // แยกออกมาเพราะใช้ทั้งตาราง (จอกว้าง) และการ์ด (จอแคบ) ต้องเหมือนกันเป๊ะ
@@ -434,6 +435,7 @@ export function renderLots(V) {
         <div {...kb(V.moreLots)} className="hv-bg-f6 tap" style={s('margin-top:10px;height:44px;border-radius:11px;border:1px solid rgba(30,36,32,.14);display:flex;align-items:center;justify-content:center;font:600 13.5px/1.75 Sarabun,sans-serif;color:#414a44;cursor:pointer')}>{V.lotsMoreLabel}</div>
       )}
       </div>
+      {renderScrollBtns(V)}
     </div>
   );
 }

@@ -765,3 +765,17 @@ nextjs-portal {
    🚨 จอเตี้ยกว่า 700px บีบแถวลง เห็นเพิ่มอีก 2 แถว (คลาส rec-tight · ดูข้อ 3.65) */
 .tbl tbody tr.rec-row td { padding-top: 11px; padding-bottom: 11px; position: relative }
 .tbl tbody tr.rec-tight td { padding-top: 6px; padding-bottom: 6px }
+
+/* ── ปุ่มขึ้นบนสุด/ลงล่างสุด (พี่กันเคาะแบบ ค · 10 ก.ย. 2569) ─────────────────
+   ปุ่มไหนโผล่ขึ้นกับตำแหน่งที่เลื่อนอยู่ · ชัดหรือจางขึ้นกับว่าเพิ่งเลื่อนไหม
+   ค่าความจางกับการโผล่หายตั้งในแท็ก (components/pages/scrollbtns.jsx)
+   ตรงนี้คุมแค่จังหวะการเปลี่ยน กับสีตอนเอาเมาส์ชี้
+
+   🚨 เอาเมาส์ชี้แล้วต้องกลับมาชัดเต็มตา (พี่กันสั่ง "ถ้าเอาเมาส์ไปชี้ มันจะเปลี่ยนเป็นสีเข้ม")
+      ต้องมี !important เพราะความจางถูกตั้งไว้ในแท็กซึ่งชนะกฎ CSS เสมอ
+      ส่วนสีเข้มขึ้นมาจากคลาส .hv-teal ที่มีอยู่แล้ว (#24614a)
+   🚨 ปุ่มที่ถูกซ่อน (opacity 0) ต้องไม่กลับมาตอนเอาเมาส์ผ่าน — กัน pointer-events:none ไว้แล้ว
+      เมาส์จึงไม่มีทาง hover โดนปุ่มที่ซ่อนอยู่ */
+.jump-btn{transition:opacity .25s ease,transform .25s ease,background .18s ease}
+.jump-btn:hover{opacity:1 !important}
+@media (prefers-reduced-motion: reduce){ .jump-btn{transition:none} }

@@ -2,6 +2,7 @@
 // พี่กันสั่ง 1 ก.ย. 2569 "ไปบีบจุดนี้หน่อย เพราะตอนใช้ในมือถือ มันกินเนื้อที่มาก"
 import fs from 'fs';
 import puppeteer from 'puppeteer-core';
+import { UI, mustFind } from './lib/ui-text.mjs';
 
 // พอร์ตอ่านจากตัวแปรแวดล้อม PORT ถ้าไม่ตั้งใช้ 3000
 // (พี่กันตั้งกฎ 5 ก.ย. 2569 ว่าพอร์ตอาจไม่ว่าง ต้องเปิดพอร์ตอื่นได้)
@@ -80,19 +81,33 @@ const grab = (page, src) => page.evaluate((x) => {
 
     const m = await page.evaluate(() => {
       const R = (e) => e ? Math.round(e.getBoundingClientRect().height) : 0;
-      const bar = [...document.querySelectorAll('div')]
-        .find((e) => (e.innerText || '').indexOf('สะสมปีงบ') === 0 && R(e) > 80 && R(e) < 400);
+      // 🚨 หาแถบจากตัวชี้ของแอปโดยตรง ไม่ผูกกับข้อความบนจอ (พี่กันสั่ง 10 ก.ย. 2569)
+      //    เดิมหาด้วยคำว่า 'สะสมปีงบ' ซึ่งพี่กันสั่งเอาออกจากแถบมือถือไปแล้วตั้งแต่ 1 ก.ย.
+      //    ตัวตรวจเลยรายงาน 0px มาตลอดโดยไม่มีใครรู้
+      //    แอปวัดความสูงแถบไว้เองอยู่แล้วด้วย ResizeObserver (_barH.save)
+      //    ค่านี้แม่นกว่าการไปงมหา element และไม่พังเวลาข้อความในแถบเปลี่ยน
+      const app = (() => {
+        const el = document.querySelector('[role="button"]');
+        const key = el && Object.keys(el).find((k) => k.indexOf('__reactFiber') === 0);
+        let f = key ? el[key] : null;
+        while (f) { if (f.stateNode && f.stateNode._barH) return f.stateNode; f = f.return; }
+        return null;
+      })();
+      const barH = app && app._barH ? Math.round(app._barH.save) : 0;
       const btn = [...document.querySelectorAll('[role="button"]')]
         .find((e) => (e.innerText || '').indexOf('รายการ') > 0 || (e.innerText || '').indexOf('ลองส่งใหม่') >= 0);
       const b = btn ? btn.getBoundingClientRect() : null;
       return {
         จอสูง: window.innerHeight,
-        แถบบันทึกสูง: R(bar),
+        แถบบันทึกสูง: barH,
         ปุ่มสูง: b ? Math.round(b.height) : 0,
         ปุ่มอยู่ในจอไหม: b ? (b.top >= 0 && b.bottom <= window.innerHeight) : false,
         ข้อความปุ่ม: btn ? btn.innerText.replace(/\s+/g, ' ').trim() : '(ไม่เจอ)'
       };
     });
+
+    // 🚨 หาแถบหรือปุ่มไม่เจอ = หยุด ห้ามรายงานตัวเลข 0 (พี่กันสั่ง 10 ก.ย. 2569)
+    mustFind({ "แถบบันทึกฝั่งมือถือ": m.แถบบันทึกสูง, "ปุ่มบันทึก": m.ปุ่มสูง });
 
     log('');
     log('จอมือถือสูง ' + m.จอสูง + 'px');

@@ -2,6 +2,7 @@
 // 🚨 วัดพิกัดจริงในเบราว์เซอร์ ไม่ใช่อ่านจากโค้ด
 import fs from 'fs';
 import puppeteer from 'puppeteer-core';
+import { UI, mustFind } from './lib/ui-text.mjs';
 
 // พอร์ตอ่านจากตัวแปรแวดล้อม PORT ถ้าไม่ตั้งใช้ 3000
 // (พี่กันตั้งกฎ 5 ก.ย. 2569 ว่าพอร์ตอาจไม่ว่าง ต้องเปิดพอร์ตอื่นได้)
@@ -47,15 +48,29 @@ const H = Number(process.argv[3] || 956);
     await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
     await wait(3500);
 
-    // กดเปิด "ตัวเลือกเพิ่มเติม" ถ้ายังไม่เปิด
-    await page.evaluate(() => {
-      const hit = [...document.querySelectorAll('[role="button"]')]
-        .find((e) => /ตัวเลือกเพิ่มเติม|เพิ่มเติม/.test(e.innerText || ''));
-      if (hit) hit.click();
+    // กางส่วน "ตัวเลือกเพิ่มเติม" ที่ซ่อนช่องวันที่กับ HN ไว้
+    //
+    // 🚨 เดิมหาปุ่มด้วยข้อความ /ตัวเลือกเพิ่มเติม|เพิ่มเติม/ ซึ่งกดไม่โดนเลยสักครั้ง
+    //    เพราะปุ่มจริงเป็นไอคอน ▾ ไม่มีข้อความอยู่ในนั้น
+    //    ผลคือช่อง HN ไม่เคยถูกกางออกมา ตัวตรวจ HN ทับวันที่จึงไม่เคยตรวจอะไรเลย
+    //    ตั้งค่าผ่านแอปตรง ๆ แทน ไม่ผูกกับหน้าตาปุ่ม (พี่กันสั่ง 10 ก.ย. 2569)
+    const เปิดตัวเลือก = await page.evaluate(() => {
+      const el = document.querySelector('[role="button"]');
+      const key = el && Object.keys(el).find((k) => k.indexOf('__reactFiber') === 0);
+      let f = key ? el[key] : null, app = null;
+      while (f) {
+        if (f.stateNode && f.stateNode.state && 'showMore' in f.stateNode.state) { app = f.stateNode; break; }
+        f = f.return;
+      }
+      if (!app) return 'ไม่เจอตัวแอป';
+      if (app.state.showMore) return 'เปิดอยู่แล้ว';
+      app.setState({ showMore: true });
+      return 'สั่งเปิดแล้ว';
     });
+    log('   ตัวเลือกเพิ่มเติม: ' + เปิดตัวเลือก);
     await wait(900);
 
-    const out = await page.evaluate(() => {
+    const out = await page.evaluate((HN_PH) => {
       const grab = (re, tag) => [...document.querySelectorAll(tag || '*')]
         .filter((e) => re.test((e.innerText || e.placeholder || '').trim()) && e.children.length === 0);
       const box = (e) => { const r = e.getBoundingClientRect();
@@ -66,7 +81,7 @@ const H = Number(process.argv[3] || 956);
       push('ป้ายวันที่', grab(/^วันที่$/)[0]);
       push('ป้าย HN', grab(/^HN/)[0]);
       push('ช่องวันที่', document.querySelector('input[type="date"]'));
-      push('ช่อง HN', [...document.querySelectorAll('input')].find((i) => i.placeholder === 'ปล่อยว่างได้'));
+      push('ช่อง HN', [...document.querySelectorAll('input')].find((i) => i.placeholder === HN_PH));
       push('ป้ายผู้บันทึก', grab(/^ผู้บันทึก$/)[0]);
       push('ป้ายต้องเลือก', grab(/ต้องเลือกก่อนบันทึก/)[0]);
 
@@ -79,6 +94,13 @@ const H = Number(process.argv[3] || 956);
         });
       }
       return res;
+    }, UI.hnPlaceholder);
+
+    // 🚨 หาไม่เจอต้องร้อง ห้ามรายงานต่อด้วยข้อมูลที่ขาด (พี่กันสั่ง 10 ก.ย. 2569)
+    mustFind({
+      "ช่อง HN": out.items.some((i) => i.name === "ช่อง HN"),
+      "ช่องวันที่": out.items.some((i) => i.name === "ช่องวันที่"),
+      "ป้าย HN": out.items.some((i) => i.name === "ป้าย HN")
     });
 
     log('');

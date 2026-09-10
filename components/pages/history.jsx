@@ -9,6 +9,7 @@ import { renderLoadFail } from './loadfail';
 import { renderSortClear } from './sortclear';
 import { renderPageTitle } from './pagetitle';
 import { renderSearchBox } from './thaibox';
+import { renderScrollBtns } from './scrollbtns';
 
 // แถบเครื่องมือเสริม — ไม่มีในมอคอัป
 // เดิมมีแค่ 4 ปุ่มช่วงเวลาสำเร็จรูป + ตัดที่ 60 แถว แล้วบอกให้ "กรองช่วงวันที่ให้แคบลง"
@@ -212,6 +213,7 @@ export function renderHistoryWide(V) {
         </div>
       )}
       </div>
+      {renderScrollBtns(V)}
     </div>
   );
 }
@@ -289,15 +291,25 @@ export function renderHistoryNarrow(V) {
     <div style={s('width:100%;max-width:520px;margin:0 auto;min-height:100%;flex:1 0 auto')}>
       {/* 🚨 หัวใช้ตัวกลาง components/pages/pagehead.jsx ตัวเดียวกับอีกสองหน้า
           ห้ามวาดเอง ไม่งั้นปุ่ม ℹ ⚙ เหลื่อมกันอีก (พี่กันจับได้ 4 ก.ย. 2569) */}
-      <div style={s('background:#fff;border-bottom:1px solid rgba(30,36,32,.07)')}>
-        <div style={s(HEAD_PAD)}>
+      {/* ── หัวเว็บ — ปล่อยให้เลื่อนหายไปตามปกติ ตรึงเฉพาะแถบเครื่องมือข้างล่าง ──
+          🚨 ระยะขอบล่างของ HEAD_PAD ถูกย้ายไปเป็นระยะขอบบนของแถบเครื่องมือแทน
+             ช่องไฟที่ตาเห็นเท่าเดิมทุกจุด แต่ตอนแถบไปติดขอบบน ช่องค้นหาจะไม่ชิดขอบ */}
+      <div style={s('background:#fff')}>
+        <div style={sx(HEAD_PAD, { paddingBottom: 0 })}>
           {renderPageHead({
           onAbout: V.openAbout, onSettings: V.openSettings,
           sub: (<>{V.histTitle || 'ประวัติ'} · {V.histCountLabel} · <span style={s('font:700 11.5px/1.45 Sarabun,sans-serif;color:#2f7d5d;font-variant-numeric:tabular-nums')}>{V.histTotalLabel}</span></>),
           })}
         </div>
+      </div>
 
-      <div style={s('padding:0 20px 14px')}>
+      {/* ── แถบเครื่องมือตรึงไว้บนสุด (พี่กันสั่ง 10 ก.ย. 2569 · เฉพาะมือถือ) ──
+          ช่องค้นหา · ชิปช่วงเวลา · ปุ่มดูเป็นรายการ Lot ต้องเห็นตลอดเวลาที่เลื่อนดูรายการ
+          ไม่ต้องเลื่อนกลับขึ้นไปข้างบนทุกครั้งที่อยากเปลี่ยนช่วงเวลาหรือค้นใหม่
+          🚨 กฎอยู่ใน app/mobile.css ขึ้นต้นด้วย .mrv-mobile ฝั่งคอมจึงไม่โดนแม้แต่พิกเซลเดียว
+          🚨 ชั้นต้องเป็น Z.bar (6) ต่ำกว่าหน้าต่างซ้อนที่ต่ำที่สุด (ป๊อปใส่จำนวน 20) */}
+      <div className="mrv-hist-stick"
+        style={sx('background:#fff;border-bottom:1px solid rgba(30,36,32,.07);padding:11px 20px 14px', { zIndex: Z.bar })}>
         {/* ช่องค้นหา + ปุ่มตัวกรอง อยู่แถวเดียวกัน โทนเดียวกับหน้ารายการ Lot */}
         <div style={s('display:flex;align-items:center;gap:8px;margin-bottom:9px')}>
         {renderSearchBox({
@@ -352,7 +364,6 @@ export function renderHistoryNarrow(V) {
           </svg>
           ดูเป็นรายการ Lot
         </div>
-      </div>
       </div>
 
       <div style={s('padding:14px 20px 20px')}>
@@ -441,6 +452,7 @@ export function renderHistoryNarrow(V) {
           </div>
         )}
       </div>
+      {renderScrollBtns(V)}
     </div>
   );
 }

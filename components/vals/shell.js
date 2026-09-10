@@ -149,6 +149,26 @@ export function shellVals(app, d) {
     toastValueColor: st.toast && st.toast.ok ? '#7fd6ab' : '#f0a68f'
   };
 
+  // ── ปุ่มขึ้นบนสุด/ลงล่างสุด (พี่กันเคาะแบบ ค · 10 ก.ย. 2569) ───────────────
+  //
+  //   ใส่หน้าที่เป็นรายการยาว — แดชบอร์ด (สรุป) · รายงาน (ประวัติ) · รายการ Lot
+  //   🚨 หน้ากรอกห้ามใส่ (พี่กันสั่งตรง ๆ) — มีแถบบันทึกตรึงอยู่ล่างจอแล้ว
+  //      ปุ่มลอยเพิ่มอีกคู่จะบังรายการยาที่กำลังกรอกอยู่
+  //
+  //   🔑 'หน้ารายงาน' ที่พี่กันเรียก = หน้าประวัติ (พี่กันยืนยันเอง 10 ก.ย. 2569)
+  //      รอบก่อนแคลร์ตีความว่าเป็นหน้าสรุปหน้าเดียว งานเลยทำไม่ครบมาตั้งแต่ต้น
+  //
+  // 🚨 ต้องประกอบหลัง V เสร็จ เพราะอ่าน V.anyModalOpen ต่อ
+  //    มีหน้าต่างซ้อนเปิดอยู่ = ซ่อนปุ่มลอย ไม่งั้นลอยอยู่ข้างฉากหลังที่ถูกล็อกไว้
+  V.jumpOn = (st.screen === 'history' || st.screen === 'summary' || st.screen === 'lots')
+    && !st.settingsOpen && !V.anyModalOpen && st.jumpPos !== 'none';
+  // ปุ่มที่ชี้ไปยังที่ที่ยืนอยู่แล้วต้องหายไป ไม่ใช่กดแล้วเงียบ
+  V.jumpUp = st.jumpPos === 'mid' || st.jumpPos === 'bottom';
+  V.jumpDown = st.jumpPos === 'mid' || st.jumpPos === 'top';
+  V.jumpAwake = !!st.jumpAwake;
+  V.jumpToTop = app.pageToTop;
+  V.jumpToBottom = app.pageToBottom;
+
   // แท็บชุดมือถือ — ต้องประกอบหลัง V เสร็จ เพราะกรองจากรายการเดียวกัน
   V.tabsNarrow = V.tabs.filter((t) => MOBILE_HIDE.indexOf(t.key) < 0);
   return V;
