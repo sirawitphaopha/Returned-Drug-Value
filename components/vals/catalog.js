@@ -6,25 +6,31 @@ import { buildDrugNames } from '@/lib/drugName';
 import { thaiToEnglish } from '@/lib/drugSearch';
 import { pillColorOf, COLOR_HEX } from '@/lib/drugPillColors';
 import { FORM_UNIT, UNIT_FALLBACK } from '@/lib/units';
+import { ROW_H } from '../helpers';
 
 // คอลัมน์ในตาราง — ต้องครบทุกช่องที่มีจริงในตาราง drugs ของ Supabase
 // (`hidden` ไม่อยู่ในนี้ เพราะทำผ่านปุ่มท้ายแถวและมีตัวกรองแยกให้แล้ว)
 const COLS = [
-  { key: 'id', label: 'ID', w: '54px', sort: true },
-  { key: 'abbrev', label: 'ตัวย่อ', w: '78px', sort: true },
-  { key: 'generic', label: 'ชื่อยา', w: '', sort: true },
-  { key: 'brand', label: 'ชื่อการค้า', w: '104px', sort: true },
-  { key: 'strength', label: 'ความแรง', w: '88px', sort: true },
-  { key: 'unit', label: 'หน่วย', w: '72px', sort: true },
+  { key: 'id', label: 'ID', w: '41px', sort: true },
+  { key: 'abbrev', label: 'ตัวย่อ', w: '58px', sort: true },
+  // 🔴 ต้องระบุความกว้างเป็นตัวเลข ห้ามเว้นว่าง
+  //    ตารางนี้ล็อกความกว้างคอลัมน์ (table-layout:fixed) คอลัมน์ที่ไม่ระบุจะได้แค่ที่ว่างที่เหลือ
+  //    วัดจริงได้ 94 จุด ชื่อยาสองท่อนเลยถูกหักเป็นสามบรรทัด (พี่กันเจอเอง 21 ก.ย. 2569)
+  // 🔴🔴 ห้ามแก้ด้วยการขยายตารางจนล้นจอ — คอลัมน์อื่นถูกบีบมาให้แทน
+  //    ตารางล้นจอแล้วแถบที่ตรึงไว้กับปุ่มจะหลุดออกนอกสายตา (บทเรียนจากเว็บวอร์ฟาริน 21 ก.ย. 2569)
+  { key: 'generic', label: 'Generic', w: '214px', sort: true },
+  { key: 'brand', label: 'Brand', w: '123px', sort: true },
+  { key: 'strength', label: 'Strength', w: '87px', sort: true },
+  { key: 'unit', label: 'Unit', w: '92px', sort: true },
   { key: 'percent', label: '%', w: '54px', sort: true },
-  { key: 'form', label: 'รูปแบบ', w: '92px', sort: true },
-  { key: 'release', label: 'ออกฤทธิ์', w: '80px', sort: true },
-  { key: 'route', label: 'ทางให้', w: '78px', sort: true },
-  { key: 'had', label: 'HAD', w: '58px', sort: true },
-  { key: 'preg', label: 'Preg', w: '62px', sort: true },
-  { key: 'renal', label: 'Renal', w: '70px', sort: true },
+  { key: 'form', label: 'Form', w: '92px', sort: true },
+  { key: 'release', label: 'Release', w: '79px', sort: true },
+  { key: 'route', label: 'Route', w: '67px', sort: true },
+  { key: 'had', label: 'HAD', w: '52px', sort: true },
+  { key: 'preg', label: 'Preg', w: '59px', sort: true },
+  { key: 'renal', label: 'Renal', w: '68px', sort: true },
   // ราคาต่อหน่วยของเว็บนี้ (ตาราง mr_drug_price) — ไม่ใช่ของกลางเหมือนคอลัมน์อื่น
-  { key: 'price', label: 'ราคา/หน่วย', w: '104px', sort: true }
+  { key: 'price', label: 'Price', w: '74px', sort: true }
 ];
 
 // ตัวกรองรูปแบบยา — เอาเฉพาะที่มีเยอะสุด 5 อันแรกจากคลังจริง
@@ -92,7 +98,9 @@ export function catalogVals(app, d) {
     rows = found;
   }
 
-  const s = st.catSort;
+  // 🔴 ยังไม่ได้กดเรียง = เรียงตาม ID จากน้อยไปมากเสมอ (พี่กันสั่ง 21 ก.ย. 2569)
+  //    ลูกศรบนหัว ID ต้องบอกความจริงด้วย ไม่ใช่ขึ้น ↑↓ ทั้งที่เรียงอยู่
+  const s = st.catSort || { key: 'id', dir: 'asc' };
   // จำนวนแถวที่วาดจริงตอนนี้ — เพิ่มเองเมื่อเลื่อนใกล้ถึงท้ายตาราง
   const drawn = Math.max(60, Number(st.catDraw) || 60);
   if (s) {
@@ -143,6 +151,17 @@ export function catalogVals(app, d) {
 
     isCatalog: st.screen === 'catalog',
     catCols: COLS,
+    // ปุ่มปรับความสูงแถว 3 ระดับ — ตัวเดียวกับหน้าประวัติ (พี่กันสั่งให้มีในหน้าคลังยาด้วย 21 ก.ย. 2569)
+    // 🚨 ตั้งครั้งเดียวมีผลกับตารางทุกหน้า เพราะคลาสไปอยู่ที่ <html>
+    catRowHPicks: ROW_H.map((r) => ({
+      key: r.key,
+      lines: r.lines,
+      title: 'แถวสูง ' + r.px + ' จุด · ' + r.hint,
+      on: (st.rowH || 'roomy') === r.key,
+      bg: (st.rowH || 'roomy') === r.key ? '#2f7d5d' : '#f0f1ee',
+      fg: (st.rowH || 'roomy') === r.key ? '#fff' : '#414a44',
+      pick: () => app.setRowH(r.key)
+    })),
     catShowFull: st.catShowFull,
     catToggleFull: app.toggleCatFullName,
     catFullLabel: st.catShowFull ? 'ซ่อนคอลัมน์นี้' : 'แสดงคอลัมน์นี้',
@@ -162,20 +181,31 @@ export function catalogVals(app, d) {
       { key: 'had', label: 'HAD' },
       ...forms.map((f) => ({ key: 'form:' + f, label: f })),
       { key: 'pregDX', label: 'Preg D/X' },
-      { key: 'renal', label: 'ปรับตามไต' },
+      { key: 'renal', label: 'Renal' },
       { key: 'hidden', label: 'ที่ซ่อนอยู่ (' + hiddenCount + ')' }
     ].map((f) => ({ ...f, on: st.catFilters.includes(f.key), pick: () => app.toggleCatFilter(f.key) })),
     catHasFilter: st.catFilters.length > 0,
+    // เรียงอยู่หรือเปล่า — ใช้ตัดสินว่าปุ่มล้างทั้งหมดต้องโผล่ไหม
+    catHasSort: !!(st.catSort && st.catSort.key),
+    // 🔴 ย่อช่องค้นหาเมื่อ "แถบถูกตรึงอยู่" และ "มีปุ่มที่โผล่มาต่อท้ายแถวชิป" พร้อมกัน
+    //    (พี่กันสั่งวิธีนี้เอง 21 ก.ย. 2569) ตอนแถบถูกตรึง ปุ่มปรับแถวกับปุ่มเพิ่มยา
+    //    ลงมาอยู่แถวเดียวกับช่องค้นหา ถ้าไม่ย่อ ปุ่มล้างค่าจะมุดอยู่ใต้ปุ่มพวกนั้น
+    //    🚨 ยังไม่เลื่อน = ไม่ย่อ เพราะปุ่มยังอยู่แถวหัวเรื่อง ไม่มีอะไรทับกัน
+    catStuck: !!st.catStuck,
+    catNarrowSearch: !!st.catStuck && (st.catFilters.length > 0 || !!raw || !!(st.catSort && st.catSort.key)),
     catClearFilters: app.clearCatFilters,
     // ล้างทั้งคำค้นและตัวกรองในปุ่มเดียว — คนที่ทั้งค้นทั้งกรองไม่ต้องกดสองที่
     catClearAll: app.clearCatAll,
-    catSortKey: s ? s.key : '',
-    catSortDir: s ? s.dir : '',
+    catSortKey: s.key,
+    catSortDir: s.dir,
     catSortBy: app.toggleCatSort,
-    catSortClear: { on: !!(st.catSort && st.catSort.key), clear: app.clearCatSort, label: ((COLS.find((c) => st.catSort && c.key === st.catSort.key) || {}).label || '') },
+    // 🚨 ห้ามโผล่พร้อมปุ่มล้างทั้งหมด — สองปุ่มรวมกันดันชิปตกไปบรรทัดที่สอง
+    //    ไม่ได้หายไปไหน เพราะปุ่มล้างทั้งหมดล้างการเรียงให้อยู่แล้ว
+    catSortClear: { on: !!(st.catSort && st.catSort.key) && st.catFilters.length === 0 && !raw, clear: app.clearCatSort, label: ((COLS.find((c) => st.catSort && c.key === st.catSort.key) || {}).label || '') },
     catAdd: app.openCatAdd,
     catToTop: app.catToTop,
     catHeadRef: app.catHeadRef,
+    catFloatRef: app.catFloatRef,
 
     // ── วาดครบทุกแถว แต่ทยอยตามที่เลื่อนถึง (ผลตรวจข้อ ก-9) ────────────────
     // 🚨 catShown ยังเป็นจำนวนที่ "ตรงเงื่อนไข" ทั้งหมด ไม่ใช่จำนวนที่วาดอยู่
@@ -238,9 +268,14 @@ export function catalogVals(app, d) {
     catPillPreview: st.catEdit ? (pillColorOf({ pill_color: st.catEdit.pill_color, pill_color_hex: st.catEdit.pill_color_hex }) || {}).color || '' : '',
     catPillHint: st.catEdit && st.catEdit.pill_color && COLOR_HEX[String(st.catEdit.pill_color).trim()] ? COLOR_HEX[String(st.catEdit.pill_color).trim()] : 'เว้นว่างได้',
     catDefaultUnit: st.catEdit ? (FORM_UNIT[String(st.catEdit.form || '').trim()] || UNIT_FALLBACK) : '',
+    // หน่วยนับไทย — เอาจาก FORM_UNIT ที่ใช้จริงทั้งเว็บ ไม่ได้ตั้งรายการขึ้นเอง
+    // เว้นว่างไว้ = ใช้ค่าตามรูปแบบยา (ลำดับการตัดสินอยู่ใน lib/units.js)
+    catUnitThOpts: Array.from(new Set(Object.values(FORM_UNIT).concat([UNIT_FALLBACK]))).sort((x, y) => x.localeCompare(y, 'th')),
     catUnitOpts: distinct(list, 'unit', st.catEdit),
     catFormOpts: distinct(list, 'form', st.catEdit),
     catRouteOpts: distinct(list, 'route', st.catEdit),
+    // การออกฤทธิ์ — เอาค่าที่มีจริงในคลัง (ER · SR · IR) ไม่ได้ตั้งรายการขึ้นเอง
+    catReleaseOpts: distinct(list, 'release', st.catEdit),
 
     // ── ป๊อปยืนยันซ่อน ─────────────────────────────────────────────────────
     catHideTarget: st.catHideTarget,

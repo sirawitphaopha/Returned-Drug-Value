@@ -3,23 +3,25 @@
 // 🚨 ตาราง drugs ใช้ร่วมกัน 3 เว็บ · แก้ที่นี่กระทบ ME-DRP กับ TB Calculator ด้วย
 // 🚨 ลบยาไม่ได้โดยตั้งใจ ใช้ "ซ่อน" แทน (พี่กันสั่ง 13 ส.ค. 2569)
 import { s, sx, kb } from '../helpers';
-import { renderSortClear } from './sortclear';
 import { renderPageTitle } from './pagetitle';
 import { skelTableTag } from './skeleton';
 import { renderLoadFail } from './loadfail';
 import { renderSearchBox } from './thaibox';
+import { renderScrollBtns } from './scrollbtns';
 
 // หัวตารางตรึงใต้แถบค้นหาที่ตรึงอยู่ก่อนแล้ว — ระยะวัดจริงจาก ResizeObserver ผ่าน --cathead
-const TH = 'padding:9px 10px;text-align:center;font:600 12px/1.75 Sarabun,sans-serif;color:#fff;background:#2f7d5d;white-space:nowrap;position:sticky;top:var(--cathead,150px);z-index:2';
-const TD = 'padding:9px 10px;font:400 12.5px/1.75 Sarabun,sans-serif;color:#414a44;vertical-align:top';
+const TH = 'padding:9px 8px;text-align:center;font:600 11.5px/1.75 Sarabun,sans-serif;color:#fff;background:#2f7d5d;white-space:nowrap;position:sticky;top:var(--cathead,150px);z-index:2';
+const TD = 'padding:9px 8px;font:400 12.5px/1.75 Sarabun,sans-serif;color:#414a44;vertical-align:top';
 const BTN = 'border:1px solid #cfe0d6;background:#fff;color:#2f7d5d;font:600 11.5px/1.75 Sarabun,sans-serif;padding:4px 9px;border-radius:7px;cursor:pointer';
+// ปุ่มไอคอนท้ายแถว — 30x30 ห่างกัน 6 จุด (พี่กันสั่งเปลี่ยนเป็นไอคอน 21 ก.ย. 2569)
+const ICON_BTN = 'display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid #cfe0d6;background:#fff;color:#2f7d5d;border-radius:8px;cursor:pointer;vertical-align:middle;transition:background-color .15s ease,border-color .15s ease,color .15s ease';
 // 🚨 ชิปกับช่องค้นหาต้องสูงเท่ากันเป๊ะ (พี่กันสั่ง 25 ส.ค. 2569)
 //    ใช้ height ตายตัว + จัดกลางแนวตั้ง แทนการปั้นความสูงด้วย padding
 //    ไม่งั้นพอเปลี่ยนขนาดตัวอักษรเมื่อไหร่ ความสูงสองฝั่งก็หลุดจากกันอีก
 const CHIP_BASE = 'height:38px;box-sizing:border-box;display:inline-flex;align-items:center;padding:0 13px;border-radius:999px;cursor:pointer;white-space:nowrap';
 const CHIP_ON = CHIP_BASE + ';border:1px solid #2f7d5d;background:#e3f0e8;color:#2f7d5d;font:600 12px/1.75 Sarabun,sans-serif';
 const CHIP_OFF = CHIP_BASE + ';border:1px solid #e3e6e1;background:#fff;color:#6b746e;font:400 12px/1.75 Sarabun,sans-serif';
-const FLD = 'width:100%;box-sizing:border-box;border:1.5px solid #dfe5e1;border-radius:9px;padding:9px 11px;font:400 13.5px/1.75 Sarabun,sans-serif;color:#1e2420;outline:none;background:#fff';
+const FLD = 'width:100%;box-sizing:border-box;border:1.5px solid #dfe5e1;border-radius:9px;padding:9px 11px;font:400 13.5px/1.75 Sarabun,sans-serif;color:#1e2420;outline:none;background-color:#fff';
 const LAB = 'display:block;font:600 12px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:5px';
 
 export function renderCatalog(V) {
@@ -39,11 +41,36 @@ export function renderCatalog(V) {
               {' · '}แก้ที่นี่แล้วเว็บอื่นของห้องยาเห็นด้วย
             </div>
           </div>
-          <div {...kb(V.catAdd)} className="hv-teal tap" style={s('background:#2f7d5d;color:#fff;font:600 13px/1.75 Sarabun,sans-serif;padding:9px 16px;border-radius:9px;cursor:pointer')}>
-            เพิ่มยา
-          </div>
         </div>
 
+
+        {/* 🔴 ปุ่มปรับแถวกับปุ่มเพิ่มยา ตรึงตัวเองไว้ที่ระดับเดียวกับแถบค้นหา (ทำเหมือนเว็บ ME-DRP)
+            อยู่บนสุด = อยู่แถวหัวเรื่องเหมือนเดิมทุกจุด · เลื่อนลง = ลงมาอยู่แถวเดียวกับช่องค้นหา
+            🔑 ระยะขอบบนติดลบ = ตอนยังไม่เลื่อน กล่องนี้ทับอยู่บนแถวหัวเรื่อง จึงไม่กินที่เพิ่ม
+            🚨 กล่องนอกไม่รับเมาส์ ปล่อยให้กดของที่อยู่ข้างใต้ได้ ปุ่มข้างในรับเอง
+            🚨 ชั้นต้องสูงกว่าแถบค้นหา (z-index 6) ไม่งั้นปุ่มมุดหายใต้แถบตอนเลื่อน */}
+        <div ref={V.catFloatRef} style={s('position:sticky;top:13px;z-index:7;display:flex;align-items:center;justify-content:flex-end;pointer-events:none;height:40px;margin-top:-40px;margin-bottom:0')}>
+          <div style={s('display:flex;align-items:center;gap:10px;flex:none;pointer-events:auto')}>
+            {/* ปุ่มปรับความสูงแถว 3 ระดับ — ตัวเดียวกับหน้าประวัติ (พี่กันสั่ง 21 ก.ย. 2569)
+                ไอคอนคือเส้นแนวนอนที่ห่างกันตามระดับ ยิ่งชิดยิ่งแทนแถวที่แน่นขึ้น
+                🚨 ต้องมี title กับ aria-label เสมอ เพราะเป็นไอคอนล้วน */}
+            <div style={s('display:flex;align-items:center;gap:4px')}>
+              {V.catRowHPicks.map((c) => (
+                <div key={c.key} {...kb(c.pick)} title={c.title} aria-label={c.title}
+                  className={c.on ? 'hv-seg-on' : 'hv-seg-off'}
+                  style={sx('width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background-color .15s ease', { background: c.bg, color: c.fg })}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    {c.lines.map((y, i) => (<path key={i} d={'M4 ' + y + 'h16'} />))}
+                  </svg>
+                </div>
+              ))}
+            </div>
+            <div {...kb(V.catAdd)} className="hv-teal tap" style={s('background:#2f7d5d;color:#fff;font:600 13px/1.75 Sarabun,sans-serif;padding:9px 16px;border-radius:9px;cursor:pointer')}>
+              + เพิ่มยา
+            </div>
+          </div>
+
+        </div>
         {/* แถบค้นหา + ตัวกรอง + ปุ่มสลับคอลัมน์ — ตรึงไว้บนสุดของพื้นที่เลื่อน
             ตารางยาว 417 แถว เลื่อนไปไกลแล้วต้องยังกดกรองหรือค้นได้ทันที (พี่กันสั่ง 19 ส.ค. 2569)
             พื้นที่เลื่อนคือ scrollRef ของ shell ไม่ใช่ทั้งหน้า top:0 จึงหมายถึงขอบบนกรอบนั้น */}
@@ -58,7 +85,12 @@ export function renderCatalog(V) {
               flex:0 1 = ย่อได้แต่ห้ามขยาย · min-width กันแคบจนพิมพ์แล้วอ่านไม่ออกบนจอเล็ก */}
           {/* ช่องค้นหามาตรฐานของทั้งเว็บ (thaibox.jsx) — พี่กันตั้งเป็นกฎ 3 ก.ย. 2569
               🚨 ช่องนี้กิน 25% ของแถว ที่เหลือเป็นของตัวกรอง (พี่กันสั่ง 25 ส.ค. 2569) */}
-          <div style={s('display:flex;flex:0 1 25%;min-width:170px')}>
+          {/* 🔴 ตอนแถบถูกตรึงและมีปุ่มล้างค่าโผล่ ช่องค้นหาจะย่อลง (พี่กันสั่งเอง 21 ก.ย. 2569)
+              เหตุผล — ตอนนั้นปุ่มปรับแถวกับปุ่มเพิ่มยาลงมาอยู่แถวเดียวกับช่องค้นหา
+              ชิปทั้งแถวจึงต้องขยับซ้ายให้พ้น ไม่งั้นปุ่มล้างค่าไปมุดอยู่ใต้ปุ่มพวกนั้น */}
+          <div style={s(V.catNarrowSearch
+            ? 'display:flex;flex:0 1 240px;min-width:170px;transition:flex-basis .18s ease'
+            : 'display:flex;flex:0 1 25%;min-width:170px;transition:flex-basis .18s ease')}>
             {renderSearchBox({
               value: V.catSearch,
               onChange: (e) => V.setCatSearch(e.target.value),
@@ -70,14 +102,22 @@ export function renderCatalog(V) {
             })}
           </div>
 
-          <div style={s('flex:1 1 300px;min-width:0;display:flex;gap:6px;flex-wrap:wrap;align-items:center')}>
+          {/* 🔴 ตอนแถบถูกตรึง ต้องกันที่ขวาไว้ให้ปุ่มปรับแถวกับปุ่มเพิ่มยาที่ลอยลงมาทับแถวนี้
+              228 = ความกว้างกลุ่มปุ่มที่วัดจริง 222 บวกช่องไฟ 6 (ไม่ได้เดา)
+              🔴 ช่องค้นหา 240 มาจากการวัด ไม่ใช่ตัวเลขสวย ๆ — ชิปทั้งแถวยาว 767
+                 กว้างกว่านี้แล้วที่เหลือไม่พอ ชิปกับปุ่มล้างจะตกไปบรรทัดที่สอง
+              🚨 ไม่มีที่กันไว้ ชิปกับปุ่มล้างค่าจะมุดเข้าไปอยู่ใต้ปุ่มพวกนั้น */}
+          <div style={s('flex:1 1 300px;min-width:0;display:flex;gap:6px;flex-wrap:wrap;align-items:center;transition:padding-right .18s ease' + (V.catStuck ? ';padding-right:228px' : ''))}>
             {V.catFilters.map((f) => (
               <div key={f.key} {...kb(f.pick)} className={(f.on ? 'hv-bg-e3f' : 'hv-bg-f6') + ' tap'} style={s(f.on ? CHIP_ON : CHIP_OFF)}>{f.label}</div>
             ))}
             {/* ปุ่มล้าง — โผล่เมื่อมีอะไรให้ล้างจริง ล้างทั้งตัวกรองและคำค้นในปุ่มเดียว
                 เดิมล้างเฉพาะตัวกรอง ผู้ใช้ที่ทั้งค้นทั้งกรองต้องกดสองที่ (พี่กันทัก) */}
-            {renderSortClear(V.catSortClear)}
-            {(V.catHasFilter || V.catHasSearch) && (
+            {/* 🔴 หน้านี้ไม่มีปุ่มล้างการเรียงแยกอีกแล้ว (พี่กันถามเอง 21 ก.ย. 2569 ว่ายุบดีไหม)
+                สองปุ่มรวมกันยาวเกินแถว ชิปเลยตกไปบรรทัดที่สอง
+                ปุ่มล้างทั้งหมดล้างการเรียงให้ด้วยแล้ว จึงไม่มีอะไรหายไป
+                🚨 ตัววาดกลาง sortclear.jsx ห้ามแตะ หน้าประวัติกับรายการ Lot ยังใช้อยู่ */}
+            {(V.catHasFilter || V.catHasSearch || V.catHasSort) && (
               <div {...kb(V.catClearAll)} className="hv-bg-red-l tap" title="ล้างคำค้นและตัวกรองทั้งหมด"
                 style={s(CHIP_BASE + ';border:1px solid rgba(194,84,60,.3);background:#fff;color:#c2543c;font:600 12px/1.75 Sarabun,sans-serif')}>
                 ✕ ล้างทั้งหมด
@@ -113,14 +153,15 @@ export function renderCatalog(V) {
 
         {(V.catLoading || V.skelDemo) ? (
           /* คลังยามี 14 คอลัมน์ ใช้ชุดจริง (V.catCols) จะได้กว้างตรงกัน */
-          skelTableTag(V.catCols, 11, { extraCols: ["178px"] })
+          skelTableTag(V.catCols, 11, { extraCols: ["104px"] })
         ) : (
           <div style={s('border:1px solid #eef1ee;border-radius:10px')}>
             <table className="tbl-grid" style={s('width:100%;border-collapse:collapse')}>
               <colgroup>
                 {V.catCols.map((c) => <col key={c.key} style={c.w ? { width: c.w } : undefined} />)}
                 {V.catShowFull && <col style={{ width: '340px' }} />}
-                <col style={{ width: '178px' }} />
+                {/* ความกว้างมาจากคลาส ไม่ใช่ค่าฝังในแท็ก เพราะต้องแคบลงตามระดับความสูงแถว */}
+                <col className="act-col" />
               </colgroup>
               <thead>
                 <tr>
@@ -128,7 +169,7 @@ export function renderCatalog(V) {
                     <th key={c.key} {...(c.sort ? kb(() => V.catSortBy(c.key)) : {})} className={c.sort ? 'hv-teal' : ''} style={sx(TH, Object.assign({}, c.sort ? { cursor: 'pointer' } : null, c.key === 'generic' ? { textAlign: 'left' } : null))}>
                       {c.label}
                       {c.sort && (
-                        <span aria-hidden="true" className="tbl-arrow" style={s('margin-left:3px;opacity:.85;font-size:12px')}>
+                        <span aria-hidden="true" className="tbl-arrow" style={s('margin-left:2px;opacity:.85;font-size:11px')}>
                           {V.catSortKey === c.key ? (V.catSortDir === 'asc' ? '↑' : '↓') : '↑↓'}
                         </span>
                       )}
@@ -142,29 +183,29 @@ export function renderCatalog(V) {
               <tbody>
                 {V.catRows.map((r) => (
                   <tr key={r.id} className="cat-row" style={sx('border-bottom:1px solid #f2f5f3', { background: r.rowBg })}>
-                    <td style={s(TD + ';color:#6f7873;font-size:11.5px')}>{r.id}</td>
+                    <td style={s(TD + ';text-align:center;color:#6f7873;font-size:11.5px')}>{r.id}</td>
                     {/* สีตรงกับที่ใช้ในผลค้นหา — ม่วง ตัวย่อ · ส้ม เปอร์เซ็นต์ · แดงอมชมพู ออกฤทธิ์ · เทล ชื่อการค้า */}
-                    <td style={s(TD + ';color:#6d3b9e;font-weight:600')}>{r.abbrev || '—'}</td>
+                    <td style={s(TD + ';text-align:center;color:#6d3b9e;font-weight:600')}>{r.abbrev || '—'}</td>
                     <td style={s(TD + ';color:#1e2420;font-weight:600')}>
                       {r.generic}
                       {r.hidden && <span style={s('margin-left:6px;font:600 10.5px/1.75 Sarabun,sans-serif;color:#8a6d3b;background:#fbf1e0;border-radius:5px;padding:2px 6px')}>ซ่อนอยู่</span>}
                     </td>
-                    <td style={s(TD + ';color:#2f7d5d;font-weight:600')}>{r.brand || '—'}</td>
+                    <td style={s(TD + ';text-align:center;color:#2f7d5d;font-weight:600')}>{r.brand || '—'}</td>
                     <td style={s(TD)}>{r.strength || '—'}</td>
                     <td style={s(TD)}>{r.unit || '—'}</td>
-                    <td style={s(TD + ';color:#96650f;font-weight:700')}>{r.percent ? r.percent + '%' : '—'}</td>
-                    <td style={s(TD)}>{r.form || '—'}</td>
-                    <td style={s(TD + ';color:#b02a5b;font-weight:700;font-style:italic')}>{r.release || '—'}</td>
-                    <td style={s(TD)}>{r.route || '—'}</td>
-                    <td style={s(TD)}>{r.had ? <span style={s('font:700 10.5px/1.75 Sarabun,sans-serif;color:#c2543c;background:#fbe9e5;border-radius:5px;padding:2px 7px')}>HAD</span> : ''}</td>
-                    <td style={s(TD)}>{r.preg || '—'}</td>
-                    <td style={s(TD)}>{r.renal ? <span style={s('font:700 10.5px/1.75 Sarabun,sans-serif;color:#8a5a00;background:#fbf1e0;border-radius:5px;padding:2px 7px')}>ไต</span> : '—'}</td>
+                    <td style={s(TD + ';text-align:center;color:#96650f;font-weight:700')}>{r.percent ? r.percent + '%' : '—'}</td>
+                    <td style={s(TD + ';text-align:center')}>{r.form || '—'}</td>
+                    <td style={s(TD + ';text-align:center;color:#b02a5b;font-weight:700;font-style:italic')}>{r.release || '—'}</td>
+                    <td style={s(TD + ';text-align:center')}>{r.route || '—'}</td>
+                    <td style={s(TD + ';text-align:center')}>{r.had ? <span style={s('font:700 10.5px/1.75 Sarabun,sans-serif;color:#c2543c;background:#fbe9e5;border-radius:5px;padding:2px 7px')}>HAD</span> : ''}</td>
+                    <td style={s(TD + ';text-align:center')}>{r.preg || '—'}</td>
+                    <td style={s(TD + ';text-align:center')}>{r.renal ? <span style={s('font:700 10.5px/1.75 Sarabun,sans-serif;color:#8a5a00;background:#fbf1e0;border-radius:5px;padding:2px 7px')}>Renal</span> : '—'}</td>
                     {/* ราคาต่อหน่วย — ของเว็บนี้เอง (mr_drug_price) ไม่ใช่ของกลางเหมือนคอลัมน์อื่น
                         ยาที่ยังไม่ใส่ราคาโชว์ป้ายเตือน ไม่ใช่ 0.00 กันเข้าใจผิดว่าราคาศูนย์บาทจริง */}
                     <td style={s(TD + ';text-align:right;font-variant-numeric:tabular-nums')}>
                       {r.priceLabel
                         ? <span style={s('color:#1e2420;font-weight:600')}>{r.priceLabel}</span>
-                        : <span style={s('font:600 10.5px/1.75 Sarabun,sans-serif;color:#c2543c;background:#fbe9e5;border-radius:5px;padding:2px 7px;white-space:nowrap')}>ยังไม่ใส่ราคา</span>}
+                        : <span style={s('font:600 10.5px/1.75 Sarabun,sans-serif;color:#c2543c;background:#fbe9e5;border-radius:5px;padding:2px 7px;display:inline-block')}>ยังไม่ใส่ราคา</span>}
                     </td>
                     {V.catShowFull && (
                       <td style={s(TD + ';background:#f7faf8;overflow-wrap:anywhere')}>
@@ -177,10 +218,37 @@ export function renderCatalog(V) {
                         {r.brand && <span style={s('color:#2f7d5d;font-weight:600;margin-left:6px;white-space:nowrap')}>({r.brand})</span>}
                       </td>
                     )}
-                    <td style={s(TD + ';white-space:nowrap')}>
-                      <span {...kb(r.edit)} className="hv-bg-f6 tap" style={s(BTN + ';margin-right:5px')}>แก้ไข</span>
-                      <span {...kb(r.log)} className="hv-bg-f6 tap" style={s(BTN + ';margin-right:5px;color:#6b746e;border-color:#e3e6e1')}>ประวัติ</span>
-                      <span {...kb(r.hide)} className="hv-cream tap" style={s('border:1px solid #f0d8ae;background:#fef7ec;color:#b45309;font:600 11.5px/1.75 Sarabun,sans-serif;padding:4px 9px;border-radius:7px;cursor:pointer')}>{r.hideLabel}</span>
+                    {/* ปุ่มท้ายแถวเป็นไอคอน — พี่กันสั่งเอง 21 ก.ย. 2569
+                        "ทำเป็น icon ละกัน แต่เอาเมาส์ชี้ถึงขึ้นว่ามันคือปุ่มอะไร"
+                        ⚠️ กฎเดิมข้อ 3.52 เขียนว่าห้ามย่อปุ่มเป็นไอคอน — พี่กันเปลี่ยนกฎเอง
+                        🚨 ทุกปุ่มต้องมี title กับ aria-label เสมอ ไม่งั้นทั้งคนและโปรแกรมอ่านจอไม่รู้ว่าปุ่มอะไร
+                        🚨 ปุ่มกว้าง 30 ห่างกัน 6 = พื้นที่กดไม่ทับกัน (กฎข้อ 3.55) */}
+                    <td style={s(TD + ';white-space:nowrap;text-align:center;padding-left:1px;padding-right:1px')}>
+                      <span {...kb(r.edit)} title="แก้ไขข้อมูลยา" aria-label="แก้ไขข้อมูลยา" className="icon-edit" style={s(ICON_BTN + ';margin-right:6px')}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
+                        </svg>
+                      </span>
+                      <span {...kb(r.log)} title="ดูประวัติการแก้ไขยาตัวนี้" aria-label="ดูประวัติการแก้ไขยาตัวนี้" className="icon-log" style={s(ICON_BTN + ';margin-right:6px;color:#6b746e;border-color:#e3e6e1')}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M3 3v5h5" /><path d="M3.05 13A9 9 0 106 5.3L3 8" /><path d="M12 7v5l3.5 2" />
+                        </svg>
+                      </span>
+                      <span {...kb(r.hide)} title={r.hideLabel === 'ซ่อน' ? 'ซ่อนยาออกจากช่องค้นหาของทุกเว็บ' : 'เอายากลับมาแสดงในช่องค้นหา'} aria-label={r.hideLabel === 'ซ่อน' ? 'ซ่อนยาออกจากช่องค้นหาของทุกเว็บ' : 'เอายากลับมาแสดงในช่องค้นหา'} className="icon-hide" style={s(ICON_BTN + ';border:1px solid #f0d8ae;background:#fef7ec;color:#b45309')}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          {r.hideLabel === 'ซ่อน' ? (
+                            <>
+                              <path d="M17.94 17.94A10.07 10.07 0 0112 20C5 20 1 12 1 12a18.45 18.45 0 015.06-5.94" />
+                              <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                              <path d="M14.12 14.12A3 3 0 119.88 9.88" /><path d="M1 1l22 22" />
+                            </>
+                          ) : (
+                            <>
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                            </>
+                          )}
+                        </svg>
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -203,11 +271,11 @@ export function renderCatalog(V) {
 
       </div>
 
-      {/* ปุ่มลอยกดทีเดียวขึ้นบนสุด — ตารางยาว 417 แถว เลื่อนกลับเองไกลมาก */}
-      <div {...kb(V.catToTop)} className="hv-teal tap" title="ขึ้นบนสุด"
-        style={s('position:fixed;right:24px;bottom:24px;z-index:15;width:44px;height:44px;border-radius:50%;background:#2f7d5d;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(30,36,32,.25);font:700 18px Sarabun,sans-serif')}>
-        ↑
-      </div>
+      {/* 🔴 ปุ่มขึ้นบนสุด/ลงล่างสุด ใช้ตัวกลางตัวเดียวกับหน้าประวัติ รายการ Lot และหน้าสรุป
+          เดิมหน้านี้วาดปุ่มของตัวเองไว้ตัวเดียว ไม่มีปุ่มลงล่างสุด ไม่มีระบบจางตอนหยุดเลื่อน
+          ไม่มีชื่อให้โปรแกรมอ่านจอ และกล่องครอบไม่ได้เป็น pointer-events:none
+          จึงกลืนการกดของปุ่มท้ายแถวที่อยู่ใต้มัน (เจ้าของงานทักเอง 21 ก.ย. 2569) */}
+      {renderScrollBtns(V)}
 
       {V.catEdit && renderCatEdit(V)}
       {V.catHideTarget && renderCatHide(V)}
@@ -221,16 +289,21 @@ export function renderCatalog(V) {
 // กดพื้นหลังไม่ปิด · แก้ค้างแล้วกดยกเลิกจะถามก่อน (กฎเดียวกับป๊อปอื่นในเว็บ)
 function renderCatEdit(V) {
   const d = V.catEdit;
+  /* 🔴 ช่องที่กรอกแล้ว ชื่อหัวข้อกับกรอบเปลี่ยนเป็นสีธีมเว็บ (พี่กันสั่ง 21 ก.ย. 2569)
+     กวาดตาทีเดียวรู้ว่ายาตัวนี้ยังขาดข้อมูลช่องไหน ไม่ต้องอ่านทีละช่อง */
+  const มีค่า = (v) => String(v === undefined || v === null ? '' : v).trim() !== '';
+  const LAB_OF = (v) => sx(LAB, มีค่า(v) ? { color: '#2f7d5d' } : null);
+  const FLD_OF = (v) => sx(FLD, มีค่า(v) ? { borderColor: '#2f7d5d' } : null);
   const fld = (label, key, ph) => (
     <div style={s('flex:1;min-width:120px')}>
-      <label style={s(LAB)}>{label}</label>
-      <input value={d[key] || ''} onChange={(e) => V.setCatField(key, e.target.value)} placeholder={ph || ''} style={s(FLD)} />
+      <label style={LAB_OF(d[key])}>{label}</label>
+      <input value={d[key] || ''} onChange={(e) => V.setCatField(key, e.target.value)} placeholder={ph || ''} style={FLD_OF(d[key])} />
     </div>
   );
   const sel = (label, key, opts) => (
     <div style={s('flex:1;min-width:120px')}>
-      <label style={s(LAB)}>{label}</label>
-      <select value={d[key] || ''} onChange={(e) => V.setCatField(key, e.target.value)} style={s(FLD)}>
+      <label style={LAB_OF(d[key])}>{label}</label>
+      <select value={d[key] || ''} onChange={(e) => V.setCatField(key, e.target.value)} style={FLD_OF(d[key])}>
         <option value="">— เลือก —</option>
         {opts.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -243,7 +316,9 @@ function renderCatEdit(V) {
   );
 
   return (
-    <div style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:32;display:flex;align-items:center;justify-content:center;padding:18px')}>
+    /* 🔴🔴 ต้องมี role=dialog เสมอ — ตัวห้ามฉากหลังเลื่อน (_blockBgScroll ใน MedReturnApp)
+       ป๊อปนี้เคยไม่มีป้าย จึงเลื่อนดูข้างในไม่ได้เลยตั้งแต่ 1 ก.ย. 2569 (พี่กันเจอเอง 21 ก.ย. 2569) */
+    <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:32;display:flex;align-items:center;justify-content:center;padding:18px')}>
       <div style={s('background:#fff;border-radius:16px;width:560px;max-width:100%;max-height:90vh;overflow:auto;box-shadow:0 24px 60px rgba(30,36,32,.3)')}>
         <div style={s('background:#2f7d5d;color:#fff;padding:14px 18px;font:700 16px Sarabun,sans-serif')}>
           {V.catEditNew ? 'เพิ่มยาเข้าคลัง' : 'แก้ไขยา'}
@@ -253,23 +328,28 @@ function renderCatEdit(V) {
             ยาตัวนี้ใช้ร่วมกันทุกเว็บของห้องยา แก้แล้วเว็บอื่นเปลี่ยนตามทันที
           </div>
           <div>
-            <label style={s(LAB)}>ชื่อยา (generic)</label>
-            <input value={d.generic || ''} onChange={(e) => V.setCatField('generic', e.target.value)} style={s(FLD)} />
+            {/* 🔴 ดอกจันแดง = ช่องบังคับ ต้องมีเหมือน ME-DRP (พี่กันทัก 21 ก.ย. 2569) */}
+            <label style={LAB_OF(d.generic)}>ชื่อยา (generic) <span style={s('color:#c2543c')}>*</span></label>
+            <input value={d.generic || ''} onChange={(e) => V.setCatField('generic', e.target.value)} style={FLD_OF(d.generic)} />
           </div>
           <div style={s('display:flex;gap:9px;flex-wrap:wrap')}>
-            {fld('ความแรง', 'strength', '500')}
+            {fld('ความแรง', 'strength', 'เช่น 500')}
             {sel('หน่วย', 'unit', V.catUnitOpts)}
-            {fld('เปอร์เซ็นต์', 'percent', '1')}
+            {fld('เปอร์เซ็นต์', 'percent', 'เช่น 1')}
           </div>
           <div style={s('display:flex;gap:9px;flex-wrap:wrap')}>
             {sel('รูปแบบ', 'form', V.catFormOpts)}
             {sel('ทางให้ยา', 'route', V.catRouteOpts)}
-            {fld('การออกฤทธิ์', 'release', 'ER, IR')}
+            {sel('การออกฤทธิ์', 'release', V.catReleaseOpts)}
           </div>
           <div style={s('display:flex;gap:9px;flex-wrap:wrap')}>
-            {fld('ชื่อการค้า', 'brand')}
-            {fld('ตัวย่อ', 'abbrev', 'CPM')}
-            {fld('Preg', 'preg', 'C')}
+            {fld('ชื่อการค้า', 'brand', 'เช่น Augmentin')}
+            {/* 🔴 ข้อความจางต้องบอกว่าเป็นตัวอย่าง ไม่งั้นดูเหมือนค่าจริงของยาตัวนั้น
+                (พี่กันทัก 21 ก.ย. 2569 เห็น CPM ในช่องตัวย่อของ Abacavir) */}
+            {fld('ตัวย่อ', 'abbrev', 'เช่น CPM')}
+            {/* 🔴 Preg เป็นช่องเลือก ไม่ใช่ช่องพิมพ์ (พี่กันทัก 21 ก.ย. 2569)
+                รายการ A B C D X ชุดเดียวกับ ME-DRP ห้ามเพิ่มลดเอง */}
+            {sel('Preg', 'preg', ['A', 'B', 'C', 'D', 'X'])}
           </div>
           <div style={s('display:flex;gap:9px;flex-wrap:wrap')}>
             {flag('ยาความเสี่ยงสูง (HAD)', 'had')}
@@ -282,29 +362,34 @@ function renderCatEdit(V) {
           <div style={s('border-top:1px dashed #e3e6e1;padding-top:11px;display:flex;flex-direction:column;gap:11px')}>
             <div style={s('display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end')}>
               <div style={s('flex:1 1 150px;min-width:0')}>
-                <label style={s(LAB)}>ราคาต่อหน่วย (บาท)</label>
+                <label style={LAB_OF(d.unit_price)}>ราคาต่อหน่วย (บาท)</label>
                 <input value={d.unit_price == null ? '' : d.unit_price} inputMode="decimal" placeholder="0.00"
                   onChange={(e) => V.setCatField('unit_price', e.target.value.replace(/[^0-9.]/g, ''))}
-                  style={s(FLD + ';text-align:right;font-variant-numeric:tabular-nums')} />
+                  style={sx(FLD + ';text-align:right;font-variant-numeric:tabular-nums', มีค่า(d.unit_price) ? { borderColor: '#2f7d5d' } : null)} />
               </div>
               <div style={s('flex:1 1 150px;min-width:0')}>
-                <label style={s(LAB)}>หน่วยนับ</label>
-                <input value={d.unit_th || ''} placeholder={V.catDefaultUnit || 'เม็ด'}
-                  onChange={(e) => V.setCatField('unit_th', e.target.value)} style={s(FLD)} />
+                {/* 🔴 ช่องนี้ถือว่ามีค่าเสมอ เพราะถึงไม่ได้กรอกเอง ระบบก็ใช้หน่วยตามรูปแบบยาให้แล้ว
+                    หัวข้อกับกรอบจึงต้องเป็นสีธีมตามที่ตาเห็น ไม่ใช่เทาเหมือนช่องที่ยังว่าง */}
+                <label style={LAB_OF(d.unit_th || V.catDefaultUnit)}>หน่วยนับ</label>
+                <select value={d.unit_th || ''} onChange={(e) => V.setCatField('unit_th', e.target.value)} style={FLD_OF(d.unit_th || V.catDefaultUnit)}>
+                  <option value="">{V.catDefaultUnit || 'เม็ด'}</option>
+                  {/* 🔴 ตัดหน่วยที่ซ้ำกับตัวแรกออก ไม่งั้นเห็น เม็ด สองบรรทัดติดกัน ดูเหมือนระบบพัง */}
+                  {V.catUnitThOpts.filter((u) => u !== (V.catDefaultUnit || 'เม็ด')).map((u) => <option key={u} value={u}>{u}</option>)}
+                </select>
               </div>
             </div>
 
             <div style={s('display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end')}>
               <div style={s('flex:1 1 150px;min-width:0')}>
-                <label style={s(LAB)}>สีเม็ดยา</label>
+                <label style={LAB_OF(d.pill_color)}>สีเม็ดยา</label>
                 <input value={d.pill_color || ''} placeholder="ส้ม · น้ำเงิน · ชมพู"
-                  onChange={(e) => V.setCatField('pill_color', e.target.value)} style={s(FLD)} />
+                  onChange={(e) => V.setCatField('pill_color', e.target.value)} style={FLD_OF(d.pill_color)} />
               </div>
               <div style={s('flex:1 1 150px;min-width:0')}>
-                <label style={s(LAB)}>รหัสสี</label>
+                <label style={LAB_OF(d.pill_color_hex)}>รหัสสี</label>
                 <div style={s('display:flex;gap:8px;align-items:center')}>
                   <input value={d.pill_color_hex || ''} placeholder={V.catPillHint || 'เว้นว่างได้'}
-                    onChange={(e) => V.setCatField('pill_color_hex', e.target.value)} style={s(FLD)} />
+                    onChange={(e) => V.setCatField('pill_color_hex', e.target.value)} style={FLD_OF(d.pill_color_hex)} />
                   {V.catPillPreview && (
                     <span title="สีที่จะเห็นบนหน้าจอ" style={sx('width:26px;height:26px;border-radius:7px;flex:none;border:1px solid rgba(30,36,32,.18)', { background: V.catPillPreview })} />
                   )}
@@ -316,15 +401,16 @@ function renderCatEdit(V) {
             </div>
           </div>
         </div>
-        <div style={s('border-top:1px solid #eef1ee;padding:13px 18px;display:flex;gap:9px;justify-content:flex-end')}>
-          <div {...kb(V.askCloseCatEdit)} className="hv-bg-f6 tap" style={s('border:1px solid #dfe5e1;background:#fff;color:#6b746e;font:600 13px/1.75 Sarabun,sans-serif;padding:9px 18px;border-radius:9px;cursor:pointer')}>ยกเลิก</div>
-          <div {...kb(V.saveCatEdit)} className="hv-teal tap" style={sx('color:#fff;font:600 13px/1.75 Sarabun,sans-serif;padding:9px 20px;border-radius:9px;cursor:pointer', { background: V.catBusy ? '#6f7873' : '#2f7d5d' })}>
+        {/* 🔴 ปุ่มท้ายป๊อปแบ่งครึ่งเท่ากัน ทรงเดียวกับ ME-DRP (พี่กันเทียบเอง 21 ก.ย. 2569) */}
+        <div style={s('position:sticky;bottom:0;background:#fff;border-top:1px solid #eef1ee;padding:13px 18px;display:flex;gap:10px;border-radius:0 0 16px 16px')}>
+          <div {...kb(V.askCloseCatEdit)} className="hv-bg-f6 tap" style={s('flex:1;text-align:center;border:1.5px solid #dfe5e1;background:#fff;color:#2f7d5d;font:700 14px/1.75 Sarabun,sans-serif;padding:12px;border-radius:11px;cursor:pointer')}>ยกเลิก</div>
+          <div {...kb(V.saveCatEdit)} className="hv-teal tap" style={sx('flex:1;text-align:center;color:#fff;font:700 14px/1.75 Sarabun,sans-serif;padding:12px;border-radius:11px;cursor:pointer', { background: V.catBusy ? '#6f7873' : '#2f7d5d' })}>
             {V.catBusy ? 'กำลังบันทึก' : 'บันทึก'}
           </div>
         </div>
 
         {V.catConfirmClose && (
-          <div style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:34;display:flex;align-items:center;justify-content:center;padding:18px')}>
+          <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:34;display:flex;align-items:center;justify-content:center;padding:18px')}>
             <div style={s('background:#fff;border-radius:14px;width:340px;max-width:100%;padding:18px')}>
               <div style={s('font:700 15px Sarabun,sans-serif;color:#1e2420;margin-bottom:7px')}>ปิดโดยไม่บันทึกการแก้ไข</div>
               <div style={s('font:400 13px/1.75 Sarabun,sans-serif;color:#6b746e;margin-bottom:16px')}>สิ่งที่แก้ไว้จะหายไปทั้งหมด</div>
@@ -343,7 +429,8 @@ function renderCatEdit(V) {
 // ── ป๊อปยืนยันซ่อน ───────────────────────────────────────────────────────────
 function renderCatHide(V) {
   return (
-    <div style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:32;display:flex;align-items:center;justify-content:center;padding:18px')}>
+    /* 🔴 role=dialog = ตัวห้ามฉากหลังเลื่อนยอมให้ล้อเมาส์ทำงานในกล่องนี้ ขาดไปแล้วเลื่อนดูข้างในไม่ได้ */
+    <div role="dialog" aria-modal="true" style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:32;display:flex;align-items:center;justify-content:center;padding:18px')}>
       <div style={s('background:#fff;border-radius:14px;width:400px;max-width:100%;padding:18px')}>
         <div style={s('font:700 15px Sarabun,sans-serif;color:#1e2420;margin-bottom:8px')}>
           {V.catHideIsBack ? 'เอายากลับมาแสดง' : 'ซ่อนยาออกจากช่องค้นหา'}
@@ -368,7 +455,7 @@ function renderCatHide(V) {
 // ── ป๊อปประวัติการแก้ ─────────────────────────────────────────────────────────
 function renderCatLog(V) {
   return (
-    <div {...kb(V.closeCatLog)} style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:32;display:flex;align-items:center;justify-content:center;padding:18px')}>
+    <div {...kb(V.closeCatLog)} role="dialog" aria-modal="true" style={s('position:fixed;inset:0;background:rgba(30,36,32,.42);z-index:32;display:flex;align-items:center;justify-content:center;padding:18px')}>
       <div onClick={(e) => e.stopPropagation()} style={s('background:#fff;border-radius:16px;width:540px;max-width:100%;max-height:84vh;overflow:auto;box-shadow:0 24px 60px rgba(30,36,32,.3)')}>
         <div style={s('background:#2f7d5d;color:#fff;padding:14px 18px')}>
           <div style={s('font:700 15px Sarabun,sans-serif')}>ประวัติการแก้ไข</div>

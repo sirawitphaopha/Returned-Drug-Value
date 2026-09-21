@@ -66,7 +66,10 @@ a{color:#2f7d5d}a:hover{color:#24614a}
 select{-webkit-appearance:none;-moz-appearance:none;appearance:none;
   background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2715%27 height=%2715%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23414a44%27 stroke-width=%272.2%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M6 9.5 12 15.5 18 9.5%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:34px}
 
-input{font-family:inherit}input:focus{outline:none}::placeholder{color:#6b746e;opacity:1}
+input{font-family:inherit}input:focus{outline:none}/* 🔴 ข้อความจางต้องจางจริง ห้ามเข้มใกล้ตัวหนังสือที่กรอกไว้
+   ของเดิม #6b746e เข้มเกือบเท่าค่าจริง อ่านผ่าน ๆ แล้วนึกว่ายาตัวนั้นมีข้อมูลอยู่แล้ว
+   อันตรายมากในช่องข้อมูลยา (พี่กันทัก 21 ก.ย. 2569 เห็นตัวย่อ CPM ในช่องของ Abacavir) */
+::placeholder{color:#b3bab5;opacity:1}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(30,36,32,.18);border-radius:9px}
 
 /* วงกลมหมุนตอนรอวัดความกว้างจอ (มอคอัปไม่มี เพราะเป็นไฟล์เดียวไม่มีฝั่งเซิร์ฟเวอร์) */
@@ -811,15 +814,21 @@ nextjs-portal {
    (เจอเองตอนเทส 10 ก.ย. 2569 — คลาสเปลี่ยนถูก แต่ความสูงไม่ขยับเลย) */
 
 /* แถวโปร่ง — 43 จุด (ค่าตั้งต้น) */
-.rh-roomy .tbl tbody td { padding-top: 6px; padding-bottom: 6px }
+.rh-roomy .tbl tbody td,
+.rh-roomy .tbl-grid tbody td { padding-top: 6px !important; padding-bottom: 6px !important }
 .rh-roomy .tbl tbody .rh-btn { padding-top: 5px !important; padding-bottom: 5px !important }
 
 /* แถวแน่น — 34 จุด */
-.rh-tight .tbl tbody td { padding-top: 4px; padding-bottom: 4px }
+.rh-tight .tbl tbody td,
+.rh-tight .tbl-grid tbody td { padding-top: 4px !important; padding-bottom: 4px !important }
 .rh-tight .tbl tbody .rh-btn { padding-top: 3px !important; padding-bottom: 3px !important; font-size: 11px !important }
 
 /* แถวแน่นมาก — 30 จุด · ระดับเดียวที่ตัวอักษรเล็กลง */
-.rh-dense .tbl tbody td { padding-top: 2px; padding-bottom: 2px; font-size: 13px }
+.rh-dense .tbl tbody td,
+.rh-dense .tbl-grid tbody td { padding-top: 2px !important; padding-bottom: 2px !important; font-size: 12px !important }
+/* 🔴 ปุ่มไอคอนท้ายแถวของหน้าคลังยาเป็นตัวกำหนดความสูงแถวจริง ต้องย่อตามระดับด้วย */
+.rh-tight .tbl-grid tbody span[aria-label] { height: 26px !important; width: 26px !important }
+.rh-dense .tbl-grid tbody span[aria-label] { height: 22px !important; width: 22px !important }
 .rh-dense .tbl tbody .rh-btn { padding-top: 1px !important; padding-bottom: 1px !important; font-size: 11px !important }
 
 /* ── ระหว่างเลื่อน ปิดการไล่สีตอนเอาเมาส์ชี้ (พี่กันแจ้ง 10 ก.ย. 2569) ─────────
@@ -836,3 +845,19 @@ nextjs-portal {
 .is-scrolling .tbl tbody td,
 .is-scrolling .tbl-grid tbody tr,
 .is-scrolling .tbl-grid tbody td { transition: none !important }
+
+/* ── ปุ่มไอคอนท้ายแถวหน้าคลังยา (พี่กันสั่งเปลี่ยนเป็นไอคอน 21 ก.ย. 2569) ─────────
+   🔴🔴 ต้องเข้มกว่าสีที่ "แถว" ทาให้ตอนเอาเมาส์ชี้ทั้งแถว
+      ไม่งั้นชี้ที่ปุ่มแล้วไม่มีอะไรเปลี่ยนเลย เพราะแถวทาสีนั้นไปก่อนแล้ว
+      (พี่กันจับได้เอง 21 ก.ย. 2569 — สกิลปุ่มข้อ 1 กับข้อ 4)
+   🚨 เขียน border เต็มประโยค ไม่ใช่ border-color เดี่ยว (สกิลปุ่ม กับดักข้อ 6) */
+.cat-row:hover .icon-edit:hover, .icon-edit:hover { background:#cfe6da !important; border:1px solid #2f7d5d !important; color:#24614a !important }
+.cat-row:hover .icon-log:hover, .icon-log:hover { background:#dce7e1 !important; border:1px solid #6b8f7f !important; color:#2f7d5d !important }
+.cat-row:hover .icon-hide:hover, .icon-hide:hover { background:#f7e2b4 !important; border:1px solid #d9a441 !important; color:#8a5a00 !important }
+
+/* คอลัมน์ปุ่มท้ายแถวของหน้าคลังยา — กว้างพอดีปุ่มในแต่ละระดับความสูงแถว
+   ปุ่มไอคอน 3 อัน กว้าง 30/26/22 ตามระดับ ช่องไฟ 6 สองช่อง ขอบข้างละ 1
+   🚨 ที่ว่างที่ได้คืนตอนแถวแน่น ถูกกระจายให้คอลัมน์อื่นเองโดยตารางที่ล็อกความกว้าง */
+.tbl-grid col.act-col { width: 104px }
+.rh-tight .tbl-grid col.act-col { width: 92px }
+.rh-dense .tbl-grid col.act-col { width: 80px }

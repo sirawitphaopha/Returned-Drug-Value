@@ -742,9 +742,9 @@ export const Z = {
   toast: 95      // ข้อความเด้ง — เหนือทุกอย่าง
 };
 
-export const APP_VERSION = '0.20.1.0';
+export const APP_VERSION = '0.21.0.0';
 export const APP_FIRST_RELEASE = '4 สิงหาคม 2569';
-export const APP_LAST_UPDATE = '10 กันยายน 2569';
+export const APP_LAST_UPDATE = '21 กันยายน 2569';
 
 // ชื่อผู้บันทึกแบบสั้น — คำนำหน้า + ชื่อ ไม่เอานามสกุล
 // พี่กันสั่ง 4 ก.ย. 2569: "เอาแค่ตำแหน่ง และชื่อ ไม่เอานามสกุล"

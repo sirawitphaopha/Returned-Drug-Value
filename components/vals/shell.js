@@ -160,7 +160,9 @@ export function shellVals(app, d) {
   //
   // 🚨 ต้องประกอบหลัง V เสร็จ เพราะอ่าน V.anyModalOpen ต่อ
   //    มีหน้าต่างซ้อนเปิดอยู่ = ซ่อนปุ่มลอย ไม่งั้นลอยอยู่ข้างฉากหลังที่ถูกล็อกไว้
-  V.jumpOn = (st.screen === 'history' || st.screen === 'summary' || st.screen === 'lots')
+  // 🔴 หน้าคลังยาต้องมีด้วย — ตารางยาว 419 แถว เลื่อนกลับเองไกลมาก
+  //    เดิมหน้านั้นวาดปุ่มขึ้นบนสุดของตัวเองไว้ต่างหาก ตอนนี้ยกมาใช้ตัวกลางตัวเดียวกันแล้ว (21 ก.ย. 2569)
+  V.jumpOn = (st.screen === 'history' || st.screen === 'summary' || st.screen === 'lots' || st.screen === 'catalog')
     && !st.settingsOpen && !V.anyModalOpen && st.jumpPos !== 'none';
   // ปุ่มที่ชี้ไปยังที่ที่ยืนอยู่แล้วต้องหายไป ไม่ใช่กดแล้วเงียบ
   V.jumpUp = st.jumpPos === 'mid' || st.jumpPos === 'bottom';

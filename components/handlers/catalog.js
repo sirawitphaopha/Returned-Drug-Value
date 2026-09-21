@@ -82,7 +82,9 @@ export function catalogActions(app) {
   };
   app.clearCatFilters = () => app.setState(Object.assign({ catFilters: [] }, RESET));
   // ล้างทั้งคำค้นและตัวกรองในทีเดียว — คนที่ทั้งค้นทั้งกรองไม่ต้องไล่กดสองที่
-  app.clearCatAll = () => app.setState(Object.assign({ catFilters: [], catSearch: '' }, RESET));
+  // 🔴 ล้างการเรียงไปด้วย — ปุ่มชื่อ ล้างทั้งหมด ต้องล้างทุกอย่างที่ตั้งไว้จริง ๆ
+  //    และทำให้ไม่ต้องมีปุ่มล้างการเรียงโผล่ซ้อนมาอีกปุ่ม (พี่กันทัก 21 ก.ย. 2569)
+  app.clearCatAll = () => app.setState(Object.assign({ catFilters: [], catSearch: '', catSort: null }, RESET));
 
   // กดหัวคอลัมน์เพื่อเรียง · กดซ้ำสลับขึ้น/ลง
   // ล้างการเรียง กลับไปเรียงตามรหัสยาเหมือนตอนเปิดหน้า (พี่กันสั่ง 4 ก.ย. 2569)

@@ -212,6 +212,8 @@ export default class MedReturnApp extends React.Component {
       //   jumpPos   ตอนนี้เลื่อนอยู่ตรงไหน — 'none' คือเนื้อหาสั้นจนไม่ต้องเลื่อน
       //   jumpAwake เพิ่งเลื่อนภายใน 1.5 วินาทีไหม (ตื่น = ปุ่มชัด · หลับ = ปุ่มจาง)
       jumpPos: 'none',
+      //   catStuck  แถบค้นหาหน้าคลังยาติดขอบบนแล้วหรือยัง (ใช้ย่อช่องค้นหา)
+      catStuck: false,
       jumpAwake: false,
       // คอลัมน์ HN ในหน้าประวัติ — ค่าตั้งต้นคือซ่อน (พี่กันสั่ง 10 ก.ย. 2569)
       // ค่าจริงอ่านจากที่เก็บถาวรตอน componentDidMount
@@ -308,10 +310,28 @@ export default class MedReturnApp extends React.Component {
     // หัวตารางต้องตรึงพอดีใต้แถบค้นหาที่ตรึงอยู่ก่อนแล้ว
     // ตั้งเลขตายตัวไม่ได้ เพราะชิปตัวกรองขึ้นบรรทัดใหม่เองเมื่อจอแคบ (flex-wrap)
     this._catHeadRO = null;
+    this._catHeadEl = null;
+    // กล่องปุ่มลอย (ปรับแถว + เพิ่มยา) ของหน้าคลังยา — ใช้วัดว่ามันลงมาทับแถบค้นหาหรือยัง
+    this._catFloatEl = null;
+    this.catFloatRef = (el) => { this._catFloatEl = el; };
+    // จุดที่เลื่อนถึงแล้วกลุ่มปุ่มลอยเริ่มทับแถบค้นหา — เป็นตัวเลขคงที่จนกว่าผังหน้าจะเปลี่ยน
+    // 🚨 ใช้ offsetTop ไล่ขึ้นไป ไม่ใช้ตำแหน่งบนจอ เพราะแถบเป็นของที่ตรึงตัวเองได้
+    //    พอมันตรึงอยู่ ตำแหน่งบนจอจะค้างที่ศูนย์ แล้วจะได้จุดตัดผิดทันที
+    this._catStuckAt = null;
+    this._calcCatStuckAt = () => {
+      const sc = this.scrollRef && this.scrollRef.current;
+      const el = this._catHeadEl;
+      if (!sc || !el) { this._catStuckAt = null; return; }
+      let y = 0, n = el;
+      while (n && n !== sc) { y += n.offsetTop; n = n.offsetParent; }
+      this._catStuckAt = Math.max(0, y - 15);
+    };
     this.catHeadRef = (el) => {
+      this._catHeadEl = el;
+      this._catStuckAt = null;
       if (this._catHeadRO) { this._catHeadRO.disconnect(); this._catHeadRO = null; }
       if (!el || typeof ResizeObserver === 'undefined') return;
-      const write = () => document.documentElement.style.setProperty('--cathead', el.offsetHeight + 'px');
+      const write = () => { document.documentElement.style.setProperty('--cathead', el.offsetHeight + 'px'); this._calcCatStuckAt(); };
       write();
       this._catHeadRO = new ResizeObserver(write);
       this._catHeadRO.observe(el);
@@ -1001,9 +1021,19 @@ export default class MedReturnApp extends React.Component {
       // เผื่อ 8 จุด เพราะบางเครื่องเลื่อนสุดแล้วยังเหลือเศษทศนิยมค้างอยู่
       const pos = room <= 24 ? 'none'
         : (sc.scrollTop <= 8 ? 'top' : (sc.scrollTop >= room - 8 ? 'bottom' : 'mid'));
+      // 🔴 แถบค้นหาหน้าคลังยาติดขอบบนแล้วหรือยัง
+      //    ตอนติดขอบ ปุ่มปรับแถวกับปุ่มเพิ่มยาจะลงมาอยู่แถวเดียวกับช่องค้นหา
+      //    ถ้าไม่ย่อช่องค้นหาตอนนั้น ปุ่มล้างค่าท้ายแถวชิปจะมุดอยู่ใต้ปุ่มพวกนั้น
+      //    (พี่กันเจอเอง 21 ก.ย. 2569 แล้วสั่งวิธีแก้มาเองว่าให้ย่อช่องค้นหา)
+      // 🔴 ห้ามวัดตำแหน่งจริงของกล่องตรงนี้ — ตรงนี้ทำงานทุกเฟรมที่นิ้วเลื่อน
+      //    การอ่านตำแหน่งบังคับให้เบราว์เซอร์คำนวณผังหน้าใหม่ทั้งหน้า
+      //    หน้าคลังยามีสี่ร้อยกว่าแถว จึงกระตุกทันที (พี่กันเจอเอง 21 ก.ย. 2569)
+      //    จุดตัดถูกคำนวณไว้ล่วงหน้าแล้วใน _calcCatStuckAt ตรงนี้แค่เทียบตัวเลข
+      if (this._catStuckAt == null) this._calcCatStuckAt();
+      const ติดขอบ = this._catStuckAt != null && sc.scrollTop >= this._catStuckAt;
       const st = this.state;
-      if (pos !== st.jumpPos || (!!ตื่น && !st.jumpAwake)) {
-        this.setState({ jumpPos: pos, jumpAwake: ตื่น ? true : st.jumpAwake });
+      if (pos !== st.jumpPos || ติดขอบ !== st.catStuck || (!!ตื่น && !st.jumpAwake)) {
+        this.setState({ jumpPos: pos, catStuck: ติดขอบ, jumpAwake: ตื่น ? true : st.jumpAwake });
       }
       if (!ตื่น) return;
       clearTimeout(this._jumpSleep);
