@@ -40,9 +40,14 @@ const C = (dark) => ({
 // r = ผลจาก vals/record.js → nameParts() ผสมกับข้อมูลไฮไลต์คำค้น
 // opts.size = ขนาดตัวอักษร (หน้าค้นหาย่อลงเมื่อชื่อยาว) · ไม่ส่งมาใช้ 13.5px
 // opts.dark = โหมดมืด (หน้าสรุปเป็นหน้าเดียวที่มี)
+// opts.breaks = ใส่จุดตัดบรรทัดระหว่างชิ้น (ตอนนี้ใช้ที่หัวป๊อปใส่จำนวนที่เดียว)
+//   ชิ้นต่าง ๆ เว้นระยะด้วย margin ไม่มีช่องว่างจริงคั่น เบราว์เซอร์จึงมองว่าชิ้นที่ติดกันเป็นคำเดียว
+//   เช่น "dose)" ติดกับ "powder" → ตัดบรรทัดผิดที่ เหลือ "mcg/1" โดด ๆ อยู่บรรทัดเดียว (เจอ 24 ต.ค. 2569)
+//   🚨 ที่อื่นไม่ส่งค่านี้ หน้าตาเหมือนเดิมทุกจุด
 export function renderDrugName(r, opts) {
   const o = opts || {};
   const c = C(!!o.dark);
+  const br = o.breaks ? <wbr /> : null;
   // 🚨 กันหน้าขาวทั้งจอ — ถ้าที่เรียกลืมส่งชิ้นส่วนมา ให้วาดชื่อเป็นข้อความธรรมดาแทน
   //    เคยพลาด 25 ส.ค. 2569: การ์ดหนึ่งในหน้าสรุปยังไม่ได้ต่อสาย แล้วทั้งหน้าล่มทันที
   if (!r) return null;
@@ -60,6 +65,7 @@ export function renderDrugName(r, opts) {
       {/* ตัวย่อที่เภสัชกรเรียกกันจริง (CPM · HCTZ · MST) — วงเล็บสีม่วง
           วางถัดจากชื่อยาทันที เพราะเป็น "ชื่อเรียกอีกแบบ" ของยาตัวเดียวกัน
           คนละสีกับชื่อการค้า (เทล) เพื่อให้แยกออกว่าอันไหนตัวย่อ อันไหนยี่ห้อ */}
+      {br}
       {r.hasAbbrev && (
         <span style={sx("font-weight:600;color:#6d3b9e;font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;margin-left:5px", nw(r.abbrevNoWrap))}>
           ({r.abBefore}{r.abHit ? <span style={s('background:#ece3f6;border-radius:3px;padding:0 1px')}>{r.abHit}</span> : null}{r.abAfter})
@@ -69,12 +75,14 @@ export function renderDrugName(r, opts) {
       {/* 🚨 สีเม็ดยาจริง — Warfarin แยกความแรงด้วยสีเม็ดตามที่ผู้ผลิตตั้งใจทำมา
           เภสัชกรกับคนไข้จำยาตัวนี้ด้วยสีมากกว่าตัวเลข หน้าจอต้องพูดภาษาเดียวกับของในมือ
           วางไว้ติดชื่อยา เพราะเป็น "ลักษณะของยาตัวนี้" ไม่ใช่ข้อมูลประกอบ */}
+      {br}
       {r.pillLabel && (
         <span style={sx('font-weight:700;margin-left:5px;white-space:nowrap', { color: r.pillColor })}>({r.pillLabel})</span>
       )}
 
       {/* ความแรง — ถ้ามียาชื่อเดียวกันหลายความแรงในรายการเดียว ตัวเลขจะถูกทาสีคนละสี
           กันหยิบสลับ (Morphine 10 · 20 · 30 mg) · หน่วยคงสีเทาเดิม บรรทัดจะได้ไม่รก */}
+      {br}
       {r.strength && (
         <span style={sx("font-weight:500;font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;margin-left:6px", Object.assign({ color: c.strength }, nw(r.strengthNoWrap)))}>
           {r.stColor
@@ -84,11 +92,13 @@ export function renderDrugName(r, opts) {
       )}
 
       {/* ความเข้มข้นเป็นเปอร์เซ็นต์ สีส้มอำพัน — ไม่ชนกับเทล (ชื่อการค้า) และไม่ชนกับแดง (ทำลาย) */}
+      {br}
       {r.hasPercent && (
         <span style={sx("font-weight:700;color:#96650f;font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;margin-left:5px", nw(true))}>{r.percentLabel}</span>
       )}
 
       {/* รูปแบบยา (tab · cap · injection) — บอกได้ทันทีว่ายากินหรือยาฉีด */}
+      {br}
       {r.form && (
         <span style={sx('font-weight:600;margin-left:6px', Object.assign({ color: c.form }, nw(r.formNoWrap)))}>{r.form}</span>
       )}
@@ -96,11 +106,13 @@ export function renderDrugName(r, opts) {
       {/* 🚨 รูปแบบการออกฤทธิ์ (ER · IR · SR) — เอียง หนา วงเล็บ แดงอมชมพู
           ตั้งใจให้สะดุดตากว่าทุกตัวในบรรทัด เพราะ Morphine 10 mg ER กับ IR เป็นคนละยากัน
           ในคลังมี Sodium valproate 200 mg ทั้ง ER และ IR ชื่อเหมือนกันเป๊ะทุกตัวอักษร */}
+      {br}
       {r.hasRelease && (
         <span style={sx("font-weight:700;font-style:italic;color:#b02a5b;font-family:var(--font-en),var(--font-sarabun),Sarabun,sans-serif;margin-left:5px", nw(true))}>{r.releaseLabel}</span>
       )}
 
       {/* ชื่อการค้าในวงเล็บ สีเทลตัวหนา — เภสัชกรจำ Kapanol ได้ก่อนชื่อสามัญ */}
+      {br}
       {r.hasBrand && (
         <span style={sx('font-weight:600;margin-left:6px', Object.assign({ color: c.brand }, nw(r.brandNoWrap)))}>
           ({r.bdBefore}{r.bdHit ? <span style={s('background:#dcefe4;border-radius:3px;padding:0 1px')}>{r.bdHit}</span> : null}{r.bdAfter})

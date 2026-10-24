@@ -3,7 +3,7 @@
 // · ยอดสะสมปีงบมาจากฐานข้อมูล ไม่ได้นับจากรายการในเครื่อง
 import { SOURCES, money, thaiDate, COMPUTERS, MOBILE_PREFIX } from '@/lib/format';
 import { cleanQty, qtyNum, qtyText, splitDrugName, splitPercent, splitRelease, markMatch,
-  cleanQtyExpr, evalQty, isQtyExpr, exprText, isResolvedQty, splitResolved, DESTROY_REASONS,
+  nextQtyText, evalQty, isQtyExpr, exprText, isResolvedQty, splitResolved, DESTROY_REASONS,
   qtyOver, MAX_QTY } from '../helpers';
 import { moveHi } from '@/lib/drugSearch';
 import { pillColorOf } from '@/lib/drugPillColors';
@@ -209,7 +209,7 @@ export function recordVals(app, d) {
   const pendReuse = st.pendingDisp === 'reuse';
   // 🚨 ช่องจำนวนฝั่งคอมคิดสูตรได้แล้ว ต้องใช้ evalQty ไม่ใช่ qtyNum
   //    qtyNum ใช้ parseFloat ซึ่งอ่าน "25+25" ได้แค่ 25 แล้วทิ้งที่เหลือเงียบ ๆ
-  //    (ป๊อปอัปฝั่งมือถือใน vals/sheet.js ยังใช้ qtyNum เหมือนเดิม พี่กันสั่งไม่ให้แตะมือถือ)
+  //    (ป๊อปอัปฝั่งมือถือใน vals/sheet.js ก็ใช้ evalQty แล้ว พร้อมแถบปุ่ม + − = · 24 ต.ค. 2569)
   const pendQty = evalQty(st.qtyInput);
   // 🚨 เกินเพดานแล้วต้องเตือนกับปิดปุ่ม ไม่ใช่แอบตัดให้ (พี่กันเลือกแบบ ก)
   const pendOver = qtyOver(pendQty);
@@ -424,7 +424,10 @@ export function recordVals(app, d) {
         priceLabel: drug.hasPrice ? drug.price.toFixed(2) + ' ฿' : '—',
         priceSub: drug.hasPrice ? 'ต่อ ' + drug.unit : '',
         priceColor: drug.hasPrice ? '#2f7d5d' : '#c0c5c1',
-        rowBg: i === d.hi ? '#eef6f1' : '#fff',
+        // 🚨 แถบไฮไลต์มีไว้ให้ฝั่งคอมกดลูกศรเลือก — ฝั่งมือถือเลือกด้วยการแตะ จึงไม่มีไฮไลต์เลย
+        //    (พี่กันสั่ง 24 ต.ค. 2569 "ในโมบายมันไม่ต้องกดลง มันใช้การจิ้ม แปลว่ามันไม่ควรมีไฮไลต์
+        //     เเม้ว่าจะเอานิ้วไปชี้ก็ตาม" · สีตอนนิ้วแตะถอดที่ pages/record.jsx → renderDrugOption)
+        rowBg: d.wide && i === d.hi ? '#eef6f1' : '#fff',
         // ติด ref ไว้เฉพาะแถวที่ถูกไฮไลต์ เพื่อให้กรอบเลื่อนตามลูกศรขึ้น/ลง
         // (ตัวเลื่อนอยู่ใน componentDidUpdate ของ MedReturnApp)
         hiRef: i === d.hi ? app.hiRef : null,
@@ -515,7 +518,8 @@ export function recordVals(app, d) {
     // รับทศนิยมได้ 2 ตำแหน่ง — ยาน้ำครึ่งขวด ยาแบ่งครึ่งเม็ด
     // (เดิมกรอง [^0-9] ทิ้ง พิมพ์ 2.5 กลายเป็น 25 ซึ่งผิดเป็นสิบเท่า)
     // และรับเครื่องหมายคิดเลขกับวงเล็บด้วย — 25+25 · 3*(10+2) (พี่กันสั่ง 25 ส.ค. 2569)
-    onQtyInput: (e) => app.setState({ qtyInput: cleanQtyExpr(e.target.value) }),
+    // เฉลยแล้วพิมพ์เครื่องหมายต่อ = บวกต่อจากยอดเดิม ไม่ค้างยอดเก่า (ดู nextQtyText ใน helpers)
+    onQtyInput: (e) => app.setState({ qtyInput: nextQtyText(st.qtyInput, e.target.value) }),
     onQtyKey: (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();

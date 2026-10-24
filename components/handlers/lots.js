@@ -6,7 +6,7 @@
 //
 // ใบสรุปพิมพ์: แปะหน้าถุงยาที่รอตรวจ ให้เวรถัดไปรู้ว่าถุงนี้คือ Lot ไหน
 //              หรือเก็บเข้าแฟ้มเป็นหลักฐานว่าวันนั้นรับคืนอะไรมาบ้าง
-import { SS, fetchT, cleanQtyExpr, evalQty } from '../helpers';
+import { SS, fetchT, nextQtyText, evalQty } from '../helpers';
 import { downloadCsv, lotsToCsv } from '@/lib/csv';
 
 // วันเวลาที่พิมพ์ใบ — ใช้ พ.ศ. ตามที่ห้องยาอ่านกันจริง
@@ -252,7 +252,8 @@ export function lotsActions(app) {
 
   // แก้จำนวนรายแถว — ใช้กติกาเดียวกับหน้าบันทึก (พิมพ์สูตรได้ · Enter 2 จังหวะ)
   app.startLotQty = (id, qty) => app.setState({ lotEditQtyId: id, lotEditQtyText: String(qty) });
-  app.changeLotQty = (text) => app.setState({ lotEditQtyText: cleanQtyExpr(text) });
+  // เฉลยแล้วพิมพ์เครื่องหมายต่อ = บวกต่อจากยอดเดิม (nextQtyText · กติกาเดียวกับหน้าบันทึก)
+  app.changeLotQty = (text) => app.setState({ lotEditQtyText: nextQtyText(app.state.lotEditQtyText, text) });
   app.cancelLotQty = () => app.setState({ lotEditQtyId: null, lotEditQtyText: '' });
 
   app.resolveLotQty = () => {

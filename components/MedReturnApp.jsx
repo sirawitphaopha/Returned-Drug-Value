@@ -200,10 +200,6 @@ export default class MedReturnApp extends React.Component {
       //   "ให้มัน detect ขอบมือถือ แล้ว fix เลย และปรับใช้กับทุกมือถือได้"
       // 0 = ยังไม่ได้วัด (ตอนเซิร์ฟเวอร์วาดจอ) ให้ใช้ 100% ไปก่อน
       lockW: 0,
-      // ── ดึงหน้าลงเพื่อโหลดใหม่ (พี่กันสั่ง 1 ก.ย. 2569) ────────────────────
-      // pullY = ระยะที่นิ้วลากลงมาแล้ว (หน่วยพิกเซล · 0 คือยังไม่ได้ลาก)
-      // pullBusy = ปล่อยนิ้วแล้วกำลังโหลดอยู่
-      // 🚨 ทั้งคู่ต้องเป็น 0/false เสมอบนเดสก์ท็อป — ตัวจับนิ้วไม่ทำงานที่นั่นเลย
       // มีหน้าต่างซ้อนเปิดอยู่ไหม — ตัวดักการเลื่อนอ่านค่านี้
       // 🚨 ตัวจริงคำนวณใน vals/shell.js · ตรงนี้เป็นสำเนาที่ componentDidUpdate เขียนให้
       //    เพราะตัวดักเป็นเหตุการณ์นอก React จะเรียก renderVals เองไม่ได้
@@ -221,8 +217,6 @@ export default class MedReturnApp extends React.Component {
       // ความสูงแถวตาราง — 'roomy' 43 · 'tight' 34 · 'dense' 30 (พี่กันสั่ง 10 ก.ย. 2569)
       // ค่าจริงอ่านจากที่เก็บถาวรตอน componentDidMount
       rowH: 'roomy',
-      pullY: 0,
-      pullBusy: false,
       // มีเมาส์จริงไหม — วัดตอน componentDidMount ด้วย (pointer: fine)
       // ใช้กันสวิตช์ "คอม/มือถือ" ไม่ให้โผล่บนเครื่องสัมผัสจริง (พี่กันสั่ง — ขึ้นมาแล้วบังจอ)
       // ความกว้างอย่างเดียวไม่พอ แท็บเล็ตแนวนอนกว้าง 1024 จะหลุดขึ้นมา
@@ -275,6 +269,8 @@ export default class MedReturnApp extends React.Component {
     this.qtyRef = React.createRef();
     this.qtyLayerRef = React.createRef();   // ชั้นที่วาดสูตรในช่องจำนวน — เลื่อนตาม input
     this.sheetQtyRef = React.createRef();
+    // ชั้นที่วาดสูตรกับผลลัพธ์ทับช่องจำนวนในป๊อปฝั่งมือถือ (เลื่อนตามช่องจริง)
+    this.sheetQtyLayerRef = React.createRef();
     // พื้นที่เลื่อนหลักของทั้งแอป — goScreen ใช้เด้งกลับบนสุดตอนสลับแท็บ
     this.scrollRef = React.createRef();
 
@@ -643,14 +639,6 @@ export default class MedReturnApp extends React.Component {
       window.visualViewport.addEventListener('scroll', this.lockWidth);
     }
     window.addEventListener('resize', this._onResize);
-    // ดึงหน้าลงเพื่อโหลดใหม่ — ผูกที่หน้าต่าง ไม่ใช่ที่พื้นที่เลื่อน
-    // 🚨 พื้นที่เลื่อนถูกสร้างหลัง componentDidMount ในบางจังหวะ (ตอนยังโหลดอยู่)
-    //    ผูกที่หน้าต่างแล้วเช็ค scrollRef เอาข้างในจึงไม่มีทางพลาด
-    // 🚨 passive:false ที่ touchmove เท่านั้น — ตัวอื่นปล่อย passive ไว้ให้เลื่อนลื่น
-    window.addEventListener('touchstart', this._onTouchStart, { passive: true });
-    window.addEventListener('touchmove', this._onTouchMove, { passive: false });
-    window.addEventListener('touchend', this._onTouchEnd, { passive: true });
-    window.addEventListener('touchcancel', this._onTouchEnd, { passive: true });
     window.addEventListener('keydown', this._onKey);
     // ปุ่มย้อนกลับของเครื่อง — ต้องปิดหน้าต่างซ้อน ไม่ใช่ออกจากเว็บ (ดู _onPop)
     window.addEventListener('popstate', this._onPop);
@@ -870,68 +858,13 @@ export default class MedReturnApp extends React.Component {
   //
   // 🚨 เงื่อนไขต้องตรงกับ vals/derive.js → wide เป๊ะ ๆ ห้ามเขียนคนละแบบ
   //    แก้ที่หนึ่งต้องแก้อีกที่เสมอ ไม่งั้น CSS กับ JSX จะไม่ตรงกันแบบเงียบ ๆ
-  // ── ดึงหน้าลงเพื่อโหลดใหม่ (พี่กันสั่ง 1 ก.ย. 2569) ─────────────────────────
-  //
-  // ทำไมต้องมี: เว็บนี้ถามเซิร์ฟเวอร์เองทุก 20 วินาทีอยู่แล้ว (ดูข้อ 3.62)
-  // แต่คนใช้มือถือไม่มีทางรู้ว่าของบนจอสดหรือเก่า และไม่มีปุ่มโหลดใหม่ให้กด
-  // การดึงลงเป็นท่ามาตรฐานที่ทุกแอปใช้ตรงกัน จึงไม่ต้องสอน
-  //
-  // 🚨 ทำงานเฉพาะฝั่งมือถือ — ผูกกับคลาส .mrv-mobile ตัวเดียวกับ mobile.css
-  //    เดสก์ท็อปไม่มี touch event และถึงมีก็ถูกด่านนี้ตีกลับก่อน
-  // 🚨 ต้องอยู่บนสุดของพื้นที่เลื่อนเท่านั้น (scrollTop === 0)
-  //    ไม่งั้นเลื่อนดูตารางประวัติกลางหน้าแล้วหน้าถูกดึงลงมั่ว
-  // 🚨 ระยะที่นิ้วลากถูกหารครึ่ง — ให้รู้สึกฝืดเหมือนดึงยางยืด
-  //    ลากเท่าไหร่ขยับเท่านั้น จะรู้สึกลื่นเกินจนเผลอสั่งโหลดใหม่บ่อย
-  PULL_MAX = 92;
-  PULL_FIRE = 62;
-
-  _onTouchStart = (e) => {
-    if (!this._isNarrowNow()) return;
-    if (this.state.pullBusy) return;
-    const sc = this.scrollRef.current;
-    if (!sc || sc.scrollTop > 0) { this._pullFrom = null; return; }
-    this._pullFrom = e.touches && e.touches[0] ? e.touches[0].clientY : null;
-  };
-
-  _onTouchMove = (e) => {
-    if (this._pullFrom == null) return;
-    const sc = this.scrollRef.current;
-    // เลื่อนขึ้นไปแล้ว = เลิกนับว่าเป็นการดึง ปล่อยให้เลื่อนตามปกติ
-    if (!sc || sc.scrollTop > 0) { this._pullFrom = null; if (this.state.pullY) this.setState({ pullY: 0 }); return; }
-    const y = e.touches && e.touches[0] ? e.touches[0].clientY : 0;
-    const dy = y - this._pullFrom;
-    if (dy <= 0) { if (this.state.pullY) this.setState({ pullY: 0 }); return; }
-    // 🚨 ต้องห้ามการเลื่อนของเบราว์เซอร์ ไม่งั้นเด้งของมันเองสู้กับของเรา ภาพกระตุก
-    //    ทำได้เพราะตัวจับนี้ผูกแบบ passive:false (ดู componentDidMount)
-    if (e.cancelable) e.preventDefault();
-    const next = Math.min(this.PULL_MAX, dy * 0.5);
-    if (Math.abs(next - this.state.pullY) >= 1) this.setState({ pullY: next });
-  };
-
-  _onTouchEnd = () => {
-    if (this._pullFrom == null) return;
-    this._pullFrom = null;
-    const y = this.state.pullY;
-    if (y >= this.PULL_FIRE) { this.pullRefresh(); return; }
-    if (y) this.setState({ pullY: 0 });
-  };
-
-  // 🚨 ต้องคืนหน้าจอให้เร็วแม้เซิร์ฟเวอร์ช้า — ค้างที่ตัวหมุนนาน ๆ คนจะกดซ้ำ
-  //    ตั้งเวลาขั้นต่ำ 420 มิลลิวินาที ไม่งั้นเน็ตเร็ว ๆ ตัวหมุนแวบเดียวจนดูเหมือนไม่ได้ทำอะไร
-  pullRefresh = async () => {
-    if (this.state.pullBusy) return;
-    this.setState({ pullBusy: true, pullY: this.PULL_FIRE });
-    const t0 = Date.now();
-    try {
-      // ถามลายเซ็นก่อน (คลังยา · การตั้งค่า · รายการยาคืน) แล้วโหลดเฉพาะหน้าที่เปิดอยู่
-      await this.pulse({ quiet: true });
-      this.refreshCurrent();
-      if (this.loadServerDrafts) this.loadServerDrafts();
-    } catch (e) {}
-    const left = 420 - (Date.now() - t0);
-    const done = () => this.setState({ pullBusy: false, pullY: 0 });
-    if (left > 0) setTimeout(done, left); else done();
-  };
+  // 🗑 เคยมี "ดึงหน้าลงเพื่อโหลดใหม่" (ใส่ 1 ก.ย. 2569) — ถอดออกแล้ว 24 ต.ค. 2569 พี่กันสั่ง
+  //    "เอาลากลงเเล้วรีเฟรช เอาออกละอัน"
+  //    ติดง่ายเกินไป (หน้าขยับตั้งแต่จุดแรกที่นิ้วลาก · ลากราว 1 ใน 7 ของจอก็รีเฟรชแล้ว)
+  //    และไปแย่งการลากของกรอบที่เลื่อนได้ในหน้า (รายการผลค้นหายาเลื่อนกลับขึ้นไม่ได้)
+  //    เว็บเช็คข้อมูลใหม่เองทุก 20 วินาทีกับทุกครั้งที่กลับเข้าแท็บอยู่แล้ว (pulse · ข้อ 3.62)
+  //    ถ้าวันหน้าจะใส่กลับ ต้องอ่านสกิล mobile-web-app หัวข้อดึงลงเพื่อโหลดใหม่ก่อน (ระยะลากที่เหมาะสม)
+  //    🚨 overscroll-behavior-y: contain ใน mobile.css ยังต้องอยู่ — กันการรีเฟรชทั้งหน้าของเบราว์เซอร์เอง
 
   // ── ห้ามซูมด้วยนิ้ว (พี่กันสั่ง 1 ก.ย. 2569) ───────────────────────────────
   //
@@ -1103,6 +1036,8 @@ export default class MedReturnApp extends React.Component {
     if (typeof window === 'undefined' || this._earlyBound) return;
     this._earlyBound = true;
     // ฉากหลังห้ามเลื่อนเมื่อมีหน้าต่างซ้อน (ดู _blockBgScroll)
+    // จดจุดที่นิ้วแตะลงก่อน — ตัวกันต้องรู้ว่านิ้วลากขึ้นหรือลง
+    document.addEventListener('touchstart', this._bgTouchStart, { passive: true });
     document.addEventListener('touchmove', this._blockBgScroll, { passive: false });
     document.addEventListener('wheel', this._blockBgScroll, { passive: false });
     document.addEventListener('scroll', this._pinLeft, { passive: true, capture: true });
@@ -1125,11 +1060,45 @@ export default class MedReturnApp extends React.Component {
   // 🚨 ต้องปล่อยให้เลื่อนได้ถ้านิ้วอยู่ "ในตัวหน้าต่างซ้อนเอง"
   //    ไม่งั้นหน้าต่างที่มีเนื้อหายาว (รายการล็อต · ตั้งค่า) เลื่อนดูข้างในไม่ได้เลย
   //    ตัวชี้วัดคือ element ที่นิ้วแตะอยู่ในกล่องที่มี role="dialog" หรือไม่
+  //
+  // 🚨🔴 นิ้วอยู่ในหน้าต่างก็ยังห้ามได้ ถ้าตรงนั้นไม่มีอะไรให้เลื่อน (24 ต.ค. 2569)
+  //    ของเดิมปล่อยทุกการลากที่อยู่ในหน้าต่างซ้อน ป๊อปใส่จำนวนฝั่งมือถือเนื้อหาสั้นกว่าจอ
+  //    ในตัวมันจึงไม่มีอะไรเลื่อนได้ การลากเลยไหลออกไปให้ตัวนอกสุด
+  //    บน iPhone ตอนแป้นพิมพ์เด้ง (ป๊อปนี้เปิดแป้นให้เองทันที) iOS เลื่อนทั้งจอตามนิ้วได้
+  //    ถ้าไม่มีใครห้าม = เห็นหน้าข้างหลังป๊อปไหลไปมา
+  //    ตอนนี้ปล่อยเฉพาะตอนมีกล่องในหน้าต่างที่ "เลื่อนไปทางที่นิ้วลากได้จริง" เท่านั้น
+  //    เลื่อนสุดขอบแล้วก็ห้ามต่อ ไม่ปล่อยให้ไหลทะลุออกไปหาฉากหลัง
+  // ⚠️ ล้อเมาส์ของคอมยังใช้กติกาเดิม — คอมปิด overflow ของพื้นที่เลื่อนไว้แล้ว ไม่มีอะไรรั่ว
+  _bgTouchStart = (e) => {
+    const p = e.touches && e.touches[0];
+    this._bgY = p ? p.clientY : null;
+  };
+
   _blockBgScroll = (e) => {
     if (!this.state.anyModalOpen) return;
     const t = e.target;
-    if (t && t.closest && t.closest('[role="dialog"], [data-scrollable="1"]')) return;
+    const box = t && t.closest ? t.closest('[role="dialog"], [data-scrollable="1"]') : null;
+    if (box && (e.type !== 'touchmove' || this._canScrollIn(t, e))) return;
     if (e.cancelable) e.preventDefault();
+  };
+
+  // มีกล่องไหนในหน้าต่างซ้อน (ไล่จากจุดที่นิ้วแตะขึ้นไปจนถึงตัวหน้าต่าง)
+  // ที่ยังเลื่อนไปทางที่นิ้วลากได้อยู่ไหม
+  _canScrollIn = (t, e) => {
+    const p = e.touches && e.touches[0];
+    if (!p || this._bgY == null) return true;           // ไม่รู้ทิศ ปล่อยไว้ก่อนแบบเดิม
+    const dy = p.clientY - this._bgY;                    // บวก = นิ้วลากลง = อยากเห็นของด้านบน
+    const root = t.closest('[role="dialog"]') || t.closest('[data-scrollable="1"]');
+    for (let el = t; el && el.nodeType === 1; el = el.parentElement) {
+      const oy = getComputedStyle(el).overflowY;
+      if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight + 1) {
+        if (dy === 0) return true;
+        if (dy > 0 && el.scrollTop > 0) return true;
+        if (dy < 0 && el.scrollTop + el.clientHeight < el.scrollHeight - 1) return true;
+      }
+      if (el === root) break;
+    }
+    return false;
   };
 
   _isNarrowNow = () => {
@@ -1244,6 +1213,7 @@ export default class MedReturnApp extends React.Component {
       window.visualViewport.removeEventListener('resize', this.lockWidth);
       window.visualViewport.removeEventListener('scroll', this.lockWidth);
     }
+    document.removeEventListener('touchstart', this._bgTouchStart);
     document.removeEventListener('touchmove', this._blockBgScroll);
     document.removeEventListener('wheel', this._blockBgScroll);
     document.removeEventListener('scroll', this._pinLeft, true);
@@ -1259,10 +1229,6 @@ export default class MedReturnApp extends React.Component {
     document.removeEventListener('gesturestart', this._onGesture);
     document.removeEventListener('gesturechange', this._onGesture);
     document.removeEventListener('gestureend', this._onGesture);
-    window.removeEventListener('touchstart', this._onTouchStart);
-    window.removeEventListener('touchmove', this._onTouchMove);
-    window.removeEventListener('touchend', this._onTouchEnd);
-    window.removeEventListener('touchcancel', this._onTouchEnd);
     document.removeEventListener('mousedown', this._onDocDown);
     document.removeEventListener('visibilitychange', this._onVisible);
     window.removeEventListener('online', this._onOnline);

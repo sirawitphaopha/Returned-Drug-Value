@@ -619,6 +619,39 @@ export function splitResolved(raw) {
   return { expr: s.slice(0, i + 1), answer: s.slice(i + 1), resolved: true };
 }
 
+// ── พิมพ์ต่อจากสูตรที่เฉลยแล้ว (พี่กันสั่งแก้ 24 ต.ค. 2569) ────────────────────
+// 🚨🔴 บั๊กเดิม: เฉลย "30+30=60" แล้วพิมพ์ +10 ต่อ ช่องกลายเป็น "30+30=60+10"
+//    แต่ evalQty คิดจากฝั่งซ้ายของ = เสมอ ยอดจึงค้างที่ 60 โดยไม่มีอะไรเตือน = นับยาขาด
+//
+// กติกาใหม่ (แบบเครื่องคิดเลขทั่วไป)
+//   ต่อด้วยเครื่องหมาย  → ถอด "=60" ทิ้ง ต่อจากสูตรเดิม "30+30+10" ยอดรันต่อเป็น 70
+//                         คูณ/หาร ใส่วงเล็บครอบสูตรเดิมให้ "(30+30)*2" ไม่งั้นคูณแค่ตัวท้าย
+//   ต่อด้วยตัวเลข      → เริ่มนับใหม่
+//   ลบถอยหลัง         → ยกเลิกการเฉลย กลับเป็นสูตรเดิมให้แก้ต่อ
+//   แก้กลางสูตร        → ถอดผลลัพธ์ทิ้ง เหลือสูตรที่ยังไม่เฉลย
+// ยังไม่ได้เฉลย = ทำงานเหมือนเดิมทุกอย่าง (cleanQtyExpr อย่างเดียว)
+//
+// 🚨 ใช้กับทุกช่องที่พิมพ์สูตรได้ — ช่องจำนวนฝั่งคอม · แป้นเครื่องคิดเลข · ช่องแก้จำนวนในตาราง ·
+//    ช่องแก้จำนวนในหน้าต่างแก้ไข Lot · ป๊อปใส่จำนวนฝั่งมือถือ (กติกาเดียวกันทุกช่อง ข้อ 3.26 ของ CLAUDE.md)
+export function nextQtyText(prev, value) {
+  const p = String(prev == null ? '' : prev);
+  let n = String(value == null ? '' : value);
+  if (p.indexOf('=') >= 0 && n) {
+    const left = p.split('=')[0];
+    if (p.indexOf(n) === 0) {
+      n = left;
+    } else if (n.indexOf(p) === 0) {
+      const add = n.slice(p.length);
+      if (/^[*/×÷xX]/.test(add)) n = (/[+\-]/.test(left.slice(1)) ? '(' + left + ')' : left) + add;
+      else if (/^[+\-−]/.test(add)) n = left + add;
+      else n = add;
+    } else {
+      n = n.split('=')[0];
+    }
+  }
+  return cleanQtyExpr(n);
+}
+
 export function isResolvedQty(raw) {
   return String(raw == null ? '' : raw).indexOf('=') >= 0;
 }
@@ -742,9 +775,9 @@ export const Z = {
   toast: 95      // ข้อความเด้ง — เหนือทุกอย่าง
 };
 
-export const APP_VERSION = '0.21.0.0';
+export const APP_VERSION = '0.21.1.0';
 export const APP_FIRST_RELEASE = '4 สิงหาคม 2569';
-export const APP_LAST_UPDATE = '21 กันยายน 2569';
+export const APP_LAST_UPDATE = '24 ตุลาคม 2569';
 
 // ชื่อผู้บันทึกแบบสั้น — คำนำหน้า + ชื่อ ไม่เอานามสกุล
 // พี่กันสั่ง 4 ก.ย. 2569: "เอาแค่ตำแหน่ง และชื่อ ไม่เอานามสกุล"

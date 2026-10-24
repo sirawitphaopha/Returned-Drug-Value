@@ -23,7 +23,8 @@ const nw = (on) => (on ? { whiteSpace: 'nowrap' } : null);
 function renderDrugOption(r, big) {
   const nameSize = big ? '15.5px' : '14.5px';
   return (
-    <div key={r.name} ref={r.hiRef} {...kb(big ? r.pick : r.pickInline)} className="hv-bg-eef"
+    /* big = ฝั่งมือถือ · ไม่มีสีตอนนิ้วชี้ เพราะมือถือเลือกด้วยการแตะ ไม่มีแถบไฮไลต์ (พี่กันสั่ง 24 ต.ค. 2569) */
+    <div key={r.name} ref={r.hiRef} {...kb(big ? r.pick : r.pickInline)} className={big ? undefined : 'hv-bg-eef'}
       style={sx('display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid rgba(30,36,32,.06);cursor:pointer', { background: r.rowBg })}>
 
       <div style={s('min-width:0;flex:1')}>
@@ -183,9 +184,14 @@ export function renderRecordNarrow(V) {
         })}
 
         {/* 🚨 overscroll-behavior:contain — เลื่อนดูยาจนสุดกรอบแล้วหน้าเว็บข้างหลังต้องไม่ไหลตาม
-            (กฎกลาง pharmacy-web-logic ข้อ 28) ไม่เปลี่ยนหน้าตาสักพิกเซล เปลี่ยนแค่พฤติกรรมการเลื่อน */}
+            (กฎกลาง pharmacy-web-logic ข้อ 28) ไม่เปลี่ยนหน้าตาสักพิกเซล เปลี่ยนแค่พฤติกรรมการเลื่อน
+            🚨 กรอบหนา 2 จุดสีเขียวของเว็บ (พี่กันสั่ง 24 ต.ค. 2569 "อยากให้เส้นของมันหนากว่านี้
+               เพราะตอนนี้มันกลืนกับหน้าเว็บเลย") — เดิมเส้นเทาจาง 1 จุด กลืนกับพื้นหน้าบันทึก
+            🚨 ต้องตรงกับกรอบเขียวรอบช่องค้นหาตอนกำลังพิมพ์ (พี่กันสั่ง "ทำให้มันตรง")
+               กรอบนั้นคือเส้นโฟกัสของช่องกรอก (globals.css · หนา 2 ห่างช่อง 2) ยื่นออกนอกเส้นเทาทางละ 3 จุด
+               สี ความหนา ความมน (10) ตั้งที่นี่ · ขอบซ้ายขวาที่ยื่นออกตามตอนพิมพ์อยู่ใน mobile.css (.mrv-srch-list) */}
         {V.hasResults && (
-          <div style={s('margin-top:8px;border:1px solid rgba(30,36,32,.10);border-radius:12px;background:#fff;box-shadow:0 10px 26px rgba(30,36,32,.12);overflow:hidden;max-height:264px;overflow-y:auto;overscroll-behavior:contain')}>
+          <div className="mrv-srch-list" style={s('margin-top:8px;border:2px solid #2f7d5d;border-radius:10px;background:#fff;box-shadow:0 10px 26px rgba(30,36,32,.12);overflow:hidden;max-height:264px;overflow-y:auto;overscroll-behavior:contain')}>
             {V.results.map((r) => renderDrugOption(r, true))}
           </div>
         )}

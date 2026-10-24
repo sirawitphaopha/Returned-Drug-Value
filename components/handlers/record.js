@@ -1,14 +1,13 @@
 // หน้าบันทึก — เพิ่มยาเข้ารายการ · ป๊อปอัปใส่จำนวน · ส่งขึ้นฐานข้อมูล
 // คัดจากมอคอัป (บรรทัด 912–1051) ตัดสวิตช์จำลองเน็ตหลุดกับ resetDemo ออก
 import { money, thaiDate, SOURCES } from '@/lib/format';
-import { newUuid, fetchT, qtyNum, evalQty, cleanQtyExpr, qtyText, readLS, clearLS } from '../helpers';
+import { newUuid, fetchT, evalQty, cleanQtyExpr, nextQtyText, qtyText, readLS, clearLS } from '../helpers';
 
 const sumReuse = (rows) => rows.reduce((a, r) => a + (r.disposition === 'reuse' ? r.price * r.qty : 0), 0);
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
-// จำนวนที่รับได้ — เพดานต้องตรงกับฝั่งเซิร์ฟเวอร์ ไม่งั้นกดบันทึกแล้วโดนตีกลับ
-// โดยที่ผู้ใช้ไม่รู้ว่าผิดตรงไหน
-const clampQty = (raw) => qtyNum(raw);
+// 🗑 เคยมี clampQty (= qtyNum) ไว้อ่านจำนวนในป๊อปใส่จำนวน — เลิกใช้แล้ว 24 ต.ค. 2569
+//    ป๊อปฝั่งมือถือพิมพ์สูตรได้แล้ว ต้องอ่านด้วย evalQty ตัวเดียวกับช่องฝั่งคอม (ดู confirmSheet)
 
 export function recordActions(app) {
   // ยาที่ยังไม่ใส่ราคา — บันทึกได้ตามปกติ (พี่กันสั่งเปลี่ยน 19 ส.ค. 2569)
@@ -253,7 +252,7 @@ export function recordActions(app) {
     const d = app.state.pending;
     // 🚨 ต้องใช้ evalQty ไม่ใช่ clampQty — ช่องนี้พิมพ์สูตรได้แล้ว (25+25)
     //    clampQty ใช้ parseFloat ซึ่งอ่าน "25+25" ได้แค่ 25 แล้วทิ้งที่เหลือเงียบ ๆ
-    //    = บันทึกไปครึ่งเดียวโดยไม่มีใครรู้ (ฝั่งป๊อปมือถือยังใช้ clampQty เหมือนเดิม)
+    //    = บันทึกไปครึ่งเดียวโดยไม่มีใครรู้ (ป๊อปมือถือก็ใช้ evalQty แล้วตั้งแต่ 24 ต.ค. 2569)
     const qty = evalQty(app.state.qtyInput);
     if (d && app.blockNoPrice(d)) return;
     if (!d || !qty) {
@@ -287,12 +286,14 @@ export function recordActions(app) {
       app.setState({ qtyInput: '' }, () => { if (app.qtyRef.current) app.qtyRef.current.focus(); });
       return;
     }
+    // 🚨 ผ่าน nextQtyText เหมือนการพิมพ์เอง — เฉลยแล้วกดเครื่องหมายต่อต้องบวกต่อจากยอดเดิม
     if (k === 'back') {
-      app.setState({ qtyInput: String(app.state.qtyInput || '').slice(0, -1) },
+      const cur = String(app.state.qtyInput || '');
+      app.setState({ qtyInput: nextQtyText(cur, cur.slice(0, -1)) },
         () => { if (app.qtyRef.current) app.qtyRef.current.focus(); });
       return;
     }
-    app.setState({ qtyInput: cleanQtyExpr(String(app.state.qtyInput || '') + k) },
+    app.setState({ qtyInput: nextQtyText(app.state.qtyInput, String(app.state.qtyInput || '') + k) },
       () => { if (app.qtyRef.current) app.qtyRef.current.focus(); });
   };
 
@@ -352,7 +353,7 @@ export function recordActions(app) {
   };
 
   app.changeEditQty = (text) => {
-    app.setState({ editQtyText: cleanQtyExpr(text) });
+    app.setState({ editQtyText: nextQtyText(app.state.editQtyText, text) });
   };
 
   // ยืนยันการแก้ — ช่องว่างหรือคิดได้ 0 ให้ถอยกลับไปใช้ค่าเดิม ไม่ลบแถวทิ้ง
@@ -403,6 +404,52 @@ export function recordActions(app) {
       sheetReason: '',
       query: ''
     }, () => { if (app.sheetQtyRef.current) app.sheetQtyRef.current.focus(); });
+  };
+
+  // ── ปุ่มคิดเลขในป๊อปใส่จำนวนฝั่งมือถือ (พี่กันเลือกแบบ ค · 24 ต.ค. 2569) ──────
+  //   "ระบบรันตัวเลขตอนกด + ไปเรื่อยๆจะเหมือนในเเบบเดสท๊อปเลยนะ"
+  //
+  // แถบปุ่มไม่ได้คิดเลขเอง — แค่ใส่เครื่องหมายลงช่อง แล้ว evalQty คิดให้ (ตัวเดียวกับฝั่งคอม)
+  // "พิมพ์เอง" กับ "กดปุ่ม" จึงเดินทางเดียวกัน ไม่มีทางให้ผลต่างกัน
+  //
+  // 🚨🔴 กด = แล้วกดบวกต่อ ต้องบวกต่อจากยอดเดิม ไม่ใช่ทิ้งส่วนที่ต่อท้าย
+  //    evalQty คิดจากสูตรฝั่งซ้ายของ = เสมอ ถ้าปล่อยให้ช่องกลายเป็น "30+30+4=64+10"
+  //    ยอดจะค้างที่ 64 เงียบ ๆ ทั้งที่คนกรอกตั้งใจบวกอีก 10 = นับยาขาดโดยไม่มีอะไรเตือน
+  //    จึงถอด "=64" ทิ้งก่อนต่อเครื่องหมาย ได้ "30+30+4+10" ยอดรวมรันต่อเป็น 74
+  // ⚠️ ทำเฉพาะฝั่งมือถือ ช่องจำนวนฝั่งคอมยังเป็นแบบเดิม (แจ้งพี่กันแล้ว 24 ต.ค. 2569)
+  const sheetFocusEnd = () => {
+    const el = app.sheetQtyRef.current;
+    if (!el) return;
+    el.focus();
+    const end = el.value.length;
+    try { el.setSelectionRange(end, end); } catch (e) {}
+    el.scrollLeft = el.scrollWidth;
+  };
+
+  // พิมพ์จากแป้นของเครื่อง
+  app.onSheetCalcInput = (value) => {
+    // กติกาเดียวกับทุกช่องที่พิมพ์สูตรได้ (nextQtyText ใน helpers) · มือถือไม่มีปุ่ม = บนแป้นของเครื่อง
+    // จึงถอด = ที่หลุดมาจากการวางข้อความทิ้ง การเฉลยทำผ่านปุ่ม = บนแถบเท่านั้น
+    app.setState({ sheetQty: nextQtyText(app.state.sheetQty, value).replace(/=/g, '') });
+  };
+
+  // ปุ่ม + และ − บนแถบ
+  app.sheetCalcOp = (op) => {
+    let v = String(app.state.sheetQty || '').split('=')[0];
+    // ช่องยังว่าง = ยังไม่มีอะไรให้บวก ไม่ใส่เครื่องหมายลอย ๆ ไว้หน้าตัวเลข
+    if (!v) { sheetFocusEnd(); return; }
+    // กดเครื่องหมายติดกัน = เปลี่ยนเครื่องหมาย ไม่ซ้อนสองตัว (30+ แล้วกด − ได้ 30−)
+    v = /[+\-*/]$/.test(v) ? v.slice(0, -1) + op : v + op;
+    app.setState({ sheetQty: cleanQtyExpr(v) }, sheetFocusEnd);
+  };
+
+  // ปุ่ม = บนแถบ — จังหวะแรกของ Enter ฝั่งคอม: เฉลยเป็น "30+30+4=64" แต่ยังไม่เพิ่มรายการ
+  // เก็บสูตรไว้ในช่องด้วย ตรวจย้อนได้ว่ามาจากการบวกอะไร (กติกาข้อ 3.27)
+  app.sheetCalcEq = () => {
+    const v = String(app.state.sheetQty || '');
+    const n = evalQty(v);
+    if (!n || v.indexOf('=') >= 0 || !/[+\-*/()]/.test(v.slice(1))) { sheetFocusEnd(); return; }
+    app.setState({ sheetQty: v.replace(/[+\-*/(]+$/, '') + '=' + n }, sheetFocusEnd);
   };
 
   // ── เลือกเหตุผลที่ต้องทำลาย (ผลตรวจข้อ ส-8 · พี่กันเคาะแบบ ก 26 ส.ค. 2569) ──
@@ -456,7 +503,10 @@ export function recordActions(app) {
 
   app.confirmSheet = () => {
     const s = app.state.sheet;
-    const qty = clampQty(app.state.sheetQty);
+    // 🚨 ต้องใช้ evalQty — ช่องฝั่งมือถือพิมพ์สูตรได้แล้ว (24 ต.ค. 2569)
+    //    ตัวเดิม (qtyNum) อ่าน "30+30+4" ได้แค่ 30 แล้วทิ้งที่เหลือเงียบ ๆ
+    //    ฝั่งคอมพิมพ์ได้แต่เลขล้วน ซึ่ง evalQty ให้ค่าเท่ากับตัวเดิมทุกตัว
+    const qty = evalQty(app.state.sheetQty);
     if (!s || !qty) return;
 
     if (s.kind === 'add') {

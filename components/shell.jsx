@@ -32,26 +32,8 @@ function renderLoading() {
   );
 }
 
-// ── แถบ "ดึงลงเพื่อโหลดใหม่" ───────────────────────────────────────────────
-//
-// 🚨 ความสูงของกล่องเป็น 0 เสมอ (position:absolute) ผังหน้าจึงไม่ขยับเลย
-//    ใช้ absolute แทนการแทรกกล่องจริง เพราะกล่องจริงจะดันทุกอย่างลงตลอดเวลา
-// 🚨 ตัวหมุนหมุนเฉพาะตอนกำลังโหลด ระหว่างลากเป็นวงกลมนิ่งที่ค่อย ๆ เข้มขึ้น
-//    ของที่หมุนตลอดเวลาบอกอะไรไม่ได้ว่าตอนนี้ถึงจุดที่ปล่อยได้หรือยัง
-function renderPull(V) {
-  if (!V.pullY && !V.pullBusy) return null;
-  const k = Math.min(1, V.pullY / 62);
-  return (
-    <div role="status" aria-live="polite" style={s('position:relative;z-index:2;height:0;overflow:visible')}>
-      <div style={sx('position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;pointer-events:none', { height: V.pullY + 'px', opacity: Math.max(0.25, k) })}>
-        <div style={sx('width:22px;height:22px;border-radius:50%;border:2.2px solid rgba(47,125,93,.22)', V.pullBusy
-          ? { borderTopColor: '#2f7d5d', animation: 'mrspin .7s linear infinite' }
-          : { borderTopColor: '#2f7d5d', transform: 'rotate(' + Math.round(k * 300) + 'deg)' })}></div>
-        <span style={s('font:600 11.5px Sarabun,sans-serif;color:#2f7d5d')}>{V.pullLabel}</span>
-      </div>
-    </div>
-  );
-}
+// 🗑 เคยมี renderPull (ตัวหมุนตอนดึงหน้าลงเพื่อโหลดใหม่) — ถอดออกแล้ว 24 ต.ค. 2569 พี่กันสั่งเอาออก
+//    ดูหมายเหตุใน MedReturnApp.jsx ตรงที่เคยเป็นตัวจับนิ้ว
 
 export function renderShell(app) {
   if (app.state.loading) return renderLoading();
@@ -100,13 +82,6 @@ export function renderShell(app) {
       {/* role="main" = บอกโปรแกรมอ่านหน้าจอว่าตรงนี้คือเนื้อหาหลักของหน้า (ผลตรวจข้อ ต-14)
           🚨 เติม role บน div เดิม ไม่เปลี่ยนเป็นแท็ก <main> เพราะ <main> มีสไตล์ตั้งต้นของเบราว์เซอร์
              เปลี่ยนแท็กเมื่อไหร่หน้าตาขยับทันที · เติม role อย่างเดียวไม่แตะ CSS เลยสักพิกเซล */}
-      {/* ── ดึงหน้าลงเพื่อโหลดใหม่ (พี่กันสั่ง 1 ก.ย. 2569) ──────────────────────
-          🚨 วางไว้นอกพื้นที่เลื่อน แล้วให้พื้นที่เลื่อนขยับทับมันลงมา
-             ถ้าวางข้างใน มันจะเลื่อนหนีไปกับเนื้อหาแล้วมองไม่เห็นตอนดึง
-          🚨 บนเดสก์ท็อป V.pullY เป็น 0 เสมอ กล่องนี้จึงสูง 0 และไม่มีอะไรขยับ */}
-      {renderPull(V)}
-      {/* transform ตามนิ้ว — ใช้ translate ไม่ใช่ margin/padding
-          เพราะ translate ไม่ทำให้เบราว์เซอร์คำนวณผังหน้าใหม่ทุกเฟรม ภาพจึงลื่น */}
       {/* ── ฉากหลังห้ามเลื่อนเมื่อมีหน้าต่างซ้อนเปิดอยู่ (พี่กันสั่ง 1 ก.ย. 2569) ──
           "เราบอกเเล้วว่าพอมี popup เเล้วฉากหลังห้ามเลื่อน"
 
@@ -114,9 +89,8 @@ export function renderShell(app) {
              เว็บนี้ล็อกความสูงเท่าจอ ตัวที่เลื่อนจริงคือ div ตัวนี้ ไม่ใช่ body
           🚨 ตำแหน่งที่เลื่อนค้างไว้ไม่หาย เพราะแค่ปิด overflow ไม่ได้รีเซ็ต scrollTop
              ปิดหน้าต่างแล้วกลับมาที่เดิมพอดี */}
-      <div ref={app.scrollRef} role="main" style={sx('flex:1;overflow-anchor:none;min-height:0;position:relative;display:flex;flex-direction:column', Object.assign(
-        { overflowY: V.anyModalOpen ? 'hidden' : 'auto' },
-        V.pullY ? { transform: 'translateY(' + V.pullY + 'px)', transition: V.pullBusy ? undefined : 'none' } : null))}>
+      <div ref={app.scrollRef} role="main" style={sx('flex:1;overflow-anchor:none;min-height:0;position:relative;display:flex;flex-direction:column',
+        { overflowY: V.anyModalOpen ? 'hidden' : 'auto' })}>
         {/* กล่องครอบเนื้อหา — ยืดเต็มพื้นที่ที่เหลือ ท้ายเว็บเลยถูกดันลงล่างสุดเอง
             ไม่ต้องพึ่ง margin-top:auto
 
